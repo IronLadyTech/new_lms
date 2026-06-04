@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userRole() {
+      return isSignedIn() && userDoc().data.role;
+    }
+
+    function isSuperAdmin() {
+      return userRole() == 'superadmin';
+    }
+
+    function isAdmin() {
+      return userRole() in ['admin', 'superadmin'];
+    }
+
+    function isModerator() {
+      return userRole() in ['moderator', 'admin', 'superadmin'];
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isModerator());
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && (
+        request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])
+        || isSuperAdmin()
+      );
+      allow delete: if isSuperAdmin();
+    }
+
+    match /courses/{courseId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /resources/{resourceId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /assignments/{assignmentId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /activities/{activityId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid || isModerator()
+      );
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSuperAdmin();
+    }
+  }
+}
