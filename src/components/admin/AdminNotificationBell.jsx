@@ -3,6 +3,7 @@ import { Bell, MessageCircle, UserPlus, Activity, X } from 'lucide-react';
 import { getAllTickets, TICKET_STATUSES, categoryLabel } from '../../services/ticketService';
 import { getAllActivities, getAllUsers } from '../../services/userService';
 import { ROLES } from '../../utils/roles';
+import { formatActivitySummary, formatActivityTypeLabel } from '../../utils/activityLabels';
 
 const DISMISSED_KEY = 'ilms_admin_dismissed_notifications';
 
@@ -27,23 +28,25 @@ function formatWhen(ms) {
   return new Date(ms).toLocaleString();
 }
 
-function formatActivity(a, userMap) {
+function formatActivity(a, userMap, courseMap = {}) {
   const name = userMap[a.userId]?.displayName || userMap[a.userId]?.email?.split('@')[0] || 'User';
+  const summary = formatActivitySummary(a, { courseMap });
+
   if (a.type === 'resource_view') {
-    return { title: 'User viewed a resource', body: `${name} opened "${a.title || 'content'}"` };
+    return { title: 'User viewed a resource', body: `${name} — ${summary}` };
   }
   if (a.type === 'ticket_created') {
-    return { title: 'Support ticket created', body: `${name} submitted "${a.title || 'ticket'}"` };
+    return { title: 'Support ticket created', body: `${name} — ${summary}` };
   }
   if (a.type === 'ticket_reply') {
-    return { title: 'User replied on ticket', body: `${name}: ${a.title || 'New message'}` };
+    return { title: 'User replied on ticket', body: `${name} — ${summary}` };
   }
   if (a.type === 'course_enroll') {
-    return { title: 'User enrolled in course', body: `${name} joined course ${a.courseId || a.title || ''}` };
+    return { title: 'User enrolled in course', body: `${name} — ${summary}` };
   }
   return {
-    title: 'User activity',
-    body: `${name} · ${a.title || a.type}${a.courseId ? ` · ${a.courseId}` : ''}`,
+    title: formatActivityTypeLabel(a.type),
+    body: `${name} — ${summary}`,
   };
 }
 

@@ -29,9 +29,9 @@ export default function Home() {
 
   const enrolled = profile?.enrolledCourses || [];
 
-  const handleEnroll = async (courseId) => {
+  const handleEnroll = async (courseId, courseTitle) => {
     if (!profile || isGuest) return;
-    await enrollInCourse(user.uid, courseId);
+    await enrollInCourse(user.uid, courseId, courseTitle);
     refreshProfile();
   };
 
@@ -64,7 +64,7 @@ export default function Home() {
                     <button
                       type="button"
                       className="btn btn-outline btn-sm"
-                      onClick={() => handleEnroll(course.id)}
+                      onClick={() => handleEnroll(course.id, course.title)}
                     >
                       Enroll
                     </button>

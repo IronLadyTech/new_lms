@@ -28,6 +28,7 @@ import AdminOverviewCharts from './AdminOverviewCharts';
 import { ROLES, getRoleLabel, isAdminRole } from '../../utils/roles';
 import { isSuperAdminEmail } from '../../utils/constants';
 import { getAllTickets, TICKET_STATUSES } from '../../services/ticketService';
+import { formatActivitySummary, formatActivityTypeLabel } from '../../utils/activityLabels';
 import {
   LayoutDashboard,
   Users as UsersIcon,
@@ -82,6 +83,24 @@ function formatTime(ts) {
   if (!ts) return '—';
   const d = ts.toDate ? ts.toDate() : new Date(ts);
   return d.toLocaleString();
+}
+
+function ActivityListItem({ activity, userMap, courseMap }) {
+  const userName =
+    userMap[activity.userId]?.displayName || userMap[activity.userId]?.email?.split('@')[0] || 'User';
+
+  return (
+    <li>
+      <div className="admin-list__content">
+        <div className="admin-list__title-row">
+          <strong>{userName}</strong>
+          <span className="badge badge--soft">{formatActivityTypeLabel(activity.type)}</span>
+        </div>
+        <p className="admin-list__meta muted">{formatActivitySummary(activity, { courseMap })}</p>
+      </div>
+      <span className="muted admin-list__time">{formatTime(activity.createdAt)}</span>
+    </li>
+  );
 }
 
 export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, onTabChange }) {
@@ -481,13 +500,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
             <h3 className="admin-section__title">Recent activity</h3>
             <ul className="admin-list">
               {activities.slice(0, 8).map((a) => (
-                <li key={a.id}>
-                  <div>
-                    <strong>{userMap[a.userId]?.displayName || 'User'}</strong>
-                    <span className="muted"> — {a.title || a.type}</span>
-                  </div>
-                  <span className="muted">{formatTime(a.createdAt)}</span>
-                </li>
+                <ActivityListItem key={a.id} activity={a} userMap={userMap} courseMap={courseMap} />
               ))}
               {activities.length === 0 && <li className="muted">No activity yet.</li>}
             </ul>
@@ -865,14 +878,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
             </div>
             <ul className="admin-list">
               {(selectedUserId ? userActivities : activities).map((a) => (
-                <li key={a.id}>
-                  <div>
-                    <strong>{userMap[a.userId]?.displayName || a.userId}</strong>
-                    <span className="muted"> — {a.title || a.type}</span>
-                    {a.courseId && <span className="badge">{a.courseId.slice(0, 8)}…</span>}
-                  </div>
-                  <span className="muted">{formatTime(a.createdAt)}</span>
-                </li>
+                <ActivityListItem key={a.id} activity={a} userMap={userMap} courseMap={courseMap} />
               ))}
               {(selectedUserId ? userActivities : activities).length === 0 && (
                 <li className="muted">No activity recorded.</li>

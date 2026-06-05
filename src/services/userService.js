@@ -67,7 +67,7 @@ export async function updateUserProfile(uid, data) {
   await updateDoc(doc(db, USERS, uid), { ...data, updatedAt: serverTimestamp() });
 }
 
-export async function enrollInCourse(uid, courseId) {
+export async function enrollInCourse(uid, courseId, courseTitle) {
   await updateDoc(doc(db, USERS, uid), {
     enrolledCourses: arrayUnion(courseId),
     updatedAt: serverTimestamp(),
@@ -76,7 +76,7 @@ export async function enrollInCourse(uid, courseId) {
   logUserActivity(uid, {
     type: 'course_enroll',
     courseId,
-    title: courseId,
+    title: courseTitle || null,
   }).catch(() => {});
 
   const profile = await getUserProfile(uid);

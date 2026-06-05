@@ -627,7 +627,7 @@ img.logo-mark {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
   padding: 1rem;
   background: var(--surface);
@@ -651,6 +651,25 @@ img.logo-mark {
 .admin-list__meta {
   margin-top: 0.3rem;
   font-size: 0.85rem;
+  word-break: break-word;
+}
+
+.admin-list__time {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.badge--soft {
+  margin-left: 0;
+  text-transform: none;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--primary);
+  background: rgba(59, 130, 246, 0.12);
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.7rem;
 }
 
 .admin-list__meta .link-inline {
