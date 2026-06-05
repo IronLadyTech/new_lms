@@ -4,24 +4,26 @@ import { useAuth } from '../../context/AuthContext';
 import { getCourse, getResources } from '../../services/courseService';
 import { logUserActivity } from '../../services/userService';
 import { logActivityToZoho } from '../../services/zohoService';
+import GuestLockedPanel from '../../components/GuestLockedPanel';
 
 export default function CourseDetail() {
   const { courseId } = useParams();
-  const { user, profile } = useAuth();
+  const { user, profile, isGuest } = useAuth();
   const [course, setCourse] = useState(null);
   const [resources, setResources] = useState([]);
 
   useEffect(() => {
+    if (isGuest) return undefined;
     (async () => {
       const c = await getCourse(courseId);
       setCourse(c);
       const r = await getResources(courseId);
       setResources(r);
     })();
-  }, [courseId]);
+  }, [courseId, isGuest]);
 
   const trackView = async (resource) => {
-    if (!user) return;
+    if (!user || isGuest) return;
     await logUserActivity(user.uid, {
       type: 'resource_view',
       courseId,
@@ -35,6 +37,17 @@ export default function CourseDetail() {
       metadata: { title: resource.title },
     }).catch(() => {});
   };
+
+  if (isGuest) {
+    return (
+      <div className="page course-detail">
+        <Link to="/app/home" className="back-link">
+          ← Courses
+        </Link>
+        <GuestLockedPanel title="Course content locked" />
+      </div>
+    );
+  }
 
   if (!course) return <p className="muted">Loading course…</p>;
 
@@ -50,12 +63,15 @@ export default function CourseDetail() {
         <h2>Resources</h2>
         <ul className="resource-list">
           {resources.map((r) => (
-            <li key={r.id} className="resource-item">
+            <li key={r.id} className={`resource-item${r.locked ? ' resource-item--locked' : ''}`}>
               <div>
                 <strong>{r.title}</strong>
                 <span className="muted"> ({r.type})</span>
+                {r.locked && <span className="badge badge-locked">Locked</span>}
               </div>
-              {r.url ? (
+              {r.locked ? (
+                <span className="resource-locked-label muted">Contact Iron Lady for access</span>
+              ) : r.url ? (
                 <a
                   href={r.url}
                   target="_blank"

@@ -39,6 +39,7 @@ export async function createCourse(data) {
     code: data.code,
     description: data.description || '',
     thumbnail: data.thumbnail || '',
+    introUrl: data.introUrl || '',
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
@@ -70,10 +71,20 @@ export async function createResource(data) {
     type: data.type,
     url: data.url,
     description: data.description || '',
+    locked: data.locked ?? false,
     createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
   };
   await setDoc(ref, resource);
   return { id: ref.id, ...resource };
+}
+
+export async function updateResource(resourceId, data) {
+  await updateDoc(doc(db, RESOURCES, resourceId), { ...data, updatedAt: serverTimestamp() });
+}
+
+export async function setResourceLocked(resourceId, locked) {
+  await updateResource(resourceId, { locked });
 }
 
 export async function deleteResource(resourceId) {

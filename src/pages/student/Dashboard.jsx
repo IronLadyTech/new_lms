@@ -4,31 +4,59 @@ import { useAuth } from '../../context/AuthContext';
 import { getCourses } from '../../services/courseService';
 import { getUserActivities } from '../../services/userService';
 import { getAssignments } from '../../services/courseService';
+import { getEvents } from '../../services/eventService';
+import GuestLockedPanel from '../../components/GuestLockedPanel';
 
 export default function Dashboard() {
-  const { user, profile } = useAuth();
+  const { user, profile, isGuest } = useAuth();
   const [courses, setCourses] = useState([]);
   const [activities, setActivities] = useState([]);
   const [pendingAssignments, setPendingAssignments] = useState([]);
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || isGuest) return undefined;
+    let cancelled = false;
+
     (async () => {
-      const allCourses = await getCourses();
+      // Kick off independent reads in parallel instead of awaiting one by one.
+      const [allCourses, acts, events] = await Promise.all([
+        getCourses(),
+        getUserActivities(user.uid, 5),
+        getEvents(),
+      ]);
+      if (cancelled) return;
+
       const enrolled = allCourses.filter((c) => profile?.enrolledCourses?.includes(c.id));
       setCourses(enrolled);
-
-      const acts = await getUserActivities(user.uid, 5);
       setActivities(acts);
 
-      const pending = [];
-      for (const c of enrolled) {
-        const assignments = await getAssignments(c.id);
-        pending.push(...assignments.map((a) => ({ ...a, courseTitle: c.title })));
-      }
-      setPendingAssignments(pending.slice(0, 5));
+      const today = new Date().toISOString().slice(0, 10);
+      setUpcomingEvents(events.filter((e) => e.date >= today).slice(0, 5));
+
+      // Fetch all enrolled-course assignments concurrently (avoids N+1 waterfall).
+      const assignmentLists = await Promise.all(
+        enrolled.map((c) =>
+          getAssignments(c.id).then((list) => list.map((a) => ({ ...a, courseTitle: c.title })))
+        )
+      );
+      if (cancelled) return;
+      setPendingAssignments(assignmentLists.flat().slice(0, 5));
     })();
-  }, [user, profile]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, profile, isGuest]);
+
+  if (isGuest) {
+    return (
+      <div className="page dashboard-page">
+        <h1>Your dashboard</h1>
+        <GuestLockedPanel title="Dashboard locked" />
+      </div>
+    );
+  }
 
   return (
     <div className="page dashboard-page">
@@ -78,6 +106,25 @@ export default function Dashboard() {
               <li key={a.id}>
                 <span className="activity-type">{a.type}</span>
                 <span>{a.title}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="section">
+        <h2>
+          Upcoming events · <Link to="/app/calendar">View calendar</Link>
+        </h2>
+        {upcomingEvents.length === 0 ? (
+          <p className="muted">No upcoming events scheduled.</p>
+        ) : (
+          <ul className="list-cards">
+            {upcomingEvents.map((ev) => (
+              <li key={ev.id}>
+                <strong>{ev.date}</strong>
+                {ev.time && ` · ${ev.time}`} — {ev.title}
+                <span className="badge">{ev.type}</span>
               </li>
             ))}
           </ul>
