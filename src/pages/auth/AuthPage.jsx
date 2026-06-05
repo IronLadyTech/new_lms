@@ -6,7 +6,8 @@ import { ROLES } from '../../utils/roles';
 
 export default function AuthPage({ mode = 'login' }) {
   const isLogin = mode === 'login';
-  const { signIn, signUp, signInWithGoogle, signInAsGuest, error, setError, profile, user, loading, role } = useAuth();
+  const { signIn, signUp, signInWithGoogle, signInAsGuest, error, setError, profile, user, loading, role, isGuest } =
+    useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,12 +15,12 @@ export default function AuthPage({ mode = 'login' }) {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user && (profile || role)) {
+    if (!loading && user && !isGuest && (profile || role)) {
       redirectByRole(profile?.role || role, navigate);
     }
-  }, [loading, user, profile, role, navigate]);
+  }, [loading, user, profile, role, isGuest, navigate]);
 
-  if (loading || (user && profile)) {
+  if (loading || (user && profile && !isGuest)) {
     return (
       <div className="loading-screen">
         <div className="spinner" />
@@ -61,6 +62,7 @@ export default function AuthPage({ mode = 'login' }) {
     setError(null);
     try {
       await signInAsGuest();
+      navigate('/app/home', { replace: true });
     } catch (err) {
       setError(err.message || 'Guest login failed. Please try again.');
     } finally {
