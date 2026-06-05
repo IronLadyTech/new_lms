@@ -4,6 +4,7 @@ import { Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { ROLES } from '../../utils/roles';
 import AdminPanel, { ADMIN_TABS } from './AdminPanel';
+import AdminNotificationBell from './AdminNotificationBell';
 
 export default function AdminShell({ title, subtitle, isSuperAdmin = false }) {
   const { signOut, profile, role } = useAuth();
@@ -97,10 +98,11 @@ export default function AdminShell({ title, subtitle, isSuperAdmin = false }) {
           >
             <Menu size={22} />
           </button>
-          <div>
+          <div className="admin-shell__header-text">
             <h1>{activeTab ? activeTab.label : title}</h1>
             <p>{activeTab ? activeTab.desc : subtitle}</p>
           </div>
+          <AdminNotificationBell onTabChange={handleSelectTab} />
         </header>
 
         <AdminPanel isSuperAdmin={isSuperAdmin} tab={tab} onTabChange={setTab} />

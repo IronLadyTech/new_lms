@@ -73,6 +73,12 @@ export async function enrollInCourse(uid, courseId) {
     updatedAt: serverTimestamp(),
   });
 
+  logUserActivity(uid, {
+    type: 'course_enroll',
+    courseId,
+    title: courseId,
+  }).catch(() => {});
+
   const profile = await getUserProfile(uid);
   if (profile) {
     syncUserToZoho({

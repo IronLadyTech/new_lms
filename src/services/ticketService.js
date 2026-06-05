@@ -12,6 +12,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { logUserActivity } from './userService';
 
 const TICKETS = 'tickets';
 
@@ -54,6 +55,12 @@ export async function createTicket({ userId, userEmail, userDisplayName, categor
     resolvedAt: null,
   };
   await setDoc(ref, ticket);
+
+  logUserActivity(userId, {
+    type: 'ticket_created',
+    title: subject,
+    metadata: { ticketId: ref.id, category },
+  }).catch(() => {});
 
   if (message?.trim()) {
     await addTicketMessage(ref.id, {
@@ -139,6 +146,15 @@ export async function addTicketMessage(ticketId, { senderId, senderName, senderR
   };
   await setDoc(ref, msg);
   await updateDoc(doc(db, TICKETS, ticketId), { updatedAt: serverTimestamp() });
+
+  if ((senderRole || 'user') === 'user') {
+    logUserActivity(senderId, {
+      type: 'ticket_reply',
+      title: text.slice(0, 80),
+      metadata: { ticketId },
+    }).catch(() => {});
+  }
+
   return { id: ref.id, ...msg };
 }
 

@@ -24,6 +24,7 @@ import { getEvents } from '../../services/eventService';
 import EventCalendar from './EventCalendar';
 import TicketManager from './TicketManager';
 import RoleSelect from './RoleSelect';
+import AdminOverviewCharts from './AdminOverviewCharts';
 import { ROLES, getRoleLabel, isAdminRole } from '../../utils/roles';
 import { isSuperAdminEmail } from '../../utils/constants';
 import { getAllTickets, TICKET_STATUSES } from '../../services/ticketService';
@@ -466,6 +467,17 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 <LifeBuoy size={16} /> {stats.openTickets} support ticket(s) need attention — open Tickets →
               </button>
             )}
+
+            <AdminOverviewCharts
+              users={users}
+              tickets={tickets}
+              activities={activities}
+              courses={courses}
+              resources={resources}
+              stats={stats}
+              userMap={userMap}
+            />
+
             <h3 className="admin-section__title">Recent activity</h3>
             <ul className="admin-list">
               {activities.slice(0, 8).map((a) => (
