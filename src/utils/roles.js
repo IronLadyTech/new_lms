@@ -1,4 +1,5 @@
 export const ROLES = {
+  GUEST: 'guest',
   STUDENT: 'student',
   ADMIN: 'admin',
   MODERATOR: 'moderator',
@@ -6,6 +7,7 @@ export const ROLES = {
 };
 
 export const ROLE_HIERARCHY = {
+  [ROLES.GUEST]: -1,
   [ROLES.STUDENT]: 0,
   [ROLES.MODERATOR]: 1,
   [ROLES.ADMIN]: 2,
@@ -18,4 +20,18 @@ export function hasMinRole(userRole, requiredRole) {
 
 export function isAdminRole(role) {
   return [ROLES.ADMIN, ROLES.MODERATOR, ROLES.SUPERADMIN].includes(role);
+}
+
+export function isGuestRole(role) {
+  return role === ROLES.GUEST;
+}
+
+/** User-facing role label (student → user). */
+export function getRoleLabel(role) {
+  if (role === ROLES.GUEST) return 'Guest';
+  if (role === ROLES.STUDENT || !role) return 'User';
+  if (role === ROLES.SUPERADMIN) return 'Super Admin';
+  if (role === ROLES.ADMIN) return 'Admin';
+  if (role === ROLES.MODERATOR) return 'Moderator';
+  return role;
 }

@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
@@ -27,7 +27,11 @@ let googleProvider = null;
 if (configured) {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
-  db = getFirestore(app);
+  // Force long-polling auto-detect: avoids cases where the streaming connection
+  // stalls behind some networks/proxies, which can make reads hang. Reliable
+  // in-memory cache keeps the app fast without the cross-tab lock issues that
+  // the persistent multi-tab cache can hit.
+  db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
   storage = getStorage(app);
   googleProvider = new GoogleAuthProvider();
 }

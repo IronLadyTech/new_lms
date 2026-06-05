@@ -6,57 +6,127 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function userDoc() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    // Bootstrap owner — checked via the auth token email, so it works even if
+    // the user's Firestore profile document does not exist yet. Checked FIRST
+    // everywhere to avoid depending on a possibly-missing user doc.
+    function isBootstrapSuperAdmin() {
+      return isSignedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() == 'ironladytech@gmail.com';
     }
 
+    // Safe role lookup: only read the user doc if it actually exists, otherwise
+    // treat the role as empty (prevents the whole rule from erroring/denying).
     function userRole() {
-      return isSignedIn() && userDoc().data.role;
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : '';
+    }
+
+    function isGuest() {
+      return userRole() == 'guest';
+    }
+
+    function isBlockedUser() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.blocked == true;
     }
 
     function isSuperAdmin() {
-      return userRole() == 'superadmin';
+      return isBootstrapSuperAdmin() || userRole() == 'superadmin';
     }
 
     function isAdmin() {
-      return userRole() in ['admin', 'superadmin'];
+      return isBootstrapSuperAdmin() || userRole() in ['admin', 'superadmin'];
     }
 
     function isModerator() {
-      return userRole() in ['moderator', 'admin', 'superadmin'];
+      return isBootstrapSuperAdmin() || userRole() in ['moderator', 'admin', 'superadmin'];
+    }
+
+    function hasStaffAccess() {
+      return isModerator();
+    }
+
+    function hasAdminAccess() {
+      return isAdmin();
     }
 
     match /users/{userId} {
-      allow read: if isSignedIn() && (request.auth.uid == userId || isModerator());
+      allow read: if isSignedIn() && (request.auth.uid == userId || hasStaffAccess());
       allow create: if isSignedIn() && request.auth.uid == userId;
       allow update: if isSignedIn() && (
-        request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])
+        request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'blocked'])
         || isSuperAdmin()
+        || (isAdmin() && request.resource.data.role in ['student', 'moderator', 'admin'])
+        || (hasAdminAccess() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['blocked', 'updatedAt']))
+        || (request.auth.uid == userId && isBootstrapSuperAdmin())
       );
       allow delete: if isSuperAdmin();
     }
 
     match /courses/{courseId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
+      allow read: if isSignedIn() && !isGuest() && !isBlockedUser();
+      allow write: if hasAdminAccess();
     }
 
     match /resources/{resourceId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
+      allow read: if isSignedIn() && !isGuest() && !isBlockedUser()
+        && (hasStaffAccess() || resource.data.locked != true);
+      allow write: if hasAdminAccess();
     }
 
     match /assignments/{assignmentId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
+      allow read: if isSignedIn() && !isGuest() && !isBlockedUser();
+      allow write: if hasAdminAccess();
     }
 
     match /activities/{activityId} {
-      allow read: if isSignedIn() && (
-        resource.data.userId == request.auth.uid || isModerator()
+      allow read: if isSignedIn() && !isGuest() && !isBlockedUser() && (
+        resource.data.userId == request.auth.uid || hasStaffAccess()
       );
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && !isGuest() && !isBlockedUser() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isSuperAdmin();
+    }
+
+    match /groups/{groupId} {
+      allow read: if isSignedIn() && !isGuest() && !isBlockedUser() && (hasStaffAccess() || request.auth.uid in resource.data.memberIds);
+      allow write: if hasAdminAccess();
+    }
+
+    match /events/{eventId} {
+      allow read: if isSignedIn() && !isGuest() && !isBlockedUser();
+      allow write: if hasAdminAccess();
+    }
+
+    match /tickets/{ticketId} {
+      allow read: if isSignedIn() && !isGuest() && !isBlockedUser() && (
+        resource.data.userId == request.auth.uid || hasStaffAccess()
+      );
+      allow create: if isSignedIn() && !isGuest() && !isBlockedUser()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'open';
+      allow update: if hasStaffAccess()
+        || (request.auth.uid == resource.data.userId
+          && resource.data.status != 'resolved'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['subject', 'category', 'updatedAt']));
+      allow delete: if hasStaffAccess()
+        || (request.auth.uid == resource.data.userId && resource.data.status == 'open');
+
+      match /messages/{messageId} {
+        allow read: if isSignedIn() && !isGuest() && !isBlockedUser() && (
+          get(/databases/$(database)/documents/tickets/$(ticketId)).data.userId == request.auth.uid
+          || hasStaffAccess()
+        );
+        allow create: if isSignedIn() && !isGuest() && !isBlockedUser() && (
+          get(/databases/$(database)/documents/tickets/$(ticketId)).data.userId == request.auth.uid
+          || hasStaffAccess()
+        );
+        allow delete: if hasStaffAccess()
+          || get(/databases/$(database)/documents/tickets/$(ticketId)).data.userId == request.auth.uid;
+      }
     }
   }
 }

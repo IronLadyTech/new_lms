@@ -1,30 +1,36 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getCourses, seedDefaultCourses } from '../../services/courseService';
+import { getCourses } from '../../services/courseService';
 import { enrollInCourse } from '../../services/userService';
+import GuestLockedPanel from '../../components/GuestLockedPanel';
 
 export default function Home() {
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile, isGuest } = useAuth();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (isGuest) {
+      setLoading(false);
+      return undefined;
+    }
     (async () => {
       try {
-        let list = await getCourses();
-        if (list.length === 0) list = await seedDefaultCourses();
+        const list = await getCourses();
         setCourses(list);
+      } catch (e) {
+        console.error(e);
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [isGuest]);
 
   const enrolled = profile?.enrolledCourses || [];
 
   const handleEnroll = async (courseId) => {
-    if (!profile) return;
+    if (!profile || isGuest) return;
     await enrollInCourse(user.uid, courseId);
     refreshProfile();
   };
@@ -34,8 +40,12 @@ export default function Home() {
       <h1>Courses</h1>
       <p className="page-sub">MBW & LEP programs — tap to open or enroll</p>
 
-      {loading ? (
+      {isGuest ? (
+        <GuestLockedPanel title="Courses locked" />
+      ) : loading ? (
         <p className="muted">Loading courses…</p>
+      ) : courses.length === 0 ? (
+        <p className="muted">No courses yet. Ask your admin to add courses from the admin panel.</p>
       ) : (
         <div className="course-grid">
           {courses.map((course) => {

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getCourses, getResources } from '../../services/courseService';
 import { getUserActivities } from '../../services/userService';
+import GuestLockedPanel from '../../components/GuestLockedPanel';
 
 const RESOURCE_ICONS = {
   video: '🎬',
@@ -12,13 +13,13 @@ const RESOURCE_ICONS = {
 };
 
 export default function Progress() {
-  const { user, profile } = useAuth();
+  const { user, profile, isGuest } = useAuth();
   const [courses, setCourses] = useState([]);
   const [resources, setResources] = useState([]);
   const [activities, setActivities] = useState([]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || isGuest) return undefined;
     (async () => {
       const all = await getCourses();
       const enrolled = all.filter((c) => profile?.enrolledCourses?.includes(c.id));
@@ -34,7 +35,16 @@ export default function Progress() {
       const acts = await getUserActivities(user.uid, 30);
       setActivities(acts);
     })();
-  }, [user, profile]);
+  }, [user, profile, isGuest]);
+
+  if (isGuest) {
+    return (
+      <div className="page progress-page">
+        <h1>Course tracking</h1>
+        <GuestLockedPanel title="Progress locked" />
+      </div>
+    );
+  }
 
   return (
     <div className="page progress-page">
@@ -48,19 +58,22 @@ export default function Progress() {
         ) : (
           <ul className="resource-list">
             {resources.map((r) => (
-              <li key={r.id} className="resource-item">
+              <li key={r.id} className={`resource-item${r.locked ? ' resource-item--locked' : ''}`}>
                 <span>{RESOURCE_ICONS[r.type] || '📁'}</span>
                 <div>
                   <strong>{r.title}</strong>
                   <span className="muted">
                     {r.type} · {r.courseTitle}
                   </span>
+                  {r.locked && <span className="badge badge-locked">Locked</span>}
                 </div>
-                {r.url && (
+                {r.locked ? (
+                  <span className="resource-locked-label muted">Locked</span>
+                ) : r.url ? (
                   <a href={r.url} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline">
                     Open
                   </a>
-                )}
+                ) : null}
               </li>
             ))}
           </ul>

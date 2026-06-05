@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { ROLES } from '../utils/roles';
+import { isSuperAdminEmail } from '../utils/constants';
 import { syncUserToZoho } from './zohoService';
 
 const USERS = 'users';
@@ -23,11 +24,26 @@ export async function getUserProfile(uid) {
   return { id: snap.id, ...snap.data() };
 }
 
+export function resolveRoleForEmail(email, fallback = ROLES.STUDENT) {
+  return isSuperAdminEmail(email) ? ROLES.SUPERADMIN : fallback;
+}
+
+/** Ensures the owner email always has superadmin role (e.g. after Google sign-in). */
+export async function ensureSuperAdminIfOwner(uid, email) {
+  if (!isSuperAdminEmail(email)) return null;
+  const existing = await getUserProfile(uid);
+  if (existing?.role === ROLES.SUPERADMIN) return existing;
+  await updateDoc(doc(db, USERS, uid), { role: ROLES.SUPERADMIN, updatedAt: serverTimestamp() });
+  return getUserProfile(uid);
+}
+
 export async function createUserProfile(uid, { email, displayName, role = ROLES.STUDENT }) {
+  const resolvedRole = resolveRoleForEmail(email, role);
   const profile = {
     email,
     displayName: displayName || email?.split('@')[0] || 'User',
-    role,
+    role: resolvedRole,
+    blocked: false,
     enrolledCourses: [],
     streak: 0,
     lastActivityAt: null,
@@ -56,6 +72,12 @@ export async function enrollInCourse(uid, courseId) {
     enrolledCourses: arrayUnion(courseId),
     updatedAt: serverTimestamp(),
   });
+
+  logUserActivity(uid, {
+    type: 'course_enroll',
+    courseId,
+    title: courseId,
+  }).catch(() => {});
 
   const profile = await getUserProfile(uid);
   if (profile) {
@@ -98,11 +120,32 @@ export async function getUserActivities(uid, limitCount = 20) {
 
 export async function getAllUsers() {
   const snap = await getDocs(collection(db, USERS));
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const users = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  users.sort((a, b) => {
+    const ta = a.createdAt?.toMillis?.() ?? 0;
+    const tb = b.createdAt?.toMillis?.() ?? 0;
+    return tb - ta;
+  });
+  return users;
+}
+
+export async function getAllActivities(limitCount = 100) {
+  const snap = await getDocs(collection(db, ACTIVITIES));
+  const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  items.sort((a, b) => {
+    const ta = a.createdAt?.toMillis?.() ?? 0;
+    const tb = b.createdAt?.toMillis?.() ?? 0;
+    return tb - ta;
+  });
+  return items.slice(0, limitCount);
 }
 
 export async function assignAdminRole(uid, role) {
   await updateDoc(doc(db, USERS, uid), { role, updatedAt: serverTimestamp() });
+}
+
+export async function setUserBlocked(uid, blocked) {
+  await updateDoc(doc(db, USERS, uid), { blocked, updatedAt: serverTimestamp() });
 }
 
 export async function incrementStreak(uid) {

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { isAdminRole } from '../../utils/roles';
+import { isAdminRole, isGuestRole } from '../../utils/roles';
 import { ROLES } from '../../utils/roles';
 
 export default function AuthPage({ mode = 'login' }) {
   const isLogin = mode === 'login';
-  const { signIn, signUp, signInWithGoogle, error, setError, profile, user, loading } = useAuth();
+  const { signIn, signUp, signInWithGoogle, signInAsGuest, error, setError, profile, user, loading, role } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,10 +14,10 @@ export default function AuthPage({ mode = 'login' }) {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user && profile) {
-      redirectByRole(profile.role, navigate);
+    if (!loading && user && (profile || role)) {
+      redirectByRole(profile?.role || role, navigate);
     }
-  }, [loading, user, profile, navigate]);
+  }, [loading, user, profile, role, navigate]);
 
   if (loading || (user && profile)) {
     return (
@@ -37,7 +37,6 @@ export default function AuthPage({ mode = 'login' }) {
       } else {
         await signUp(email, password, displayName);
       }
-      navigate('/app/home');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -50,9 +49,20 @@ export default function AuthPage({ mode = 'login' }) {
     setError(null);
     try {
       await signInWithGoogle();
-      navigate('/app/home');
     } catch (err) {
       setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGuest = async () => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      await signInAsGuest();
+    } catch (err) {
+      setError(err.message || 'Guest login failed. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -115,6 +125,20 @@ export default function AuthPage({ mode = 'login' }) {
           Continue with Google
         </button>
 
+        {isLogin && (
+          <>
+            <div className="auth-divider">
+              <span>or</span>
+            </div>
+            <button type="button" className="btn btn-guest" onClick={handleGuest} disabled={submitting}>
+              Continue as guest
+            </button>
+            <p className="auth-guest-note muted">
+              Guest access is preview only. Courses and resources are locked — contact Iron Lady for full access.
+            </p>
+          </>
+        )}
+
         <p className="auth-switch">
           {isLogin ? (
             <>
@@ -132,7 +156,7 @@ export default function AuthPage({ mode = 'login' }) {
 }
 
 function redirectByRole(role, navigate) {
-  if (role === ROLES.SUPERADMIN) navigate('/superadmin', { replace: true });
-  else if (isAdminRole(role)) navigate('/admin', { replace: true });
+  if (isAdminRole(role)) navigate('/portal', { replace: true });
+  else if (isGuestRole(role)) navigate('/app/home', { replace: true });
   else navigate('/app/home', { replace: true });
 }
