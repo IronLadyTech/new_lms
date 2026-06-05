@@ -300,6 +300,7 @@ img.logo-mark {
   padding: 0 1.25rem;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
+  overflow: visible;
 }
 
 .app-header__brand {
@@ -2481,6 +2482,11 @@ img.logo-mark {
 /* Notification bell */
 .notification-bell {
   position: relative;
+  z-index: 1;
+}
+
+.notification-bell.is-open {
+  z-index: 60;
 }
 
 .notification-bell__trigger {
@@ -2520,19 +2526,20 @@ img.logo-mark {
 .notification-bell__backdrop {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 55;
   border: none;
   background: transparent;
   cursor: default;
 }
 
 .notification-bell__panel {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 50;
-  width: min(360px, 92vw);
-  max-height: 420px;
+  position: fixed;
+  top: calc(var(--header-h) + 8px);
+  right: max(0.75rem, env(safe-area-inset-right, 0px));
+  left: auto;
+  z-index: 60;
+  width: min(360px, calc(100vw - 1.5rem));
+  max-height: min(420px, calc(100dvh - var(--header-h) - var(--nav-h) - 1.5rem));
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -2653,6 +2660,46 @@ img.logo-mark {
 .notification-bell__empty {
   padding: 1.25rem;
   text-align: center;
+}
+
+@media (max-width: 640px) {
+  .notification-bell__backdrop {
+    background: rgba(0, 0, 0, 0.45);
+  }
+
+  .notification-bell__panel {
+    top: calc(var(--header-h) + 0.5rem);
+    left: max(0.75rem, env(safe-area-inset-left, 0px));
+    right: max(0.75rem, env(safe-area-inset-right, 0px));
+    width: auto;
+    max-height: min(70dvh, calc(100dvh - var(--header-h) - var(--nav-h) - 1rem));
+    border-radius: 16px;
+  }
+
+  .admin-shell .notification-bell__panel {
+    top: 4.5rem;
+    max-height: min(70dvh, calc(100dvh - 5.5rem));
+  }
+
+  .notification-bell__head {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .notification-bell__head-actions .btn {
+    padding: 0.35rem 0.55rem;
+    font-size: 0.75rem;
+  }
+
+  .notification-bell__link strong,
+  .notification-bell__link .muted {
+    word-break: break-word;
+  }
+}
+
+/* Admin header: panel sits below the taller admin top bar */
+.admin-shell .notification-bell__panel {
+  top: 5.25rem;
+  max-height: min(420px, calc(100dvh - 6rem));
 }
 
 /* Learner calendar */
