@@ -9,6 +9,7 @@ import GuestLockedPanel from '../../components/GuestLockedPanel';
 import ActivityLogList, { buildCourseMap } from '../../components/ActivityLogList';
 import CourseThumbnail from '../../components/CourseThumbnail';
 import EventPreviewCard from '../../components/EventPreviewCard';
+import EventDetailActions from '../../components/EventDetailActions';
 
 export default function Dashboard() {
   const { user, profile, isGuest, refreshProfile } = useAuth();
@@ -146,8 +147,9 @@ export default function Dashboard() {
         ) : (
           <ul className="list-cards list-cards--events">
             {upcomingEvents.map((ev) => (
-              <li key={ev.id}>
+              <li key={ev.id} className="event-preview-list__item">
                 <EventPreviewCard event={ev} />
+                <EventDetailActions event={ev} compact />
               </li>
             ))}
           </ul>

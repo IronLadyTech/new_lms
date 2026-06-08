@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { createEvent, updateEvent, deleteEvent, eventsForDate, eventsForMonth } from '../../services/eventService';
 import { uploadEventImage } from '../../services/storageService';
 import EventImage from '../EventImage';
+import EventDetailActions from '../EventDetailActions';
+import { normalizeEventLink } from '../../utils/eventLinks';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const EVENT_TYPES = [
@@ -24,6 +26,7 @@ const EMPTY_FORM = {
   time: '09:00',
   type: 'general',
   imageUrl: '',
+  linkUrl: '',
   imageMode: 'link',
 };
 
@@ -69,6 +72,7 @@ function eventToForm(ev) {
     time: ev.time || '09:00',
     type: ev.type || 'general',
     imageUrl: ev.imageUrl || '',
+    linkUrl: ev.linkUrl || '',
     imageMode: 'link',
   };
 }
@@ -157,6 +161,7 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
         time: form.time,
         type: form.type,
         imageUrl,
+        linkUrl: normalizeEventLink(form.linkUrl),
       };
 
       if (editingEventId) {
@@ -286,6 +291,12 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
                   </div>
                   {ev.time && <span className="event-calendar__event-time">{ev.time}</span>}
                   {ev.description && <p className="muted">{ev.description}</p>}
+                  {ev.linkUrl && (
+                    <a href={normalizeEventLink(ev.linkUrl)} target="_blank" rel="noreferrer" className="link-inline">
+                      Event link
+                    </a>
+                  )}
+                  <EventDetailActions event={ev} compact />
                   <div className="admin-list__actions">
                     <button type="button" className="btn btn-sm btn-outline" onClick={() => startEditEvent(ev)}>
                       Edit
@@ -323,6 +334,13 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 rows={3}
+              />
+
+              <input
+                type="url"
+                placeholder="Event link — Zoom, meet, website (optional)"
+                value={form.linkUrl}
+                onChange={(e) => setForm({ ...form, linkUrl: e.target.value })}
               />
 
               <label className="field field--full event-form__image-field">

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { eventsForDate, eventsForMonth } from '../services/eventService';
 import EventImage from './EventImage';
 import EventPreviewCard from './EventPreviewCard';
+import EventDetailActions from './EventDetailActions';
+import { normalizeEventLink } from '../utils/eventLinks';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -111,8 +113,9 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
           <h2>Upcoming events</h2>
           <ul className="learner-calendar__upcoming-list">
             {upcoming.map((ev) => (
-              <li key={ev.id}>
+              <li key={ev.id} className="event-preview-list__item">
                 <EventPreviewCard event={ev} onClick={() => jumpToDate(ev.date)} />
+                <EventDetailActions event={ev} compact />
               </li>
             ))}
           </ul>
@@ -207,6 +210,12 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
                   </div>
                   {ev.time && <span className="event-calendar__event-time">{ev.time}</span>}
                   {ev.description && <p className="muted">{ev.description}</p>}
+                  {ev.linkUrl && (
+                    <a href={normalizeEventLink(ev.linkUrl)} target="_blank" rel="noreferrer" className="link-inline">
+                      Open event link
+                    </a>
+                  )}
+                  <EventDetailActions event={ev} compact />
                 </li>
               ))}
             </ul>

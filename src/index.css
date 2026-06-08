@@ -2950,6 +2950,43 @@ img.logo-mark {
   border: none;
 }
 
+.event-preview-list__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.event-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.event-actions--compact {
+  margin-top: 0;
+}
+
+.event-actions__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.event-calendar__event-card .event-actions {
+  margin-top: 0.65rem;
+}
+
+.learner-calendar__upcoming-list .event-preview-list__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.learner-calendar__upcoming-list .event-actions {
+  padding-left: 0.15rem;
+}
+
 .learner-calendar__upcoming-list .event-preview-card {
   background: var(--surface-2);
 }
