@@ -15,6 +15,8 @@ import {
   statusLabel,
 } from '../../services/ticketService';
 import { ROLES } from '../../utils/roles';
+import ConfirmDialog from '../ConfirmDialog';
+import { useConfirm } from '../../hooks/useConfirm';
 
 function formatTime(ts) {
   if (!ts) return '—';
@@ -23,6 +25,7 @@ function formatTime(ts) {
 }
 
 export default function TicketManager({ users, isSuperAdmin, onRefresh }) {
+  const { confirm, dialogProps } = useConfirm();
   const { user, profile, role } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -116,7 +119,13 @@ export default function TicketManager({ users, isSuperAdmin, onRefresh }) {
 
   const handleDelete = async () => {
     if (!selectedId) return;
-    if (!window.confirm('Delete this ticket permanently?')) return;
+    const ok = await confirm({
+      title: 'Delete ticket',
+      message: 'Delete this ticket permanently?',
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
     try {
       await deleteTicket(selectedId);
       setSelectedId(null);
@@ -160,6 +169,7 @@ export default function TicketManager({ users, isSuperAdmin, onRefresh }) {
   };
 
   return (
+    <>
     <section>
       <h2>Support tickets {openCount > 0 && <span className="badge badge-alert">{openCount} open</span>}</h2>
       <p className="muted">
@@ -301,5 +311,7 @@ export default function TicketManager({ users, isSuperAdmin, onRefresh }) {
         </div>
       )}
     </section>
+    <ConfirmDialog {...dialogProps} />
+    </>
   );
 }

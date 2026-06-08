@@ -3,6 +3,8 @@ import { createEvent, updateEvent, deleteEvent, eventsForDate, eventsForMonth } 
 import { uploadEventImage } from '../../services/storageService';
 import EventImage from '../EventImage';
 import EventDetailActions from '../EventDetailActions';
+import ConfirmDialog from '../ConfirmDialog';
+import { useConfirm } from '../../hooks/useConfirm';
 import { normalizeEventLink } from '../../utils/eventLinks';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -78,6 +80,7 @@ function eventToForm(ev) {
 }
 
 export default function EventCalendar({ events, onRefresh, createdBy }) {
+  const { confirm, dialogProps } = useConfirm();
   const today = new Date();
   const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
   const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
@@ -182,7 +185,13 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
   };
 
   const handleDelete = async (eventId) => {
-    if (!window.confirm('Delete this event?')) return;
+    const ok = await confirm({
+      title: 'Delete event',
+      message: 'Delete this event?',
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
     setMsg('');
     try {
       await deleteEvent(eventId);
@@ -442,6 +451,7 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
           </ul>
         )}
       </section>
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 }

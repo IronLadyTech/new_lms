@@ -6,7 +6,7 @@ import { ROLES } from '../../utils/roles';
 
 export default function AuthPage({ mode = 'login' }) {
   const isLogin = mode === 'login';
-  const { signIn, signUp, signInWithGoogle, signInAsGuest, error, setError, profile, user, loading, role, isGuest } =
+  const { signIn, signUp, signInWithGoogle, signInAsGuest, error, setError, profile, user, loading, role, isGuest, isBlocked } =
     useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -15,12 +15,12 @@ export default function AuthPage({ mode = 'login' }) {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user && !isGuest && (profile || role)) {
+    if (!loading && user && !isGuest && !isBlocked && (profile || role)) {
       redirectByRole(profile?.role || role, navigate);
     }
-  }, [loading, user, profile, role, isGuest, navigate]);
+  }, [loading, user, profile, role, isGuest, isBlocked, navigate]);
 
-  if (loading || (user && profile && !isGuest)) {
+  if (loading || (user && profile && !isGuest && !isBlocked)) {
     return (
       <div className="loading-screen">
         <div className="spinner" />

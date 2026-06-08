@@ -1935,6 +1935,10 @@ img.logo-mark {
   gap: 0.65rem;
 }
 
+.guest-lock__email + .guest-lock__actions {
+  margin-top: 0.85rem;
+}
+
 .guest-lock__btn {
   display: inline-flex;
   align-items: center;
@@ -3105,4 +3109,289 @@ img.logo-mark {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* In-app confirm dialog */
+.confirm-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.confirm-dialog__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(8, 12, 18, 0.72);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+
+.confirm-dialog__panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 420px);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+  animation: confirm-dialog-in 0.18s ease-out;
+}
+
+@keyframes confirm-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.confirm-dialog__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+}
+
+.confirm-dialog__message {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.confirm-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.625rem;
+  margin-top: 1.25rem;
+}
+
+.confirm-dialog__btn {
+  min-width: 5.5rem;
+}
+
+/* User progress modal */
+.user-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.user-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(8, 12, 18, 0.72);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+
+.user-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 720px);
+  max-height: min(90vh, 860px);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+  animation: confirm-dialog-in 0.18s ease-out;
+}
+
+.user-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.user-modal__identity {
+  display: flex;
+  gap: 0.875rem;
+  align-items: center;
+  min-width: 0;
+}
+
+.user-modal__avatar {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.25), rgba(59, 130, 246, 0.08));
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #93c5fd;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.user-modal__title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.user-modal__email {
+  margin: 0.15rem 0 0.5rem;
+  font-size: 0.875rem;
+  word-break: break-all;
+}
+
+.user-modal__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.user-modal__close {
+  flex-shrink: 0;
+  padding: 0.45rem 0.55rem;
+  line-height: 0;
+}
+
+.user-modal__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.user-modal__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.user-modal__stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.user-modal__stat-value--sm {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.user-modal__stat-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.user-modal__body {
+  overflow-y: auto;
+  padding: 0.5rem 1.5rem 1.5rem;
+}
+
+.user-modal__section {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.user-modal__section:last-child {
+  border-bottom: none;
+}
+
+.user-modal__section h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.9375rem;
+}
+
+.user-modal__course-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.user-modal__course-item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.user-modal__course-desc {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+}
+
+.user-modal__tag-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.user-modal__ticket-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.user-modal__ticket-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.user-modal__ticket-time {
+  font-size: 0.8125rem;
+}
+
+.user-modal__loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.progress-table tbody tr.progress-table__row {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.progress-table tbody tr.progress-table__row:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.progress-table tbody tr.progress-table__row:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+.progress-table__actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.progress-table__empty {
+  text-align: center;
+  padding: 2rem 1rem !important;
 }

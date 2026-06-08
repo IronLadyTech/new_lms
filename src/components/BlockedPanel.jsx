@@ -1,10 +1,16 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Ban, Mail } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { IRON_LADY_CONTACT_EMAIL } from '../utils/constants';
 
 export default function BlockedPanel() {
+  const navigate = useNavigate();
   const { signOut } = useAuth();
+
+  const handleBackToLogin = async () => {
+    await signOut();
+    navigate('/auth/login', { replace: true });
+  };
 
   return (
     <div className="guest-lock blocked-panel">
@@ -25,9 +31,9 @@ export default function BlockedPanel() {
         <button type="button" className="btn btn-danger guest-lock__btn" onClick={() => signOut()}>
           Sign out
         </button>
-        <Link to="/auth/login" className="btn btn-outline guest-lock__btn">
+        <button type="button" className="btn btn-outline guest-lock__btn" onClick={handleBackToLogin}>
           Back to login
-        </Link>
+        </button>
       </div>
     </div>
   );

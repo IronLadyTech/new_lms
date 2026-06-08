@@ -44,6 +44,9 @@ import {
   GraduationCap,
   CheckCircle2,
 } from 'lucide-react';
+import ConfirmDialog from '../ConfirmDialog';
+import UserProgressModal from './UserProgressModal';
+import { useConfirm } from '../../hooks/useConfirm';
 
 const RESOURCE_TYPES = ['video', 'pdf', 'ppt', 'assignment', 'mock_test'];
 export const ADMIN_TABS = [
@@ -106,6 +109,7 @@ function ActivityListItem({ activity, userMap, courseMap }) {
 
 export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, onTabChange }) {
   const { user } = useAuth();
+  const { confirm, dialogProps } = useConfirm();
   const [courses, setCourses] = useState([]);
   const [resources, setResources] = useState([]);
   const [users, setUsers] = useState([]);
@@ -149,6 +153,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
   const [uploading, setUploading] = useState(false);
   const [groupForm, setGroupForm] = useState({ name: '', description: '' });
   const [userSearch, setUserSearch] = useState('');
+  const [progressModalUser, setProgressModalUser] = useState(null);
 
   const roleOptions = isSuperAdmin ? ROLE_OPTIONS_SUPER : ROLE_OPTIONS_ADMIN;
   const courseMap = Object.fromEntries(courses.map((c) => [c.id, c]));
@@ -275,7 +280,13 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
   };
 
   const handleDeleteCourse = async (courseId) => {
-    if (!window.confirm('Delete this course? This cannot be undone.')) return;
+    const ok = await confirm({
+      title: 'Delete course',
+      message: 'Delete this course? This cannot be undone.',
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
     setError('');
     setMessage('');
     try {
@@ -358,7 +369,13 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
   };
 
   const handleDeleteResource = async (resourceId) => {
-    if (!window.confirm('Delete this resource?')) return;
+    const ok = await confirm({
+      title: 'Delete resource',
+      message: 'Delete this resource?',
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
     try {
       await deleteResource(resourceId);
       if (editingResourceId === resourceId) resetResourceForm();
@@ -400,7 +417,15 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
     if (!canBlockUser(targetUser)) return;
     const next = !targetUser.blocked;
     const label = targetUser.displayName || targetUser.email;
-    if (!window.confirm(`${next ? 'Block' : 'Unblock'} ${label}?`)) return;
+    const ok = await confirm({
+      title: next ? 'Block user' : 'Unblock user',
+      message: next
+        ? `Block ${label}? They will lose access to courses, calendar, and support.`
+        : `Unblock ${label}? They will be able to use the app again.`,
+      confirmLabel: next ? 'Block user' : 'Unblock',
+      variant: next ? 'danger' : 'primary',
+    });
+    if (!ok) return;
     setError('');
     setMessage('');
     try {
@@ -866,8 +891,15 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
 
         {tab === 'progress' && (
           <section>
-            <h2>User progress &amp; enrollments</h2>
-            <p className="muted">Track which courses each user is enrolled in and their learning activity.</p>
+            <h2>User progress &amp; enrollments ({filteredUsers.length})</h2>
+            <p className="muted">Track which courses each user is enrolled in and their learning activity. Click a row or use View progress to open full details.</p>
+            <div className="admin-form">
+              <input
+                placeholder="Search by name, email, or role (e.g. jaytiwari)"
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+              />
+            </div>
             <div className="progress-table-wrap">
               <table className="progress-table">
                 <thead>
@@ -878,11 +910,30 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                     <th>Streak</th>
                     <th>Activities</th>
                     <th>Last active</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((u) => (
-                    <tr key={u.id}>
+                  {filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="muted progress-table__empty">
+                        {users.length === 0 ? 'No users yet.' : 'No users match your search.'}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredUsers.map((u) => (
+                    <tr
+                      key={u.id}
+                      className="progress-table__row"
+                      tabIndex={0}
+                      onClick={() => setProgressModalUser(u)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setProgressModalUser(u);
+                        }
+                      }}
+                    >
                       <td>
                         <strong>{u.displayName}</strong>
                         <br />
@@ -905,8 +956,21 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                       <td>{u.streak ?? 0}</td>
                       <td>{activityCountByUser[u.id] || 0}</td>
                       <td className="muted">{formatTime(u.lastActivityAt)}</td>
+                      <td className="progress-table__actions">
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setProgressModalUser(u);
+                          }}
+                        >
+                          View progress
+                        </button>
+                      </td>
                     </tr>
-                  ))}
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1019,6 +1083,15 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
           </section>
         )}
       </main>
+      <ConfirmDialog {...dialogProps} />
+      <UserProgressModal
+        user={progressModalUser}
+        courseMap={courseMap}
+        groups={groups}
+        tickets={tickets}
+        activityCount={progressModalUser ? activityCountByUser[progressModalUser.id] || 0 : 0}
+        onClose={() => setProgressModalUser(null)}
+      />
     </>
   );
 }
