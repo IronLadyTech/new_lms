@@ -18,6 +18,7 @@ import {
   setUserBlocked,
   getUserActivities,
 } from '../../services/userService';
+import { isAdminRole } from '../../utils/roles';
 import { uploadResourceFile, uploadCourseAsset, resourceTypeFromFile } from '../../services/storageService';
 import { getGroups, createGroup, deleteGroup, addMemberToGroup, addCourseToGroup } from '../../services/groupService';
 import { getEvents } from '../../services/eventService';
@@ -26,7 +27,7 @@ import TicketManager from './TicketManager';
 import RoleSelect from './RoleSelect';
 import AdminOverviewCharts from './AdminOverviewCharts';
 import CourseThumbnail from '../CourseThumbnail';
-import { ROLES, getRoleLabel, isAdminRole } from '../../utils/roles';
+import { ROLES, getRoleLabel } from '../../utils/roles';
 import { isSuperAdminEmail } from '../../utils/constants';
 import { getAllTickets, TICKET_STATUSES } from '../../services/ticketService';
 import { formatActivitySummary, formatActivityTypeLabel } from '../../utils/activityLabels';
@@ -43,10 +44,13 @@ import {
   ShieldCheck,
   GraduationCap,
   CheckCircle2,
+  Megaphone,
 } from 'lucide-react';
 import ConfirmDialog from '../ConfirmDialog';
 import UserProgressModal from './UserProgressModal';
+import AnnouncementManager from './AnnouncementManager';
 import { useConfirm } from '../../hooks/useConfirm';
+import { getAnnouncements } from '../../services/announcementService';
 
 const RESOURCE_TYPES = ['video', 'pdf', 'ppt', 'assignment', 'mock_test'];
 export const ADMIN_TABS = [
@@ -56,6 +60,7 @@ export const ADMIN_TABS = [
   { id: 'progress', label: 'Progress', icon: TrendingUp, desc: 'Enrollments & activity' },
   { id: 'activity', label: 'Activity', icon: Clock, desc: 'Activity log' },
   { id: 'calendar', label: 'Calendar', icon: CalendarDays, desc: 'Events' },
+  { id: 'announcements', label: 'Announcements', icon: Megaphone, desc: 'Broadcast to learners' },
   { id: 'courses', label: 'Courses', icon: BookOpen, desc: 'Create & upload courses' },
   { id: 'resources', label: 'Resources', icon: Paperclip, desc: 'PDF / PPT / links' },
   { id: 'groups', label: 'Batches', icon: Boxes, desc: 'Learner batches' },
@@ -66,6 +71,7 @@ const TABS = [
   { id: 'progress', label: 'Progress' },
   { id: 'activity', label: 'Activity' },
   { id: 'calendar', label: 'Calendar' },
+  { id: 'announcements', label: 'Announcements' },
   { id: 'tickets', label: 'Tickets' },
   { id: 'courses', label: 'Courses' },
   { id: 'resources', label: 'Resources' },
@@ -108,7 +114,7 @@ function ActivityListItem({ activity, userMap, courseMap }) {
 }
 
 export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, onTabChange }) {
-  const { user } = useAuth();
+  const { user, profile, role, refreshProfile } = useAuth();
   const { confirm, dialogProps } = useConfirm();
   const [courses, setCourses] = useState([]);
   const [resources, setResources] = useState([]);
@@ -116,6 +122,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
   const [groups, setGroups] = useState([]);
   const [events, setEvents] = useState([]);
   const [tickets, setTickets] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [activities, setActivities] = useState([]);
   const [internalTab, setInternalTab] = useState('overview');
   // Controlled when AdminShell drives the tab via the sidebar; otherwise local.
@@ -194,6 +201,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
       tryLoad('Activity', () => getAllActivities(150), setActivities),
       tryLoad('Groups', getGroups, setGroups),
       tryLoad('Events', getEvents, setEvents),
+      tryLoad('Announcements', getAnnouncements, setAnnouncements),
       tryLoad('Tickets', getAllTickets, setTickets),
     ]);
 
@@ -204,6 +212,27 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
   useEffect(() => {
     load();
   }, []);
+
+  // Blocked staff can still open admin UI but Firestore denies other collections.
+  // Restore admin access automatically (block is meant for learner app only).
+  useEffect(() => {
+    if (!user?.uid || !isAdminRole(role) || profile?.blocked !== true) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        await setUserBlocked(user.uid, false);
+        if (!cancelled) {
+          await refreshProfile();
+          load();
+        }
+      } catch (err) {
+        console.error('Admin self-unblock failed:', err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.uid, role, profile?.blocked, refreshProfile]);
 
   useEffect(() => {
     if (!selectedUserId) {
@@ -488,10 +517,35 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 <li key={w}>{w}</li>
               ))}
             </ul>
-            <p className="muted">
-              Deploy <code>firestore.rules</code> in Firebase Console → Firestore → Rules, then click Refresh.
-              Users like jaytiwari092@gmail.com appear after they sign in once and rules allow admin read access.
-            </p>
+            {users.length > 0 ? (
+              <p className="muted">
+                Users loaded but other collections did not. This usually means{' '}
+                <strong>Firestore rules are outdated</strong> (missing <code>announcements</code> and{' '}
+                <code>canUseApp</code>). Open{' '}
+                <a
+                  href="https://console.firebase.google.com/project/lmsironlady/firestore/rules"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Firestore → Rules
+                </a>
+                , paste the full <code>firestore.rules</code> file from this project, click <strong>Publish</strong>,
+                then refresh.
+                {profile?.blocked && (
+                  <>
+                    {' '}
+                    Your account also has <code>blocked: true</code> — fixing that now…
+                  </>
+                )}
+              </p>
+            ) : (
+              <p className="muted">
+                Publish <code>firestore.rules</code> in Firebase Console → Firestore → Rules, then refresh.
+              </p>
+            )}
+            <button type="button" className="btn btn-primary btn-sm" onClick={load}>
+              Refresh now
+            </button>
           </div>
         )}
 
@@ -1006,6 +1060,22 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
             <h2>Events calendar</h2>
             <p className="muted">Schedule classes, deadlines, and meetings. Visible to all signed-in users.</p>
             <EventCalendar events={events} onRefresh={load} createdBy={user?.uid} />
+          </section>
+        )}
+
+        {tab === 'announcements' && (
+          <section>
+            <h2>Announcements</h2>
+            <p className="muted">
+              Broadcast messages to learners. Choose visibility for 24 hours, 7 days, or 30 days. Tag specific users
+              to highlight them.
+            </p>
+            <AnnouncementManager
+              announcements={announcements}
+              users={users}
+              onRefresh={load}
+              createdBy={user?.uid}
+            />
           </section>
         )}
 

@@ -5,7 +5,9 @@ import { getCourses } from '../../services/courseService';
 import { getUserActivities, syncUserStreak } from '../../services/userService';
 import { getAssignments } from '../../services/courseService';
 import { getEvents } from '../../services/eventService';
+import { getAnnouncements, getActiveAnnouncementsForUser } from '../../services/announcementService';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
+import AnnouncementFeed from '../../components/AnnouncementFeed';
 import ActivityLogList, { buildCourseMap } from '../../components/ActivityLogList';
 import CourseThumbnail from '../../components/CourseThumbnail';
 import EventPreviewCard from '../../components/EventPreviewCard';
@@ -18,6 +20,7 @@ export default function Dashboard() {
   const [activities, setActivities] = useState([]);
   const [pendingAssignments, setPendingAssignments] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [streak, setStreak] = useState(profile?.streak ?? 0);
 
   useEffect(() => {
@@ -50,10 +53,11 @@ export default function Dashboard() {
     let cancelled = false;
 
     (async () => {
-      const [allCourses, acts, events] = await Promise.all([
+      const [allCourses, acts, events, allAnnouncements] = await Promise.all([
         getCourses(),
         getUserActivities(user.uid, 5),
         getEvents(),
+        getAnnouncements(),
       ]);
       if (cancelled) return;
 
@@ -61,6 +65,7 @@ export default function Dashboard() {
       const enrolled = allCourses.filter((c) => profile?.enrolledCourses?.includes(c.id));
       setCourses(enrolled);
       setActivities(acts);
+      setAnnouncements(getActiveAnnouncementsForUser(allAnnouncements, user.uid));
 
       const today = new Date().toLocaleDateString('en-CA');
       setUpcomingEvents(events.filter((e) => e.date >= today).slice(0, 5));
@@ -106,6 +111,13 @@ export default function Dashboard() {
           <span className="stat-label">Enrolled</span>
         </div>
       </div>
+
+      {announcements.length > 0 && (
+        <section className="section announcement-section">
+          <h2>Announcements</h2>
+          <AnnouncementFeed announcements={announcements} userId={user.uid} />
+        </section>
+      )}
 
       <section className="section">
         <h2>

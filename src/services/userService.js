@@ -103,8 +103,12 @@ export function resolveRoleForEmail(email, fallback = ROLES.STUDENT) {
 export async function ensureSuperAdminIfOwner(uid, email) {
   if (!isSuperAdminEmail(email)) return null;
   const existing = await getUserProfile(uid);
-  if (existing?.role === ROLES.SUPERADMIN) return existing;
-  await updateDoc(doc(db, USERS, uid), { role: ROLES.SUPERADMIN, updatedAt: serverTimestamp() });
+  if (existing?.role === ROLES.SUPERADMIN && existing?.blocked !== true) return existing;
+  await updateDoc(doc(db, USERS, uid), {
+    role: ROLES.SUPERADMIN,
+    blocked: false,
+    updatedAt: serverTimestamp(),
+  });
   return getUserProfile(uid);
 }
 

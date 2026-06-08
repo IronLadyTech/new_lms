@@ -2,13 +2,16 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getCourses } from '../../services/courseService';
+import { getAnnouncements, getActiveAnnouncementsForUser } from '../../services/announcementService';
 import { enrollInCourse } from '../../services/userService';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
+import AnnouncementFeed from '../../components/AnnouncementFeed';
 import CourseThumbnail from '../../components/CourseThumbnail';
 
 export default function Home() {
   const { user, profile, refreshProfile, isGuest } = useAuth();
   const [courses, setCourses] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,15 +21,16 @@ export default function Home() {
     }
     (async () => {
       try {
-        const list = await getCourses();
+        const [list, allAnnouncements] = await Promise.all([getCourses(), getAnnouncements()]);
         setCourses(list);
+        setAnnouncements(getActiveAnnouncementsForUser(allAnnouncements, user.uid));
       } catch (e) {
         console.error(e);
       } finally {
         setLoading(false);
       }
     })();
-  }, [isGuest]);
+  }, [isGuest, user?.uid]);
 
   const enrolled = profile?.enrolledCourses || [];
 
@@ -40,6 +44,13 @@ export default function Home() {
     <div className="page home-page">
       <h1>Courses</h1>
       <p className="page-sub">MBW & LEP programs — tap to open or enroll</p>
+
+      {!isGuest && announcements.length > 0 && (
+        <section className="section announcement-section">
+          <h2>Announcements</h2>
+          <AnnouncementFeed announcements={announcements} userId={user.uid} />
+        </section>
+      )}
 
       {isGuest ? (
         <GuestLockedPanel title="Courses locked" />

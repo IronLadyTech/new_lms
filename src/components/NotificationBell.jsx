@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bell, CalendarDays, MessageCircle, UserCheck, X } from 'lucide-react';
+import { Bell, CalendarDays, Megaphone, MessageCircle, UserCheck, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getEvents } from '../services/eventService';
+import { getAnnouncements, getActiveAnnouncementsForUser } from '../services/announcementService';
 import { getUserTickets, statusLabel, TICKET_STATUSES } from '../services/ticketService';
 import { calendarEventUrl } from './EventPreviewCard';
 
@@ -20,9 +21,22 @@ function setDismissed(ids) {
   localStorage.setItem(DISMISSED_KEY, JSON.stringify(ids));
 }
 
-function buildNotifications(events, tickets) {
+function buildNotifications(events, tickets, announcements, userId) {
   const today = new Date().toISOString().slice(0, 10);
   const items = [];
+
+  getActiveAnnouncementsForUser(announcements, userId)
+    .slice(0, 10)
+    .forEach((a) => {
+      const tagged = (a.taggedUserIds || []).includes(userId);
+      items.push({
+        id: `announcement-${a.id}`,
+        kind: 'announcement',
+        title: a.title,
+        body: tagged ? `${a.body.slice(0, 80)} · You're tagged` : a.body.slice(0, 100),
+        link: '/app/dashboard',
+      });
+    });
 
   events
     .filter((e) => e.date >= today)
@@ -70,6 +84,7 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [events, setEvents] = useState([]);
   const [tickets, setTickets] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [dismissed, setDismissedState] = useState(getDismissed);
 
   useEffect(() => {
@@ -78,10 +93,11 @@ export default function NotificationBell() {
 
     const load = async () => {
       try {
-        const [ev, tk] = await Promise.all([getEvents(), getUserTickets(user.uid)]);
+        const [ev, tk, ann] = await Promise.all([getEvents(), getUserTickets(user.uid), getAnnouncements()]);
         if (!cancelled) {
           setEvents(ev);
           setTickets(tk);
+          setAnnouncements(ann);
         }
       } catch (e) {
         console.error(e);
@@ -100,7 +116,10 @@ export default function NotificationBell() {
     };
   }, [user, isGuest]);
 
-  const notifications = useMemo(() => buildNotifications(events, tickets), [events, tickets]);
+  const notifications = useMemo(
+    () => buildNotifications(events, tickets, announcements, user?.uid),
+    [events, tickets, announcements, user?.uid]
+  );
   const visible = notifications.filter((n) => !dismissed.includes(n.id));
   const count = visible.length;
 
@@ -159,6 +178,7 @@ export default function NotificationBell() {
                         {n.kind === 'event' && <CalendarDays size={16} />}
                         {n.kind === 'assigned' && <UserCheck size={16} />}
                         {n.kind === 'ticket' && <MessageCircle size={16} />}
+                        {n.kind === 'announcement' && <Megaphone size={16} />}
                       </span>
                       <span>
                         <strong>{n.title}</strong>

@@ -758,7 +758,8 @@ img.logo-mark {
 }
 
 .admin-form input,
-.admin-form select {
+.admin-form select,
+.admin-form textarea {
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -3564,5 +3565,151 @@ img.logo-mark {
 
   .portal-gate__card {
     padding: 1.5rem 2rem 2rem;
+  }
+}
+
+/* Announcements */
+.announcement-section {
+  margin-bottom: 0.5rem;
+}
+
+.announcement-feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.announcement-card {
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.announcement-card--tagged {
+  border-color: rgba(59, 130, 246, 0.45);
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.08), var(--surface));
+}
+
+.announcement-card--private {
+  border-left: 3px solid var(--accent);
+}
+
+.announcement-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-bottom: 0.5rem;
+}
+
+.announcement-card__icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--accent);
+}
+
+.announcement-card__meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.announcement-card__meta strong {
+  display: block;
+}
+
+.announcement-card__time {
+  font-size: 0.78rem;
+}
+
+.announcement-card__you-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.announcement-card__body {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
+.announcement-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.announcement-manager__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.announcement-manager__hint {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.announcement-manager__tag-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.announcement-manager__tag-list {
+  max-height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.announcement-manager__tag-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.announcement-manager__tag-option input {
+  margin-top: 0.2rem;
+}
+
+.announcement-manager__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.announcement-manager__list {
+  margin-top: 1.5rem;
+}
+
+.notification-bell__item--announcement .notification-bell__item-icon {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--accent);
+}
+
+@media (max-width: 520px) {
+  .announcement-manager__row {
+    grid-template-columns: 1fr;
   }
 }
