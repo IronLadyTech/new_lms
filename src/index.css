@@ -136,33 +136,36 @@ a:hover {
 .auth-page {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1rem;
+  padding: 1.25rem 1rem;
   background: var(--auth-gradient);
 }
 
-.auth-page__theme {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-}
-
 .auth-card {
+  position: relative;
   width: 100%;
   max-width: 420px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 4px);
-  padding: 2rem;
+  padding: 1.25rem 1.25rem 1.5rem;
   box-shadow: var(--shadow-lg);
+}
+
+.auth-card__theme {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.25rem;
 }
 
 .auth-card__header {
   text-align: center;
   margin-bottom: 1.5rem;
+  padding-top: 0;
 }
 
 .auth-card__header h1 {
@@ -1413,21 +1416,29 @@ img.logo-mark {
 .portal-gate {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 1.25rem 1rem;
   background: var(--bg);
 }
 
 .portal-gate__card {
+  position: relative;
   max-width: 520px;
   width: 100%;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 2rem;
+  padding: 1.25rem 1.25rem 2rem;
   text-align: center;
+}
+
+.portal-gate__theme {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.25rem;
 }
 
 .portal-gate__logo {
@@ -3456,14 +3467,17 @@ img.logo-mark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
   padding: 0;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface-2);
   color: var(--text);
   cursor: pointer;
+  flex-shrink: 0;
   transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 
@@ -3535,8 +3549,20 @@ img.logo-mark {
   margin-left: auto;
 }
 
-.portal-gate__theme {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
+@media (min-width: 480px) {
+  .auth-page {
+    padding: 2rem 1rem;
+  }
+
+  .auth-card {
+    padding: 1.5rem 2rem 2rem;
+  }
+
+  .portal-gate {
+    padding: 2rem;
+  }
+
+  .portal-gate__card {
+    padding: 1.5rem 2rem 2rem;
+  }
 }
