@@ -4,6 +4,7 @@ import { Bell, CalendarDays, MessageCircle, UserCheck, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getEvents } from '../services/eventService';
 import { getUserTickets, statusLabel, TICKET_STATUSES } from '../services/ticketService';
+import { calendarEventUrl } from './EventPreviewCard';
 
 const DISMISSED_KEY = 'ilms_dismissed_notifications';
 
@@ -32,7 +33,7 @@ function buildNotifications(events, tickets) {
         kind: 'event',
         title: ev.title,
         body: `${ev.date}${ev.time ? ` · ${ev.time}` : ''}${ev.type ? ` · ${ev.type}` : ''}`,
-        link: '/app/calendar',
+        link: calendarEventUrl(ev),
       });
     });
 

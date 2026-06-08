@@ -25,6 +25,7 @@ import EventCalendar from './EventCalendar';
 import TicketManager from './TicketManager';
 import RoleSelect from './RoleSelect';
 import AdminOverviewCharts from './AdminOverviewCharts';
+import CourseThumbnail from '../CourseThumbnail';
 import { ROLES, getRoleLabel, isAdminRole } from '../../utils/roles';
 import { isSuperAdminEmail } from '../../utils/constants';
 import { getAllTickets, TICKET_STATUSES } from '../../services/ticketService';
@@ -133,6 +134,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
     introUrl: '',
   });
   const [courseThumbnailFile, setCourseThumbnailFile] = useState(null);
+  const [editingCourseId, setEditingCourseId] = useState(null);
 
   const [resourceForm, setResourceForm] = useState({
     courseId: '',
@@ -216,7 +218,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
 
   const userMap = Object.fromEntries(users.map((u) => [u.id, u]));
 
-  const handleCreateCourse = async (e) => {
+  const handleSaveCourse = async (e) => {
     e.preventDefault();
     setUploading(true);
     setError('');
@@ -227,15 +229,62 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
         const uploaded = await uploadCourseAsset(courseThumbnailFile);
         thumbnail = uploaded.url;
       }
-      await createCourse({ ...courseForm, thumbnail, introUrl: courseForm.introUrl });
-      setCourseForm({ title: '', code: '', description: '', thumbnail: '', introUrl: '' });
-      setCourseThumbnailFile(null);
-      setMessage('Course created.');
+
+      if (editingCourseId) {
+        await updateCourse(editingCourseId, {
+          title: courseForm.title.trim(),
+          code: courseForm.code.trim(),
+          description: courseForm.description.trim(),
+          thumbnail,
+          introUrl: courseForm.introUrl.trim(),
+        });
+        setMessage('Course updated.');
+      } else {
+        await createCourse({ ...courseForm, thumbnail, introUrl: courseForm.introUrl });
+        setMessage('Course created.');
+      }
+
+      resetCourseForm();
       load();
     } catch (err) {
       setError(err.message);
     } finally {
       setUploading(false);
+    }
+  };
+
+  const resetCourseForm = () => {
+    setCourseForm({ title: '', code: '', description: '', thumbnail: '', introUrl: '' });
+    setCourseThumbnailFile(null);
+    setEditingCourseId(null);
+  };
+
+  const startEditCourse = (course) => {
+    setEditingCourseId(course.id);
+    setCourseForm({
+      title: course.title || '',
+      code: course.code || '',
+      description: course.description || '',
+      thumbnail: course.thumbnail || '',
+      introUrl: course.introUrl || '',
+    });
+    setCourseThumbnailFile(null);
+    setMessage('');
+    setError('');
+    document.getElementById('course-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleDeleteCourse = async (courseId) => {
+    if (!window.confirm('Delete this course? This cannot be undone.')) return;
+    setError('');
+    setMessage('');
+    try {
+      await deleteCourse(courseId);
+      if (editingCourseId === courseId) resetCourseForm();
+      setMessage('Course deleted.');
+      load();
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -509,15 +558,19 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
 
         {tab === 'courses' && (
           <section className="admin-section">
-            <div className="admin-card">
+            <div className="admin-card" id="course-form">
               <div className="admin-card__head">
                 <span className="admin-card__icon"><BookOpen size={22} /></span>
                 <div>
-                  <h3>Create a course</h3>
-                  <p className="muted">Add a thumbnail by URL or upload an image, plus an optional intro video.</p>
+                  <h3>{editingCourseId ? 'Edit course' : 'Create a course'}</h3>
+                  <p className="muted">
+                    {editingCourseId
+                      ? 'Update title, code, description, thumbnail, or intro video.'
+                      : 'Add a thumbnail by URL or upload an image, plus an optional intro video.'}
+                  </p>
                 </div>
               </div>
-              <form className="admin-card__form admin-card__form--grid" onSubmit={handleCreateCourse}>
+              <form className="admin-card__form admin-card__form--grid" onSubmit={handleSaveCourse}>
                 <label className="field">
                   <span>Title</span>
                   <input
@@ -566,8 +619,13 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 </label>
                 <div className="admin-card__actions">
                   <button type="submit" className="btn btn-primary" disabled={uploading}>
-                    {uploading ? 'Uploading…' : '+ Create course'}
+                    {uploading ? 'Saving…' : editingCourseId ? 'Save changes' : '+ Create course'}
                   </button>
+                  {editingCourseId && (
+                    <button type="button" className="btn btn-outline" onClick={resetCourseForm}>
+                      Cancel edit
+                    </button>
+                  )}
                 </div>
               </form>
             </div>
@@ -578,7 +636,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 <li key={c.id}>
                   <div className="admin-list__content">
                     <div className="admin-list__title-row">
-                      {c.thumbnail && <img src={c.thumbnail} alt="" className="course-thumb-sm" />}
+                      <CourseThumbnail course={c} size="sm" />
                       <strong>{c.code}</strong>
                       <span className="muted">— {c.title}</span>
                     </div>
@@ -591,18 +649,10 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                     )}
                   </div>
                   <div className="admin-list__actions">
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline"
-                      onClick={() =>
-                        updateCourse(c.id, {
-                          description: prompt('New description', c.description) || c.description,
-                        }).then(load)
-                      }
-                    >
+                    <button type="button" className="btn btn-sm btn-outline" onClick={() => startEditCourse(c)}>
                       Edit
                     </button>
-                    <button type="button" className="btn btn-sm btn-danger" onClick={() => deleteCourse(c.id).then(load)}>
+                    <button type="button" className="btn btn-sm btn-danger" onClick={() => handleDeleteCourse(c.id)}>
                       Delete
                     </button>
                   </div>

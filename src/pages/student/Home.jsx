@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getCourses } from '../../services/courseService';
 import { enrollInCourse } from '../../services/userService';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
+import CourseThumbnail from '../../components/CourseThumbnail';
 
 export default function Home() {
   const { user, profile, refreshProfile, isGuest } = useAuth();
@@ -52,23 +53,26 @@ export default function Home() {
             const isEnrolled = enrolled.includes(course.id);
             return (
               <article key={course.id} className="course-card">
-                <div className="course-card__badge">{course.code}</div>
-                <h2>{course.title}</h2>
-                <p>{course.description}</p>
-                <div className="course-card__actions">
-                  {isEnrolled ? (
-                    <Link to={`/app/course/${course.id}`} className="btn btn-primary btn-sm">
-                      Continue
-                    </Link>
-                  ) : (
-                    <button
-                      type="button"
-                      className="btn btn-outline btn-sm"
-                      onClick={() => handleEnroll(course.id, course.title)}
-                    >
-                      Enroll
-                    </button>
-                  )}
+                <CourseThumbnail course={course} size="card" />
+                <div className="course-card__body">
+                  <div className="course-card__badge">{course.code}</div>
+                  <h2>{course.title}</h2>
+                  <p>{course.description}</p>
+                  <div className="course-card__actions">
+                    {isEnrolled ? (
+                      <Link to={`/app/course/${course.id}`} className="btn btn-primary btn-sm">
+                        Continue
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        onClick={() => handleEnroll(course.id, course.title)}
+                      >
+                        Enroll
+                      </button>
+                    )}
+                  </div>
                 </div>
               </article>
             );

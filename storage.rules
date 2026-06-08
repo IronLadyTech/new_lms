@@ -18,5 +18,10 @@ service firebase.storage {
       allow read: if request.auth != null;
       allow write: if isAdminUser();
     }
+
+    match /events/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if isAdminUser();
+    }
   }
 }

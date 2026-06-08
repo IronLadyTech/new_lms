@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { createEvent, updateEvent, deleteEvent, eventsForDate, eventsForMonth } from '../../services/eventService';
+import { uploadEventImage } from '../../services/storageService';
+import EventImage from '../EventImage';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const EVENT_TYPES = [
@@ -15,7 +17,15 @@ const EVENT_LEGEND = [
   { type: 'general', label: 'General event' },
 ];
 
-const EMPTY_FORM = { title: '', description: '', date: '', time: '09:00', type: 'general' };
+const EMPTY_FORM = {
+  title: '',
+  description: '',
+  date: '',
+  time: '09:00',
+  type: 'general',
+  imageUrl: '',
+  imageMode: 'link',
+};
 
 function pad(n) {
   return String(n).padStart(2, '0');
@@ -58,6 +68,8 @@ function eventToForm(ev) {
     date: ev.date || '',
     time: ev.time || '09:00',
     type: ev.type || 'general',
+    imageUrl: ev.imageUrl || '',
+    imageMode: 'link',
   };
 }
 
@@ -68,6 +80,7 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
   const [selectedDate, setSelectedDate] = useState(todayStr);
   const [form, setForm] = useState({ ...EMPTY_FORM, date: todayStr });
   const [editingEventId, setEditingEventId] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
 
@@ -93,6 +106,7 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
   const resetForm = (dateStr = selectedDate) => {
     setForm({ ...EMPTY_FORM, date: dateStr });
     setEditingEventId(null);
+    setImageFile(null);
   };
 
   const jumpToDate = (dateStr) => {
@@ -113,9 +127,21 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
     const [y, m] = ev.date.split('-').map(Number);
     setEditingEventId(ev.id);
     setForm(eventToForm(ev));
+    setImageFile(null);
     setViewDate(new Date(y, m - 1, 1));
     setSelectedDate(ev.date);
     setMsg('');
+  };
+
+  const resolveImageUrl = async () => {
+    if (form.imageMode === 'upload') {
+      if (imageFile) {
+        const uploaded = await uploadEventImage(imageFile);
+        return uploaded.url;
+      }
+      return form.imageUrl.trim();
+    }
+    return form.imageUrl.trim();
   };
 
   const handleSubmit = async (e) => {
@@ -123,18 +149,22 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
     setSaving(true);
     setMsg('');
     try {
+      const imageUrl = await resolveImageUrl();
+      const payload = {
+        title: form.title,
+        description: form.description,
+        date: form.date,
+        time: form.time,
+        type: form.type,
+        imageUrl,
+      };
+
       if (editingEventId) {
-        await updateEvent(editingEventId, {
-          title: form.title,
-          description: form.description,
-          date: form.date,
-          time: form.time,
-          type: form.type,
-        });
+        await updateEvent(editingEventId, payload);
         setMsg('Event updated.');
         if (form.date !== selectedDate) jumpToDate(form.date);
       } else {
-        await createEvent({ ...form, createdBy });
+        await createEvent({ ...payload, createdBy });
         setMsg('Event added.');
       }
       resetForm(form.date);
@@ -249,6 +279,7 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
             <ul className="event-calendar__event-list admin-calendar__event-list">
               {selectedEvents.map((ev) => (
                 <li key={ev.id} className={`event-calendar__event-card event-calendar__event-card--${ev.type || 'general'}${editingEventId === ev.id ? ' is-editing' : ''}`}>
+                  <EventImage src={ev.imageUrl} alt={ev.title} />
                   <div className="event-calendar__event-card-head">
                     <strong>{ev.title}</strong>
                     <span className={`badge badge-event badge-event--${ev.type || 'general'}`}>{formatEventType(ev.type)}</span>
@@ -293,6 +324,57 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 rows={3}
               />
+
+              <label className="field field--full event-form__image-field">
+                <span>Event image (optional)</span>
+                <select
+                  value={form.imageMode}
+                  onChange={(e) => {
+                    setForm({ ...form, imageMode: e.target.value });
+                    setImageFile(null);
+                  }}
+                >
+                  <option value="link">Paste image link</option>
+                  <option value="upload">Upload image</option>
+                </select>
+              </label>
+
+              {form.imageMode === 'link' ? (
+                <input
+                  placeholder="https://… image URL (optional)"
+                  value={form.imageUrl}
+                  onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                />
+              ) : (
+                <label className="field field--full">
+                  <span>Choose image file</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                  />
+                </label>
+              )}
+
+              {form.imageUrl && form.imageMode === 'link' && (
+                <div className="event-form__image-preview-wrap">
+                  <EventImage src={form.imageUrl} alt="Preview" className="event-form__image-preview" />
+                </div>
+              )}
+
+              {form.imageUrl && (
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm event-form__remove-image"
+                  onClick={() => {
+                    setForm({ ...form, imageUrl: '' });
+                    setImageFile(null);
+                  }}
+                >
+                  Remove image
+                </button>
+              )}
+
               <div className="admin-card__actions">
                 <button type="submit" className="btn btn-primary btn-sm" disabled={saving}>
                   {saving ? 'Saving…' : editingEventId ? 'Save changes' : '+ Add event'}

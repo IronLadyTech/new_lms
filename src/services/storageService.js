@@ -27,6 +27,10 @@ export async function uploadCourseAsset(file) {
   return uploadFile(file, 'courses');
 }
 
+export async function uploadEventImage(file) {
+  return uploadFile(file, 'events');
+}
+
 export const ACCEPTED_RESOURCE_TYPES = {
   pdf: ['.pdf', 'application/pdf'],
   ppt: ['.ppt', '.pptx', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'],

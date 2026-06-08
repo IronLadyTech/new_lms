@@ -7,6 +7,8 @@ import { getAssignments } from '../../services/courseService';
 import { getEvents } from '../../services/eventService';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
 import ActivityLogList, { buildCourseMap } from '../../components/ActivityLogList';
+import CourseThumbnail from '../../components/CourseThumbnail';
+import EventPreviewCard from '../../components/EventPreviewCard';
 
 export default function Dashboard() {
   const { user, profile, isGuest, refreshProfile } = useAuth();
@@ -105,16 +107,19 @@ export default function Dashboard() {
       </div>
 
       <section className="section">
-        <h2>Enrolled courses</h2>
+        <h2>
+          Enrolled courses · <Link to="/app/home">View all courses</Link>
+        </h2>
         {courses.length === 0 ? (
           <p className="muted">
             No enrollments yet. <Link to="/app/home">Browse courses</Link>
           </p>
         ) : (
-          <ul className="list-cards">
+          <ul className="list-cards list-cards--courses">
             {courses.map((c) => (
-              <li key={c.id}>
-                <Link to={`/app/course/${c.id}`}>
+              <li key={c.id} className="list-cards__course">
+                <CourseThumbnail course={c} size="sm" />
+                <Link to={`/app/course/${c.id}`} className="list-cards__course-link">
                   <strong>{c.code}</strong> — {c.title}
                 </Link>
               </li>
@@ -139,12 +144,10 @@ export default function Dashboard() {
         {upcomingEvents.length === 0 ? (
           <p className="muted">No upcoming events scheduled.</p>
         ) : (
-          <ul className="list-cards">
+          <ul className="list-cards list-cards--events">
             {upcomingEvents.map((ev) => (
               <li key={ev.id}>
-                <strong>{ev.date}</strong>
-                {ev.time && ` · ${ev.time}`} — {ev.title}
-                <span className="badge">{ev.type}</span>
+                <EventPreviewCard event={ev} />
               </li>
             ))}
           </ul>
