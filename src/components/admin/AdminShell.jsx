@@ -2,22 +2,26 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { ROLES } from '../../utils/roles';
-import AdminPanel, { ADMIN_TABS } from './AdminPanel';
+import { ROLES, isModeratorOnly } from '../../utils/roles';
+import AdminPanel, { ADMIN_TABS, MODERATOR_TABS } from './AdminPanel';
 import AdminNotificationBell from './AdminNotificationBell';
 
 export default function AdminShell({ title, subtitle, isSuperAdmin = false }) {
   const { signOut, profile, role } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState('overview');
+  const moderatorView = isModeratorOnly(role);
+  const navTabs = moderatorView ? MODERATOR_TABS : ADMIN_TABS;
+  const [tab, setTab] = useState(moderatorView ? 'mbw' : 'overview');
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const activeTab = ADMIN_TABS.find((t) => t.id === tab);
+  const activeTab = navTabs.find((t) => t.id === tab);
 
   const handleSelectTab = (id) => {
     setTab(id);
     setMenuOpen(false);
   };
+
+  const sidebarLabel = isSuperAdmin ? 'Super Admin' : moderatorView ? 'Customer Expression' : 'Admin';
 
   return (
     <div className="admin-shell">
@@ -31,7 +35,7 @@ export default function AdminShell({ title, subtitle, isSuperAdmin = false }) {
           <img src="/logo.png" alt="Iron Lady" className="logo-mark" />
           <div>
             <strong>Iron Lady</strong>
-            <span>{isSuperAdmin ? 'Super Admin' : 'Admin'}</span>
+            <span>{sidebarLabel}</span>
           </div>
           <button
             type="button"
@@ -44,7 +48,7 @@ export default function AdminShell({ title, subtitle, isSuperAdmin = false }) {
         </div>
 
         <nav className="admin-sidebar__nav">
-          {ADMIN_TABS.map((t) => {
+          {navTabs.map((t) => {
             const Icon = t.icon;
             return (
               <button

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { ROLES, isAdminRole } from '../../utils/roles';
+import { ROLES, isAdminRole, isModeratorOnly } from '../../utils/roles';
 
 export default function PortalGate() {
   const { profile, role, loading } = useAuth();
@@ -20,6 +20,7 @@ export default function PortalGate() {
   }
 
   const isSuperAdmin = role === ROLES.SUPERADMIN;
+  const cxtView = isModeratorOnly(role);
   const adminPath = isSuperAdmin ? '/superadmin' : '/admin';
 
   return (
@@ -28,15 +29,21 @@ export default function PortalGate() {
         <img src="/logo.png" alt="Iron Lady" className="logo-mark lg portal-gate__logo" />
         <h1>Welcome back{profile?.displayName ? `, ${profile.displayName}` : ''}</h1>
         <p className="portal-gate__sub">
-          You are signed in as <strong>{isSuperAdmin ? 'Super Admin' : 'Admin'}</strong>. How would you like to continue?
+          You are signed in as{' '}
+          <strong>{isSuperAdmin ? 'Super Admin' : cxtView ? 'Customer Expression' : 'Admin'}</strong>. How would
+          you like to continue?
         </p>
 
         <div className="portal-gate__actions">
           <button type="button" className="portal-gate__btn portal-gate__btn--admin" onClick={() => navigate(adminPath)}>
-            <span className="portal-gate__icon">⚙️</span>
-            <span className="portal-gate__btn-title">Open admin section</span>
+            <span className="portal-gate__icon">{cxtView ? '📋' : '⚙️'}</span>
+            <span className="portal-gate__btn-title">
+              {cxtView ? 'Open my batches' : 'Open admin section'}
+            </span>
             <span className="portal-gate__btn-desc">
-              Manage users, courses, resources, batches &amp; track progress
+              {cxtView
+                ? 'Track your learners, tasks, and batch progress'
+                : 'Manage users, courses, resources, batches & track progress'}
             </span>
           </button>
 

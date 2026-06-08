@@ -77,6 +77,18 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {courses.some((c) => c.code === 'MBW') && (
+        <section className="section mbw-dash-card">
+          <h2>MBW Pre-Session Tasks</h2>
+          <p className="mbw-dash-card__text">
+            Continue your Iron Lady MBW journey — complete tasks in order and track your progress.
+          </p>
+          <Link to="/app/mbw" className="btn btn-primary btn-sm">
+            Open MBW tasks →
+          </Link>
+        </section>
+      )}
+
       <section className="section">
         <h2>Enrolled courses</h2>
         {courses.length === 0 ? (
@@ -87,9 +99,15 @@ export default function Dashboard() {
           <ul className="list-cards">
             {courses.map((c) => (
               <li key={c.id}>
-                <Link to={`/app/course/${c.id}`}>
-                  <strong>{c.code}</strong> — {c.title}
-                </Link>
+                {c.code === 'MBW' ? (
+                  <Link to="/app/mbw">
+                    <strong>{c.code}</strong> — {c.title}
+                  </Link>
+                ) : (
+                  <Link to={`/app/course/${c.id}`}>
+                    <strong>{c.code}</strong> — {c.title}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>

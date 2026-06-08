@@ -1,4 +1,4 @@
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { isAdminRole } from '../utils/roles';
@@ -8,6 +8,10 @@ import BlockedPanel from './BlockedPanel';
 
 export default function StudentLayout() {
   const { role, isGuest, isBlocked, refreshProfile } = useAuth();
+  const location = useLocation();
+  const isCourseContext =
+    location.pathname.includes('/mbw') || /^\/app\/course\//.test(location.pathname);
+  const isLightShell = isCourseContext;
   const showAdminLink = isAdminRole(role) && !isGuest;
   const accessBlocked = isBlocked && !isAdminRole(role);
 
@@ -36,7 +40,11 @@ export default function StudentLayout() {
   }
 
   return (
-    <div className="student-layout">
+    <div
+      className={`student-layout${isLightShell ? ' student-layout--mbw' : ''}${
+        isCourseContext ? ' student-layout--course' : ''
+      }`}
+    >
       <header className="app-header">
         <div className="app-header__brand">
           <img src="/logo.png" alt="Iron Lady" className="logo-mark" />
@@ -55,7 +63,7 @@ export default function StudentLayout() {
           </Link>
         </div>
       </header>
-      <main className="student-main">
+      <main className={`student-main${isLightShell ? ' student-main--mbw' : ''}`}>
         <Outlet />
       </main>
       <BottomNav />

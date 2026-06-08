@@ -57,9 +57,15 @@ export default function Home() {
                 <p>{course.description}</p>
                 <div className="course-card__actions">
                   {isEnrolled ? (
-                    <Link to={`/app/course/${course.id}`} className="btn btn-primary btn-sm">
-                      Continue
-                    </Link>
+                    course.code === 'MBW' ? (
+                      <Link to="/app/mbw" className="btn btn-primary btn-sm">
+                        Open tasks
+                      </Link>
+                    ) : (
+                      <Link to={`/app/course/${course.id}`} className="btn btn-primary btn-sm">
+                        Continue
+                      </Link>
+                    )
                   ) : (
                     <button
                       type="button"

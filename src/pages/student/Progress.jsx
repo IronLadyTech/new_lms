@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getCourses, getResources } from '../../services/courseService';
 import { getUserActivities } from '../../services/userService';
@@ -50,6 +51,16 @@ export default function Progress() {
     <div className="page progress-page">
       <h1>Course tracking</h1>
       <p className="page-sub">All activity — videos, PPT, PDF, mock tests</p>
+
+      {courses.some((c) => c.code === 'MBW') && (
+        <section className="section mbw-dash-card">
+          <h2>MBW Pre-Session Tasks</h2>
+          <p className="mbw-dash-card__text">Track and complete your Iron Lady MBW pre-session work.</p>
+          <Link to="/app/mbw" className="btn btn-primary btn-sm">
+            Open MBW tasks →
+          </Link>
+        </section>
+      )}
 
       <section className="section">
         <h2>Resources</h2>

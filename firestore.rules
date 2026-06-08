@@ -54,14 +54,38 @@ service cloud.firestore {
       return isAdmin();
     }
 
+    function isModeratorOnly() {
+      return userRole() == 'moderator';
+    }
+
+    function batchExists(batchId) {
+      return batchId != null
+        && exists(/databases/$(database)/documents/groups/$(batchId));
+    }
+
+    function isAssignedModerator(batchId) {
+      return batchExists(batchId)
+        && request.auth.uid in get(/databases/$(database)/documents/groups/$(batchId)).data.moderatorIds;
+    }
+
+    function moderatorCanReadUser(userId) {
+      let u = get(/databases/$(database)/documents/users/$(userId)).data;
+      return u.batchId != null && isAssignedModerator(u.batchId);
+    }
+
+    function staffCanReadUser(userId) {
+      return isAdmin() || (isModeratorOnly() && moderatorCanReadUser(userId));
+    }
+
     match /users/{userId} {
-      allow read: if isSignedIn() && (request.auth.uid == userId || hasStaffAccess());
+      allow read: if isSignedIn() && (request.auth.uid == userId || staffCanReadUser(userId));
       allow create: if isSignedIn() && request.auth.uid == userId;
       allow update: if isSignedIn() && (
         request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'blocked'])
         || isSuperAdmin()
         || (isAdmin() && request.resource.data.role in ['student', 'moderator', 'admin'])
         || (hasAdminAccess() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['blocked', 'updatedAt']))
+        || (hasAdminAccess() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['batchId', 'batchName', 'program', 'updatedAt']))
         || (request.auth.uid == userId && isBootstrapSuperAdmin())
       );
       allow delete: if isSuperAdmin();
@@ -92,7 +116,11 @@ service cloud.firestore {
     }
 
     match /groups/{groupId} {
-      allow read: if isSignedIn() && !isGuest() && !isBlockedUser() && (hasStaffAccess() || request.auth.uid in resource.data.memberIds);
+      allow read: if isSignedIn() && !isGuest() && !isBlockedUser() && (
+        isAdmin()
+        || request.auth.uid in resource.data.memberIds
+        || (isModeratorOnly() && request.auth.uid in resource.data.moderatorIds)
+      );
       allow write: if hasAdminAccess();
     }
 
@@ -127,6 +155,34 @@ service cloud.firestore {
         allow delete: if hasStaffAccess()
           || get(/databases/$(database)/documents/tickets/$(ticketId)).data.userId == request.auth.uid;
       }
+    }
+
+    match /mbw_tasks/{taskId} {
+      allow read: if isSignedIn() && !isGuest() && !isBlockedUser();
+      allow write: if hasAdminAccess();
+    }
+
+    match /mbw_submissions/{submissionId} {
+      allow read: if isSignedIn() && !isGuest() && !isBlockedUser() && (
+        resource.data.userId == request.auth.uid
+        || isAdmin()
+        || (isModeratorOnly()
+          && resource.data.batchId != null
+          && isAssignedModerator(resource.data.batchId))
+      );
+      allow create: if isSignedIn() && !isGuest() && !isBlockedUser()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasAll(['taskId', 'userId', 'status']);
+      allow update: if isSignedIn() && !isGuest() && !isBlockedUser() && (
+        hasStaffAccess()
+        || (
+          resource.data.userId == request.auth.uid
+          && request.resource.data.userId == resource.data.userId
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reviewedBy', 'reviewedAt', 'feedback'])
+          && !(resource.data.status == 'under_review' && request.resource.data.status == 'completed')
+        )
+      );
+      allow delete: if hasAdminAccess();
     }
   }
 }

@@ -22,6 +22,14 @@ export function isAdminRole(role) {
   return [ROLES.ADMIN, ROLES.MODERATOR, ROLES.SUPERADMIN].includes(role);
 }
 
+export function isModeratorOnly(role) {
+  return role === ROLES.MODERATOR;
+}
+
+export function isFullAdmin(role) {
+  return [ROLES.ADMIN, ROLES.SUPERADMIN].includes(role);
+}
+
 export function isGuestRole(role) {
   return role === ROLES.GUEST;
 }
@@ -32,6 +40,6 @@ export function getRoleLabel(role) {
   if (role === ROLES.STUDENT || !role) return 'User';
   if (role === ROLES.SUPERADMIN) return 'Super Admin';
   if (role === ROLES.ADMIN) return 'Admin';
-  if (role === ROLES.MODERATOR) return 'Moderator';
+  if (role === ROLES.MODERATOR) return 'Customer Expression';
   return role;
 }

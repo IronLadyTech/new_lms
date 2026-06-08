@@ -13,7 +13,6 @@ import {
 import { db } from '../firebase/config';
 import { ROLES } from '../utils/roles';
 import { isSuperAdminEmail } from '../utils/constants';
-import { syncUserToZoho } from './zohoService';
 
 const USERS = 'users';
 const ACTIVITIES = 'activities';
@@ -53,18 +52,30 @@ export async function createUserProfile(uid, { email, displayName, role = ROLES.
 
   await setDoc(doc(db, USERS, uid), profile);
 
-  syncUserToZoho({
-    email,
-    displayName: profile.displayName,
-    uid,
-    enrolledCourses: [],
-  }).catch(() => {});
-
   return profile;
 }
 
 export async function updateUserProfile(uid, data) {
   await updateDoc(doc(db, USERS, uid), { ...data, updatedAt: serverTimestamp() });
+}
+
+/** Link a learner to a batch (Customer Expression / program cohort). */
+export async function assignUserToBatch(uid, { batchId, batchName, program }) {
+  await updateDoc(doc(db, USERS, uid), {
+    batchId: batchId || null,
+    batchName: batchName || null,
+    program: program || null,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function clearUserBatch(uid) {
+  await updateDoc(doc(db, USERS, uid), {
+    batchId: null,
+    batchName: null,
+    program: null,
+    updatedAt: serverTimestamp(),
+  });
 }
 
 export async function enrollInCourse(uid, courseId) {
@@ -78,16 +89,6 @@ export async function enrollInCourse(uid, courseId) {
     courseId,
     title: courseId,
   }).catch(() => {});
-
-  const profile = await getUserProfile(uid);
-  if (profile) {
-    syncUserToZoho({
-      email: profile.email,
-      displayName: profile.displayName,
-      uid,
-      enrolledCourses: [...(profile.enrolledCourses || []), courseId],
-    }).catch(() => {});
-  }
 }
 
 export async function logUserActivity(uid, { type, courseId, title, metadata }) {

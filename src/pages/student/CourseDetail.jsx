@@ -3,12 +3,11 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getCourse, getResources } from '../../services/courseService';
 import { logUserActivity } from '../../services/userService';
-import { logActivityToZoho } from '../../services/zohoService';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
 
 export default function CourseDetail() {
   const { courseId } = useParams();
-  const { user, profile, isGuest } = useAuth();
+  const { user, isGuest } = useAuth();
   const [course, setCourse] = useState(null);
   const [resources, setResources] = useState([]);
 
@@ -30,12 +29,6 @@ export default function CourseDetail() {
       title: resource.title,
       metadata: { resourceType: resource.type },
     });
-    logActivityToZoho({
-      email: profile?.email || user.email,
-      activityType: 'resource_view',
-      courseId,
-      metadata: { title: resource.title },
-    }).catch(() => {});
   };
 
   if (isGuest) {
@@ -52,7 +45,7 @@ export default function CourseDetail() {
   if (!course) return <p className="muted">Loading course…</p>;
 
   return (
-    <div className="page course-detail">
+    <div className="page course-detail mbw-program-page">
       <Link to="/app/home" className="back-link">
         ← Courses
       </Link>
