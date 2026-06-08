@@ -2,24 +2,51 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getCourses } from '../../services/courseService';
-import { getUserActivities } from '../../services/userService';
+import { getUserActivities, syncUserStreak } from '../../services/userService';
 import { getAssignments } from '../../services/courseService';
 import { getEvents } from '../../services/eventService';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
+import ActivityLogList, { buildCourseMap } from '../../components/ActivityLogList';
 
 export default function Dashboard() {
-  const { user, profile, isGuest } = useAuth();
+  const { user, profile, isGuest, refreshProfile } = useAuth();
   const [courses, setCourses] = useState([]);
+  const [courseMap, setCourseMap] = useState({});
   const [activities, setActivities] = useState([]);
   const [pendingAssignments, setPendingAssignments] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [streak, setStreak] = useState(profile?.streak ?? 0);
+
+  useEffect(() => {
+    setStreak(profile?.streak ?? 0);
+  }, [profile?.streak]);
 
   useEffect(() => {
     if (!user || isGuest) return undefined;
     let cancelled = false;
 
     (async () => {
-      // Kick off independent reads in parallel instead of awaiting one by one.
+      try {
+        const synced = await syncUserStreak(user.uid);
+        if (!cancelled) {
+          setStreak(synced);
+          await refreshProfile();
+        }
+      } catch (e) {
+        console.error('Streak sync failed:', e);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, isGuest, refreshProfile]);
+
+  useEffect(() => {
+    if (!user || isGuest) return undefined;
+    let cancelled = false;
+
+    (async () => {
       const [allCourses, acts, events] = await Promise.all([
         getCourses(),
         getUserActivities(user.uid, 5),
@@ -27,14 +54,14 @@ export default function Dashboard() {
       ]);
       if (cancelled) return;
 
+      setCourseMap(buildCourseMap(allCourses));
       const enrolled = allCourses.filter((c) => profile?.enrolledCourses?.includes(c.id));
       setCourses(enrolled);
       setActivities(acts);
 
-      const today = new Date().toISOString().slice(0, 10);
+      const today = new Date().toLocaleDateString('en-CA');
       setUpcomingEvents(events.filter((e) => e.date >= today).slice(0, 5));
 
-      // Fetch all enrolled-course assignments concurrently (avoids N+1 waterfall).
       const assignmentLists = await Promise.all(
         enrolled.map((c) =>
           getAssignments(c.id).then((list) => list.map((a) => ({ ...a, courseTitle: c.title })))
@@ -47,7 +74,7 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [user, profile, isGuest]);
+  }, [user, profile?.enrolledCourses, isGuest]);
 
   if (isGuest) {
     return (
@@ -68,7 +95,7 @@ export default function Dashboard() {
 
       <div className="stat-row">
         <div className="stat-card">
-          <span className="stat-value">{profile?.streak ?? 0}</span>
+          <span className="stat-value">{streak}</span>
           <span className="stat-label">Day streak</span>
         </div>
         <div className="stat-card">
@@ -101,14 +128,7 @@ export default function Dashboard() {
         {activities.length === 0 ? (
           <p className="muted">No activity yet. Start a lesson!</p>
         ) : (
-          <ul className="activity-list">
-            {activities.map((a) => (
-              <li key={a.id}>
-                <span className="activity-type">{a.type}</span>
-                <span>{a.title}</span>
-              </li>
-            ))}
-          </ul>
+          <ActivityLogList activities={activities} courseMap={courseMap} />
         )}
       </section>
 
