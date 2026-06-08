@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { isAdminRole, isGuestRole } from '../../utils/roles';
 import { ROLES } from '../../utils/roles';
+import ThemeToggle from '../../components/ThemeToggle';
 
 export default function AuthPage({ mode = 'login' }) {
   const isLogin = mode === 'login';
@@ -72,6 +73,9 @@ export default function AuthPage({ mode = 'login' }) {
 
   return (
     <div className="auth-page">
+      <div className="auth-page__theme">
+        <ThemeToggle compact />
+      </div>
       <div className="auth-card">
         <div className="auth-card__header">
           <img src="/logo.png" alt="Iron Lady" className="logo-mark lg" />

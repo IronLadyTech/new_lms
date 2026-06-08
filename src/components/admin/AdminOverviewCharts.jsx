@@ -16,15 +16,26 @@ import { Download } from 'lucide-react';
 import { ROLES, getRoleLabel } from '../../utils/roles';
 import { TICKET_STATUSES, statusLabel, categoryLabel } from '../../services/ticketService';
 import { downloadCsv, tsToIso } from '../../utils/csvExport';
+import { useTheme } from '../../context/ThemeContext';
 
 const CHART_COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#14b8a6', '#6366f1', '#ef4444', '#06b6d4'];
 
-const tooltipStyle = {
-  background: '#1a2332',
-  border: '1px solid #2d3a4f',
-  borderRadius: '8px',
-  color: '#e8edf4',
-};
+function useChartTheme() {
+  const { theme } = useTheme();
+  return useMemo(() => {
+    const styles = getComputedStyle(document.documentElement);
+    return {
+      tooltipStyle: {
+        background: styles.getPropertyValue('--chart-tooltip-bg').trim(),
+        border: `1px solid ${styles.getPropertyValue('--chart-tooltip-border').trim()}`,
+        borderRadius: '8px',
+        color: styles.getPropertyValue('--chart-tooltip-text').trim(),
+      },
+      gridStroke: styles.getPropertyValue('--chart-grid').trim(),
+      tickFill: styles.getPropertyValue('--chart-tick').trim(),
+    };
+  }, [theme]);
+}
 
 function buildRolePieData(users) {
   const counts = {
@@ -155,6 +166,7 @@ export default function AdminOverviewCharts({
   stats,
   userMap,
 }) {
+  const { tooltipStyle, gridStroke, tickFill } = useChartTheme();
   const courseMap = useMemo(() => Object.fromEntries(courses.map((c) => [c.id, c])), [courses]);
 
   const roleData = useMemo(() => buildRolePieData(users), [users]);
@@ -293,9 +305,9 @@ export default function AdminOverviewCharts({
         <ChartCard title="Activity (7 days)" subtitle="Daily user actions">
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={activityData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2d3a4f" />
-              <XAxis dataKey="day" tick={{ fill: '#8b9cb3', fontSize: 12 }} />
-              <YAxis allowDecimals={false} tick={{ fill: '#8b9cb3', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+              <XAxis dataKey="day" tick={{ fill: tickFill, fontSize: 12 }} />
+              <YAxis allowDecimals={false} tick={{ fill: tickFill, fontSize: 12 }} />
               <Tooltip contentStyle={tooltipStyle} />
               <Bar dataKey="count" name="Actions" fill="#3b82f6" radius={[6, 6, 0, 0]} />
             </BarChart>
@@ -308,9 +320,9 @@ export default function AdminOverviewCharts({
           ) : (
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={enrollmentData} layout="vertical" margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2d3a4f" />
-                <XAxis type="number" allowDecimals={false} tick={{ fill: '#8b9cb3', fontSize: 12 }} />
-                <YAxis type="category" dataKey="name" width={90} tick={{ fill: '#8b9cb3', fontSize: 11 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                <XAxis type="number" allowDecimals={false} tick={{ fill: tickFill, fontSize: 12 }} />
+                <YAxis type="category" dataKey="name" width={90} tick={{ fill: tickFill, fontSize: 11 }} />
                 <Tooltip contentStyle={tooltipStyle} />
                 <Bar dataKey="count" name="Learners" fill="#22c55e" radius={[0, 6, 6, 0]} />
               </BarChart>
@@ -339,9 +351,9 @@ export default function AdminOverviewCharts({
         <ChartCard title="New signups (7 days)" subtitle="Daily registrations">
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={signupData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2d3a4f" />
-              <XAxis dataKey="day" tick={{ fill: '#8b9cb3', fontSize: 12 }} />
-              <YAxis allowDecimals={false} tick={{ fill: '#8b9cb3', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+              <XAxis dataKey="day" tick={{ fill: tickFill, fontSize: 12 }} />
+              <YAxis allowDecimals={false} tick={{ fill: tickFill, fontSize: 12 }} />
               <Tooltip contentStyle={tooltipStyle} />
               <Bar dataKey="count" name="Signups" fill="#f59e0b" radius={[6, 6, 0, 0]} />
             </BarChart>

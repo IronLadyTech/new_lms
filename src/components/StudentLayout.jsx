@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { isAdminRole } from '../utils/roles';
 import BottomNav from './BottomNav';
 import NotificationBell from './NotificationBell';
+import ThemeToggle from './ThemeToggle';
 import BlockedPanel from './BlockedPanel';
 
 export default function StudentLayout() {
@@ -25,6 +26,9 @@ export default function StudentLayout() {
             <img src="/logo.png" alt="Iron Lady" className="logo-mark" />
             <span>LMS</span>
           </div>
+          <div className="app-header__actions">
+            <ThemeToggle compact />
+          </div>
         </header>
         <main className="student-main">
           <div className="page">
@@ -44,6 +48,7 @@ export default function StudentLayout() {
         </div>
         <div className="app-header__actions">
           {isGuest && <span className="guest-badge">Guest</span>}
+          <ThemeToggle compact />
           <NotificationBell />
           {showAdminLink && (
             <Link to="/portal" className="app-header__link app-header__link--admin">
