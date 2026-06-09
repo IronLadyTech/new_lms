@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getCourses, getResources } from '../../services/courseService';
 import { getUserActivities } from '../../services/userService';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
+import ActivityLogList, { buildCourseMap } from '../../components/ActivityLogList';
 
 const RESOURCE_ICONS = {
   video: '🎬',
@@ -16,6 +17,7 @@ const RESOURCE_ICONS = {
 export default function Progress() {
   const { user, profile, isGuest } = useAuth();
   const [courses, setCourses] = useState([]);
+  const [courseMap, setCourseMap] = useState({});
   const [resources, setResources] = useState([]);
   const [activities, setActivities] = useState([]);
 
@@ -23,6 +25,7 @@ export default function Progress() {
     if (!user || isGuest) return undefined;
     (async () => {
       const all = await getCourses();
+      setCourseMap(buildCourseMap(all));
       const enrolled = all.filter((c) => profile?.enrolledCourses?.includes(c.id));
       setCourses(enrolled);
 
@@ -93,15 +96,11 @@ export default function Progress() {
 
       <section className="section">
         <h2>Activity log</h2>
-        <ul className="activity-list">
-          {activities.map((a) => (
-            <li key={a.id}>
-              <span className="activity-type">{a.type}</span>
-              <span>{a.title}</span>
-              {a.courseId && <span className="muted"> · {a.courseId}</span>}
-            </li>
-          ))}
-        </ul>
+        <ActivityLogList
+          activities={activities}
+          courseMap={courseMap}
+          emptyMessage="No activity recorded yet. Open a resource or enroll in a course to get started."
+        />
       </section>
     </div>
   );

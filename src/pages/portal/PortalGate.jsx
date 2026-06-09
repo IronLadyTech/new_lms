@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ROLES, isAdminRole, isModeratorOnly } from '../../utils/roles';
+import ThemeToggle from '../../components/ThemeToggle';
 
 export default function PortalGate() {
   const { profile, role, loading } = useAuth();
@@ -26,6 +27,9 @@ export default function PortalGate() {
   return (
     <div className="portal-gate">
       <div className="portal-gate__card">
+        <div className="portal-gate__theme">
+          <ThemeToggle compact />
+        </div>
         <img src="/logo.png" alt="Iron Lady" className="logo-mark lg portal-gate__logo" />
         <h1>Welcome back{profile?.displayName ? `, ${profile.displayName}` : ''}</h1>
         <p className="portal-gate__sub">

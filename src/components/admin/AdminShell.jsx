@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ROLES, isModeratorOnly } from '../../utils/roles';
 import AdminPanel, { ADMIN_TABS, MODERATOR_TABS } from './AdminPanel';
 import AdminNotificationBell from './AdminNotificationBell';
+import ThemeToggle from '../ThemeToggle';
 
 export default function AdminShell({ title, subtitle, isSuperAdmin = false }) {
   const { signOut, profile, role } = useAuth();
@@ -106,7 +107,10 @@ export default function AdminShell({ title, subtitle, isSuperAdmin = false }) {
             <h1>{activeTab ? activeTab.label : title}</h1>
             <p>{activeTab ? activeTab.desc : subtitle}</p>
           </div>
-          <AdminNotificationBell onTabChange={handleSelectTab} />
+          <div className="admin-shell__header-actions">
+            <ThemeToggle compact />
+            <AdminNotificationBell onTabChange={handleSelectTab} />
+          </div>
         </header>
 
         <AdminPanel isSuperAdmin={isSuperAdmin} tab={tab} onTabChange={setTab} />

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Lock,
   Mail,
@@ -9,6 +9,7 @@ import {
   LogIn,
   Sparkles,
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { IRON_LADY_CONTACT_EMAIL } from '../utils/constants';
 
 const LOCKED_ITEMS = [
@@ -19,6 +20,14 @@ const LOCKED_ITEMS = [
 ];
 
 export default function GuestLockedPanel({ title = 'Access locked', subtitle }) {
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+
+  const handleSignIn = async () => {
+    await signOut();
+    navigate('/auth/login');
+  };
+
   return (
     <div className="guest-lock">
       <div className="guest-lock__glow" aria-hidden />
@@ -63,10 +72,10 @@ export default function GuestLockedPanel({ title = 'Access locked', subtitle }) 
       </div>
 
       <div className="guest-lock__actions">
-        <Link to="/auth/login" className="btn btn-primary guest-lock__btn">
+        <button type="button" className="btn btn-primary guest-lock__btn" onClick={handleSignIn}>
           <LogIn size={18} strokeWidth={2} />
           Sign in with an account
-        </Link>
+        </button>
       </div>
     </div>
   );

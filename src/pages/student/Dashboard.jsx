@@ -2,39 +2,74 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getCourses } from '../../services/courseService';
-import { getUserActivities } from '../../services/userService';
+import { getUserActivities, syncUserStreak } from '../../services/userService';
 import { getAssignments } from '../../services/courseService';
 import { getEvents } from '../../services/eventService';
+import { getAnnouncements, getActiveAnnouncementsForUser } from '../../services/announcementService';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
+import AnnouncementFeed from '../../components/AnnouncementFeed';
+import ActivityLogList, { buildCourseMap } from '../../components/ActivityLogList';
+import CourseThumbnail from '../../components/CourseThumbnail';
+import EventPreviewCard from '../../components/EventPreviewCard';
+import EventDetailActions from '../../components/EventDetailActions';
 
 export default function Dashboard() {
-  const { user, profile, isGuest } = useAuth();
+  const { user, profile, isGuest, refreshProfile } = useAuth();
   const [courses, setCourses] = useState([]);
+  const [courseMap, setCourseMap] = useState({});
   const [activities, setActivities] = useState([]);
   const [pendingAssignments, setPendingAssignments] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [streak, setStreak] = useState(profile?.streak ?? 0);
+
+  useEffect(() => {
+    setStreak(profile?.streak ?? 0);
+  }, [profile?.streak]);
 
   useEffect(() => {
     if (!user || isGuest) return undefined;
     let cancelled = false;
 
     (async () => {
-      // Kick off independent reads in parallel instead of awaiting one by one.
-      const [allCourses, acts, events] = await Promise.all([
+      try {
+        const synced = await syncUserStreak(user.uid);
+        if (!cancelled) {
+          setStreak(synced);
+          await refreshProfile();
+        }
+      } catch (e) {
+        console.error('Streak sync failed:', e);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, isGuest, refreshProfile]);
+
+  useEffect(() => {
+    if (!user || isGuest) return undefined;
+    let cancelled = false;
+
+    (async () => {
+      const [allCourses, acts, events, allAnnouncements] = await Promise.all([
         getCourses(),
         getUserActivities(user.uid, 5),
         getEvents(),
+        getAnnouncements(),
       ]);
       if (cancelled) return;
 
+      setCourseMap(buildCourseMap(allCourses));
       const enrolled = allCourses.filter((c) => profile?.enrolledCourses?.includes(c.id));
       setCourses(enrolled);
       setActivities(acts);
+      setAnnouncements(getActiveAnnouncementsForUser(allAnnouncements, user.uid));
 
-      const today = new Date().toISOString().slice(0, 10);
+      const today = new Date().toLocaleDateString('en-CA');
       setUpcomingEvents(events.filter((e) => e.date >= today).slice(0, 5));
 
-      // Fetch all enrolled-course assignments concurrently (avoids N+1 waterfall).
       const assignmentLists = await Promise.all(
         enrolled.map((c) =>
           getAssignments(c.id).then((list) => list.map((a) => ({ ...a, courseTitle: c.title })))
@@ -47,7 +82,7 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [user, profile, isGuest]);
+  }, [user, profile?.enrolledCourses, isGuest]);
 
   if (isGuest) {
     return (
@@ -68,7 +103,7 @@ export default function Dashboard() {
 
       <div className="stat-row">
         <div className="stat-card">
-          <span className="stat-value">{profile?.streak ?? 0}</span>
+          <span className="stat-value">{streak}</span>
           <span className="stat-label">Day streak</span>
         </div>
         <div className="stat-card">
@@ -89,22 +124,32 @@ export default function Dashboard() {
         </section>
       )}
 
+      {announcements.length > 0 && (
+        <section className="section announcement-section">
+          <h2>Announcements</h2>
+          <AnnouncementFeed announcements={announcements} userId={user.uid} />
+        </section>
+      )}
+
       <section className="section">
-        <h2>Enrolled courses</h2>
+        <h2>
+          Enrolled courses · <Link to="/app/home">View all courses</Link>
+        </h2>
         {courses.length === 0 ? (
           <p className="muted">
             No enrollments yet. <Link to="/app/home">Browse courses</Link>
           </p>
         ) : (
-          <ul className="list-cards">
+          <ul className="list-cards list-cards--courses">
             {courses.map((c) => (
-              <li key={c.id}>
+              <li key={c.id} className="list-cards__course">
+                <CourseThumbnail course={c} size="sm" />
                 {c.code === 'MBW' ? (
-                  <Link to="/app/mbw">
+                  <Link to="/app/mbw" className="list-cards__course-link">
                     <strong>{c.code}</strong> — {c.title}
                   </Link>
                 ) : (
-                  <Link to={`/app/course/${c.id}`}>
+                  <Link to={`/app/course/${c.id}`} className="list-cards__course-link">
                     <strong>{c.code}</strong> — {c.title}
                   </Link>
                 )}
@@ -119,14 +164,7 @@ export default function Dashboard() {
         {activities.length === 0 ? (
           <p className="muted">No activity yet. Start a lesson!</p>
         ) : (
-          <ul className="activity-list">
-            {activities.map((a) => (
-              <li key={a.id}>
-                <span className="activity-type">{a.type}</span>
-                <span>{a.title}</span>
-              </li>
-            ))}
-          </ul>
+          <ActivityLogList activities={activities} courseMap={courseMap} />
         )}
       </section>
 
@@ -137,12 +175,11 @@ export default function Dashboard() {
         {upcomingEvents.length === 0 ? (
           <p className="muted">No upcoming events scheduled.</p>
         ) : (
-          <ul className="list-cards">
+          <ul className="list-cards list-cards--events">
             {upcomingEvents.map((ev) => (
-              <li key={ev.id}>
-                <strong>{ev.date}</strong>
-                {ev.time && ` · ${ev.time}`} — {ev.title}
-                <span className="badge">{ev.type}</span>
+              <li key={ev.id} className="event-preview-list__item">
+                <EventPreviewCard event={ev} />
+                <EventDetailActions event={ev} compact />
               </li>
             ))}
           </ul>

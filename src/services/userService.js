@@ -17,6 +17,77 @@ import { isSuperAdminEmail } from '../utils/constants';
 const USERS = 'users';
 const ACTIVITIES = 'activities';
 
+function getLocalDateKey(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function getTodayKey() {
+  return getLocalDateKey(new Date());
+}
+
+function getYesterdayKey() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return getLocalDateKey(d);
+}
+
+function toDateKey(ts) {
+  if (!ts) return null;
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  if (Number.isNaN(d.getTime())) return null;
+  return getLocalDateKey(d);
+}
+
+function collectActiveDates(profile, activities) {
+  const dates = new Set();
+  const profileDate = toDateKey(profile?.lastActivityAt);
+  if (profileDate) dates.add(profileDate);
+  (activities || []).forEach((a) => {
+    const key = toDateKey(a.createdAt);
+    if (key) dates.add(key);
+  });
+  return dates;
+}
+
+function countConsecutiveStreak(activeDates) {
+  if (!activeDates.size) return 0;
+
+  const today = getTodayKey();
+  const cursor = new Date();
+  cursor.setHours(12, 0, 0, 0);
+
+  if (!activeDates.has(getLocalDateKey(cursor))) {
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  let streak = 0;
+  while (activeDates.has(getLocalDateKey(cursor))) {
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}
+
+/** Updates streak when the user is active on a new calendar day. */
+function computeStreakUpdate(profile) {
+  const today = getTodayKey();
+  const lastStreakDate = profile?.lastStreakDate || null;
+  const currentStreak = profile?.streak || 0;
+
+  if (lastStreakDate === today) return {};
+
+  const yesterday = getYesterdayKey();
+  let newStreak = 1;
+  if (lastStreakDate === yesterday) {
+    newStreak = currentStreak + 1;
+  }
+
+  return { streak: newStreak, lastStreakDate: today };
+}
+
 export async function getUserProfile(uid) {
   const snap = await getDoc(doc(db, USERS, uid));
   if (!snap.exists()) return null;
@@ -31,8 +102,12 @@ export function resolveRoleForEmail(email, fallback = ROLES.STUDENT) {
 export async function ensureSuperAdminIfOwner(uid, email) {
   if (!isSuperAdminEmail(email)) return null;
   const existing = await getUserProfile(uid);
-  if (existing?.role === ROLES.SUPERADMIN) return existing;
-  await updateDoc(doc(db, USERS, uid), { role: ROLES.SUPERADMIN, updatedAt: serverTimestamp() });
+  if (existing?.role === ROLES.SUPERADMIN && existing?.blocked !== true) return existing;
+  await updateDoc(doc(db, USERS, uid), {
+    role: ROLES.SUPERADMIN,
+    blocked: false,
+    updatedAt: serverTimestamp(),
+  });
   return getUserProfile(uid);
 }
 
@@ -45,6 +120,7 @@ export async function createUserProfile(uid, { email, displayName, role = ROLES.
     blocked: false,
     enrolledCourses: [],
     streak: 0,
+    lastStreakDate: null,
     lastActivityAt: null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -78,16 +154,16 @@ export async function clearUserBatch(uid) {
   });
 }
 
-export async function enrollInCourse(uid, courseId) {
+export async function enrollInCourse(uid, courseId, courseTitle) {
   await updateDoc(doc(db, USERS, uid), {
     enrolledCourses: arrayUnion(courseId),
     updatedAt: serverTimestamp(),
   });
 
-  logUserActivity(uid, {
+  await logUserActivity(uid, {
     type: 'course_enroll',
     courseId,
-    title: courseId,
+    title: courseTitle || null,
   }).catch(() => {});
 }
 
@@ -101,9 +177,13 @@ export async function logUserActivity(uid, { type, courseId, title, metadata }) 
     createdAt: serverTimestamp(),
   });
 
+  const profile = await getUserProfile(uid);
+  const streakUpdate = computeStreakUpdate(profile);
+
   await updateDoc(doc(db, USERS, uid), {
     lastActivityAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
+    ...streakUpdate,
   });
 }
 
@@ -151,7 +231,40 @@ export async function setUserBlocked(uid, blocked) {
 
 export async function incrementStreak(uid) {
   const profile = await getUserProfile(uid);
-  const streak = (profile?.streak || 0) + 1;
-  await updateDoc(doc(db, USERS, uid), { streak, updatedAt: serverTimestamp() });
+  const streakUpdate = computeStreakUpdate(profile);
+  if (Object.keys(streakUpdate).length === 0) return profile?.streak || 0;
+
+  await updateDoc(doc(db, USERS, uid), {
+    ...streakUpdate,
+    lastActivityAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return streakUpdate.streak;
+}
+
+/** Recalculate streak from profile + recent activity log. */
+export async function syncUserStreak(uid) {
+  const profile = await getUserProfile(uid);
+  if (!profile) return 0;
+
+  const today = getTodayKey();
+  if (profile.lastStreakDate === today && (profile.streak || 0) > 0) {
+    return profile.streak;
+  }
+
+  const activities = await getUserActivities(uid, 90);
+  const activeDates = collectActiveDates(profile, activities);
+  const streak = countConsecutiveStreak(activeDates);
+
+  if (streak === 0) return profile.streak || 0;
+
+  const lastStreakDate = activeDates.has(today) ? today : getYesterdayKey();
+
+  await updateDoc(doc(db, USERS, uid), {
+    streak,
+    lastStreakDate,
+    updatedAt: serverTimestamp(),
+  });
+
   return streak;
 }

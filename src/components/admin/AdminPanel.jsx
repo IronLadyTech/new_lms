@@ -36,9 +36,11 @@ import RoleSelect from './RoleSelect';
 import AdminOverviewCharts from './AdminOverviewCharts';
 import ZohoIntegration from './ZohoIntegration';
 import MBWAdminDashboard from './MBWAdminDashboard';
+import CourseThumbnail from '../CourseThumbnail';
 import { ROLES, getRoleLabel, isAdminRole, isModeratorOnly, isFullAdmin } from '../../utils/roles';
 import { isSuperAdminEmail } from '../../utils/constants';
 import { getAllTickets, TICKET_STATUSES } from '../../services/ticketService';
+import { formatActivitySummary, formatActivityTypeLabel } from '../../utils/activityLabels';
 import {
   LayoutDashboard,
   Users as UsersIcon,
@@ -54,7 +56,13 @@ import {
   CheckCircle2,
   Link2,
   ListChecks,
+  Megaphone,
 } from 'lucide-react';
+import ConfirmDialog from '../ConfirmDialog';
+import UserProgressModal from './UserProgressModal';
+import AnnouncementManager from './AnnouncementManager';
+import { useConfirm } from '../../hooks/useConfirm';
+import { getAnnouncements } from '../../services/announcementService';
 
 const RESOURCE_TYPES = ['video', 'pdf', 'ppt', 'assignment', 'mock_test'];
 export const ADMIN_TABS = [
@@ -64,6 +72,7 @@ export const ADMIN_TABS = [
   { id: 'progress', label: 'Progress', icon: TrendingUp, desc: 'Enrollments & activity' },
   { id: 'activity', label: 'Activity', icon: Clock, desc: 'Activity log' },
   { id: 'calendar', label: 'Calendar', icon: CalendarDays, desc: 'Events' },
+  { id: 'announcements', label: 'Announcements', icon: Megaphone, desc: 'Broadcast to learners' },
   { id: 'courses', label: 'Courses', icon: BookOpen, desc: 'Create & upload courses' },
   { id: 'resources', label: 'Resources', icon: Paperclip, desc: 'PDF / PPT / links' },
   { id: 'groups', label: 'Batches', icon: Boxes, desc: 'Learner batches' },
@@ -82,6 +91,7 @@ const TABS = [
   { id: 'progress', label: 'Progress' },
   { id: 'activity', label: 'Activity' },
   { id: 'calendar', label: 'Calendar' },
+  { id: 'announcements', label: 'Announcements' },
   { id: 'tickets', label: 'Tickets' },
   { id: 'courses', label: 'Courses' },
   { id: 'resources', label: 'Resources' },
@@ -107,8 +117,27 @@ function formatTime(ts) {
   return d.toLocaleString();
 }
 
+function ActivityListItem({ activity, userMap, courseMap }) {
+  const userName =
+    userMap[activity.userId]?.displayName || userMap[activity.userId]?.email?.split('@')[0] || 'User';
+
+  return (
+    <li>
+      <div className="admin-list__content">
+        <div className="admin-list__title-row">
+          <strong>{userName}</strong>
+          <span className="badge badge--soft">{formatActivityTypeLabel(activity.type)}</span>
+        </div>
+        <p className="admin-list__meta muted">{formatActivitySummary(activity, { courseMap })}</p>
+      </div>
+      <span className="muted admin-list__time">{formatTime(activity.createdAt)}</span>
+    </li>
+  );
+}
+
 export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, onTabChange }) {
-  const { user, role } = useAuth();
+  const { user, profile, role, refreshProfile } = useAuth();
+  const { confirm, dialogProps } = useConfirm();
   const moderatorView = isModeratorOnly(role);
   const fullAdmin = isFullAdmin(role) || isSuperAdmin;
   const [courses, setCourses] = useState([]);
@@ -117,6 +146,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
   const [groups, setGroups] = useState([]);
   const [events, setEvents] = useState([]);
   const [tickets, setTickets] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [activities, setActivities] = useState([]);
   const [internalTab, setInternalTab] = useState('overview');
   // Controlled when AdminShell drives the tab via the sidebar; otherwise local.
@@ -139,6 +169,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
     introUrl: '',
   });
   const [courseThumbnailFile, setCourseThumbnailFile] = useState(null);
+  const [editingCourseId, setEditingCourseId] = useState(null);
 
   const [resourceForm, setResourceForm] = useState({
     courseId: '',
@@ -158,6 +189,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
     moderatorIds: [],
   });
   const [userSearch, setUserSearch] = useState('');
+  const [progressModalUser, setProgressModalUser] = useState(null);
 
   const roleOptions = isSuperAdmin ? ROLE_OPTIONS_SUPER : ROLE_OPTIONS_ADMIN;
   const courseMap = Object.fromEntries(courses.map((c) => [c.id, c]));
@@ -206,6 +238,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
       tryLoad('Activity', () => getAllActivities(150), setActivities),
       tryLoad('Groups', getGroups, setGroups),
       tryLoad('Events', getEvents, setEvents),
+      tryLoad('Announcements', getAnnouncements, setAnnouncements),
       tryLoad('Tickets', getAllTickets, setTickets),
     ]);
 
@@ -216,6 +249,27 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
   useEffect(() => {
     load();
   }, []);
+
+  // Blocked staff can still open admin UI but Firestore denies other collections.
+  // Restore admin access automatically (block is meant for learner app only).
+  useEffect(() => {
+    if (!user?.uid || !isAdminRole(role) || profile?.blocked !== true) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        await setUserBlocked(user.uid, false);
+        if (!cancelled) {
+          await refreshProfile();
+          load();
+        }
+      } catch (err) {
+        console.error('Admin self-unblock failed:', err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.uid, role, profile?.blocked, refreshProfile]);
 
   useEffect(() => {
     if (!selectedUserId) {
@@ -235,7 +289,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
 
   const userMap = Object.fromEntries(users.map((u) => [u.id, u]));
 
-  const handleCreateCourse = async (e) => {
+  const handleSaveCourse = async (e) => {
     e.preventDefault();
     setUploading(true);
     setError('');
@@ -246,15 +300,68 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
         const uploaded = await uploadCourseAsset(courseThumbnailFile);
         thumbnail = uploaded.url;
       }
-      await createCourse({ ...courseForm, thumbnail, introUrl: courseForm.introUrl });
-      setCourseForm({ title: '', code: '', description: '', thumbnail: '', introUrl: '' });
-      setCourseThumbnailFile(null);
-      setMessage('Course created.');
+
+      if (editingCourseId) {
+        await updateCourse(editingCourseId, {
+          title: courseForm.title.trim(),
+          code: courseForm.code.trim(),
+          description: courseForm.description.trim(),
+          thumbnail,
+          introUrl: courseForm.introUrl.trim(),
+        });
+        setMessage('Course updated.');
+      } else {
+        await createCourse({ ...courseForm, thumbnail, introUrl: courseForm.introUrl });
+        setMessage('Course created.');
+      }
+
+      resetCourseForm();
       load();
     } catch (err) {
       setError(err.message);
     } finally {
       setUploading(false);
+    }
+  };
+
+  const resetCourseForm = () => {
+    setCourseForm({ title: '', code: '', description: '', thumbnail: '', introUrl: '' });
+    setCourseThumbnailFile(null);
+    setEditingCourseId(null);
+  };
+
+  const startEditCourse = (course) => {
+    setEditingCourseId(course.id);
+    setCourseForm({
+      title: course.title || '',
+      code: course.code || '',
+      description: course.description || '',
+      thumbnail: course.thumbnail || '',
+      introUrl: course.introUrl || '',
+    });
+    setCourseThumbnailFile(null);
+    setMessage('');
+    setError('');
+    document.getElementById('course-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleDeleteCourse = async (courseId) => {
+    const ok = await confirm({
+      title: 'Delete course',
+      message: 'Delete this course? This cannot be undone.',
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    setError('');
+    setMessage('');
+    try {
+      await deleteCourse(courseId);
+      if (editingCourseId === courseId) resetCourseForm();
+      setMessage('Course deleted.');
+      load();
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -328,7 +435,13 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
   };
 
   const handleDeleteResource = async (resourceId) => {
-    if (!window.confirm('Delete this resource?')) return;
+    const ok = await confirm({
+      title: 'Delete resource',
+      message: 'Delete this resource?',
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
     try {
       await deleteResource(resourceId);
       if (editingResourceId === resourceId) resetResourceForm();
@@ -370,7 +483,15 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
     if (!canBlockUser(targetUser)) return;
     const next = !targetUser.blocked;
     const label = targetUser.displayName || targetUser.email;
-    if (!window.confirm(`${next ? 'Block' : 'Unblock'} ${label}?`)) return;
+    const ok = await confirm({
+      title: next ? 'Block user' : 'Unblock user',
+      message: next
+        ? `Block ${label}? They will lose access to courses, calendar, and support.`
+        : `Unblock ${label}? They will be able to use the app again.`,
+      confirmLabel: next ? 'Block user' : 'Unblock',
+      variant: next ? 'danger' : 'primary',
+    });
+    if (!ok) return;
     setError('');
     setMessage('');
     try {
@@ -442,10 +563,35 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 <li key={w}>{w}</li>
               ))}
             </ul>
-            <p className="muted">
-              Deploy <code>firestore.rules</code> in Firebase Console → Firestore → Rules, then click Refresh.
-              Users like jaytiwari092@gmail.com appear after they sign in once and rules allow admin read access.
-            </p>
+            {users.length > 0 ? (
+              <p className="muted">
+                Users loaded but other collections did not. This usually means{' '}
+                <strong>Firestore rules are outdated</strong> (missing <code>announcements</code> and{' '}
+                <code>canUseApp</code>). Open{' '}
+                <a
+                  href="https://console.firebase.google.com/project/lmsironlady/firestore/rules"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Firestore → Rules
+                </a>
+                , paste the full <code>firestore.rules</code> file from this project, click <strong>Publish</strong>,
+                then refresh.
+                {profile?.blocked && (
+                  <>
+                    {' '}
+                    Your account also has <code>blocked: true</code> — fixing that now…
+                  </>
+                )}
+              </p>
+            ) : (
+              <p className="muted">
+                Publish <code>firestore.rules</code> in Firebase Console → Firestore → Rules, then refresh.
+              </p>
+            )}
+            <button type="button" className="btn btn-primary btn-sm" onClick={load}>
+              Refresh now
+            </button>
           </div>
         )}
 
@@ -528,13 +674,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
             <h3 className="admin-section__title">Recent activity</h3>
             <ul className="admin-list">
               {activities.slice(0, 8).map((a) => (
-                <li key={a.id}>
-                  <div>
-                    <strong>{userMap[a.userId]?.displayName || 'User'}</strong>
-                    <span className="muted"> — {a.title || a.type}</span>
-                  </div>
-                  <span className="muted">{formatTime(a.createdAt)}</span>
-                </li>
+                <ActivityListItem key={a.id} activity={a} userMap={userMap} courseMap={courseMap} />
               ))}
               {activities.length === 0 && <li className="muted">No activity yet.</li>}
             </ul>
@@ -543,15 +683,19 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
 
         {tab === 'courses' && fullAdmin && (
           <section className="admin-section">
-            <div className="admin-card">
+            <div className="admin-card" id="course-form">
               <div className="admin-card__head">
                 <span className="admin-card__icon"><BookOpen size={22} /></span>
                 <div>
-                  <h3>Create a course</h3>
-                  <p className="muted">Add a thumbnail by URL or upload an image, plus an optional intro video.</p>
+                  <h3>{editingCourseId ? 'Edit course' : 'Create a course'}</h3>
+                  <p className="muted">
+                    {editingCourseId
+                      ? 'Update title, code, description, thumbnail, or intro video.'
+                      : 'Add a thumbnail by URL or upload an image, plus an optional intro video.'}
+                  </p>
                 </div>
               </div>
-              <form className="admin-card__form admin-card__form--grid" onSubmit={handleCreateCourse}>
+              <form className="admin-card__form admin-card__form--grid" onSubmit={handleSaveCourse}>
                 <label className="field">
                   <span>Title</span>
                   <input
@@ -600,8 +744,13 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 </label>
                 <div className="admin-card__actions">
                   <button type="submit" className="btn btn-primary" disabled={uploading}>
-                    {uploading ? 'Uploading…' : '+ Create course'}
+                    {uploading ? 'Saving…' : editingCourseId ? 'Save changes' : '+ Create course'}
                   </button>
+                  {editingCourseId && (
+                    <button type="button" className="btn btn-outline" onClick={resetCourseForm}>
+                      Cancel edit
+                    </button>
+                  )}
                 </div>
               </form>
             </div>
@@ -612,7 +761,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 <li key={c.id}>
                   <div className="admin-list__content">
                     <div className="admin-list__title-row">
-                      {c.thumbnail && <img src={c.thumbnail} alt="" className="course-thumb-sm" />}
+                      <CourseThumbnail course={c} size="sm" />
                       <strong>{c.code}</strong>
                       <span className="muted">— {c.title}</span>
                     </div>
@@ -625,18 +774,10 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                     )}
                   </div>
                   <div className="admin-list__actions">
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline"
-                      onClick={() =>
-                        updateCourse(c.id, {
-                          description: prompt('New description', c.description) || c.description,
-                        }).then(load)
-                      }
-                    >
+                    <button type="button" className="btn btn-sm btn-outline" onClick={() => startEditCourse(c)}>
                       Edit
                     </button>
-                    <button type="button" className="btn btn-sm btn-danger" onClick={() => deleteCourse(c.id).then(load)}>
+                    <button type="button" className="btn btn-sm btn-danger" onClick={() => handleDeleteCourse(c.id)}>
                       Delete
                     </button>
                   </div>
@@ -851,8 +992,15 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
 
         {tab === 'progress' && fullAdmin && (
           <section>
-            <h2>User progress &amp; enrollments</h2>
-            <p className="muted">Track which courses each user is enrolled in and their learning activity.</p>
+            <h2>User progress &amp; enrollments ({filteredUsers.length})</h2>
+            <p className="muted">Track which courses each user is enrolled in and their learning activity. Click a row or use View progress to open full details.</p>
+            <div className="admin-form">
+              <input
+                placeholder="Search by name, email, or role (e.g. jaytiwari)"
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+              />
+            </div>
             <div className="progress-table-wrap">
               <table className="progress-table">
                 <thead>
@@ -863,11 +1011,30 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                     <th>Streak</th>
                     <th>Activities</th>
                     <th>Last active</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((u) => (
-                    <tr key={u.id}>
+                  {filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="muted progress-table__empty">
+                        {users.length === 0 ? 'No users yet.' : 'No users match your search.'}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredUsers.map((u) => (
+                    <tr
+                      key={u.id}
+                      className="progress-table__row"
+                      tabIndex={0}
+                      onClick={() => setProgressModalUser(u)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setProgressModalUser(u);
+                        }
+                      }}
+                    >
                       <td>
                         <strong>{u.displayName}</strong>
                         <br />
@@ -890,8 +1057,21 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                       <td>{u.streak ?? 0}</td>
                       <td>{activityCountByUser[u.id] || 0}</td>
                       <td className="muted">{formatTime(u.lastActivityAt)}</td>
+                      <td className="progress-table__actions">
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setProgressModalUser(u);
+                          }}
+                        >
+                          View progress
+                        </button>
+                      </td>
                     </tr>
-                  ))}
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -913,14 +1093,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
             </div>
             <ul className="admin-list">
               {(selectedUserId ? userActivities : activities).map((a) => (
-                <li key={a.id}>
-                  <div>
-                    <strong>{userMap[a.userId]?.displayName || a.userId}</strong>
-                    <span className="muted"> — {a.title || a.type}</span>
-                    {a.courseId && <span className="badge">{a.courseId.slice(0, 8)}…</span>}
-                  </div>
-                  <span className="muted">{formatTime(a.createdAt)}</span>
-                </li>
+                <ActivityListItem key={a.id} activity={a} userMap={userMap} courseMap={courseMap} />
               ))}
               {(selectedUserId ? userActivities : activities).length === 0 && (
                 <li className="muted">No activity recorded.</li>
@@ -934,6 +1107,22 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
             <h2>Events calendar</h2>
             <p className="muted">Schedule classes, deadlines, and meetings. Visible to all signed-in users.</p>
             <EventCalendar events={events} onRefresh={load} createdBy={user?.uid} />
+          </section>
+        )}
+
+        {tab === 'announcements' && (
+          <section>
+            <h2>Announcements</h2>
+            <p className="muted">
+              Broadcast messages to learners. Choose visibility for 24 hours, 7 days, or 30 days. Tag specific users
+              to highlight them.
+            </p>
+            <AnnouncementManager
+              announcements={announcements}
+              users={users}
+              onRefresh={load}
+              createdBy={user?.uid}
+            />
           </section>
         )}
 
@@ -1085,6 +1274,15 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
           />
         )}
       </main>
+      <ConfirmDialog {...dialogProps} />
+      <UserProgressModal
+        user={progressModalUser}
+        courseMap={courseMap}
+        groups={groups}
+        tickets={tickets}
+        activityCount={progressModalUser ? activityCountByUser[progressModalUser.id] || 0 : 0}
+        onClose={() => setProgressModalUser(null)}
+      />
     </>
   );
 }

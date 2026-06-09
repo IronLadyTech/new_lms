@@ -13,6 +13,8 @@ import {
   statusLabel,
 } from '../../services/ticketService';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
+import ConfirmDialog from '../../components/ConfirmDialog';
+import { useConfirm } from '../../hooks/useConfirm';
 
 function formatTime(ts) {
   if (!ts) return '';
@@ -22,6 +24,7 @@ function formatTime(ts) {
 
 export default function Support() {
   const { user, profile, isGuest } = useAuth();
+  const { confirm, dialogProps } = useConfirm();
   const [tickets, setTickets] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -127,7 +130,13 @@ export default function Support() {
   };
 
   const handleDeleteTicket = async (ticketId) => {
-    if (!window.confirm('Delete this ticket? This cannot be undone.')) return;
+    const ok = await confirm({
+      title: 'Delete ticket',
+      message: 'Delete this ticket? This cannot be undone.',
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
     setSubmitting(true);
     setNotice('');
     try {
@@ -301,6 +310,7 @@ export default function Support() {
           </div>
         )}
       </section>
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 }

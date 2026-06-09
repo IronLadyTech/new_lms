@@ -31,6 +31,8 @@ export async function createEvent(data) {
     date: data.date,
     time: data.time || '',
     type: data.type || 'general',
+    imageUrl: data.imageUrl || '',
+    linkUrl: data.linkUrl || '',
     createdBy: data.createdBy || null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),

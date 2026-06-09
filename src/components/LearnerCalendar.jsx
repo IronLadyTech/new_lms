@@ -1,5 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { eventsForDate, eventsForMonth } from '../services/eventService';
+import EventImage from './EventImage';
+import EventPreviewCard from './EventPreviewCard';
+import EventDetailActions from './EventDetailActions';
+import { normalizeEventLink } from '../utils/eventLinks';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -44,7 +48,7 @@ function groupByDate(eventList) {
   }, {});
 }
 
-export default function LearnerCalendar({ events }) {
+export default function LearnerCalendar({ events, initialDate = '', focusEventId = '' }) {
   const today = new Date();
   const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
   const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
@@ -75,6 +79,20 @@ export default function LearnerCalendar({ events }) {
     setSelectedDate(dateStr);
   };
 
+  useEffect(() => {
+    if (initialDate && /^\d{4}-\d{2}-\d{2}$/.test(initialDate)) {
+      jumpToDate(initialDate);
+    }
+  }, [initialDate]);
+
+  useEffect(() => {
+    if (!focusEventId) return undefined;
+    const timer = setTimeout(() => {
+      document.getElementById(`learner-event-${focusEventId}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [focusEventId, selectedDate, selectedEvents]);
+
   const handleSelectDay = (day) => {
     if (!day) return;
     jumpToDate(toDateStr(year, month, day));
@@ -95,18 +113,9 @@ export default function LearnerCalendar({ events }) {
           <h2>Upcoming events</h2>
           <ul className="learner-calendar__upcoming-list">
             {upcoming.map((ev) => (
-              <li key={ev.id}>
-                <button type="button" className="learner-calendar__upcoming-item" onClick={() => jumpToDate(ev.date)}>
-                  <span className={`learner-calendar__type-dot learner-calendar__type-dot--${ev.type || 'general'}`} />
-                  <span className="learner-calendar__date">{ev.date}</span>
-                  <span>
-                    <strong>{ev.title}</strong>
-                    <span className="muted">
-                      {ev.time ? `${ev.time} · ` : ''}
-                      {formatEventType(ev.type)}
-                    </span>
-                  </span>
-                </button>
+              <li key={ev.id} className="event-preview-list__item">
+                <EventPreviewCard event={ev} onClick={() => jumpToDate(ev.date)} />
+                <EventDetailActions event={ev} compact />
               </li>
             ))}
           </ul>
@@ -189,13 +198,24 @@ export default function LearnerCalendar({ events }) {
           ) : (
             <ul className="event-calendar__event-list">
               {selectedEvents.map((ev) => (
-                <li key={ev.id} className={`event-calendar__event-card event-calendar__event-card--${ev.type || 'general'}`}>
+                <li
+                  key={ev.id}
+                  id={`learner-event-${ev.id}`}
+                  className={`event-calendar__event-card event-calendar__event-card--${ev.type || 'general'}${focusEventId === ev.id ? ' is-focused' : ''}`}
+                >
+                  <EventImage src={ev.imageUrl} alt={ev.title} />
                   <div className="event-calendar__event-card-head">
                     <strong>{ev.title}</strong>
                     <span className={`badge badge-event badge-event--${ev.type || 'general'}`}>{formatEventType(ev.type)}</span>
                   </div>
                   {ev.time && <span className="event-calendar__event-time">{ev.time}</span>}
                   {ev.description && <p className="muted">{ev.description}</p>}
+                  {ev.linkUrl && (
+                    <a href={normalizeEventLink(ev.linkUrl)} target="_blank" rel="noreferrer" className="link-inline">
+                      Open event link
+                    </a>
+                  )}
+                  <EventDetailActions event={ev} compact />
                 </li>
               ))}
             </ul>

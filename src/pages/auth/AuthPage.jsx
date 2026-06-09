@@ -3,10 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { isAdminRole, isGuestRole } from '../../utils/roles';
 import { ROLES } from '../../utils/roles';
+import ThemeToggle from '../../components/ThemeToggle';
 
 export default function AuthPage({ mode = 'login' }) {
   const isLogin = mode === 'login';
-  const { signIn, signUp, signInWithGoogle, signInAsGuest, error, setError, profile, user, loading, role } = useAuth();
+  const { signIn, signUp, signInWithGoogle, signInAsGuest, error, setError, profile, user, loading, role, isGuest, isBlocked } =
+    useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,12 +16,12 @@ export default function AuthPage({ mode = 'login' }) {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user && (profile || role)) {
+    if (!loading && user && !isGuest && !isBlocked && (profile || role)) {
       redirectByRole(profile?.role || role, navigate);
     }
-  }, [loading, user, profile, role, navigate]);
+  }, [loading, user, profile, role, isGuest, isBlocked, navigate]);
 
-  if (loading || (user && profile)) {
+  if (loading || (user && profile && !isGuest && !isBlocked)) {
     return (
       <div className="loading-screen">
         <div className="spinner" />
@@ -61,6 +63,7 @@ export default function AuthPage({ mode = 'login' }) {
     setError(null);
     try {
       await signInAsGuest();
+      navigate('/app/home', { replace: true });
     } catch (err) {
       setError(err.message || 'Guest login failed. Please try again.');
     } finally {
@@ -71,6 +74,9 @@ export default function AuthPage({ mode = 'login' }) {
   return (
     <div className="auth-page">
       <div className="auth-card">
+        <div className="auth-card__theme">
+          <ThemeToggle compact />
+        </div>
         <div className="auth-card__header">
           <img src="/logo.png" alt="Iron Lady" className="logo-mark lg" />
           <h1>{isLogin ? 'Welcome back' : 'Create account'}</h1>

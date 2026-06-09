@@ -54,6 +54,14 @@ service cloud.firestore {
       return isAdmin();
     }
 
+    // Learners blocked by admin cannot read app data. Staff and bootstrap owner
+    // can still use the admin panel (e.g. to unblock users).
+    function canUseApp() {
+      return isSignedIn()
+        && !isGuest()
+        && (!isBlockedUser() || hasStaffAccess() || isBootstrapSuperAdmin());
+    }
+
     match /users/{userId} {
       allow read: if isSignedIn() && (request.auth.uid == userId || hasStaffAccess());
       allow create: if isSignedIn() && request.auth.uid == userId;
@@ -68,44 +76,49 @@ service cloud.firestore {
     }
 
     match /courses/{courseId} {
-      allow read: if isSignedIn() && !isGuest() && !isBlockedUser();
+      allow read: if canUseApp();
       allow write: if hasAdminAccess();
     }
 
     match /resources/{resourceId} {
-      allow read: if isSignedIn() && !isGuest() && !isBlockedUser()
+      allow read: if canUseApp()
         && (hasStaffAccess() || resource.data.locked != true);
       allow write: if hasAdminAccess();
     }
 
     match /assignments/{assignmentId} {
-      allow read: if isSignedIn() && !isGuest() && !isBlockedUser();
+      allow read: if canUseApp();
       allow write: if hasAdminAccess();
     }
 
     match /activities/{activityId} {
-      allow read: if isSignedIn() && !isGuest() && !isBlockedUser() && (
+      allow read: if canUseApp() && (
         resource.data.userId == request.auth.uid || hasStaffAccess()
       );
-      allow create: if isSignedIn() && !isGuest() && !isBlockedUser() && request.resource.data.userId == request.auth.uid;
+      allow create: if canUseApp() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isSuperAdmin();
     }
 
     match /groups/{groupId} {
-      allow read: if isSignedIn() && !isGuest() && !isBlockedUser() && (hasStaffAccess() || request.auth.uid in resource.data.memberIds);
+      allow read: if canUseApp() && (hasStaffAccess() || request.auth.uid in resource.data.memberIds);
       allow write: if hasAdminAccess();
     }
 
     match /events/{eventId} {
-      allow read: if isSignedIn() && !isGuest() && !isBlockedUser();
+      allow read: if canUseApp();
+      allow write: if hasAdminAccess();
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if canUseApp();
       allow write: if hasAdminAccess();
     }
 
     match /tickets/{ticketId} {
-      allow read: if isSignedIn() && !isGuest() && !isBlockedUser() && (
+      allow read: if canUseApp() && (
         resource.data.userId == request.auth.uid || hasStaffAccess()
       );
-      allow create: if isSignedIn() && !isGuest() && !isBlockedUser()
+      allow create: if canUseApp()
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.status == 'open';
       allow update: if hasStaffAccess()
@@ -116,11 +129,11 @@ service cloud.firestore {
         || (request.auth.uid == resource.data.userId && resource.data.status == 'open');
 
       match /messages/{messageId} {
-        allow read: if isSignedIn() && !isGuest() && !isBlockedUser() && (
+        allow read: if canUseApp() && (
           get(/databases/$(database)/documents/tickets/$(ticketId)).data.userId == request.auth.uid
           || hasStaffAccess()
         );
-        allow create: if isSignedIn() && !isGuest() && !isBlockedUser() && (
+        allow create: if canUseApp() && (
           get(/databases/$(database)/documents/tickets/$(ticketId)).data.userId == request.auth.uid
           || hasStaffAccess()
         );

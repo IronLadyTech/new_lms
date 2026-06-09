@@ -19,7 +19,14 @@ import { isAdminRole } from './utils/roles';
 
 function RoleRedirect() {
   const { user, loading, role } = useAuth();
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="spinner" />
+        <p>Loading…</p>
+      </div>
+    );
+  }
   if (!user) return <Navigate to="/auth/login" replace />;
   if (isAdminRole(role)) return <Navigate to="/portal" replace />;
   return <Navigate to="/app/home" replace />;

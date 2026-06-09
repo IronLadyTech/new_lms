@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getCourse, getResources } from '../../services/courseService';
 import { logUserActivity } from '../../services/userService';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
+import CourseThumbnail from '../../components/CourseThumbnail';
 
 export default function CourseDetail() {
   const { courseId } = useParams();
@@ -49,6 +50,7 @@ export default function CourseDetail() {
       <Link to="/app/home" className="back-link">
         ← Courses
       </Link>
+      <CourseThumbnail course={course} size="hero" />
       <h1>{course.title}</h1>
       <p className="page-sub">{course.code} — {course.description}</p>
 

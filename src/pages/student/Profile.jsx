@@ -6,6 +6,7 @@ import { updateUserProfile } from '../../services/userService';
 import { isAdminRole, getRoleLabel } from '../../utils/roles';
 import { ROLES } from '../../utils/roles';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
+import ThemeToggle from '../../components/ThemeToggle';
 
 export default function Profile() {
   const { user, profile, signOut, refreshProfile, role, isGuest } = useAuth();
@@ -41,6 +42,8 @@ export default function Profile() {
       <div className="profile-avatar">
         {(profile?.displayName || user?.email || '?')[0].toUpperCase()}
       </div>
+
+      <ThemeToggle className="profile-theme" />
 
       <form onSubmit={handleSave} className="profile-form">
         <label>
