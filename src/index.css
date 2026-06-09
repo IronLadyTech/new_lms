@@ -346,54 +346,10 @@ img.logo-mark {
 
 /* App layout (user-facing) */
 .student-layout {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  height: 100dvh;
-  max-height: 100dvh;
-  min-height: 0;
-  overflow: hidden;
-  padding-bottom: 0;
-}
-
-/* Lock document scroll; only .student-main scrolls */
-html:has(.student-layout),
-html:has(.admin-shell),
-body:has(.student-layout),
-body:has(.admin-shell) {
-  overflow: hidden;
-  height: 100%;
-  overscroll-behavior: none;
-}
-
-html:has(.student-layout) #root,
-html:has(.admin-shell) #root {
-  height: 100%;
-  overflow: hidden;
-}
-
-.student-layout .app-header {
-  flex-shrink: 0;
-}
-
-.student-layout .student-main {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.student-layout .student-main::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
-}
-
-/* Fixed bottom nav clearance (sidebar layout excludes this on desktop) */
-.student-layout:not(.student-layout--course) .student-main {
-  padding-bottom: calc(var(--nav-h) + 1rem);
+  padding-bottom: var(--nav-h);
 }
 
 .app-header {
@@ -471,11 +427,11 @@ html:has(.student-layout--mbw) #root {
   color: #e11d48;
 }
 
-/* Course / MBW ΓÇö unified grid shell (sidebar + main stay aligned on resize) */
+/* Course / MBW — unified grid shell (sidebar + main stay aligned on resize) */
 .student-layout--course {
   display: grid;
   grid-template-columns: var(--sidebar-nav-w) minmax(0, 1fr);
-  grid-template-rows: var(--header-h) minmax(0, 1fr);
+  grid-template-rows: var(--header-h) 1fr;
   grid-template-areas:
     'header header'
     'sidebar main';
@@ -1671,7 +1627,7 @@ html:has(.student-layout--mbw) #root {
   font-size: 0.8rem;
 }
 
-/* Admin shell ΓÇö sidebar layout */
+/* Admin shell — sidebar layout */
 .admin-shell {
   display: flex;
   min-height: 100vh;
@@ -1820,19 +1776,7 @@ html:has(.student-layout--mbw) #root {
 
 .admin-shell__main {
   flex: 1;
-  min-height: 0;
-  min-width: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.admin-shell__main::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
+  overflow-x: auto;
 }
 
 .admin-shell__header {
@@ -1931,6 +1875,15 @@ html:has(.student-layout--mbw) #root {
   display: none;
 }
 
+.admin-shell__overlay.is-visible {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
 .admin-shell__header h1 {
   margin: 0;
 }
@@ -1943,6 +1896,16 @@ html:has(.student-layout--mbw) #root {
 .admin-shell .admin-main {
   max-width: none;
   padding-top: 1rem;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.admin-chart-card__body,
+.admin-chart-card__body .recharts-responsive-container,
+.admin-chart-card__body .recharts-wrapper {
+  width: 100% !important;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .admin-shell .admin-tabs {
@@ -2225,23 +2188,23 @@ html:has(.student-layout--mbw) #root {
     z-index: 60;
     width: 280px;
     max-width: 85vw;
-    transform: translateX(-100%);
-    transition: transform 0.25s ease;
+    transform: translateX(-105%);
+    transition: transform 0.25s ease, visibility 0.25s ease;
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
     overflow-y: auto;
+    visibility: hidden;
+    pointer-events: none;
   }
 
   .admin-sidebar.is-open {
     transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
   }
 
-  .admin-shell__overlay.is-visible {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(2px);
+  .admin-shell__main {
+    width: 100%;
+    max-width: 100%;
   }
 
   .admin-shell__header {
@@ -2931,7 +2894,7 @@ html:has(.student-layout--mbw) #root {
   right: max(0.75rem, env(safe-area-inset-right, 0px));
   left: auto;
   z-index: 60;
-  width: min(360px, calc(100vw - 1.5rem));
+  width: min(360px, calc(100% - 1.5rem));
   max-height: min(420px, calc(100dvh - var(--header-h) - var(--nav-h) - 1.5rem));
   overflow: hidden;
   display: flex;
@@ -4172,7 +4135,7 @@ html:has(.student-layout--mbw) #root {
   bottom: 1rem;
   left: calc(var(--sidebar-nav-w) + 50%);
   transform: translateX(-50%);
-  max-width: min(calc(100vw - var(--sidebar-nav-w) - 2rem), 420px);
+  max-width: min(calc(100% - var(--sidebar-nav-w) - 2rem), 420px);
 }
 
 .mbw-toast__icon {
