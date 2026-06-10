@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { initializeFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { getFunctions } from 'firebase/functions';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -22,6 +23,7 @@ let app = null;
 let auth = null;
 let db = null;
 let storage = null;
+let functions = null;
 let googleProvider = null;
 
 if (configured) {
@@ -33,9 +35,10 @@ if (configured) {
   // the persistent multi-tab cache can hit.
   db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
   storage = getStorage(app);
+  functions = getFunctions(app);
   googleProvider = new GoogleAuthProvider();
 }
 
-export { app, auth, db, storage, googleProvider };
+export { app, auth, db, storage, functions, googleProvider };
 
 export const isFirebaseConfigured = () => configured;

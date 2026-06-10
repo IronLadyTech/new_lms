@@ -9,6 +9,7 @@ import Progress from './pages/student/Progress';
 import Profile from './pages/student/Profile';
 import Support from './pages/student/Support';
 import CourseDetail from './pages/student/CourseDetail';
+import MBWPage from './pages/student/MBWPage';
 import Calendar from './pages/student/Calendar';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard';
@@ -64,6 +65,7 @@ export default function App() {
         <Route path="profile" element={<Profile />} />
         <Route path="support" element={<Support />} />
         <Route path="course/:courseId" element={<CourseDetail />} />
+        <Route path="mbw" element={<MBWPage />} />
       </Route>
 
       <Route

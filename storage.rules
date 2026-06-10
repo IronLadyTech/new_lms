@@ -1,11 +1,29 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    function userDoc() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isBootstrapOwner() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() == 'ironladytech@gmail.com';
+    }
+
+    function isStaffUser() {
+      return request.auth != null
+        && (
+          isBootstrapOwner()
+          || userDoc().role in ['moderator', 'admin', 'superadmin']
+        );
+    }
+
     function isAdminUser() {
       return request.auth != null
         && (
-          firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin']
-          || request.auth.token.email.lower() == 'ironladytech@gmail.com'
+          isBootstrapOwner()
+          || userDoc().role in ['admin', 'superadmin']
         );
     }
 
@@ -17,6 +35,12 @@ service firebase.storage {
     match /courses/{allPaths=**} {
       allow read: if request.auth != null;
       allow write: if isAdminUser();
+    }
+
+    // MBW resume / mirror-practice uploads — owner writes; staff can read for review
+    match /mbw/{userId}/{allPaths=**} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isStaffUser());
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
 
     match /events/{allPaths=**} {

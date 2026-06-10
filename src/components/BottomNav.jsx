@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { Home, LineChart, CalendarDays, MessageCircle, User } from 'lucide-react';
 
-const tabs = [
+const TABS = [
   { to: '/app/dashboard', label: 'Home', Icon: Home },
   { to: '/app/calendar', label: 'Calendar', Icon: CalendarDays },
   { to: '/app/progress', label: 'Progress', Icon: LineChart },
@@ -12,7 +12,7 @@ const tabs = [
 export default function BottomNav() {
   return (
     <nav className="bottom-nav" aria-label="Main navigation">
-      {tabs.map(({ to, label, Icon }) => (
+      {TABS.map(({ to, label, Icon }) => (
         <NavLink
           key={to}
           to={to}

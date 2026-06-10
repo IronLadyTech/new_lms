@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
   getCourses,
@@ -18,16 +18,26 @@ import {
   setUserBlocked,
   getUserActivities,
 } from '../../services/userService';
-import { isAdminRole } from '../../utils/roles';
 import { uploadResourceFile, uploadCourseAsset, resourceTypeFromFile } from '../../services/storageService';
-import { getGroups, createGroup, deleteGroup, addMemberToGroup, addCourseToGroup } from '../../services/groupService';
+import {
+  getGroups,
+  createGroup,
+  deleteGroup,
+  addMemberToGroup,
+  addCourseToGroup,
+  setBatchModerators,
+} from '../../services/groupService';
+import { PROGRAM_OPTIONS, PROGRAMS } from '../../data/programTypes';
+import { filterBatchesForModerator } from '../../utils/batchScope';
 import { getEvents } from '../../services/eventService';
 import EventCalendar from './EventCalendar';
 import TicketManager from './TicketManager';
 import RoleSelect from './RoleSelect';
 import AdminOverviewCharts from './AdminOverviewCharts';
+import ZohoIntegration from './ZohoIntegration';
+import MBWAdminDashboard from './MBWAdminDashboard';
 import CourseThumbnail from '../CourseThumbnail';
-import { ROLES, getRoleLabel } from '../../utils/roles';
+import { ROLES, getRoleLabel, isAdminRole, isModeratorOnly, isFullAdmin } from '../../utils/roles';
 import { isSuperAdminEmail } from '../../utils/constants';
 import { getAllTickets, TICKET_STATUSES } from '../../services/ticketService';
 import { formatActivitySummary, formatActivityTypeLabel } from '../../utils/activityLabels';
@@ -44,6 +54,8 @@ import {
   ShieldCheck,
   GraduationCap,
   CheckCircle2,
+  Link2,
+  ListChecks,
   Megaphone,
 } from 'lucide-react';
 import ConfirmDialog from '../ConfirmDialog';
@@ -64,6 +76,14 @@ export const ADMIN_TABS = [
   { id: 'courses', label: 'Courses', icon: BookOpen, desc: 'Create & upload courses' },
   { id: 'resources', label: 'Resources', icon: Paperclip, desc: 'PDF / PPT / links' },
   { id: 'groups', label: 'Batches', icon: Boxes, desc: 'Learner batches' },
+  { id: 'zoho', label: 'Zoho CRM', icon: Link2, desc: 'CRM sync & status' },
+  { id: 'mbw', label: 'MBW Tasks', icon: ListChecks, desc: 'Pre-session tracker' },
+];
+
+export const MODERATOR_TABS = [
+  { id: 'mbw', label: 'My batches', icon: ListChecks, desc: 'Track your learners & MBW tasks' },
+  { id: 'tickets', label: 'Support', icon: LifeBuoy, desc: 'Student support tickets' },
+  { id: 'calendar', label: 'Calendar', icon: CalendarDays, desc: 'Sessions & events' },
 ];
 const TABS = [
   { id: 'overview', label: 'Overview' },
@@ -76,11 +96,13 @@ const TABS = [
   { id: 'courses', label: 'Courses' },
   { id: 'resources', label: 'Resources' },
   { id: 'groups', label: 'Batches' },
+  { id: 'zoho', label: 'Zoho CRM' },
+  { id: 'mbw', label: 'MBW Tasks' },
 ];
 
 const ROLE_OPTIONS_ADMIN = [
   { value: ROLES.STUDENT, label: 'User' },
-  { value: ROLES.MODERATOR, label: 'Moderator' },
+  { value: ROLES.MODERATOR, label: 'Customer Expression' },
   { value: ROLES.ADMIN, label: 'Admin' },
 ];
 
@@ -116,6 +138,8 @@ function ActivityListItem({ activity, userMap, courseMap }) {
 export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, onTabChange }) {
   const { user, profile, role, refreshProfile } = useAuth();
   const { confirm, dialogProps } = useConfirm();
+  const moderatorView = isModeratorOnly(role);
+  const fullAdmin = isFullAdmin(role) || isSuperAdmin;
   const [courses, setCourses] = useState([]);
   const [resources, setResources] = useState([]);
   const [users, setUsers] = useState([]);
@@ -158,12 +182,25 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
   const [resourceFile, setResourceFile] = useState(null);
   const [editingResourceId, setEditingResourceId] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [groupForm, setGroupForm] = useState({ name: '', description: '' });
+  const [groupForm, setGroupForm] = useState({
+    name: '',
+    description: '',
+    program: PROGRAMS.MBW,
+    moderatorIds: [],
+  });
   const [userSearch, setUserSearch] = useState('');
   const [progressModalUser, setProgressModalUser] = useState(null);
 
   const roleOptions = isSuperAdmin ? ROLE_OPTIONS_SUPER : ROLE_OPTIONS_ADMIN;
   const courseMap = Object.fromEntries(courses.map((c) => [c.id, c]));
+  const myBatches = useMemo(
+    () => (moderatorView ? filterBatchesForModerator(groups, user?.uid) : groups),
+    [groups, moderatorView, user?.uid]
+  );
+  const cxtTeam = useMemo(
+    () => users.filter((u) => u.role === ROLES.MODERATOR || u.role === ROLES.ADMIN),
+    [users]
+  );
 
   const filteredUsers = users.filter((u) => {
     const q = userSearch.trim().toLowerCase();
@@ -472,12 +509,21 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
     setMessage('');
     try {
       await createGroup({ ...groupForm, createdBy: user?.uid });
-      setGroupForm({ name: '', description: '' });
+      setGroupForm({ name: '', description: '', program: PROGRAMS.MBW, moderatorIds: [] });
       setMessage('Batch created.');
       load();
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  const toggleGroupModerator = (moderatorId) => {
+    setGroupForm((prev) => {
+      const set = new Set(prev.moderatorIds || []);
+      if (set.has(moderatorId)) set.delete(moderatorId);
+      else set.add(moderatorId);
+      return { ...prev, moderatorIds: [...set] };
+    });
   };
 
   const activityCountByUser = activities.reduce((acc, a) => {
@@ -549,7 +595,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
           </div>
         )}
 
-        {tab === 'overview' && (
+        {tab === 'overview' && fullAdmin && (
           <section className="admin-section">
             {users.length === 0 && !loading && (
               <div className="muted-box admin-message">
@@ -635,7 +681,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
           </section>
         )}
 
-        {tab === 'courses' && (
+        {tab === 'courses' && fullAdmin && (
           <section className="admin-section">
             <div className="admin-card" id="course-form">
               <div className="admin-card__head">
@@ -741,7 +787,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
           </section>
         )}
 
-        {tab === 'resources' && (
+        {tab === 'resources' && fullAdmin && (
           <section className="admin-section">
             <div className="admin-card">
               <div className="admin-card__head">
@@ -880,7 +926,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
           </section>
         )}
 
-        {tab === 'users' && (
+        {tab === 'users' && fullAdmin && (
           <section>
             <h2>All users ({users.length})</h2>
             <p className="muted">
@@ -891,6 +937,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 placeholder="Search by name, email, or role (e.g. jaytiwari)"
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
+                className="admin-form__search"
                 style={{ flex: 1, minWidth: 220 }}
               />
               <button type="button" className="btn btn-outline btn-sm" onClick={load}>
@@ -943,7 +990,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
           </section>
         )}
 
-        {tab === 'progress' && (
+        {tab === 'progress' && fullAdmin && (
           <section>
             <h2>User progress &amp; enrollments ({filteredUsers.length})</h2>
             <p className="muted">Track which courses each user is enrolled in and their learning activity. Click a row or use View progress to open full details.</p>
@@ -1031,7 +1078,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
           </section>
         )}
 
-        {tab === 'activity' && (
+        {tab === 'activity' && fullAdmin && (
           <section>
             <h2>User activity</h2>
             <div className="admin-form">
@@ -1083,13 +1130,15 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
           <TicketManager users={users} isSuperAdmin={isSuperAdmin} onRefresh={load} />
         )}
 
-        {tab === 'groups' && (
+        {tab === 'groups' && fullAdmin && (
           <section>
             <h2>Batches</h2>
-            <p className="muted">Create learner batches and attach courses or members.</p>
+            <p className="muted">
+              Create cohort batches, assign Customer Expression leads, and add learners.
+            </p>
             <form className="admin-form admin-form--stacked" onSubmit={handleCreateGroup}>
               <input
-                placeholder="Batch name"
+                placeholder="Batch name (e.g. MBW January 2026)"
                 value={groupForm.name}
                 onChange={(e) => setGroupForm({ ...groupForm, name: e.target.value })}
                 required
@@ -1099,6 +1148,36 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 value={groupForm.description}
                 onChange={(e) => setGroupForm({ ...groupForm, description: e.target.value })}
               />
+              <label className="field">
+                Program
+                <select
+                  value={groupForm.program}
+                  onChange={(e) => setGroupForm({ ...groupForm, program: e.target.value })}
+                >
+                  {PROGRAM_OPTIONS.map((p) => (
+                    <option key={p.value} value={p.value}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {cxtTeam.length > 0 && (
+                <fieldset className="batch-moderators-field">
+                  <legend>Customer Expression lead(s)</legend>
+                  <div className="batch-moderators-field__list">
+                    {cxtTeam.map((u) => (
+                      <label key={u.id} className="batch-moderators-field__item">
+                        <input
+                          type="checkbox"
+                          checked={(groupForm.moderatorIds || []).includes(u.id)}
+                          onChange={() => toggleGroupModerator(u.id)}
+                        />
+                        {u.displayName || u.email}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              )}
               <button type="submit" className="btn btn-primary btn-sm">
                 Create batch
               </button>
@@ -1108,9 +1187,38 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 <li key={g.id}>
                   <div>
                     <strong>{g.name}</strong>
+                    <span className="badge">{g.program || 'mbw'}</span>
                     <p className="muted">{g.description || 'No description'}</p>
                     <div className="group-meta muted">
                       {(g.memberIds || []).length} members · {(g.courseIds || []).length} courses
+                    </div>
+                    <p className="muted batch-moderators-field__assigned">
+                      CXT:{' '}
+                      {(g.moderatorIds || [])
+                        .map((id) => users.find((u) => u.id === id)?.displayName || id.slice(0, 8))
+                        .join(', ') || 'None assigned'}
+                    </p>
+                    <div className="admin-form batch-moderators-field__edit">
+                      <select
+                        defaultValue=""
+                        onChange={async (e) => {
+                          const uid = e.target.value;
+                          if (!uid) return;
+                          const next = [...new Set([...(g.moderatorIds || []), uid])];
+                          await setBatchModerators(g.id, next);
+                          load();
+                          e.target.value = '';
+                        }}
+                      >
+                        <option value="">+ Assign CXT lead</option>
+                        {cxtTeam
+                          .filter((u) => !(g.moderatorIds || []).includes(u.id))
+                          .map((u) => (
+                            <option key={u.id} value={u.id}>
+                              {u.displayName || u.email}
+                            </option>
+                          ))}
+                      </select>
                     </div>
                     <div className="admin-form" style={{ marginTop: '0.5rem' }}>
                       <select
@@ -1120,12 +1228,14 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                           e.target.value = '';
                         }}
                       >
-                        <option value="">+ Add member</option>
-                        {users.map((u) => (
-                          <option key={u.id} value={u.id}>
-                            {u.displayName}
-                          </option>
-                        ))}
+                        <option value="">+ Add learner</option>
+                        {users
+                          .filter((u) => !u.role || u.role === ROLES.STUDENT)
+                          .map((u) => (
+                            <option key={u.id} value={u.id}>
+                              {u.displayName || u.email}
+                            </option>
+                          ))}
                       </select>
                       <select
                         defaultValue=""
@@ -1151,6 +1261,17 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
               {groups.length === 0 && <li className="muted">No batches yet. Create one above.</li>}
             </ul>
           </section>
+        )}
+
+        {tab === 'zoho' && fullAdmin && <ZohoIntegration users={users} />}
+
+        {tab === 'mbw' && (
+          <MBWAdminDashboard
+            users={users}
+            batches={moderatorView ? myBatches : groups}
+            isScoped={moderatorView}
+            onRefresh={load}
+          />
         )}
       </main>
       <ConfirmDialog {...dialogProps} />
