@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Iron Lady LMS — User &amp; Admin Flows</title>
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: 'dark',
+        flowchart: { curve: 'basis', padding: 16 },
+      });
+    </script>
+    <style>
+      :root {
+        --bg: #0f1419;
+        --surface: #1a2332;
+        --text: #e8edf4;
+        --muted: #8b9cb3;
+        --border: #2d3a4f;
+        --primary: #3b82f6;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+      }
+      .toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.5rem;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+      .toolbar h1 {
+        margin: 0;
+        font-size: 1.1rem;
+      }
+      .toolbar p {
+        margin: 0.15rem 0 0;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      button {
+        padding: 0.55rem 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        font: inherit;
+        cursor: pointer;
+      }
+      button.primary {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+      }
+      main {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 1.5rem;
+      }
+      section {
+        margin-bottom: 2.5rem;
+        padding: 1.25rem;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--surface);
+      }
+      section h2 {
+        margin: 0 0 0.35rem;
+        font-size: 1.25rem;
+      }
+      section .desc {
+        margin: 0 0 1rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .mermaid {
+        overflow-x: auto;
+        padding: 0.5rem 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+        margin-top: 0.75rem;
+      }
+      th,
+      td {
+        padding: 0.55rem 0.75rem;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+      }
+      th {
+        color: var(--muted);
+      }
+      .help {
+        padding: 1rem 1.5rem;
+        background: rgba(59, 130, 246, 0.08);
+        border-bottom: 1px solid var(--border);
+        font-size: 0.9rem;
+      }
+      .help ol {
+        margin: 0.5rem 0 0;
+        padding-left: 1.25rem;
+      }
+      @media print {
+        .toolbar,
+        .help {
+          display: none;
+        }
+        body {
+          background: #fff;
+          color: #000;
+        }
+        section {
+          break-inside: avoid;
+          border-color: #ccc;
+          background: #fff;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <div>
+        <h1>Iron Lady LMS — Flow charts</h1>
+        <p>User flow + Admin flow</p>
+      </div>
+      <div class="actions">
+        <button class="primary" onclick="window.print()">Download as PDF (Print)</button>
+        <button onclick="location.href='https://mermaid.live'">Open Mermaid Live</button>
+      </div>
+    </div>
+
+    <div class="help">
+      <strong>How to download:</strong>
+      <ol>
+        <li><strong>PDF</strong> — Click “Download as PDF (Print)” → choose <em>Save as PDF</em> → Save.</li>
+        <li><strong>PNG image</strong> — Right-click any diagram below → Save image (Chrome/Edge), or use <a href="https://mermaid.live" style="color:#93c5fd">mermaid.live</a> to export PNG/SVG.</li>
+        <li><strong>Share file</strong> — Send this HTML file: <code>docs/iron-lady-flows.html</code></li>
+      </ol>
+    </div>
+
+    <main>
+      <section>
+        <h2>1. User (Learner) flow</h2>
+        <p class="desc">Sign in → learner app → courses, dashboard, calendar, support, profile</p>
+        <pre class="mermaid">
+flowchart TD
+  A[Visit /auth/login] --> B{Signed in?}
+  B -->|No| C[Login / Sign up / Google / Guest]
+  C --> D{Account type}
+  D -->|Guest| E[Preview only - locked panels]
+  D -->|Real user| F[Load Firestore profile]
+  F --> G{Blocked?}
+  G -->|Yes| H[Account blocked screen]
+  G -->|No| I[Learner app /app/*]
+  B -->|Yes student| I
+  B -->|Yes staff| J[/portal - Admin or User view]
+
+  I --> K[Bottom nav + header]
+  K --> L[/app/dashboard - Home]
+  K --> M[/app/calendar]
+  K --> N[/app/progress]
+  K --> O[/app/support]
+  K --> P[/app/profile]
+  I --> Q[/app/home - Courses]
+  Q --> R[Enroll / Continue]
+  R --> S[/app/course/:id - Resources]
+  L --> T[Announcements streak events]
+        </pre>
+      </section>
+
+      <section>
+        <h2>2. Admin (Staff) flow</h2>
+        <p class="desc">Staff login → portal → admin panel → manage LMS</p>
+        <pre class="mermaid">
+flowchart TD
+  A[Staff signs in] --> B[/portal]
+  B --> C{Choose view}
+  C -->|Open admin| D{Role?}
+  C -->|See as user| E[/app/home learner view]
+  D -->|Moderator / Admin| F[/admin]
+  D -->|Super Admin| G[/superadmin]
+  F --> H[Admin sidebar tabs]
+  G --> H
+  H --> I[Overview stats charts]
+  H --> J[Users roles block]
+  H --> K[Support tickets]
+  H --> L[Progress + modal]
+  H --> M[Activity log]
+  H --> N[Calendar events]
+  H --> O[Announcements]
+  H --> P[Courses CRUD]
+  H --> Q[Resources lock/upload]
+  H --> R[Batches groups]
+  H --> S[View as user / Sign out]
+  E --> T[Header Admin link to portal]
+        </pre>
+      </section>
+
+      <section>
+        <h2>3. Routes quick reference</h2>
+        <table>
+          <thead>
+            <tr><th>URL</th><th>Who</th><th>Purpose</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>/auth/login</td><td>Public</td><td>Sign in</td></tr>
+            <tr><td>/portal</td><td>Moderator+</td><td>Choose admin or user view</td></tr>
+            <tr><td>/app/dashboard</td><td>Learner</td><td>Home dashboard</td></tr>
+            <tr><td>/app/home</td><td>Learner</td><td>Course catalog</td></tr>
+            <tr><td>/app/calendar</td><td>Learner</td><td>Events</td></tr>
+            <tr><td>/app/support</td><td>Learner</td><td>Tickets</td></tr>
+            <tr><td>/admin</td><td>Moderator+</td><td>Admin panel</td></tr>
+            <tr><td>/superadmin</td><td>Super Admin</td><td>Full admin + roles</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>4. User vs Admin (overview)</h2>
+        <pre class="mermaid">
+flowchart LR
+  subgraph User
+    U1[Auth] --> U2[Dashboard]
+    U2 --> U3[Courses]
+    U2 --> U4[Calendar]
+    U2 --> U5[Support]
+    U2 --> U6[Announcements]
+  end
+  subgraph Admin
+    A1[Portal] --> A2[Admin panel]
+    A2 --> A3[Users courses resources]
+    A2 --> A4[Events announcements]
+    A2 --> A5[Tickets analytics]
+    A1 --> A6[See as user]
+  end
+  A6 --> U2
+        </pre>
+      </section>
+    </main>
+  </body>
+</html>
