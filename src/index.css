@@ -920,6 +920,11 @@ html:has(.student-layout--mbw) #root {
   border: 1px solid var(--border);
   border-radius: 12px;
   margin-bottom: 0.5rem;
+  position: relative;
+}
+
+.admin-list li:has(.role-select.is-open) {
+  z-index: 2;
 }
 
 .admin-list__content {
@@ -1420,6 +1425,14 @@ html:has(.student-layout--mbw) #root {
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  animation: roleMenuIn 0.14s ease;
+}
+
+.role-select__menu--portal {
+  position: fixed;
+  top: auto;
+  right: auto;
+  left: auto;
   animation: roleMenuIn 0.14s ease;
 }
 
