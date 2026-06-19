@@ -21,7 +21,9 @@ export function getCohortLabel(profile) {
 
 export function isPreparationComplete(taskStates) {
   if (!taskStates?.length) return false;
-  return taskStates.every((ts) => ts.isComplete);
+  const prepTasks = taskStates.filter((ts) => ts.task.phase === 'pre-preparation');
+  if (!prepTasks.length) return false;
+  return prepTasks.every((ts) => ts.isComplete || ts.task.optional);
 }
 
 function sectionComplete(sectionId, sectionProgress) {
@@ -29,42 +31,44 @@ function sectionComplete(sectionId, sectionProgress) {
   return p?.status === MBW_SECTION_STATUS.DONE;
 }
 
-export function computeSectionProgress(taskStates) {
-  const prepComplete = isPreparationComplete(taskStates);
-  const prepDone = taskStates.filter((t) => t.isComplete).length;
-  const prepTotal = taskStates.length;
+function resolveGate(gate, sectionProgress, taskStates) {
+  if (!gate) return true;
+  if (gate.type === MBW_GATE_TYPES.PREPARATION) return isPreparationComplete(taskStates);
+  if (
+    gate.type === MBW_GATE_TYPES.SEQUENCE ||
+    gate.type === MBW_GATE_TYPES.BATCH ||
+    gate.type === MBW_GATE_TYPES.MEMBERS
+  ) {
+    return sectionComplete(gate.requiresSectionId, sectionProgress);
+  }
+  if (gate.type === MBW_GATE_TYPES.PAID) return false;
+  return true;
+}
 
+export function computeSectionProgress(taskStates) {
   const progress = {};
 
   MBW_PROGRAM_SECTIONS.forEach((section) => {
     if (section.usesTaskEngine) {
-      const done = prepDone;
-      const total = prepTotal;
+      const sectionTasks = taskStates.filter((ts) => ts.task.phase === section.id);
+      const done = sectionTasks.filter((ts) => ts.isComplete || ts.task.optional).length;
+      const total = sectionTasks.length;
+      const unlocked = resolveGate(section.gate, progress, taskStates);
+
       let status = MBW_SECTION_STATUS.LOCKED;
-      if (total === 0) {
+      if (!unlocked || total === 0) {
         status = MBW_SECTION_STATUS.LOCKED;
-      } else if (done === total) {
+      } else if (done >= total) {
         status = MBW_SECTION_STATUS.DONE;
       } else {
         status = MBW_SECTION_STATUS.IN_PROGRESS;
       }
-      progress[section.id] = { done, total, status, unlocked: true };
+
+      progress[section.id] = { done, total, status, unlocked };
       return;
     }
 
-    const gate = section.gate;
-    let unlocked = false;
-
-    if (!gate) {
-      unlocked = true;
-    } else if (gate.type === MBW_GATE_TYPES.PREPARATION) {
-      unlocked = prepComplete;
-    } else if (gate.type === MBW_GATE_TYPES.SEQUENCE || gate.type === MBW_GATE_TYPES.BATCH || gate.type === MBW_GATE_TYPES.MEMBERS) {
-      unlocked = sectionComplete(gate.requiresSectionId, progress);
-    } else if (gate.type === MBW_GATE_TYPES.PAID) {
-      unlocked = false;
-    }
-
+    const unlocked = resolveGate(section.gate, progress, taskStates);
     progress[section.id] = {
       done: 0,
       total: section.milestoneCount || 0,
@@ -162,6 +166,7 @@ export function getTaskDurationHint(task) {
   if (task.type === TASK_TYPES.FILE_UPLOAD) return 'Upload';
   if (task.type === TASK_TYPES.VIDEO_RECORD) return '~5 min recording';
   if (task.type === TASK_TYPES.EDITABLE_TEMPLATE) return 'Template';
+  if (task.type === TASK_TYPES.CHECKLIST) return 'Checklist';
   if (taskNeedsReview(task)) return 'Review required';
   return '~10 min';
 }

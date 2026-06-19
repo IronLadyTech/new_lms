@@ -11,7 +11,6 @@ import MBWProgramSkeleton from '../../components/mbw/program/MBWProgramSkeleton'
 import MBWOverviewView from '../../components/mbw/views/MBWOverviewView';
 import MBWLessonView from '../../components/mbw/views/MBWLessonView';
 import { countSavedSubmissions } from '../../utils/mbwSubmissionUtils';
-import { MBW_PROGRAM_SECTIONS } from '../../data/mbwProgramStructure';
 import {
   computeSectionProgress,
   getCurrentSectionId,
@@ -167,7 +166,7 @@ export default function MBWPage() {
       <div className="page mbw-program-page">
         <div className="mbw-program-enroll">
           <h1>Master of Business Warfare</h1>
-          <p>Enrol in the 6-month MBW program from Courses to access your journey.</p>
+          <p>Enrol in the 1-year MBW program from Courses to access your journey.</p>
           <Link to="/app/home" className="btn btn-primary">
             Go to Courses
           </Link>

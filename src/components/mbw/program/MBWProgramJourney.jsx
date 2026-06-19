@@ -34,7 +34,7 @@ export default function MBWProgramJourney({
               sectionProgress={sectionProgress}
               expanded={expandedSectionId === section.id}
               isCurrent={section.id === currentSectionId}
-              taskStates={section.usesTaskEngine ? taskStates : []}
+              taskStates={section.usesTaskEngine ? taskStates.filter((t) => t.task.phase === section.id) : []}
               activeTaskId={activeTaskId}
               nextTaskId={nextTaskId}
               onToggle={() => onToggleSection(section.id)}

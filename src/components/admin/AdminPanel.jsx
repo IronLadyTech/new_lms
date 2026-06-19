@@ -15,6 +15,7 @@ import {
   getAllUsers,
   getAllActivities,
   assignAdminRole,
+  setUserProgram,
   setUserBlocked,
   getUserActivities,
 } from '../../services/userService';
@@ -27,7 +28,7 @@ import {
   addCourseToGroup,
   setBatchModerators,
 } from '../../services/groupService';
-import { PROGRAM_OPTIONS, PROGRAMS } from '../../data/programTypes';
+import { PROGRAM_OPTIONS, PROGRAMS, getProgramShortLabel } from '../../data/programTypes';
 import { filterBatchesForModerator } from '../../utils/batchScope';
 import { getEvents } from '../../services/eventService';
 import EventCalendar from './EventCalendar';
@@ -457,7 +458,25 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
     setMessage('');
     try {
       await assignAdminRole(uid, role);
-      setMessage('Role updated. Admins can upload courses & resources.');
+      if (role === ROLES.MODERATOR) {
+        const target = users.find((u) => u.id === uid);
+        if (!target?.program) await setUserProgram(uid, PROGRAMS.MBW);
+        setMessage('CX member added. Pick their program next to the role.');
+      } else {
+        setMessage('Role updated. Admins can upload courses & resources.');
+      }
+      load();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleProgramChange = async (uid, program) => {
+    setError('');
+    setMessage('');
+    try {
+      await setUserProgram(uid, program);
+      setMessage(`CX program set to ${getProgramShortLabel(program)}.`);
       load();
     } catch (err) {
       setError(err.message);
@@ -952,6 +971,9 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                       <strong>{u.displayName}</strong>
                       <span className="muted"> {u.email}</span>
                       <span className="badge">{getRoleLabel(u.role)}</span>
+                      {u.role === ROLES.MODERATOR && (
+                        <span className="badge badge-program">{getProgramShortLabel(u.program || PROGRAMS.MBW)}</span>
+                      )}
                       {u.blocked && <span className="badge badge-blocked">Blocked</span>}
                     </div>
                     <div className="user-row__meta muted">
@@ -965,6 +987,20 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                       options={roleOptions}
                       onChange={(role) => handleRoleChange(u.id, role)}
                     />
+                    {u.role === ROLES.MODERATOR && (
+                      <select
+                        className="cx-program-select"
+                        value={u.program || PROGRAMS.MBW}
+                        onChange={(e) => handleProgramChange(u.id, e.target.value)}
+                        title="CX program — which program this member manages"
+                      >
+                        {PROGRAM_OPTIONS.map((p) => (
+                          <option key={p.value} value={p.value}>
+                            {getProgramShortLabel(p.value)}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                     {canBlockUser(u) ? (
                       <button
                         type="button"

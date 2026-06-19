@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import { getUserProfile, createUserProfile, ensureSuperAdminIfOwner } from '../services/userService';
+import { initNotifications } from '../services/notificationService';
 import { ROLES } from '../utils/roles';
 import { isSuperAdminEmail } from '../utils/constants';
 import {
@@ -73,6 +74,7 @@ export function AuthProvider({ children }) {
           clearGuestSession();
           setUser(firebaseUser);
           await loadProfile(firebaseUser);
+          initNotifications(firebaseUser.uid); // fire-and-forget: failures must not block login
         } else if (isGuestSessionActive()) {
           applyGuestSession(setUser, setProfile);
         } else {

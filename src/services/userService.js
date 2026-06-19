@@ -13,6 +13,7 @@ import {
 import { db } from '../firebase/config';
 import { ROLES } from '../utils/roles';
 import { isSuperAdminEmail } from '../utils/constants';
+import { recordSubmissionEvent } from './submissionEventService';
 
 const USERS = 'users';
 const ACTIVITIES = 'activities';
@@ -185,6 +186,29 @@ export async function logUserActivity(uid, { type, courseId, title, metadata }) 
     updatedAt: serverTimestamp(),
     ...streakUpdate,
   });
+
+  if (type === 'mock_test' || metadata?.resourceType === 'mock_test') {
+    recordSubmissionEvent({
+      learnerId: uid,
+      courseId: courseId || 'general',
+      problemId: metadata?.problemId || title || null,
+      isCorrect: metadata?.isCorrect !== false,
+    }).catch(() => {});
+  } else if (type === 'assignment_submit' || metadata?.resourceType === 'assignment') {
+    recordSubmissionEvent({
+      learnerId: uid,
+      courseId: courseId || 'general',
+      problemId: metadata?.assignmentId || metadata?.resourceId || title || null,
+      isCorrect: metadata?.isCorrect !== false,
+    }).catch(() => {});
+  } else if (type === 'resource_view' && courseId) {
+    recordSubmissionEvent({
+      learnerId: uid,
+      courseId,
+      problemId: metadata?.resourceId || title || metadata?.resourceType || null,
+      isCorrect: true,
+    }).catch(() => {});
+  }
 }
 
 export async function getUserActivities(uid, limitCount = 20) {
@@ -225,6 +249,11 @@ export async function assignAdminRole(uid, role) {
   await updateDoc(doc(db, USERS, uid), { role, updatedAt: serverTimestamp() });
 }
 
+/** Sets the program a CX member (moderator) is scoped to: mbw | lep | 100bm. */
+export async function setUserProgram(uid, program) {
+  await updateDoc(doc(db, USERS, uid), { program, updatedAt: serverTimestamp() });
+}
+
 export async function setUserBlocked(uid, blocked) {
   await updateDoc(doc(db, USERS, uid), { blocked, updatedAt: serverTimestamp() });
 }
@@ -243,6 +272,11 @@ export async function incrementStreak(uid) {
 }
 
 /** Recalculate streak from profile + recent activity log. */
+export async function saveFcmToken(uid, token) {
+  if (!uid || !token) return;
+  await updateDoc(doc(db, USERS, uid), { fcmToken: token, updatedAt: serverTimestamp() });
+}
+
 export async function syncUserStreak(uid) {
   const profile = await getUserProfile(uid);
   if (!profile) return 0;
