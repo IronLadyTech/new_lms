@@ -1333,7 +1333,12 @@ export async function saveSubmission(userId, taskId, payload, { batchId = 'defau
 
 export async function uploadMbwFile(userId, taskId, file, kind = 'file') {
   try {
-    const { url, path, fileName } = await uploadFile(file, `mbw/${userId}/${taskId}/${kind}`);
+    const { url, path, fileName } = await uploadFile(file, `mbw/${userId}/${taskId}/${kind}`, {
+      uploadedBy: userId,
+      source: 'mbw',
+      sourceId: `${userId}_${taskId}`,
+      sourceLabel: `MBW ${kind} — ${taskId}`,
+    });
     return { url, path, fileName };
   } catch (err) {
     console.warn('Storage upload failed', err);

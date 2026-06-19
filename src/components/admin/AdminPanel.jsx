@@ -37,6 +37,7 @@ import RoleSelect from './RoleSelect';
 import AdminOverviewCharts from './AdminOverviewCharts';
 import ZohoIntegration from './ZohoIntegration';
 import MBWAdminDashboard from './MBWAdminDashboard';
+import StorageManager from './StorageManager';
 import CourseThumbnail from '../CourseThumbnail';
 import { ROLES, getRoleLabel, isAdminRole, isModeratorOnly, isFullAdmin } from '../../utils/roles';
 import { isSuperAdminEmail } from '../../utils/constants';
@@ -58,6 +59,7 @@ import {
   Link2,
   ListChecks,
   Megaphone,
+  HardDrive,
 } from 'lucide-react';
 import ConfirmDialog from '../ConfirmDialog';
 import UserProgressModal from './UserProgressModal';
@@ -79,6 +81,11 @@ export const ADMIN_TABS = [
   { id: 'groups', label: 'Batches', icon: Boxes, desc: 'Learner batches' },
   { id: 'zoho', label: 'Zoho CRM', icon: Link2, desc: 'CRM sync & status' },
   { id: 'mbw', label: 'MBW Tasks', icon: ListChecks, desc: 'Pre-session tracker' },
+];
+
+export const SUPER_ADMIN_TABS = [
+  ...ADMIN_TABS,
+  { id: 'storage', label: 'Storage', icon: HardDrive, desc: 'Track & clean LMS storage' },
 ];
 
 export const MODERATOR_TABS = [
@@ -1300,6 +1307,8 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
         )}
 
         {tab === 'zoho' && fullAdmin && <ZohoIntegration users={users} />}
+
+        {tab === 'storage' && isSuperAdmin && <StorageManager users={users} />}
 
         {tab === 'mbw' && (
           <MBWAdminDashboard

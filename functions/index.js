@@ -363,3 +363,51 @@ exports.zohoSyncUser = onCall(async (request) => {
   const result = await zoho.syncUserToZoho(db, userId, snap.data());
   return { ok: result.synced, ...result };
 });
+
+// ── Storage admin (super-admin only) ──────────────────────────
+const storageAdmin = require('./storage');
+
+exports.storageGetOverview = onCall(async (request) => {
+  if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in required');
+  await storageAdmin.assertSuperAdmin(db, request.auth.uid);
+  return storageAdmin.getOverview(db);
+});
+
+exports.storageScanBucket = onCall(async (request) => {
+  if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in required');
+  await storageAdmin.assertSuperAdmin(db, request.auth.uid);
+  return storageAdmin.scanBucket(db);
+});
+
+exports.storageListObjects = onCall(async (request) => {
+  if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in required');
+  await storageAdmin.assertSuperAdmin(db, request.auth.uid);
+  return storageAdmin.listObjects(db, request.data || {});
+});
+
+exports.storageDeleteObjects = onCall(async (request) => {
+  if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in required');
+  await storageAdmin.assertSuperAdmin(db, request.auth.uid);
+  const { paths } = request.data || {};
+  return storageAdmin.deleteObjects(db, paths);
+});
+
+exports.storageCleanOrphans = onCall(async (request) => {
+  if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in required');
+  await storageAdmin.assertSuperAdmin(db, request.auth.uid);
+  return storageAdmin.cleanOrphans(db);
+});
+
+exports.storageDeleteUserStorage = onCall(async (request) => {
+  if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in required');
+  await storageAdmin.assertSuperAdmin(db, request.auth.uid);
+  const { userId } = request.data || {};
+  return storageAdmin.deleteUserStorage(db, userId);
+});
+
+exports.storageResetUserStorage = onCall(async (request) => {
+  if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in required');
+  await storageAdmin.assertSuperAdmin(db, request.auth.uid);
+  const { userId } = request.data || {};
+  return storageAdmin.resetUserStorage(db, userId);
+});

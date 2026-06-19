@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { ROLES, isModeratorOnly } from '../../utils/roles';
-import AdminPanel, { ADMIN_TABS, MODERATOR_TABS } from './AdminPanel';
+import AdminPanel, { ADMIN_TABS, SUPER_ADMIN_TABS, MODERATOR_TABS } from './AdminPanel';
 import AdminNotificationBell from './AdminNotificationBell';
 import ThemeToggle from '../ThemeToggle';
 
@@ -11,7 +11,7 @@ export default function AdminShell({ title, subtitle, isSuperAdmin = false }) {
   const { signOut, profile, role } = useAuth();
   const navigate = useNavigate();
   const moderatorView = isModeratorOnly(role);
-  const navTabs = moderatorView ? MODERATOR_TABS : ADMIN_TABS;
+  const navTabs = moderatorView ? MODERATOR_TABS : isSuperAdmin ? SUPER_ADMIN_TABS : ADMIN_TABS;
   const [tab, setTab] = useState(moderatorView ? 'mbw' : 'overview');
   const [menuOpen, setMenuOpen] = useState(false);
 

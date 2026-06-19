@@ -206,5 +206,11 @@ service cloud.firestore {
       allow read: if canUseApp();
       allow write: if hasAdminAccess();
     }
+
+    match /storage_objects/{objectId} {
+      allow read: if isSuperAdmin();
+      allow create, update: if hasAdminAccess();
+      allow delete: if isSuperAdmin();
+    }
   }
 }
