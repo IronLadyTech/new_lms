@@ -135,6 +135,123 @@ exports.weeklyLinkedInReminder = onSchedule(
   }
 );
 
+// ── FCM helpers ───────────────────────────────────────────────
+async function clearExpiredToken(uid) {
+  await db.collection('users').doc(uid).update({ fcmToken: null });
+}
+
+async function trySend(message, uid) {
+  try {
+    await admin.messaging().send(message);
+    return true;
+  } catch (err) {
+    if (err.code === 'messaging/registration-token-not-registered') {
+      await clearExpiredToken(uid);
+    }
+    console.error(`FCM send failed for ${uid}:`, err.message);
+    return false;
+  }
+}
+
+// ── CX: send task reminder to one learner ─────────────────────
+exports.sendTaskReminder = onCall(async (request) => {
+  if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in required');
+  await zoho.assertStaff(db, request.auth.uid);
+
+  const { userId, taskId } = request.data || {};
+  if (!userId || !taskId) throw new HttpsError('invalid-argument', 'userId and taskId required');
+
+  const [userDoc, taskDoc] = await Promise.all([
+    db.collection('users').doc(userId).get(),
+    db.collection('mbw_tasks').doc(taskId).get(),
+  ]);
+
+  if (!userDoc.exists) throw new HttpsError('not-found', 'User not found');
+
+  const { fcmToken, displayName } = userDoc.data();
+  if (!fcmToken) return { sent: false, reason: 'no_token' };
+
+  const taskTitle = taskDoc.exists ? (taskDoc.data().title || taskId) : taskId;
+  const firstName = (displayName || '').split(' ')[0] || 'there';
+
+  const sent = await trySend({
+    token: fcmToken,
+    notification: {
+      title: 'Task Reminder',
+      body: `Hi ${firstName}, your task "${taskTitle}" is waiting for you. Complete it today!`,
+    },
+    data: { type: 'task_reminder', taskId, userId },
+  }, userId);
+
+  if (sent) {
+    await db.collection('notifications').add({
+      type: 'task_reminder',
+      sentTo: userId,
+      sentBy: request.auth.uid,
+      taskId,
+      taskTitle,
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  }
+
+  return { sent };
+});
+
+// ── CX: send session reminder to all learners in a batch ──────
+exports.sendSessionReminder = onCall(async (request) => {
+  if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in required');
+  await zoho.assertStaff(db, request.auth.uid);
+
+  const { batchId, message: customMessage } = request.data || {};
+  if (!batchId) throw new HttpsError('invalid-argument', 'batchId required');
+
+  const batchDoc = await db.collection('groups').doc(batchId).get();
+  if (!batchDoc.exists) throw new HttpsError('not-found', 'Batch not found');
+
+  const { name: batchName = 'your batch', memberIds = [] } = batchDoc.data();
+  if (memberIds.length === 0) return { sent: 0, failed: 0, skipped: 0 };
+
+  const memberDocs = await Promise.all(memberIds.map((uid) => db.collection('users').doc(uid).get()));
+
+  const targets = memberDocs
+    .filter((d) => d.exists && d.data().fcmToken)
+    .map((d) => ({ uid: d.id, token: d.data().fcmToken }));
+
+  if (targets.length === 0) return { sent: 0, failed: 0, skipped: memberIds.length };
+
+  const body = customMessage || `Session reminder for ${batchName}. Check your LMS for the latest updates.`;
+
+  const result = await admin.messaging().sendEachForMulticast({
+    tokens: targets.map((t) => t.token),
+    notification: { title: 'Session Reminder', body },
+    data: { type: 'session_reminder', batchId },
+  });
+
+  // Clear expired tokens in the background
+  result.responses.forEach((resp, i) => {
+    if (!resp.success && resp.error?.code === 'messaging/registration-token-not-registered') {
+      clearExpiredToken(targets[i].uid).catch(() => {});
+    }
+  });
+
+  await db.collection('notifications').add({
+    type: 'session_reminder',
+    batchId,
+    batchName,
+    message: body,
+    sentBy: request.auth.uid,
+    memberCount: memberIds.length,
+    sentCount: result.successCount,
+    sentAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  return {
+    sent: result.successCount,
+    failed: result.failureCount,
+    skipped: memberIds.length - targets.length,
+  };
+});
+
 // ── Zoho CRM — auto-sync on user profile changes ──────────────
 exports.onUserProfileZohoSync = onDocumentWritten(
   { document: 'users/{userId}' },

@@ -141,5 +141,70 @@ service cloud.firestore {
           || get(/databases/$(database)/documents/tickets/$(ticketId)).data.userId == request.auth.uid;
       }
     }
+
+    match /learner_submissions/{submissionId} {
+      allow read: if canUseApp() && (
+        resource.data.learnerId == request.auth.uid || hasStaffAccess()
+      );
+      allow create: if canUseApp()
+        && request.resource.data.learnerId == request.auth.uid
+        && request.resource.data.isCorrect is bool
+        && request.resource.data.courseId is string;
+      // setDoc(merge:true) on an existing doc is evaluated as update.
+      // isCorrect must stay the same (prevents retroactive self-grading).
+      allow update: if canUseApp()
+        && resource.data.learnerId == request.auth.uid
+        && request.resource.data.learnerId == request.auth.uid
+        && request.resource.data.isCorrect == resource.data.isCorrect
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['learnerId', 'courseId', 'problemId', 'isCorrect', 'timestamp', 'dateKey']);
+      allow delete: if hasStaffAccess();
+    }
+
+    match /attendance/{recordId} {
+      allow read: if canUseApp() && (
+        resource.data.learnerId == request.auth.uid || hasStaffAccess()
+      );
+      // Staff can create any record. Learners can self-report present only.
+      allow create: if hasStaffAccess()
+        || (canUseApp()
+          && request.resource.data.learnerId == request.auth.uid
+          && request.resource.data.status == 'present');
+      // Update checks the EXISTING owner (resource.data) to prevent overwriting
+      // another learner's record. Learners can only touch status/updatedAt.
+      allow update: if hasStaffAccess()
+        || (canUseApp()
+          && resource.data.learnerId == request.auth.uid
+          && request.resource.data.learnerId == request.auth.uid
+          && request.resource.data.status == 'present'
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['status', 'updatedAt']));
+      allow delete: if hasStaffAccess();
+    }
+
+    match /mbw_submissions/{submissionId} {
+      allow read: if canUseApp() && (
+        resource.data.userId == request.auth.uid || hasStaffAccess()
+      );
+      allow create: if canUseApp()
+        && request.resource.data.userId == request.auth.uid;
+      // Staff (moderators/admins) can update any submission for the review workflow.
+      // Learners can update their own but cannot write review-only fields, and
+      // if changing status it must only move to 'submitted' (not self-complete).
+      allow update: if hasStaffAccess()
+        || (canUseApp()
+          && resource.data.userId == request.auth.uid
+          && request.resource.data.userId == request.auth.uid
+          && !request.resource.data.diff(resource.data).affectedKeys()
+               .hasAny(['reviewedBy', 'reviewedAt', 'completedAt', 'feedback'])
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status'])
+              || request.resource.data.status == 'submitted'));
+      allow delete: if hasStaffAccess();
+    }
+
+    match /mbw_tasks/{taskId} {
+      allow read: if canUseApp();
+      allow write: if hasAdminAccess();
+    }
   }
 }

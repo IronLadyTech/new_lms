@@ -46,7 +46,7 @@ export default function CourseDetail() {
   if (!course) return <p className="muted">Loading course…</p>;
 
   return (
-    <div className="page course-detail mbw-program-page">
+    <div className="page course-detail">
       <Link to="/app/home" className="back-link">
         ← Courses
       </Link>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getCourses } from '../../services/courseService';
-import { getUserActivities, syncUserStreak } from '../../services/userService';
+import { getUserActivities } from '../../services/userService';
 import { getAssignments } from '../../services/courseService';
 import { getEvents } from '../../services/eventService';
 import { getAnnouncements, getActiveAnnouncementsForUser } from '../../services/announcementService';
@@ -12,41 +12,20 @@ import ActivityLogList, { buildCourseMap } from '../../components/ActivityLogLis
 import CourseThumbnail from '../../components/CourseThumbnail';
 import EventPreviewCard from '../../components/EventPreviewCard';
 import EventDetailActions from '../../components/EventDetailActions';
+import { useStreakAnalytics } from '../../hooks/useStreakAnalytics';
+import AnimatedNumber from '../../components/analytics/AnimatedNumber';
 
 export default function Dashboard() {
-  const { user, profile, isGuest, refreshProfile } = useAuth();
+  const { user, profile, isGuest } = useAuth();
   const [courses, setCourses] = useState([]);
   const [courseMap, setCourseMap] = useState({});
   const [activities, setActivities] = useState([]);
   const [pendingAssignments, setPendingAssignments] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
-  const [streak, setStreak] = useState(profile?.streak ?? 0);
-
-  useEffect(() => {
-    setStreak(profile?.streak ?? 0);
-  }, [profile?.streak]);
-
-  useEffect(() => {
-    if (!user || isGuest) return undefined;
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const synced = await syncUserStreak(user.uid);
-        if (!cancelled) {
-          setStreak(synced);
-          await refreshProfile();
-        }
-      } catch (e) {
-        console.error('Streak sync failed:', e);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user, isGuest, refreshProfile]);
+  const { summary: streakSummary, loading: streakLoading } = useStreakAnalytics(
+    isGuest ? null : user?.uid
+  );
 
   useEffect(() => {
     if (!user || isGuest) return undefined;
@@ -102,10 +81,12 @@ export default function Dashboard() {
       </p>
 
       <div className="stat-row">
-        <div className="stat-card">
-          <span className="stat-value">{streak}</span>
-          <span className="stat-label">Day streak</span>
-        </div>
+        <Link to="/app/home" className="stat-card stat-card--streak-live">
+          <span className="stat-value">
+            {streakLoading ? '…' : <AnimatedNumber value={streakSummary?.currentStreak ?? 0} />}
+          </span>
+          <span className="stat-label">Day streak · live</span>
+        </Link>
         <div className="stat-card">
           <span className="stat-value">{courses.length}</span>
           <span className="stat-label">Enrolled</span>

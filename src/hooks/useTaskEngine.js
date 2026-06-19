@@ -210,6 +210,15 @@ export function useTaskEngine(userId) {
 
       if (taskNeedsReview(task)) {
         payload.status = SUBMISSION_STATUS.UNDER_REVIEW;
+      } else if (task.type === TASK_TYPES.CHECKLIST) {
+        const total = task.checklistItems?.length || 0;
+        const ticked = Array.isArray(fields.checkedItems) ? fields.checkedItems.length : 0;
+        if (total > 0 && ticked >= total) {
+          payload.status = SUBMISSION_STATUS.COMPLETED;
+          payload.completedAt = new Date().toISOString();
+        } else {
+          payload.status = SUBMISSION_STATUS.UNLOCKED;
+        }
       } else {
         payload.status = SUBMISSION_STATUS.COMPLETED;
         payload.completedAt = new Date().toISOString();
@@ -219,6 +228,9 @@ export function useTaskEngine(userId) {
       setSubmissions((prev) => ({ ...prev, [taskId]: { ...prev[taskId], ...saved, ...payload } }));
 
       const needsReview = taskNeedsReview(task);
+      if (task.type === TASK_TYPES.CHECKLIST && payload.status !== SUBMISSION_STATUS.COMPLETED) {
+        return null;
+      }
       return {
         message: needsReview
           ? 'Submitted — your instructor will review it soon.'

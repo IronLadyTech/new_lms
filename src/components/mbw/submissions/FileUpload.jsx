@@ -44,8 +44,30 @@ export default function FileUpload({ task, submission, canSubmit, userId, onSubm
     }
   };
 
+  const RESUME_TEMPLATES = [
+    { label: 'Entrepreneur Resume Template', file: '/templates/Entrepreneur Resume Template.docx' },
+    { label: 'Iron Lady Resume Template', file: '/templates/Iron Lady Resume Template.doc' },
+  ];
+
   return (
     <div className="mbw-submission">
+      <div className="mbw-submission__templates">
+        <p className="mbw-submission__templates-label">
+          <strong>Sample Templates</strong> — download a template to get started:
+        </p>
+        <div className="mbw-submission__templates-list">
+          {RESUME_TEMPLATES.map((t) => (
+            <a
+              key={t.file}
+              href={t.file}
+              download
+              className="btn btn-outline btn-sm"
+            >
+              ⬇ {t.label}
+            </a>
+          ))}
+        </div>
+      </div>
       {saved && (
         <div className="mbw-submission__saved">
           <strong>Submitted file:</strong>{' '}

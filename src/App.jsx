@@ -14,8 +14,15 @@ import Calendar from './pages/student/Calendar';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard';
 import PortalGate from './pages/portal/PortalGate';
+import CXLayout from './components/cx/CXLayout';
+import CXHome from './pages/cx/CXHome';
+import CXBatches from './pages/cx/CXBatches';
+import CXBatchAnalysis from './pages/cx/CXBatchAnalysis';
+import CXDashboards from './pages/cx/CXDashboards';
+import CXProfile from './pages/cx/CXProfile';
+import CXTaskReview from './pages/cx/CXTaskReview';
 import { ROLES } from './utils/roles';
-import { isAdminRole } from './utils/roles';
+import { isAdminRole, isModeratorOnly } from './utils/roles';
 
 function RoleRedirect() {
   const { user, loading, role } = useAuth();
@@ -28,6 +35,7 @@ function RoleRedirect() {
     );
   }
   if (!user) return <Navigate to="/auth/login" replace />;
+  if (isModeratorOnly(role)) return <Navigate to="/cx/home" replace />;
   if (isAdminRole(role)) return <Navigate to="/portal" replace />;
   return <Navigate to="/app/home" replace />;
 }
@@ -66,6 +74,23 @@ export default function App() {
         <Route path="support" element={<Support />} />
         <Route path="course/:courseId" element={<CourseDetail />} />
         <Route path="mbw" element={<MBWPage />} />
+      </Route>
+
+      <Route
+        path="/cx"
+        element={
+          <ProtectedRoute minRole={ROLES.MODERATOR}>
+            <CXLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="home" replace />} />
+        <Route path="home" element={<CXHome />} />
+        <Route path="batches" element={<CXBatches />} />
+        <Route path="batches/:batchId" element={<CXBatchAnalysis />} />
+        <Route path="dashboards" element={<CXDashboards />} />
+        <Route path="profile" element={<CXProfile />} />
+        <Route path="review/:userId/:taskId" element={<CXTaskReview />} />
       </Route>
 
       <Route

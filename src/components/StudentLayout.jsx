@@ -10,9 +10,11 @@ import BlockedPanel from './BlockedPanel';
 export default function StudentLayout() {
   const { role, isGuest, isBlocked, refreshProfile } = useAuth();
   const location = useLocation();
-  const isCourseContext =
-    location.pathname.includes('/mbw') || /^\/app\/course\//.test(location.pathname);
-  const isLightShell = isCourseContext;
+  const isMbwRoute = location.pathname.includes('/mbw');
+  const isCourseDetailRoute = /^\/app\/course\//.test(location.pathname);
+  const isHomePage = /^\/app\/home\/?$/.test(location.pathname);
+  const isProgressPage = /^\/app\/progress\/?$/.test(location.pathname);
+  const isLightShell = isMbwRoute;
   const showAdminLink = isAdminRole(role) && !isGuest;
   const accessBlocked = isBlocked && !isAdminRole(role);
 
@@ -46,7 +48,7 @@ export default function StudentLayout() {
   return (
     <div
       className={`student-layout${isLightShell ? ' student-layout--mbw' : ''}${
-        isCourseContext ? ' student-layout--course' : ''
+        isMbwRoute ? ' student-layout--course' : ''
       }`}
     >
       <header className="app-header">
@@ -68,7 +70,11 @@ export default function StudentLayout() {
           </Link>
         </div>
       </header>
-      <main className={`student-main${isLightShell ? ' student-main--mbw' : ''}`}>
+      <main
+        className={`student-main${isLightShell ? ' student-main--mbw' : ''}${
+          isHomePage || isProgressPage ? ' student-main--home' : ''
+        }${isCourseDetailRoute ? ' student-main--wide' : ''}`}
+      >
         <Outlet />
       </main>
       <BottomNav />

@@ -36,6 +36,10 @@ export function submissionPreview(sub, task) {
   if (sub.videoUrl) return 'Video submitted';
   if (sub.templateData?.rows?.length) return `ERRC grid (${sub.templateData.rows.length} rows)`;
   if (sub.weekEntries?.length) return `${sub.weekEntries.length} week(s) of posts`;
+  if (sub.checkedItems?.length) {
+    const total = task?.checklistItems?.length;
+    return total ? `${sub.checkedItems.length}/${total} practices done` : `${sub.checkedItems.length} practice(s) done`;
+  }
   if (sub.watchCompleted) return 'Video watched';
   if (task?.title) return task.title;
   return 'Saved';

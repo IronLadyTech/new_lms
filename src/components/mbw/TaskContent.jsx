@@ -7,9 +7,15 @@ import FileUpload from './submissions/FileUpload';
 import VideoRecordOrUpload from './submissions/VideoRecordOrUpload';
 import WatchOnly from './submissions/WatchOnly';
 import RecurringPost from './submissions/RecurringPost';
+import ChecklistSubmission from './submissions/ChecklistSubmission';
 import { TASK_TYPES, SUBMISSION_STATUS } from '../../services/mbwService';
 import { getModuleLabel, getWeekCode, getPrimaryStatus } from '../../utils/mbwDisplay';
 import { getTaskDurationHint } from '../../utils/mbwProgramUtils';
+import { MBW_PROGRAM_SECTIONS } from '../../data/mbwProgramStructure';
+
+function getSectionTitle(phase) {
+  return MBW_PROGRAM_SECTIONS.find((s) => s.id === phase)?.title ?? 'MBW';
+}
 
 export default function TaskContent({
   taskState,
@@ -59,7 +65,7 @@ export default function TaskContent({
           </div>
         ) : (
           <>
-            <p className="mbw-task__eyebrow">Iron Lady · MBW · Pre-Preparation</p>
+            <p className="mbw-task__eyebrow">Iron Lady · MBW · {getSectionTitle(task.phase)}</p>
             <h1>{task.title}</h1>
             <div className="mbw-task__meta">
               <span className="mbw-task__module-label">{getModuleLabel(task)}</span>
@@ -149,6 +155,14 @@ export default function TaskContent({
               submission={submission}
               canSubmit={canSubmit}
               onAddPost={handleRecurring}
+            />
+          )}
+          {task.type === TASK_TYPES.CHECKLIST && (
+            <ChecklistSubmission
+              task={task}
+              submission={submission}
+              canSubmit={canSubmit}
+              onSubmit={handleSubmit}
             />
           )}
 

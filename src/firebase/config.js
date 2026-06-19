@@ -3,6 +3,7 @@ import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { initializeFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions } from 'firebase/functions';
+import { getMessaging, isSupported } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -24,6 +25,7 @@ let auth = null;
 let db = null;
 let storage = null;
 let functions = null;
+let messaging = null;
 let googleProvider = null;
 
 if (configured) {
@@ -37,8 +39,13 @@ if (configured) {
   storage = getStorage(app);
   functions = getFunctions(app);
   googleProvider = new GoogleAuthProvider();
+  // Messaging is only supported in secure contexts (HTTPS / localhost).
+  // getMessaging() throws in unsupported environments, so we guard it.
+  isSupported().then((supported) => {
+    if (supported) messaging = getMessaging(app);
+  });
 }
 
-export { app, auth, db, storage, functions, googleProvider };
+export { app, auth, db, storage, functions, messaging, googleProvider };
 
 export const isFirebaseConfigured = () => configured;
