@@ -48,7 +48,7 @@ React LMS built from your Excalidraw pipeline: **Firebase + Zoho (parallel)**, s
 
    - [Zoho API Console](https://api-console.zoho.com/) → Server-based app
    - Add refresh token + client credentials to `.env`
-   - Custom field `Enrolled_Courses` on Contacts module (or adjust `zohoService.js`)
+   - Custom fields on Zoho **Leads** module: `Enrolled_Courses`, `LMS_Role`, etc. (see Admin → Zoho CRM setup)
 
 6. **Run**
 

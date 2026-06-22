@@ -1,12 +1,18 @@
 /**
  * Zoho CRM integration — server-side only (secrets never in the browser).
  * Credentials live in functions/.env (gitignored), loaded by Firebase on deploy.
+ *
+ * Syncs LMS users to Zoho **Leads** only (no Contacts module).
  */
 
 const { HttpsError } = require('firebase-functions/v2/https');
+const admin = require('firebase-admin');
+const provisioning = require('./zohoProvisioning');
+const ilUsers = require('./zohoIlUsers');
+const { entitlementsToLeadFields, readPasswordFromLead } = require('./zohoFieldMap');
 
 const DEFAULT_API_DOMAIN = 'https://www.zohoapis.in';
-const DEFAULT_MODULE = 'Contacts';
+const DEFAULT_MODULE = 'Leads';
 
 let cachedAccessToken = null;
 let tokenExpiry = 0;
@@ -36,6 +42,11 @@ function isConfigured() {
   );
 }
 
+/** Read linked Zoho Lead id (supports legacy zohoContactId from older syncs). */
+function getZohoLeadId(profile) {
+  return profile?.zohoLeadId || profile?.zohoContactId || null;
+}
+
 async function getAccessToken() {
   if (!isConfigured()) return null;
   if (cachedAccessToken && Date.now() < tokenExpiry) return cachedAccessToken;
@@ -62,9 +73,9 @@ async function getAccessToken() {
   return cachedAccessToken;
 }
 
-function contactPayload({ uid, email, displayName, enrolledCourses = [], role, blocked }) {
+function leadPayload({ uid, email, displayName, enrolledCourses = [], role, blocked, program, accessTier, paymentStatus }) {
   const courses = Array.isArray(enrolledCourses) ? enrolledCourses : [];
-  return {
+  const payload = {
     Email: email,
     Last_Name: displayName || email?.split('@')[0] || 'User',
     Description: `Firebase UID: ${uid}`,
@@ -73,9 +84,40 @@ function contactPayload({ uid, email, displayName, enrolledCourses = [], role, b
     LMS_Blocked: blocked ? 'Yes' : 'No',
     Firebase_UID: uid,
   };
+
+  Object.assign(payload, entitlementsToLeadFields({ program, accessTier, paymentStatus }));
+
+  return payload;
 }
 
-async function upsertContact(fields) {
+function profileToLeadFields(uid, profile) {
+  return leadPayload({
+    uid,
+    email: profile.email,
+    displayName: profile.displayName,
+    enrolledCourses: profile.enrolledCourses,
+    role: profile.role,
+    blocked: profile.blocked,
+    program: profile.program,
+    accessTier: profile.accessTier,
+    paymentStatus: profile.paymentStatus,
+  });
+}
+
+function leadPasswordPayload(baseFields, password, options = {}) {
+  const {
+    status = 'Password updated via LMS',
+    updatedAt = new Date().toISOString(),
+  } = options;
+  return {
+    ...baseFields,
+    LMS_Password: password,
+    LMS_Password_Updated_At: updatedAt,
+    LMS_Credential_Status: status,
+  };
+}
+
+async function upsertLead(fields) {
   const token = await getAccessToken();
   if (!token) throw new Error('Unable to obtain Zoho access token');
 
@@ -104,7 +146,7 @@ async function upsertContact(fields) {
   return row?.details?.id || null;
 }
 
-async function searchContactByEmail(email) {
+async function searchLeadByEmail(email) {
   const token = await getAccessToken();
   if (!token || !email) return null;
 
@@ -121,40 +163,178 @@ async function searchContactByEmail(email) {
   return body?.data?.[0]?.id || null;
 }
 
-async function syncUserToZoho(db, uid, profile) {
+async function searchIlUserByEmail(email) {
+  return ilUsers.searchIlUserByEmail(email, { getAccessToken, getApiDomain });
+}
+
+async function getLeadById(leadId) {
+  const token = await getAccessToken();
+  if (!token || !leadId) return null;
+
+  const res = await fetch(`${getApiDomain()}/crm/v2/${getModule()}/${leadId}`, {
+    headers: { Authorization: `Zoho-oauthtoken ${token}` },
+  });
+
+  if (!res.ok) return null;
+  const body = await res.json();
+  return body?.data?.[0] || null;
+}
+
+async function getLeadByEmail(email) {
+  const leadId = await searchLeadByEmail(email);
+  if (!leadId) return null;
+
+  const token = await getAccessToken();
+  if (!token) return null;
+
+  const res = await fetch(`${getApiDomain()}/crm/v2/${getModule()}/${leadId}`, {
+    headers: { Authorization: `Zoho-oauthtoken ${token}` },
+  });
+
+  if (!res.ok) return null;
+  const body = await res.json();
+  return body?.data?.[0] || null;
+}
+
+function credentialTimeMs(value) {
+  if (!value) return 0;
+  if (value?.toDate) return value.toDate().getTime();
+  if (value instanceof Date) return value.getTime();
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function isUsableZohoPassword(password) {
+  return typeof password === 'string' && password.trim().length >= 6 && password !== 'USER_MANAGED';
+}
+
+async function applyFirebasePassword(uid, password) {
+  await admin.auth().updateUser(uid, { password });
+}
+
+/**
+ * Keeps LMS (Firebase Auth) and Zoho LMS_Password aligned using the newest source.
+ * Requires lmsCredentialPassword on the Firestore profile (set at signup/reset).
+ */
+async function reconcileCredentials(db, uid, profile) {
+  const lead = await getLeadByEmail(profile.email);
+  const ilUser = await searchIlUserByEmail(profile.email);
+  let zohoPassword = readPasswordFromLead(lead);
+  if (!isUsableZohoPassword(zohoPassword) && isUsableZohoPassword(ilUser?.Password)) {
+    zohoPassword = ilUser.Password.trim();
+  }
+  const zohoUpdatedMs = credentialTimeMs(lead?.LMS_Password_Updated_At);
+  const lmsUpdatedMs = credentialTimeMs(profile.passwordUpdatedAt);
+  const lmsPassword = profile.lmsCredentialPassword?.trim() || '';
+
+  let passwordForZoho = null;
+  let credentialAction = null;
+
+  if (lmsPassword && lmsUpdatedMs >= zohoUpdatedMs) {
+    passwordForZoho = lmsPassword;
+    credentialAction = 'pushed_to_zoho';
+  } else if (isUsableZohoPassword(zohoPassword) && zohoUpdatedMs > lmsUpdatedMs) {
+    try {
+      await applyFirebasePassword(uid, zohoPassword);
+      const syncedAt = zohoUpdatedMs ? new Date(zohoUpdatedMs) : new Date();
+      await db.collection('users').doc(uid).update({
+        lmsCredentialPassword: zohoPassword,
+        passwordUpdatedAt: syncedAt,
+        updatedAt: new Date(),
+      });
+      credentialAction = 'applied_from_zoho';
+    } catch (err) {
+      console.warn(`Firebase password update failed for ${profile.email}:`, err.message);
+      credentialAction = `firebase_password_failed:${err.message}`;
+    }
+  } else if (isUsableZohoPassword(zohoPassword) && !lmsPassword) {
+    try {
+      await applyFirebasePassword(uid, zohoPassword);
+      const syncedAt = zohoUpdatedMs ? new Date(zohoUpdatedMs) : new Date();
+      await db.collection('users').doc(uid).update({
+        lmsCredentialPassword: zohoPassword,
+        passwordUpdatedAt: syncedAt,
+        updatedAt: new Date(),
+      });
+      credentialAction = 'seeded_from_zoho';
+    } catch (err) {
+      console.warn(`Firebase password seed failed for ${profile.email}:`, err.message);
+      credentialAction = `firebase_password_failed:${err.message}`;
+    }
+  } else if (lmsPassword && !isUsableZohoPassword(zohoPassword)) {
+    passwordForZoho = lmsPassword;
+    credentialAction = 'pushed_to_zoho';
+  } else if (lmsPassword && zohoPassword === lmsPassword) {
+    passwordForZoho = lmsPassword;
+    credentialAction = 'refreshed_on_lead_sync';
+  }
+
+  return { passwordForZoho, credentialAction, zohoLeadId: lead?.id || getZohoLeadId(profile) };
+}
+
+async function syncUserToZoho(db, uid, profile, options = {}) {
+  const { syncCredentials = true } = options;
   if (!isConfigured()) return { synced: false, reason: 'Zoho not configured' };
   if (!profile?.email) return { synced: false, reason: 'No email on profile' };
 
-  const fields = contactPayload({
-    uid,
-    email: profile.email,
-    displayName: profile.displayName,
-    enrolledCourses: profile.enrolledCourses,
-    role: profile.role,
-    blocked: profile.blocked,
-  });
+  let passwordForZoho = null;
+  let credentialAction = null;
+  let knownLeadId = getZohoLeadId(profile);
 
-  let zohoContactId = profile.zohoContactId || null;
-  try {
-    zohoContactId = (await upsertContact(fields)) || zohoContactId;
-  } catch (err) {
-    console.warn(`Zoho upsert failed for ${profile.email}:`, err.message);
-    if (!zohoContactId) {
-      zohoContactId = await searchContactByEmail(profile.email);
+  if (syncCredentials) {
+    const lead = await getLeadByEmail(profile.email);
+    if (lead) {
+      await provisioning.applyEntitlementsFromLead(db, uid, lead, profile);
+      const freshSnap = await db.collection('users').doc(uid).get();
+      profile = freshSnap.data() || profile;
+      knownLeadId = lead.id || knownLeadId;
     }
-    if (!zohoContactId) return { synced: false, reason: err.message };
+
+    const reconciled = await reconcileCredentials(db, uid, profile);
+    passwordForZoho = reconciled.passwordForZoho;
+    credentialAction = reconciled.credentialAction;
+    knownLeadId = reconciled.zohoLeadId || knownLeadId;
+    if (reconciled.credentialAction?.startsWith('applied_') || reconciled.credentialAction?.startsWith('seeded_')) {
+      const freshSnap = await db.collection('users').doc(uid).get();
+      profile = freshSnap.data() || profile;
+    }
+    if (!passwordForZoho && isUsableZohoPassword(profile.lmsCredentialPassword)) {
+      passwordForZoho = profile.lmsCredentialPassword.trim();
+      credentialAction = credentialAction || 'pushed_stored_on_lead_sync';
+    }
   }
 
-  if (zohoContactId && zohoContactId !== profile.zohoContactId) {
+  const base = profileToLeadFields(uid, profile);
+  const fields = passwordForZoho
+    ? leadPasswordPayload(base, passwordForZoho, {
+        status: 'Active LMS credential (lead sync)',
+        updatedAt: profile.passwordUpdatedAt
+          ? new Date(credentialTimeMs(profile.passwordUpdatedAt)).toISOString()
+          : new Date().toISOString(),
+      })
+    : base;
+
+  let zohoLeadId = knownLeadId;
+  try {
+    zohoLeadId = (await upsertLead(fields)) || zohoLeadId;
+  } catch (err) {
+    console.warn(`Zoho upsert failed for ${profile.email}:`, err.message);
+    if (!zohoLeadId) {
+      zohoLeadId = await searchLeadByEmail(profile.email);
+    }
+    if (!zohoLeadId) return { synced: false, reason: err.message };
+  }
+
+  if (zohoLeadId && zohoLeadId !== getZohoLeadId(profile)) {
     await db.collection('users').doc(uid).update({
-      zohoContactId,
+      zohoLeadId,
       zohoSyncedAt: new Date(),
     });
-  } else if (zohoContactId) {
+  } else if (zohoLeadId) {
     await db.collection('users').doc(uid).update({ zohoSyncedAt: new Date() });
   }
 
-  return { synced: true, zohoContactId };
+  return { synced: true, zohoLeadId, credentialAction };
 }
 
 async function logActivityToZoho(db, activity) {
@@ -164,13 +344,13 @@ async function logActivityToZoho(db, activity) {
   if (!userSnap.exists) return { synced: false, reason: 'User not found' };
 
   const profile = userSnap.data();
-  let zohoContactId = profile.zohoContactId;
+  let zohoLeadId = getZohoLeadId(profile);
 
-  if (!zohoContactId) {
+  if (!zohoLeadId) {
     const sync = await syncUserToZoho(db, activity.userId, profile);
-    zohoContactId = sync.zohoContactId;
+    zohoLeadId = sync.zohoLeadId;
   }
-  if (!zohoContactId) return { synced: false, reason: 'No Zoho contact id' };
+  if (!zohoLeadId) return { synced: false, reason: 'No Zoho lead id' };
 
   const token = await getAccessToken();
   if (!token) return { synced: false, reason: 'No Zoho token' };
@@ -197,7 +377,7 @@ async function logActivityToZoho(db, activity) {
           Note_Title: noteTitle,
           Note_Content: noteContent,
           Parent_Id: {
-            id: zohoContactId,
+            id: zohoLeadId,
           },
           se_module: getModule(),
         },
@@ -231,7 +411,16 @@ async function assertAdmin(db, uid) {
   }
 }
 
-const RELEVANT_USER_FIELDS = ['email', 'displayName', 'enrolledCourses', 'role', 'blocked'];
+const RELEVANT_USER_FIELDS = [
+  'email',
+  'displayName',
+  'enrolledCourses',
+  'role',
+  'blocked',
+  'program',
+  'accessTier',
+  'paymentStatus',
+];
 
 function userProfileChanged(before, after) {
   if (!before) return true;
@@ -240,10 +429,187 @@ function userProfileChanged(before, after) {
   );
 }
 
+async function upsertCredentialFields(db, uid, profile, fields) {
+  let zohoLeadId = getZohoLeadId(profile);
+  try {
+    zohoLeadId = (await upsertLead(fields)) || zohoLeadId;
+  } catch (err) {
+    console.warn(`Zoho credential sync failed for ${profile.email}:`, err.message);
+    if (!zohoLeadId) {
+      zohoLeadId = await searchLeadByEmail(profile.email);
+    }
+    if (!zohoLeadId) throw err;
+  }
+
+  const password = fields?.LMS_Password?.trim();
+  if (isUsableZohoPassword(password)) {
+    try {
+      await ilUsers.updateIlUserCredentials(
+        profile.email,
+        {
+          password,
+          username: profile.lmsUsername || fields?.LMS_Username || profile.email,
+          lmsUserId: profile.moodleUserId,
+        },
+        { getAccessToken, getApiDomain }
+      );
+    } catch (err) {
+      console.warn(`IL_Users credential sync failed for ${profile.email}:`, err.message);
+    }
+  }
+
+  await db.collection('users').doc(uid).update({
+    zohoSyncedAt: new Date(),
+    ...(zohoLeadId && !getZohoLeadId(profile) ? { zohoLeadId } : {}),
+  });
+
+  return { synced: true, zohoLeadId };
+}
+
+async function findUserByEmail(db, email) {
+  const trimmed = email?.trim();
+  if (!trimmed) return null;
+
+  let snap = await db.collection('users').where('email', '==', trimmed).limit(1).get();
+  if (!snap.empty) return snap.docs[0];
+
+  snap = await db.collection('users').where('email', '==', trimmed.toLowerCase()).limit(1).get();
+  if (!snap.empty) return snap.docs[0];
+
+  return null;
+}
+
+/** Push the current password to Zoho without changing LMS password timestamps (pre-reset snapshot). */
+async function pushCredentialSnapshotToZoho(db, uid, profile, password) {
+  if (!isConfigured()) return { synced: false, reason: 'Zoho not configured' };
+  if (!profile?.email) return { synced: false, reason: 'No email on profile' };
+  if (!isUsableZohoPassword(password)) return { synced: false, reason: 'No valid credential' };
+
+  const base = profileToLeadFields(uid, profile);
+  const updatedAt = profile.passwordUpdatedAt
+    ? new Date(credentialTimeMs(profile.passwordUpdatedAt)).toISOString()
+    : new Date().toISOString();
+  const fields = leadPasswordPayload(base, password, {
+    status: 'Active LMS credential (pre-reset)',
+    updatedAt,
+  });
+
+  return upsertCredentialFields(db, uid, profile, fields);
+}
+
+/** Before reset email — snapshot last known LMS password to Zoho. */
+async function syncStoredCredentialBeforeReset(db, email) {
+  const doc = await findUserByEmail(db, email);
+  if (!doc) return { synced: false, reason: 'Profile not found' };
+
+  const profile = doc.data();
+  const password = profile.lmsCredentialPassword?.trim();
+  if (!isUsableZohoPassword(password)) {
+    return { synced: false, reason: 'No stored credential to snapshot' };
+  }
+
+  return pushCredentialSnapshotToZoho(db, doc.id, profile, password);
+}
+
+/** After signup, login, or reset — store credential and push to Zoho. */
+async function syncPasswordCredentialToZoho(db, uid, profile, newPassword, options = {}) {
+  if (!isConfigured()) return { synced: false, reason: 'Zoho not configured' };
+  if (!profile?.email) return { synced: false, reason: 'No email on profile' };
+
+  const { status = 'Password updated via LMS' } = options;
+  const base = profileToLeadFields(uid, profile);
+  const fields = leadPasswordPayload(base, newPassword, { status });
+
+  let zohoLeadId = getZohoLeadId(profile);
+  try {
+    zohoLeadId = (await upsertLead(fields)) || zohoLeadId;
+  } catch (err) {
+    console.warn(`Zoho password sync failed for ${profile.email}:`, err.message);
+    if (!zohoLeadId) {
+      zohoLeadId = await searchLeadByEmail(profile.email);
+    }
+    if (!zohoLeadId) throw err;
+  }
+
+  const now = new Date();
+  await db.collection('users').doc(uid).update({
+    lmsCredentialPassword: newPassword,
+    passwordUpdatedAt: now,
+    updatedAt: now,
+    zohoSyncedAt: now,
+    ...(zohoLeadId && !getZohoLeadId(profile) ? { zohoLeadId } : {}),
+  });
+
+  try {
+    await ilUsers.updateIlUserCredentials(
+      profile.email,
+      {
+        password: newPassword,
+        username: profile.lmsUsername || profile.email,
+        lmsUserId: profile.moodleUserId,
+      },
+      { getAccessToken, getApiDomain }
+    );
+  } catch (err) {
+    console.warn(`IL_Users password sync failed for ${profile.email}:`, err.message);
+  }
+
+  return { synced: true, zohoLeadId };
+}
+
+/** Login/signup — refresh Zoho; full write when password changed since last sync. */
+async function syncCredentialOnAuth(db, uid, profile, password) {
+  if (profile.lmsCredentialPassword === password) {
+    return pushCredentialSnapshotToZoho(db, uid, profile, password);
+  }
+  return syncPasswordCredentialToZoho(db, uid, profile, password, {
+    status: 'Active LMS credential',
+  });
+}
+
 module.exports = {
   isConfigured,
   getAccessToken,
+  getLeadByEmail,
+  getLeadById,
   syncUserToZoho,
+  syncPasswordCredentialToZoho,
+  syncCredentialOnAuth,
+  syncStoredCredentialBeforeReset,
+  provisionUserFromLead: (db, lead, opts) => provisioning.provisionFromRecord(db, lead, opts),
+  provisionUserFromEmail: (db, email) =>
+    provisioning.provisionUserFromEmail(db, getLeadByEmail, searchIlUserByEmail, email),
+  provisionFromRegistrationWebhook: async (db, body) => {
+    const result = await provisioning.provisionFromRegistrationWebhook(db, body, {
+      getLeadByEmail,
+      searchIlUserByEmail,
+    });
+
+    if (result.ok && result.uid && isConfigured()) {
+      const snap = await db.collection('users').doc(result.uid).get();
+      const profile = snap.data();
+      const password = profile?.lmsCredentialPassword?.trim();
+      if (isUsableZohoPassword(password)) {
+        try {
+          const base = profileToLeadFields(result.uid, profile);
+          await upsertCredentialFields(
+            db,
+            result.uid,
+            profile,
+            leadPasswordPayload(base, password, {
+              status: 'Synced after Zoho webhook provision',
+              updatedAt: new Date().toISOString(),
+            })
+          );
+        } catch (err) {
+          console.warn(`Post-provision Zoho credential sync failed for ${profile?.email}:`, err.message);
+        }
+      }
+    }
+
+    return result;
+  },
+  searchIlUserByEmail,
   logActivityToZoho,
   assertStaff,
   assertAdmin,

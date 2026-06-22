@@ -3,6 +3,7 @@ import { useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import StudentLayout from './components/StudentLayout';
 import AuthPage from './pages/auth/AuthPage';
+import AuthActionPage from './pages/auth/AuthActionPage';
 import Home from './pages/student/Home';
 import Dashboard from './pages/student/Dashboard';
 import Progress from './pages/student/Progress';
@@ -47,6 +48,7 @@ export default function App() {
 
       <Route path="/auth/login" element={<AuthPage mode="login" />} />
       <Route path="/auth/signup" element={<AuthPage mode="signup" />} />
+      <Route path="/auth/action" element={<AuthActionPage />} />
 
       <Route
         path="/portal"

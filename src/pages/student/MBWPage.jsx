@@ -51,7 +51,7 @@ export default function MBWPage() {
     submissions,
   } = engine;
 
-  const sectionProgress = useMemo(() => computeSectionProgress(taskStates), [taskStates]);
+  const sectionProgress = useMemo(() => computeSectionProgress(taskStates, profile), [taskStates, profile]);
   const currentSectionId = useMemo(() => getCurrentSectionId(sectionProgress), [sectionProgress]);
   const totalMilestones = useMemo(() => getTotalMilestones(sectionProgress), [sectionProgress]);
   const completedMilestones = useMemo(() => getCompletedMilestones(sectionProgress), [sectionProgress]);
@@ -259,6 +259,7 @@ export default function MBWPage() {
                 <MBWOverviewView
                   showFirstTime={showFirstTime}
                   onStartFirst={() => openTask(taskStates[0]?.task.id || 'mbw-orientation')}
+                  profile={profile}
                   sectionProgress={sectionProgress}
                   expandedSectionId={expandedSectionId ?? currentSectionId}
                   currentSectionId={currentSectionId}

@@ -7,13 +7,15 @@ import ThemeToggle from '../../components/ThemeToggle';
 
 export default function AuthPage({ mode = 'login' }) {
   const isLogin = mode === 'login';
-  const { signIn, signUp, signInWithGoogle, signInAsGuest, error, setError, profile, user, loading, role, isGuest, isBlocked } =
+  const { signIn, signUp, signInWithGoogle, signInAsGuest, sendPasswordReset, error, setError, profile, user, loading, role, isGuest, isBlocked } =
     useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
     if (!loading && user && !isGuest && !isBlocked && (profile || role)) {
@@ -71,6 +73,21 @@ export default function AuthPage({ mode = 'login' }) {
     }
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    setResetSent(false);
+    try {
+      await sendPasswordReset(email);
+      setResetSent(true);
+    } catch (err) {
+      setError(err.message || 'Could not send reset email. Check the address and try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="auth-page">
       <div className="auth-card">
@@ -84,7 +101,46 @@ export default function AuthPage({ mode = 'login' }) {
         </div>
 
         {error && <div className="alert alert-error">{error}</div>}
+        {resetSent && (
+          <div className="alert alert-success auth-forgot-sent">
+            If an account exists for that email, a password reset link has been sent. Check your inbox
+            and spam folder.
+          </div>
+        )}
 
+        {isLogin && forgotOpen ? (
+          <form onSubmit={handleForgotPassword} className="auth-form">
+            <p className="auth-forgot-copy muted">
+              Enter your registered email and we&apos;ll send a secure link to reset your password.
+            </p>
+            <label>
+              Email
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                autoComplete="email"
+              />
+            </label>
+            <button type="submit" className="btn btn-primary" disabled={submitting}>
+              {submitting ? 'Sending…' : 'Send reset link'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost auth-forgot-back"
+              onClick={() => {
+                setForgotOpen(false);
+                setResetSent(false);
+                setError(null);
+              }}
+            >
+              Back to sign in
+            </button>
+          </form>
+        ) : (
+          <>
         <form onSubmit={handleSubmit} className="auth-form">
           {!isLogin && (
             <label>
@@ -118,6 +174,19 @@ export default function AuthPage({ mode = 'login' }) {
               placeholder="••••••••"
             />
           </label>
+          {isLogin && (
+            <button
+              type="button"
+              className="auth-forgot-link"
+              onClick={() => {
+                setForgotOpen(true);
+                setResetSent(false);
+                setError(null);
+              }}
+            >
+              Forgot password?
+            </button>
+          )}
           <button type="submit" className="btn btn-primary" disabled={submitting}>
             {submitting ? 'Please wait…' : isLogin ? 'Sign in' : 'Sign up'}
           </button>
@@ -144,7 +213,10 @@ export default function AuthPage({ mode = 'login' }) {
             </p>
           </>
         )}
+          </>
+        )}
 
+        {!forgotOpen && (
         <p className="auth-switch">
           {isLogin ? (
             <>
@@ -156,6 +228,7 @@ export default function AuthPage({ mode = 'login' }) {
             </>
           )}
         </p>
+        )}
       </div>
     </div>
   );

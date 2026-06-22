@@ -64,11 +64,18 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isSignedIn() && (request.auth.uid == userId || hasStaffAccess());
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isSignedIn() && (
-        request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'blocked'])
+    allow create: if isSignedIn() && request.auth.uid == userId
+      && !request.resource.data.keys().hasAny(['lmsCredentialPassword', 'accessTier', 'paymentStatus', 'provisionedFromZoho']);
+    allow update: if isSignedIn() && (
+        request.auth.uid == userId
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+            'role', 'blocked', 'lmsCredentialPassword', 'accessTier', 'paymentStatus', 'provisionedFromZoho'
+          ])
         || isSuperAdmin()
-        || (isAdmin() && request.resource.data.role in ['student', 'moderator', 'admin'])
+        || (isAdmin() && request.resource.data.role in ['student', 'moderator', 'admin']
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+            'lmsCredentialPassword', 'accessTier', 'paymentStatus', 'provisionedFromZoho'
+          ]))
         || (hasAdminAccess() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['blocked', 'updatedAt']))
         || (request.auth.uid == userId && isBootstrapSuperAdmin())
       );

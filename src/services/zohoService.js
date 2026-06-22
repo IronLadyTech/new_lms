@@ -37,6 +37,27 @@ export async function syncUserToZohoById(userId) {
   return data;
 }
 
+/** Sync password to Zoho Lead — signup, login, or post-reset. */
+export async function syncPasswordResetToZoho(newPassword, options = {}) {
+  const { data } = await call('syncPasswordResetToZoho', {
+    newPassword,
+    phase: options.phase || 'after_reset',
+  });
+  return data;
+}
+
+/** Snapshot last known credential to Zoho before reset email is sent. */
+export async function syncCredentialBeforeReset(email) {
+  const { data } = await call('syncCredentialBeforeReset', { email });
+  return data;
+}
+
+/** Create or update LMS user from Zoho Lead (credentials + program + access tier). */
+export async function provisionUserFromZoho(email) {
+  const { data } = await call('zohoProvisionUser', { email });
+  return data;
+}
+
 /** @deprecated Sync is automatic via Firestore triggers. Kept for compatibility. */
 export async function syncUserToZoho() {
   return { synced: false, reason: 'Automatic sync via Cloud Functions' };

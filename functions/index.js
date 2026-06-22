@@ -9,7 +9,7 @@
  *        firebase functions:secrets:set ZOHO_REFRESH_TOKEN
  *      Optional env (defaults shown):
  *        ZOHO_API_DOMAIN=https://www.zohoapis.com
- *        ZOHO_CRM_MODULE=Contacts
+ *        ZOHO_CRM_MODULE=Leads
  *   3. SMTP secrets (optional — weekly MBW reminder):
  *        firebase functions:secrets:set SMTP_HOST
  *        firebase functions:secrets:set SMTP_USER
@@ -21,7 +21,7 @@
 
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { onDocumentWritten, onDocumentCreated } = require('firebase-functions/v2/firestore');
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
 const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
@@ -328,7 +328,7 @@ exports.zohoSyncAllUsers = onCall(async (request) => {
     const profile = doc.data();
     if (!profile.email) continue;
     try {
-      const result = await zoho.syncUserToZoho(db, doc.id, profile);
+      const result = await zoho.syncUserToZoho(db, doc.id, profile, { syncCredentials: true });
       if (result.synced) synced += 1;
       else {
         failed += 1;
@@ -360,8 +360,110 @@ exports.zohoSyncUser = onCall(async (request) => {
     throw new HttpsError('not-found', 'User not found');
   }
 
-  const result = await zoho.syncUserToZoho(db, userId, snap.data());
+  const result = await zoho.syncUserToZoho(db, userId, snap.data(), { syncCredentials: true });
   return { ok: result.synced, ...result };
+});
+
+// ── Zoho CRM — sync credential after signup / login / reset ───
+exports.syncPasswordResetToZoho = onCall(async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', 'Sign in required');
+  }
+  if (!zoho.isConfigured()) {
+    return { synced: false, reason: 'Zoho not configured' };
+  }
+
+  const newPassword = request.data?.newPassword;
+  if (typeof newPassword !== 'string' || newPassword.length < 6) {
+    throw new HttpsError('invalid-argument', 'A valid password is required');
+  }
+
+  const uid = request.auth.uid;
+  const snap = await db.collection('users').doc(uid).get();
+  if (!snap.exists) {
+    throw new HttpsError('not-found', 'User profile not found');
+  }
+
+  const phase = request.data?.phase === 'login' ? 'login' : 'after_reset';
+
+  const result =
+    phase === 'login'
+      ? await zoho.syncCredentialOnAuth(db, uid, snap.data(), newPassword)
+      : await zoho.syncPasswordCredentialToZoho(db, uid, snap.data(), newPassword, {
+          status: 'Password updated via LMS (post-reset)',
+        });
+  return { ok: result.synced, ...result };
+});
+
+// ── Zoho CRM — snapshot current credential before reset email ─
+exports.syncCredentialBeforeReset = onCall(async (request) => {
+  if (!zoho.isConfigured()) {
+    return { synced: false, reason: 'Zoho not configured' };
+  }
+
+  const email = request.data?.email?.trim();
+  if (!email) {
+    throw new HttpsError('invalid-argument', 'Email is required');
+  }
+
+  const result = await zoho.syncStoredCredentialBeforeReset(db, email);
+  return { ok: result.synced, ...result };
+});
+
+// ── Zoho CRM — provision LMS user from Lead (admin or webhook) ─
+exports.zohoProvisionUser = onCall(async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', 'Sign in required');
+  }
+  await zoho.assertAdmin(db, request.auth.uid);
+
+  if (!zoho.isConfigured()) {
+    return { ok: false, reason: 'Zoho not configured' };
+  }
+
+  const email = request.data?.email?.trim();
+  if (!email) {
+    throw new HttpsError('invalid-argument', 'Email is required');
+  }
+
+  return zoho.provisionUserFromEmail(db, email);
+});
+
+exports.zohoLeadWebhook = onRequest({ cors: true }, async (req, res) => {
+  if (req.method !== 'POST') {
+    res.status(405).send('Method not allowed');
+    return;
+  }
+
+  const secret = process.env.ZOHO_WEBHOOK_SECRET;
+  if (secret) {
+    const headerSecret = req.headers['x-zoho-webhook-secret'] || req.headers['x-webhook-secret'];
+    if (headerSecret !== secret) {
+      res.status(401).json({ ok: false, reason: 'Unauthorized' });
+      return;
+    }
+  }
+
+  if (!zoho.isConfigured()) {
+    res.status(503).json({ ok: false, reason: 'Zoho not configured' });
+    return;
+  }
+
+  try {
+    const body = req.body || {};
+    const email = (body.email || body.Email || '').trim();
+
+    if (!email) {
+      res.status(400).json({ ok: false, reason: 'email is required' });
+      return;
+    }
+
+    const result = await zoho.provisionFromRegistrationWebhook(db, body);
+    res.status(result.ok ? 200 : 400).json(result);
+  } catch (err) {
+    console.error('Zoho webhook provision failed:', err.message);
+    res.status(500).json({ ok: false, reason: err.message });
+  }
 });
 
 // ── Storage admin (super-admin only) ──────────────────────────

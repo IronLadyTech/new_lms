@@ -4,6 +4,7 @@ import MBWProgramSection from './MBWProgramSection';
 
 export default function MBWProgramJourney({
   sectionProgress,
+  profile,
   expandedSectionId,
   currentSectionId,
   onToggleSection,
@@ -32,6 +33,7 @@ export default function MBWProgramJourney({
             <MBWProgramSection
               section={section}
               sectionProgress={sectionProgress}
+              profile={profile}
               expanded={expandedSectionId === section.id}
               isCurrent={section.id === currentSectionId}
               taskStates={section.usesTaskEngine ? taskStates.filter((t) => t.task.phase === section.id) : []}

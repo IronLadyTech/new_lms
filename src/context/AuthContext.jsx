@@ -6,10 +6,14 @@ import {
   signInWithPopup,
   signOut as firebaseSignOut,
   updateProfile,
+  sendPasswordResetEmail,
+  verifyPasswordResetCode,
+  confirmPasswordReset,
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import { getUserProfile, createUserProfile, ensureSuperAdminIfOwner } from '../services/userService';
 import { initNotifications } from '../services/notificationService';
+import { syncPasswordResetToZoho, syncCredentialBeforeReset } from '../services/zohoService';
 import { ROLES } from '../utils/roles';
 import { isSuperAdminEmail } from '../utils/constants';
 import {
@@ -107,6 +111,11 @@ export function AuthProvider({ children }) {
     if (displayName) await updateProfile(cred.user, { displayName });
     await createUserProfile(cred.user.uid, { email, displayName, role: ROLES.STUDENT });
     await loadProfile(cred.user);
+    try {
+      await syncPasswordResetToZoho(password, { phase: 'login' });
+    } catch (err) {
+      console.warn('Zoho credential sync failed on signup:', err.message);
+    }
     return cred.user;
   };
 
@@ -124,6 +133,11 @@ export function AuthProvider({ children }) {
       });
     }
     await loadProfile(cred.user);
+    try {
+      await syncPasswordResetToZoho(password, { phase: 'login' });
+    } catch (err) {
+      console.warn('Zoho credential sync failed on login:', err.message);
+    }
     return cred.user;
   };
 
@@ -165,6 +179,38 @@ export function AuthProvider({ children }) {
     setProfile(null);
   };
 
+  const sendPasswordReset = async (email) => {
+    setError(null);
+    requireAuth();
+    const trimmed = email?.trim();
+    if (!trimmed) throw new Error('Enter your email address.');
+    try {
+      await syncCredentialBeforeReset(trimmed);
+    } catch (err) {
+      console.warn('Pre-reset Zoho credential sync failed:', err.message);
+    }
+    const actionCodeSettings = {
+      url: `${window.location.origin}/auth/action`,
+      handleCodeInApp: true,
+    };
+    await sendPasswordResetEmail(auth, trimmed, actionCodeSettings);
+  };
+
+  const completePasswordReset = async (oobCode, newPassword) => {
+    setError(null);
+    requireAuth();
+    const email = await verifyPasswordResetCode(auth, oobCode);
+    await confirmPasswordReset(auth, oobCode, newPassword);
+    const cred = await signInWithEmailAndPassword(auth, email, newPassword);
+    await loadProfile(cred.user);
+    try {
+      await syncPasswordResetToZoho(newPassword, { phase: 'after_reset' });
+    } catch (err) {
+      console.warn('Zoho password reset sync failed:', err.message);
+    }
+    return cred.user;
+  };
+
   const refreshProfile = () => {
     if (user?.isGuest) {
       setProfile(GUEST_PROFILE);
@@ -194,6 +240,8 @@ export function AuthProvider({ children }) {
     signInWithGoogle,
     signInAsGuest,
     signOut,
+    sendPasswordReset,
+    completePasswordReset,
     refreshProfile,
     role: effectiveRole,
     isGuest,

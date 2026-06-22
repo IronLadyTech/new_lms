@@ -6,6 +6,7 @@ import MBWSubmissionsArchive from '../MBWSubmissionsArchive';
 export default function MBWOverviewView({
   showFirstTime,
   onStartFirst,
+  profile,
   sectionProgress,
   expandedSectionId,
   currentSectionId,
@@ -23,6 +24,7 @@ export default function MBWOverviewView({
 
       <MBWProgramJourney
         sectionProgress={sectionProgress}
+        profile={profile}
         expandedSectionId={expandedSectionId}
         currentSectionId={currentSectionId}
         onToggleSection={onToggleSection}

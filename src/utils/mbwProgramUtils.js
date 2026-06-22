@@ -4,6 +4,7 @@ import {
   MBW_SECTION_STATUS,
   MBW_GATE_TYPES,
 } from '../data/mbwProgramStructure';
+import { hasFullProgramAccess } from '../data/accessTiers';
 
 export function getProgramProgressPct(completedMilestones, totalMilestones) {
   return totalMilestones ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
@@ -31,8 +32,9 @@ function sectionComplete(sectionId, sectionProgress) {
   return p?.status === MBW_SECTION_STATUS.DONE;
 }
 
-function resolveGate(gate, sectionProgress, taskStates) {
+function resolveGate(gate, sectionProgress, taskStates, profile) {
   if (!gate) return true;
+  if (gate.requiresPaid && !hasFullProgramAccess(profile)) return false;
   if (gate.type === MBW_GATE_TYPES.PREPARATION) return isPreparationComplete(taskStates);
   if (
     gate.type === MBW_GATE_TYPES.SEQUENCE ||
@@ -41,11 +43,11 @@ function resolveGate(gate, sectionProgress, taskStates) {
   ) {
     return sectionComplete(gate.requiresSectionId, sectionProgress);
   }
-  if (gate.type === MBW_GATE_TYPES.PAID) return false;
+  if (gate.type === MBW_GATE_TYPES.PAID) return hasFullProgramAccess(profile);
   return true;
 }
 
-export function computeSectionProgress(taskStates) {
+export function computeSectionProgress(taskStates, profile = null) {
   const progress = {};
 
   MBW_PROGRAM_SECTIONS.forEach((section) => {
@@ -53,7 +55,7 @@ export function computeSectionProgress(taskStates) {
       const sectionTasks = taskStates.filter((ts) => ts.task.phase === section.id);
       const done = sectionTasks.filter((ts) => ts.isComplete || ts.task.optional).length;
       const total = sectionTasks.length;
-      const unlocked = resolveGate(section.gate, progress, taskStates);
+      const unlocked = resolveGate(section.gate, progress, taskStates, profile);
 
       let status = MBW_SECTION_STATUS.LOCKED;
       if (!unlocked || total === 0) {
@@ -68,7 +70,7 @@ export function computeSectionProgress(taskStates) {
       return;
     }
 
-    const unlocked = resolveGate(section.gate, progress, taskStates);
+    const unlocked = resolveGate(section.gate, progress, taskStates, profile);
     progress[section.id] = {
       done: 0,
       total: section.milestoneCount || 0,
@@ -184,9 +186,17 @@ export function getWeeklyCadenceItems(taskStates) {
     }));
 }
 
-export function getSectionLockDisplay(section, sectionProgress) {
+export function getSectionLockDisplay(section, sectionProgress, profile = null) {
   const p = sectionProgress[section.id];
   if (p?.unlocked) return null;
+  if (section.gate?.requiresPaid && !hasFullProgramAccess(profile)) {
+    return {
+      message:
+        section.lockedMessage ||
+        'Full program payment is required to unlock this section. Contact Iron Lady if you have completed payment.',
+      cta: section.unlockCta || { label: 'Payment support', href: '/app/support' },
+    };
+  }
   return {
     message: section.lockedMessage || 'This section is not available yet.',
     cta: section.unlockCta || null,

@@ -23,6 +23,7 @@ function SectionDot({ status }) {
 export default function MBWProgramSection({
   section,
   sectionProgress,
+  profile,
   expanded,
   isCurrent,
   taskStates,
@@ -32,7 +33,7 @@ export default function MBWProgramSection({
   onSelectLesson,
 }) {
   const progress = sectionProgress[section.id] || { done: 0, total: 0, status: 'locked', unlocked: false };
-  const lockDisplay = getSectionLockDisplay(section, sectionProgress);
+  const lockDisplay = getSectionLockDisplay(section, sectionProgress, profile);
   const panelId = `mbw-section-${section.id}`;
 
   return (
