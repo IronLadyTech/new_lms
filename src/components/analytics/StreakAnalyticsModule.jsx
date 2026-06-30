@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStreakAnalytics } from '../../hooks/useStreakAnalytics';
 import { useAttendanceAnalytics } from '../../hooks/useAttendanceAnalytics';
@@ -34,6 +34,27 @@ export default function StreakAnalyticsModule({ learnerId, courses = [], showBro
 
   const streakBroken =
     (summary?.currentStreak || 0) === 0 && (summary?.daysSinceLastActivity || 0) >= 1;
+
+  const handleResumePractice = useCallback(() => {
+    const enrolled = courses.filter((c) => c.id && c.id !== 'general');
+    const mbw = enrolled.find((c) => c.code === 'MBW');
+    if (mbw) {
+      navigate('/app/mbw');
+      return;
+    }
+    if (enrolled.length === 1) {
+      navigate(`/app/course/${enrolled[0].id}`);
+      return;
+    }
+    const scrollToCourses = () => {
+      document.getElementById('home-courses')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    if (window.location.pathname.endsWith('/home')) {
+      scrollToCourses();
+    } else {
+      navigate('/app/home#courses');
+    }
+  }, [courses, navigate]);
 
   return (
     <section className="streak-analytics" aria-label="Streak and attendance analytics">
@@ -80,7 +101,7 @@ export default function StreakAnalyticsModule({ learnerId, courses = [], showBro
       <AnalyticsInsights
         insights={mergedInsights}
         streakBroken={streakBroken}
-        onResume={() => navigate('/app/home')}
+        onResume={handleResumePractice}
       />
 
       {showBrowseLink && (

@@ -69,6 +69,14 @@ export default function Home() {
     };
   }, [isGuest, user?.uid, profile?.enrolledCourses]);
 
+  useEffect(() => {
+    if (loading || window.location.hash !== '#courses') return;
+    const timer = window.setTimeout(() => {
+      document.getElementById('home-courses')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+    return () => window.clearTimeout(timer);
+  }, [loading]);
+
   const enrolled = profile?.enrolledCourses || [];
   const enrolledCourses = useMemo(
     () => courses.filter((c) => enrolled.includes(c.id)),
@@ -98,7 +106,7 @@ export default function Home() {
         </section>
       )}
 
-      <h1>Courses</h1>
+      <h1 id="home-courses">Courses</h1>
       <p className="page-sub">MBW & LEP programs — tap to open or enroll</p>
 
       {!isGuest && enrolledCourses.some((c) => c.code === 'MBW') && (

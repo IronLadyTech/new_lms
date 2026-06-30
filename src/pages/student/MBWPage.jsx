@@ -125,7 +125,10 @@ export default function MBWPage() {
   }, []);
 
   const handleResume = useCallback(() => {
-    const target = nextTaskState?.task?.id || taskStates[0]?.task.id;
+    const target =
+      nextTaskState?.task?.id ||
+      taskStates.find((t) => t.status !== 'locked')?.task?.id ||
+      taskStates[0]?.task?.id;
     if (target) openTask(target);
   }, [nextTaskState, taskStates, openTask]);
 

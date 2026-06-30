@@ -79,6 +79,13 @@ body {
   color: var(--text);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+html {
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 a {
@@ -395,20 +402,26 @@ img.logo-mark {
 /* App layout (user-facing) */
 .student-layout {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding-bottom: var(--nav-h);
+  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
 }
 
 .app-header {
   height: var(--header-h);
+  min-height: var(--header-h);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
   padding: 0 1.25rem;
+  padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
   border-bottom: 1px solid var(--border);
   background: var(--surface);
-  overflow: visible;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .app-header__brand {
@@ -416,6 +429,8 @@ img.logo-mark {
   align-items: center;
   gap: 0.5rem;
   font-weight: 700;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .app-header__link {
@@ -564,7 +579,8 @@ html:has(.student-layout--mbw) #root {
   bottom: 0;
   left: 0;
   right: 0;
-  height: var(--nav-h);
+  height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   display: flex;
   background: var(--surface);
   border-top: 1px solid var(--border);
@@ -2010,6 +2026,8 @@ html:has(.student-layout--mbw) #root {
 /* Progress table */
 .progress-table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
 }
 
 .progress-table {
@@ -2048,6 +2066,8 @@ html:has(.student-layout--mbw) #root {
   display: flex;
   gap: 0.75rem;
   align-items: center;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
 .guest-badge {
@@ -6883,10 +6903,6 @@ button.streak-heatmap__cell:focus-visible {
     padding-bottom: 0;
   }
 
-  .student-layout--course .student-main {
-    padding-bottom: calc(var(--nav-h) + 1rem);
-  }
-
   .student-layout--course .app-header {
     position: sticky;
     top: 0;
@@ -6906,8 +6922,9 @@ button.streak-heatmap__cell:focus-visible {
     left: 0;
     right: 0;
     top: auto;
-    height: var(--nav-h);
+    height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
     max-height: none;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     flex-direction: row;
     align-items: stretch;
     justify-content: space-around;
@@ -6916,6 +6933,10 @@ button.streak-heatmap__cell:focus-visible {
     border-top: 1px solid var(--border);
     overflow: hidden;
     z-index: 100;
+  }
+
+  .student-layout--course .student-main {
+    padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 1rem);
   }
 
   .student-layout--mbw.student-layout--course .bottom-nav {
@@ -8251,4 +8272,223 @@ a.cx-bar--link:hover .cx-bar__label {
 .cx-badge--danger {
   background: rgba(239, 68, 68, 0.12);
   color: var(--danger);
+}
+
+/* ── Mobile polish (touch targets, tables, CX/admin) ─────────── */
+.admin-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.card-pad {
+  padding: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .card-pad {
+    padding: 1rem;
+  }
+
+  /* Prevent iOS input zoom */
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+
+  .app-header__brand span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 6rem;
+  }
+
+  .cx-layout .app-header__brand span:first-of-type {
+    max-width: 2.5rem;
+  }
+
+  .cx-program-badge {
+    max-width: 4.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .app-header__link {
+    padding: 0.35rem 0.15rem;
+    white-space: nowrap;
+  }
+
+  .section-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .cx-section__head {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .cx-section__head .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .cx-section {
+    padding: 0.85rem;
+  }
+
+  .cx-page {
+    padding-bottom: 0.5rem;
+  }
+
+  .cx-module__head {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .cx-module__meta {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .cx-batch-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cx-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cx-profile-row {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .cx-plist-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .cx-plist-panel {
+    max-width: none;
+    max-height: min(85vh, 640px);
+    border-radius: 16px 16px 0 0;
+  }
+
+  .progress-table {
+    font-size: 0.82rem;
+  }
+
+  .progress-table th,
+  .progress-table td {
+    padding: 0.55rem 0.45rem;
+    vertical-align: top;
+  }
+
+  .progress-table td:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 5.5rem;
+  }
+
+  .progress-table td:last-child .btn {
+    width: 100%;
+    margin-left: 0 !important;
+    justify-content: center;
+  }
+
+  .progress-table code {
+    word-break: break-all;
+    font-size: 0.72rem;
+  }
+
+  .admin-actions-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-actions-row .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .zoho-directory-search {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .zoho-directory-search__field {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .zoho-directory-search__count {
+    text-align: center;
+  }
+
+  .mbw-lesson-nav--sticky {
+    bottom: calc(var(--nav-h, 72px) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mbw-program-page--lesson {
+    padding-bottom: calc(var(--nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 7.5rem);
+  }
+
+  .mbw-task__header h1 {
+    font-size: 1.15rem;
+    word-wrap: break-word;
+  }
+
+  .mbw-video iframe,
+  .mbw-video video {
+    max-height: min(56vw, 420px);
+  }
+
+  .mbw-submission textarea,
+  .mbw-submission input[type='url'],
+  .mbw-submission input[type='text'],
+  .mbw-submission input[type='file'] {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header__brand span {
+    max-width: 4rem;
+  }
+
+  .app-header__link--admin {
+    font-size: 0.75rem;
+  }
+
+  .cx-batch-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .bottom-nav__label {
+    font-size: 0.58rem;
+  }
+
+  .bottom-nav__item {
+    min-height: 44px;
+    padding: 0.25rem 0.15rem;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .btn,
+  .bottom-nav__item,
+  .mbw-lesson-row__main,
+  .cx-batch-row,
+  .cx-review-item {
+    min-height: 44px;
+  }
+
+  .btn-sm {
+    min-height: 40px;
+  }
 }
