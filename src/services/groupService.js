@@ -71,6 +71,15 @@ export async function addMemberToGroup(groupId, userId) {
   const group = await getGroup(groupId);
   if (!group) throw new Error('Batch not found');
 
+  const userSnap = await getDoc(doc(db, 'users', userId));
+  const oldBatchId = userSnap.exists() ? userSnap.data().batchId : null;
+  if (oldBatchId && oldBatchId !== groupId) {
+    await updateDoc(doc(db, GROUPS, oldBatchId), {
+      memberIds: arrayRemove(userId),
+      updatedAt: serverTimestamp(),
+    });
+  }
+
   await updateDoc(doc(db, GROUPS, groupId), {
     memberIds: arrayUnion(userId),
     updatedAt: serverTimestamp(),
@@ -81,6 +90,11 @@ export async function addMemberToGroup(groupId, userId) {
     batchName: group.name,
     program: group.program || PROGRAMS.MBW,
   });
+}
+
+/** Remove from current batch and add to another (shift learner between cohorts). */
+export async function moveMemberToGroup(userId, toGroupId) {
+  return addMemberToGroup(toGroupId, userId);
 }
 
 export async function removeMemberFromGroup(groupId, userId) {

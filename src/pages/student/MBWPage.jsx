@@ -69,6 +69,12 @@ export default function MBWPage() {
 
   const lessonMode = Boolean(activeState);
   const activeTaskId = activeState?.task.id || null;
+  const nextFromCurrent = activeTaskId ? getNextTaskId(activeTaskId) : null;
+  const prevFromCurrent = activeTaskId ? getPrevTaskId(activeTaskId) : null;
+  const nextLessonState = useMemo(
+    () => (nextFromCurrent ? taskStates.find((t) => t.task.id === nextFromCurrent) : null),
+    [nextFromCurrent, taskStates]
+  );
 
   useEffect(() => {
     if (lessonIdFromUrl && taskStates.length && !activeState) {
@@ -126,17 +132,24 @@ export default function MBWPage() {
   const handleActionComplete = useCallback(
     (result) => {
       if (!result?.message) return;
-      setToast(result.message);
-      if (!result.reviewRequired) {
+      if (lessonIdFromUrl) {
         const nextId = getNextTaskId(result.taskId);
         setSuccessBanner(
-          nextId ? `${result.message} Continue to the next lesson when ready.` : result.message
+          nextId ? `${result.message} Tap Next lesson below when you're ready.` : result.message
         );
       } else {
-        setSuccessBanner(result.message);
+        setToast(result.message);
+        if (!result.reviewRequired) {
+          const nextId = getNextTaskId(result.taskId);
+          setSuccessBanner(
+            nextId ? `${result.message} Continue to the next lesson when ready.` : result.message
+          );
+        } else {
+          setSuccessBanner(result.message);
+        }
       }
     },
-    [getNextTaskId]
+    [getNextTaskId, lessonIdFromUrl]
   );
 
   const goToNextTask = useCallback(() => {
@@ -175,8 +188,6 @@ export default function MBWPage() {
     );
   }
 
-  const nextFromCurrent = activeTaskId ? getNextTaskId(activeTaskId) : null;
-  const prevFromCurrent = activeTaskId ? getPrevTaskId(activeTaskId) : null;
   const showFirstTime = !loading && !lessonMode && completedCount === 0;
   const resumeLabel = completedCount === 0 ? 'Start Pre-Preparation' : 'Resume';
 
@@ -241,10 +252,12 @@ export default function MBWPage() {
                   userId={user.uid}
                   threshold={WATCH_THRESHOLD}
                   successBanner={successBanner}
+                  nextLessonTitle={nextLessonState?.task?.title}
                   showPrevCta={Boolean(prevFromCurrent)}
                   showNextCta={Boolean(
                     nextFromCurrent && (activeState.isComplete || activeState.task.optional)
                   )}
+                  onBack={closeLesson}
                   onWatchProgress={setWatchProgressForTask}
                   onWatchComplete={() => markWatchComplete(activeState.task.id)}
                   onSubmit={(fields) => submitTask(activeState.task.id, fields)}
@@ -277,7 +290,7 @@ export default function MBWPage() {
         </>
       )}
 
-      <MBWToast message={toast} onClose={() => setToast('')} />
+      <MBWToast message={lessonMode ? '' : toast} onClose={() => setToast('')} />
     </div>
   );
 }

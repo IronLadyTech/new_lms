@@ -58,6 +58,30 @@ export async function provisionUserFromZoho(email) {
   return data;
 }
 
+/** First login — create Firebase account from Zoho IL_Users if credentials match. */
+export async function ensureZohoUserOnLogin(email, password) {
+  const { data } = await call('ensureZohoUserOnLogin', { email, password });
+  return data;
+}
+
+/** Paginated Zoho Leads for admin directory. */
+export async function listZohoLeads(options = {}) {
+  const { data } = await call('zohoListLeads', {
+    page: options.page || 1,
+    perPage: options.perPage || 50,
+  });
+  return data;
+}
+
+/** Paginated Zoho IL_Users for admin directory. */
+export async function listZohoIlUsers(options = {}) {
+  const { data } = await call('zohoListIlUsers', {
+    page: options.page || 1,
+    perPage: options.perPage || 50,
+  });
+  return data;
+}
+
 /** @deprecated Sync is automatic via Firestore triggers. Kept for compatibility. */
 export async function syncUserToZoho() {
   return { synced: false, reason: 'Automatic sync via Cloud Functions' };

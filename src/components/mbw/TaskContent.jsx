@@ -30,6 +30,7 @@ export default function TaskContent({
   threshold,
   successBanner,
   focusMode = false,
+  showInlineSuccess = true,
 }) {
   const { task, submission, status, watched, canSubmit, isComplete, prevTaskId } = taskState;
   const locked = status === SUBMISSION_STATUS.LOCKED;
@@ -80,7 +81,7 @@ export default function TaskContent({
         {task.description && <p className="mbw-task__desc">{task.description}</p>}
       </header>
 
-      {successBanner && (
+      {showInlineSuccess && successBanner && (
         <div className="alert alert-success mbw-task__success">{successBanner}</div>
       )}
 
@@ -118,13 +119,26 @@ export default function TaskContent({
             <WatchOnly task={task} submission={submission} />
           )}
           {task.type === TASK_TYPES.TEXT && (
-            <TextSubmission task={task} submission={submission} canSubmit={canSubmit} onSubmit={handleSubmit} />
+            <TextSubmission
+              key={task.id}
+              task={task}
+              submission={submission}
+              canSubmit={canSubmit}
+              onSubmit={handleSubmit}
+            />
           )}
           {task.type === TASK_TYPES.LINK && (
-            <LinkSubmission task={task} submission={submission} canSubmit={canSubmit} onSubmit={handleSubmit} />
+            <LinkSubmission
+              key={task.id}
+              task={task}
+              submission={submission}
+              canSubmit={canSubmit}
+              onSubmit={handleSubmit}
+            />
           )}
           {task.type === TASK_TYPES.EDITABLE_TEMPLATE && (
             <EditableTemplate
+              key={task.id}
               task={task}
               submission={submission}
               canSubmit={canSubmit || !!submission?.templateData}

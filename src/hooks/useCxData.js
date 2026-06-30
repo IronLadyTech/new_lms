@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getGroups } from '../services/groupService';
 import { getAllUsers } from '../services/userService';
 import { memberIdsForBatches, filterStudentsForBatches } from '../utils/batchScope';
+import { filterCxTasks } from '../utils/cxMetrics';
 import { PROGRAMS } from '../data/programTypes';
 
 /**
@@ -20,16 +21,35 @@ export function useCxData(program, adapter) {
     setLoading(true);
     setError('');
     try {
-      const [groups, allUsers, taskList, subs] = await Promise.all([
+      const [groupsResult, usersResult, tasksResult, subsResult] = await Promise.allSettled([
         getGroups(),
         getAllUsers(),
         adapter.getTasks(),
         adapter.getSubmissions(),
       ]);
-      setBatches(groups.filter((g) => (g.program || PROGRAMS.MBW) === program));
+
+      const failures = [];
+      const groups = groupsResult.status === 'fulfilled' ? groupsResult.value : [];
+      const allUsers = usersResult.status === 'fulfilled' ? usersResult.value : [];
+      const taskList = tasksResult.status === 'fulfilled' ? tasksResult.value : [];
+      const subs = subsResult.status === 'fulfilled' ? subsResult.value : [];
+
+      if (groupsResult.status === 'rejected') failures.push('batches');
+      if (usersResult.status === 'rejected') failures.push('learners');
+      if (tasksResult.status === 'rejected') failures.push('tasks');
+      if (subsResult.status === 'rejected') failures.push('submissions');
+
+      const programBatches = groups.filter((g) => (g.program || PROGRAMS.MBW) === program);
+      setBatches(programBatches);
       setUsers(allUsers);
-      setTasks(taskList);
+      setTasks(filterCxTasks(taskList, program));
       setAllSubmissions(subs);
+
+      if (failures.length) {
+        setError(
+          `Could not load ${failures.join(', ')}. If you are a moderator, deploy the latest Firestore rules.`
+        );
+      }
     } catch (e) {
       console.error(e);
       setError(e.message || 'Failed to load data');
@@ -43,15 +63,14 @@ export function useCxData(program, adapter) {
   }, [load]);
 
   const students = useMemo(
-    () => filterStudentsForBatches(users, batches, 'all'),
-    [users, batches]
+    () => filterStudentsForBatches(users, batches, 'all', { program }),
+    [users, batches, program]
   );
 
   const submissions = useMemo(() => {
-    const memberIds = new Set(memberIdsForBatches(batches));
-    students.forEach((s) => memberIds.add(s.id));
-    return allSubmissions.filter((s) => memberIds.has(s.userId));
-  }, [allSubmissions, batches, students]);
+    const studentIds = new Set(students.map((s) => s.id));
+    return allSubmissions.filter((s) => studentIds.has(s.userId));
+  }, [allSubmissions, students]);
 
   return { batches, users, students, tasks, submissions, loading, error, refresh: load };
 }

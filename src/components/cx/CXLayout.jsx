@@ -1,6 +1,6 @@
 import { Outlet, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { isFullAdmin } from '../../utils/roles';
+import { isFullAdmin, isModeratorOnly } from '../../utils/roles';
 import ThemeToggle from '../ThemeToggle';
 import CXBottomNav from './CXBottomNav';
 import { useProgramAdapter } from '../../hooks/useProgramAdapter';
@@ -22,6 +22,11 @@ export default function CXLayout() {
           {isFullAdmin(role) && (
             <Link to="/portal" className="app-header__link app-header__link--admin">
               Admin
+            </Link>
+          )}
+          {isModeratorOnly(role) && (
+            <Link to="/app/home" className="app-header__link">
+              LMS
             </Link>
           )}
         </div>

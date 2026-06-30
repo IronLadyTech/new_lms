@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { useProgramAdapter } from '../../hooks/useProgramAdapter';
 import { useCxData } from '../../hooks/useCxData';
 import { getProgramLabel } from '../../data/programTypes';
-import { SUBMISSION_STATUS } from '../../services/mbwService';
+import { studentsInBatch } from '../../utils/batchScope';
+import { buildSubmissionIndex, buildModuleTaskBreakdown, countCompletedCells, isCxSubmissionComplete } from '../../utils/cxMetrics';
 import { getBatchAttendanceSummary } from '../../services/attendanceService';
 import { getTodayKey, addDaysToKey } from '../../utils/streakTimezone';
 import ParticipantListModal from '../../components/cx/ParticipantListModal';
+import BatchMembersPanel from '../../components/cx/BatchMembersPanel';
 
 function timeAgo(ts) {
   const ms = ts?.seconds ? ts.seconds * 1000 : ts?.toMillis?.() || null;
@@ -36,8 +39,10 @@ function StatCard({ value, label, variant, onClick }) {
 
 export default function CXBatchAnalysis() {
   const { batchId } = useParams();
+  const navigate = useNavigate();
+  const { role } = useAuth();
   const { program, adapter } = useProgramAdapter();
-  const { batches, students, tasks, submissions, loading } = useCxData(program, adapter);
+  const { batches, users, students, tasks, submissions, loading, refresh } = useCxData(program, adapter);
   const [modal, setModal] = useState(null);
   const [attendance, setAttendance] = useState({});
   const [attendanceLoading, setAttendanceLoading] = useState(false);
@@ -46,9 +51,8 @@ export default function CXBatchAnalysis() {
 
   const members = useMemo(() => {
     if (!batch) return [];
-    const ids = new Set(batch.memberIds || []);
-    return students.filter((s) => ids.has(s.id) || s.batchId === batchId);
-  }, [batch, students, batchId]);
+    return studentsInBatch(batch, users);
+  }, [batch, users]);
 
   const memberIds = useMemo(() => new Set(members.map((m) => m.id)), [members]);
 
@@ -71,39 +75,21 @@ export default function CXBatchAnalysis() {
     };
   }, [members]);
 
-  // Per-task breakdown with participant lists
-  const perTask = useMemo(
-    () =>
-      tasks.map((t) => {
-        const completedMembers = members.filter((m) =>
-          batchSubs.some(
-            (s) => s.userId === m.id && s.taskId === t.id && s.status === SUBMISSION_STATUS.COMPLETED
-          )
-        );
-        const notCompletedMembers = members.filter(
-          (m) =>
-            !batchSubs.some(
-              (s) => s.userId === m.id && s.taskId === t.id && s.status === SUBMISSION_STATUS.COMPLETED
-            )
-        );
-        return { task: t, completedMembers, notCompletedMembers };
-      }),
+  const perModule = useMemo(
+    () => buildModuleTaskBreakdown(members, tasks, batchSubs),
     [tasks, batchSubs, members]
   );
 
-  // Per-learner task count, sorted descending
-  const perLearner = useMemo(
-    () =>
-      members
-        .map((m) => ({
-          learner: m,
-          done: batchSubs.filter(
-            (s) => s.userId === m.id && s.status === SUBMISSION_STATUS.COMPLETED
-          ).length,
-        }))
-        .sort((a, b) => b.done - a.done),
-    [members, batchSubs]
-  );
+  const perLearner = useMemo(() => {
+    const subMap = buildSubmissionIndex(batchSubs);
+    const taskById = Object.fromEntries(tasks.map((t) => [t.id, t]));
+    return members
+      .map((m) => ({
+        learner: m,
+        done: tasks.filter((t) => isCxSubmissionComplete(subMap[m.id]?.[t.id], taskById[t.id])).length,
+      }))
+      .sort((a, b) => b.done - a.done);
+  }, [members, batchSubs, tasks]);
 
   // Fetch batch-level attendance when batch courseIds and members are ready
   const courseIdsKey = batch?.courseIds?.join(',') || '';
@@ -168,9 +154,7 @@ export default function CXBatchAnalysis() {
 
   const completionRate =
     members.length && tasks.length
-      ? Math.round(
-          perLearner.reduce((s, p) => s + p.done, 0) / (members.length * tasks.length) * 100
-        )
+      ? Math.round((countCompletedCells(members, tasks, batchSubs) / (members.length * tasks.length)) * 100)
       : 0;
 
   return (
@@ -191,6 +175,16 @@ export default function CXBatchAnalysis() {
         {getProgramLabel(batch.program)} · {members.length} learners
         {batch.description ? ` · ${batch.description}` : ''}
       </p>
+
+      <BatchMembersPanel
+        batch={batch}
+        batches={batches}
+        users={users}
+        program={program}
+        role={role}
+        onUpdated={refresh}
+        onDeleted={() => navigate('/cx/batches', { replace: true })}
+      />
 
       {/* Summary stat cards */}
       <section className="cx-section">
@@ -270,49 +264,75 @@ export default function CXBatchAnalysis() {
         </section>
       )}
 
-      {/* Task completion per task with clickable counts */}
+      {/* Task completion grouped by module */}
       {adapter.hasTasks && (
         <section className="cx-section">
-          <h2>Completion per task</h2>
-          {perTask.length === 0 ? (
+          <h2>Completion by module</h2>
+          {perModule.length === 0 ? (
             <p className="muted">No tasks defined.</p>
           ) : (
-            perTask.map(({ task, completedMembers, notCompletedMembers }) => {
-              const pct = members.length
-                ? Math.round((completedMembers.length / members.length) * 100)
-                : 0;
-              return (
-                <div key={task.id} className="cx-bar">
-                  <div className="cx-bar__head">
-                    <span className="cx-bar__label">{task.title}</span>
-                    <div className="cx-bar__actions">
-                      <button
-                        type="button"
-                        className="cx-count-btn cx-count-btn--done"
-                        onClick={() =>
-                          setModal({ title: `${task.title} — Completed`, participants: completedMembers })
-                        }
-                      >
-                        {completedMembers.length} done
-                      </button>
-                      <span className="cx-board__sep">·</span>
-                      <button
-                        type="button"
-                        className="cx-count-btn cx-count-btn--pending"
-                        onClick={() =>
-                          setModal({ title: `${task.title} — Not completed`, participants: notCompletedMembers })
-                        }
-                      >
-                        {notCompletedMembers.length} pending
-                      </button>
+            <div className="cx-module-stack">
+              {perModule.map((mod) => (
+                <div key={mod.id} className="cx-module cx-module--open cx-module--static">
+                  <div className="cx-module__head cx-module__head--static">
+                    <div className="cx-module__titles">
+                      <span className="cx-module__title">{mod.title}</span>
+                      {mod.subtitle && (
+                        <span className="cx-module__subtitle muted">{mod.subtitle}</span>
+                      )}
+                    </div>
+                    <div className="cx-module__meta">
+                      <span className="cx-module__count">{mod.tasks.length} tasks</span>
+                      <span className="cx-module__pct">{mod.completionPct}% done</span>
                     </div>
                   </div>
-                  <div className="cx-bar__track">
-                    <div className="cx-bar__fill" style={{ width: `${pct}%` }} />
+                  <div className="cx-module__body cx-module__body--bars">
+                    {mod.taskRows.map(({ task, completed, notCompleted }) => {
+                      const pct = members.length
+                        ? Math.round((completed.length / members.length) * 100)
+                        : 0;
+                      return (
+                        <div key={task.id} className="cx-bar">
+                          <div className="cx-bar__head">
+                            <span className="cx-bar__label">{task.title}</span>
+                            <div className="cx-bar__actions">
+                              <button
+                                type="button"
+                                className="cx-count-btn cx-count-btn--done"
+                                onClick={() =>
+                                  setModal({
+                                    title: `${mod.title} · ${task.title} — Completed`,
+                                    participants: completed,
+                                  })
+                                }
+                              >
+                                {completed.length} done
+                              </button>
+                              <span className="cx-board__sep">·</span>
+                              <button
+                                type="button"
+                                className="cx-count-btn cx-count-btn--pending"
+                                onClick={() =>
+                                  setModal({
+                                    title: `${mod.title} · ${task.title} — Not completed`,
+                                    participants: notCompleted,
+                                  })
+                                }
+                              >
+                                {notCompleted.length} pending
+                              </button>
+                            </div>
+                          </div>
+                          <div className="cx-bar__track">
+                            <div className="cx-bar__fill" style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-              );
-            })
+              ))}
+            </div>
           )}
         </section>
       )}

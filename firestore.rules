@@ -1,223 +1,251 @@
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    // Bootstrap owner — checked via the auth token email, so it works even if
-    // the user's Firestore profile document does not exist yet. Checked FIRST
-    // everywhere to avoid depending on a possibly-missing user doc.
-    function isBootstrapSuperAdmin() {
-      return isSignedIn()
-        && request.auth.token.email != null
-        && request.auth.token.email.lower() == 'ironladytech@gmail.com';
-    }
-
-    // Safe role lookup: only read the user doc if it actually exists, otherwise
-    // treat the role as empty (prevents the whole rule from erroring/denying).
-    function userRole() {
-      return isSignedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
-        : '';
-    }
-
-    function isGuest() {
-      return userRole() == 'guest';
-    }
-
-    function isBlockedUser() {
-      return isSignedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.blocked == true;
-    }
-
-    function isSuperAdmin() {
-      return isBootstrapSuperAdmin() || userRole() == 'superadmin';
-    }
-
-    function isAdmin() {
-      return isBootstrapSuperAdmin() || userRole() in ['admin', 'superadmin'];
-    }
-
-    function isModerator() {
-      return isBootstrapSuperAdmin() || userRole() in ['moderator', 'admin', 'superadmin'];
-    }
-
-    function hasStaffAccess() {
-      return isModerator();
-    }
-
-    function hasAdminAccess() {
-      return isAdmin();
-    }
-
-    // Learners blocked by admin cannot read app data. Staff and bootstrap owner
-    // can still use the admin panel (e.g. to unblock users).
-    function canUseApp() {
-      return isSignedIn()
-        && !isGuest()
-        && (!isBlockedUser() || hasStaffAccess() || isBootstrapSuperAdmin());
-    }
-
-    match /users/{userId} {
-      allow read: if isSignedIn() && (request.auth.uid == userId || hasStaffAccess());
-    allow create: if isSignedIn() && request.auth.uid == userId
-      && !request.resource.data.keys().hasAny(['lmsCredentialPassword', 'accessTier', 'paymentStatus', 'provisionedFromZoho']);
-    allow update: if isSignedIn() && (
-        request.auth.uid == userId
-          && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-            'role', 'blocked', 'lmsCredentialPassword', 'accessTier', 'paymentStatus', 'provisionedFromZoho'
-          ])
-        || isSuperAdmin()
-        || (isAdmin() && request.resource.data.role in ['student', 'moderator', 'admin']
-          && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-            'lmsCredentialPassword', 'accessTier', 'paymentStatus', 'provisionedFromZoho'
-          ]))
-        || (hasAdminAccess() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['blocked', 'updatedAt']))
-        || (request.auth.uid == userId && isBootstrapSuperAdmin())
-      );
-      allow delete: if isSuperAdmin();
-    }
-
-    match /courses/{courseId} {
-      allow read: if canUseApp();
-      allow write: if hasAdminAccess();
-    }
-
-    match /resources/{resourceId} {
-      allow read: if canUseApp()
-        && (hasStaffAccess() || resource.data.locked != true);
-      allow write: if hasAdminAccess();
-    }
-
-    match /assignments/{assignmentId} {
-      allow read: if canUseApp();
-      allow write: if hasAdminAccess();
-    }
-
-    match /activities/{activityId} {
-      allow read: if canUseApp() && (
-        resource.data.userId == request.auth.uid || hasStaffAccess()
-      );
-      allow create: if canUseApp() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isSuperAdmin();
-    }
-
-    match /groups/{groupId} {
-      allow read: if canUseApp() && (hasStaffAccess() || request.auth.uid in resource.data.memberIds);
-      allow write: if hasAdminAccess();
-    }
-
-    match /events/{eventId} {
-      allow read: if canUseApp();
-      allow write: if hasAdminAccess();
-    }
-
-    match /announcements/{announcementId} {
-      allow read: if canUseApp();
-      allow write: if hasAdminAccess();
-    }
-
-    match /tickets/{ticketId} {
-      allow read: if canUseApp() && (
-        resource.data.userId == request.auth.uid || hasStaffAccess()
-      );
-      allow create: if canUseApp()
-        && request.resource.data.userId == request.auth.uid
-        && request.resource.data.status == 'open';
-      allow update: if hasStaffAccess()
-        || (request.auth.uid == resource.data.userId
-          && resource.data.status != 'resolved'
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['subject', 'category', 'updatedAt']));
-      allow delete: if hasStaffAccess()
-        || (request.auth.uid == resource.data.userId && resource.data.status == 'open');
-
-      match /messages/{messageId} {
-        allow read: if canUseApp() && (
-          get(/databases/$(database)/documents/tickets/$(ticketId)).data.userId == request.auth.uid
-          || hasStaffAccess()
-        );
-        allow create: if canUseApp() && (
-          get(/databases/$(database)/documents/tickets/$(ticketId)).data.userId == request.auth.uid
-          || hasStaffAccess()
-        );
-        allow delete: if hasStaffAccess()
-          || get(/databases/$(database)/documents/tickets/$(ticketId)).data.userId == request.auth.uid;
-      }
-    }
-
-    match /learner_submissions/{submissionId} {
-      allow read: if canUseApp() && (
-        resource.data.learnerId == request.auth.uid || hasStaffAccess()
-      );
-      allow create: if canUseApp()
-        && request.resource.data.learnerId == request.auth.uid
-        && request.resource.data.isCorrect is bool
-        && request.resource.data.courseId is string;
-      // setDoc(merge:true) on an existing doc is evaluated as update.
-      // isCorrect must stay the same (prevents retroactive self-grading).
-      allow update: if canUseApp()
-        && resource.data.learnerId == request.auth.uid
-        && request.resource.data.learnerId == request.auth.uid
-        && request.resource.data.isCorrect == resource.data.isCorrect
-        && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['learnerId', 'courseId', 'problemId', 'isCorrect', 'timestamp', 'dateKey']);
-      allow delete: if hasStaffAccess();
-    }
-
-    match /attendance/{recordId} {
-      allow read: if canUseApp() && (
-        resource.data.learnerId == request.auth.uid || hasStaffAccess()
-      );
-      // Staff can create any record. Learners can self-report present only.
-      allow create: if hasStaffAccess()
-        || (canUseApp()
-          && request.resource.data.learnerId == request.auth.uid
-          && request.resource.data.status == 'present');
-      // Update checks the EXISTING owner (resource.data) to prevent overwriting
-      // another learner's record. Learners can only touch status/updatedAt.
-      allow update: if hasStaffAccess()
-        || (canUseApp()
-          && resource.data.learnerId == request.auth.uid
-          && request.resource.data.learnerId == request.auth.uid
-          && request.resource.data.status == 'present'
-          && request.resource.data.diff(resource.data).affectedKeys()
-               .hasOnly(['status', 'updatedAt']));
-      allow delete: if hasStaffAccess();
-    }
-
-    match /mbw_submissions/{submissionId} {
-      allow read: if canUseApp() && (
-        resource.data.userId == request.auth.uid || hasStaffAccess()
-      );
-      allow create: if canUseApp()
-        && request.resource.data.userId == request.auth.uid;
-      // Staff (moderators/admins) can update any submission for the review workflow.
-      // Learners can update their own but cannot write review-only fields, and
-      // if changing status it must only move to 'submitted' (not self-complete).
-      allow update: if hasStaffAccess()
-        || (canUseApp()
-          && resource.data.userId == request.auth.uid
-          && request.resource.data.userId == request.auth.uid
-          && !request.resource.data.diff(resource.data).affectedKeys()
-               .hasAny(['reviewedBy', 'reviewedAt', 'completedAt', 'feedback'])
-          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status'])
-              || request.resource.data.status == 'submitted'));
-      allow delete: if hasStaffAccess();
-    }
-
-    match /mbw_tasks/{taskId} {
-      allow read: if canUseApp();
-      allow write: if hasAdminAccess();
-    }
-
-    match /storage_objects/{objectId} {
-      allow read: if isSuperAdmin();
-      allow create, update: if hasAdminAccess();
-      allow delete: if isSuperAdmin();
-    }
-  }
-}
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Bootstrap owner — auth token email works even without a Firestore profile.
+    function isBootstrapSuperAdmin() {
+      return isSignedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() == 'ironladytech@gmail.com';
+    }
+
+    function userRole() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : '';
+    }
+
+    function isGuest() {
+      return userRole() == 'guest';
+    }
+
+    function isBlockedUser() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.blocked == true;
+    }
+
+    function isSuperAdmin() {
+      return isBootstrapSuperAdmin() || userRole() == 'superadmin';
+    }
+
+    function isAdmin() {
+      return isBootstrapSuperAdmin() || userRole() in ['admin', 'superadmin'];
+    }
+
+    function isModerator() {
+      return isBootstrapSuperAdmin() || userRole() in ['moderator', 'admin', 'superadmin'];
+    }
+
+    function hasStaffAccess() {
+      return isModerator();
+    }
+
+    function hasAdminAccess() {
+      return isAdmin();
+    }
+
+    function canUseApp() {
+      return isSignedIn()
+        && !isGuest()
+        && (!isBlockedUser() || hasStaffAccess() || isBootstrapSuperAdmin());
+    }
+
+    function groupMemberIds(groupData) {
+      return groupData.keys().hasAny(['memberIds']) ? groupData.memberIds : [];
+    }
+
+    function isGroupMember(groupData) {
+      return request.auth.uid in groupMemberIds(groupData);
+    }
+
+    function moderatorLearnerBatchFieldsOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['batchId', 'batchName', 'program', 'updatedAt']);
+    }
+
+    function learnerMbwStatusOk() {
+      return !request.resource.data.keys().hasAny(['status'])
+        || request.resource.data.status in ['unlocked', 'submitted', 'under_review', 'completed'];
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || hasStaffAccess());
+      allow create: if isSignedIn() && request.auth.uid == userId
+        && !request.resource.data.keys().hasAny([
+          'lmsCredentialPassword', 'accessTier', 'paymentStatus', 'provisionedFromZoho'
+        ]);
+      allow update: if isSignedIn() && (
+          request.auth.uid == userId
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+              'role', 'blocked', 'lmsCredentialPassword', 'accessTier', 'paymentStatus', 'provisionedFromZoho'
+            ])
+          || isSuperAdmin()
+          || (isAdmin() && request.resource.data.role in ['student', 'moderator', 'admin']
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+              'lmsCredentialPassword', 'accessTier', 'paymentStatus', 'provisionedFromZoho'
+            ]))
+          || (hasAdminAccess() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['blocked', 'updatedAt']))
+          || (hasStaffAccess() && moderatorLearnerBatchFieldsOnly())
+          || (request.auth.uid == userId && isBootstrapSuperAdmin())
+        );
+      allow delete: if isSuperAdmin();
+    }
+
+    match /courses/{courseId} {
+      allow read: if canUseApp();
+      allow write: if hasAdminAccess();
+    }
+
+    match /resources/{resourceId} {
+      allow read: if canUseApp()
+        && (hasStaffAccess() || resource.data.locked != true);
+      allow write: if hasAdminAccess();
+    }
+
+    match /assignments/{assignmentId} {
+      allow read: if canUseApp();
+      allow write: if hasAdminAccess();
+    }
+
+    match /activities/{activityId} {
+      allow read: if canUseApp() && (
+        resource.data.userId == request.auth.uid || hasStaffAccess()
+      );
+      allow create: if canUseApp() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSuperAdmin();
+    }
+
+    match /groups/{groupId} {
+      allow read: if canUseApp() && (hasStaffAccess() || isGroupMember(resource.data));
+      // CX moderators create/update batches; only admins delete cohorts.
+      allow create, update: if hasStaffAccess();
+      allow delete: if hasAdminAccess();
+    }
+
+    match /events/{eventId} {
+      allow read: if canUseApp();
+      allow write: if hasAdminAccess();
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if canUseApp();
+      allow write: if hasAdminAccess();
+    }
+
+    match /tickets/{ticketId} {
+      allow read: if canUseApp() && (
+        resource.data.userId == request.auth.uid || hasStaffAccess()
+      );
+      allow create: if canUseApp()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'open';
+      allow update: if hasStaffAccess()
+        || (request.auth.uid == resource.data.userId
+          && resource.data.status != 'resolved'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['subject', 'category', 'updatedAt']));
+      allow delete: if hasStaffAccess()
+        || (request.auth.uid == resource.data.userId && resource.data.status == 'open');
+
+      match /messages/{messageId} {
+        allow read: if canUseApp() && (
+          get(/databases/$(database)/documents/tickets/$(ticketId)).data.userId == request.auth.uid
+          || hasStaffAccess()
+        );
+        allow create: if canUseApp() && (
+          get(/databases/$(database)/documents/tickets/$(ticketId)).data.userId == request.auth.uid
+          || hasStaffAccess()
+        );
+        allow delete: if hasStaffAccess()
+          || get(/databases/$(database)/documents/tickets/$(ticketId)).data.userId == request.auth.uid;
+      }
+    }
+
+    match /learner_submissions/{submissionId} {
+      allow read: if canUseApp() && (
+        resource.data.learnerId == request.auth.uid || hasStaffAccess()
+      );
+      allow create: if canUseApp()
+        && request.resource.data.learnerId == request.auth.uid
+        && request.resource.data.isCorrect is bool
+        && request.resource.data.courseId is string;
+      // setDoc(merge:true) on an existing doc is evaluated as update.
+      allow update: if hasStaffAccess()
+        || (canUseApp()
+          && resource.data.learnerId == request.auth.uid
+          && request.resource.data.learnerId == request.auth.uid
+          && request.resource.data.isCorrect == resource.data.isCorrect
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['learnerId', 'courseId', 'problemId', 'isCorrect', 'timestamp', 'dateKey']));
+      allow delete: if hasStaffAccess();
+    }
+
+    match /attendance/{recordId} {
+      allow read: if canUseApp() && (
+        resource.data.learnerId == request.auth.uid || hasStaffAccess()
+      );
+      allow create: if hasStaffAccess()
+        || (canUseApp()
+          && request.resource.data.learnerId == request.auth.uid
+          && request.resource.data.status == 'present');
+      // setDoc(merge:true) re-sends identity fields — allow idempotent learner upserts.
+      allow update: if hasStaffAccess()
+        || (canUseApp()
+          && resource.data.learnerId == request.auth.uid
+          && request.resource.data.learnerId == request.auth.uid
+          && request.resource.data.courseId == resource.data.courseId
+          && request.resource.data.date == resource.data.date
+          && request.resource.data.status == 'present');
+      allow delete: if hasStaffAccess();
+    }
+
+    match /mbw_submissions/{submissionId} {
+      function isOwnMbwSubmissionId() {
+        return submissionId.size() > request.auth.uid.size() + 1
+          && submissionId[0:request.auth.uid.size()] == request.auth.uid
+          && submissionId[request.auth.uid.size():request.auth.uid.size() + 1] == '_';
+      }
+
+      allow read: if canUseApp() && (
+        hasStaffAccess()
+        || (resource == null && isOwnMbwSubmissionId())
+        || resource.data.userId == request.auth.uid
+      );
+      allow create: if hasStaffAccess()
+        || (canUseApp()
+          && isOwnMbwSubmissionId()
+          && request.resource.data.userId == request.auth.uid
+          && learnerMbwStatusOk());
+      allow update: if hasStaffAccess()
+        || (canUseApp()
+          && isOwnMbwSubmissionId()
+          && resource.data.userId == request.auth.uid
+          && request.resource.data.userId == request.auth.uid
+          && !request.resource.data.diff(resource.data).affectedKeys()
+               .hasAny(['reviewedBy', 'reviewedAt', 'feedback'])
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status'])
+              || learnerMbwStatusOk()));
+      allow delete: if hasStaffAccess();
+    }
+
+    match /mbw_tasks/{taskId} {
+      allow read: if canUseApp();
+      allow write: if hasAdminAccess();
+    }
+
+    match /storage_objects/{objectId} {
+      allow read: if isSuperAdmin()
+        || hasStaffAccess()
+        || (canUseApp() && resource.data.uploadedBy == request.auth.uid);
+      allow create, update: if hasAdminAccess()
+        || (canUseApp() && request.resource.data.uploadedBy == request.auth.uid);
+      allow delete: if isSuperAdmin();
+    }
+  }
+}
+

@@ -4,7 +4,10 @@ import {
   MBW_SECTION_STATUS,
   MBW_GATE_TYPES,
 } from '../data/mbwProgramStructure';
-import { hasFullProgramAccess } from '../data/accessTiers';
+import { hasFullProgramAccess, normalizePaymentStatus, PAYMENT_STATUS } from '../data/accessTiers';
+
+export const REGISTRATION_PAYMENT_LOCK_TOOLTIP =
+  'You have paid only the registration amount. Complete full program payment to unlock this section.';
 
 export function getProgramProgressPct(completedMilestones, totalMilestones) {
   return totalMilestones ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
@@ -186,15 +189,57 @@ export function getWeeklyCadenceItems(taskStates) {
     }));
 }
 
+export function isRegistrationPaymentLocked(section, sectionProgress, profile = null) {
+  const p = sectionProgress[section.id];
+  if (p?.unlocked) return false;
+  if (!section.gate?.requiresPaid) return false;
+  return !hasFullProgramAccess(profile);
+}
+
+export function hasRegistrationTierOnly(profile) {
+  return normalizePaymentStatus(profile?.paymentStatus) === PAYMENT_STATUS.REGISTER;
+}
+
+function sectionTitleById(sectionId) {
+  const match = MBW_PROGRAM_SECTIONS.find((s) => s.id === sectionId);
+  return match?.title || sectionId;
+}
+
+/** Progress-only lock copy (no payment wording) — for users with full program access. */
+function resolveProgressLockMessage(section, sectionProgress) {
+  const gate = section.gate;
+  if (!gate) return section.lockedMessage || 'This section is not available yet.';
+
+  const prereqId = gate.requiresSectionId;
+  if (prereqId) {
+    if (gate.type === MBW_GATE_TYPES.PREPARATION) {
+      return `Complete ${sectionTitleById(prereqId)} to unlock ${section.title}.`;
+    }
+    if (
+      gate.type === MBW_GATE_TYPES.SEQUENCE ||
+      gate.type === MBW_GATE_TYPES.BATCH ||
+      gate.type === MBW_GATE_TYPES.MEMBERS
+    ) {
+      return `Complete ${sectionTitleById(prereqId)} to unlock ${section.title}.`;
+    }
+  }
+
+  return section.lockedMessage || 'This section is not available yet.';
+}
+
 export function getSectionLockDisplay(section, sectionProgress, profile = null) {
   const p = sectionProgress[section.id];
   if (p?.unlocked) return null;
-  if (section.gate?.requiresPaid && !hasFullProgramAccess(profile)) {
+  if (isRegistrationPaymentLocked(section, sectionProgress, profile)) {
     return {
-      message:
-        section.lockedMessage ||
-        'Full program payment is required to unlock this section. Contact Iron Lady if you have completed payment.',
+      message: REGISTRATION_PAYMENT_LOCK_TOOLTIP,
       cta: section.unlockCta || { label: 'Payment support', href: '/app/support' },
+    };
+  }
+  if (hasFullProgramAccess(profile)) {
+    return {
+      message: resolveProgressLockMessage(section, sectionProgress),
+      cta: section.unlockCta || null,
     };
   }
   return {

@@ -1,13 +1,84 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Hls from 'hls.js';
 import { Play } from 'lucide-react';
 
 function isYouTube(url) {
   return /youtube\.com|youtu\.be/i.test(url || '');
 }
 
+function isHls(url) {
+  return /\.m3u8(\?|$)/i.test(url || '');
+}
+
 function youtubeEmbed(url) {
   const m = url.match(/(?:youtu\.be\/|v=)([\w-]+)/);
   return m ? `https://www.youtube.com/embed/${m[1]}?enablejsapi=1` : url;
+}
+
+function NativeVideoPlayer({ videoUrl, videoRef, onTimeUpdate, onEnded }) {
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || isHls(videoUrl)) return undefined;
+
+    video.src = videoUrl;
+    return () => {
+      video.removeAttribute('src');
+      video.load();
+    };
+  }, [videoRef, videoUrl]);
+
+  return (
+    <video
+      ref={videoRef}
+      controls
+      autoPlay
+      onTimeUpdate={onTimeUpdate}
+      onEnded={onEnded}
+    />
+  );
+}
+
+function HlsVideoPlayer({ videoUrl, videoRef, onTimeUpdate, onEnded }) {
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return undefined;
+
+    let hls;
+
+    const attach = () => {
+      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = videoUrl;
+        return;
+      }
+
+      if (Hls.isSupported()) {
+        hls = new Hls();
+        hls.loadSource(videoUrl);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          video.play().catch(() => {});
+        });
+      } else {
+        video.src = videoUrl;
+      }
+    };
+
+    attach();
+
+    return () => {
+      hls?.destroy();
+    };
+  }, [videoRef, videoUrl]);
+
+  return (
+    <video
+      ref={videoRef}
+      controls
+      autoPlay
+      onTimeUpdate={onTimeUpdate}
+      onEnded={onEnded}
+    />
+  );
 }
 
 export default function WatchGatedVideo({
@@ -20,7 +91,11 @@ export default function WatchGatedVideo({
   threshold = 0.9,
 }) {
   const videoRef = useRef(null);
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useState(() => watchPercent >= threshold);
+
+  useEffect(() => {
+    if (watchPercent >= threshold) setStarted(true);
+  }, [watchPercent, threshold]);
 
   if (!videoUrl) {
     return (
@@ -69,25 +144,33 @@ export default function WatchGatedVideo({
     if (pct >= threshold) onComplete?.();
   };
 
+  const VideoPlayer = isHls(videoUrl) ? HlsVideoPlayer : NativeVideoPlayer;
+
   return (
-    <div className="mbw-video">
-      {!started ? (
-        <button type="button" className="mbw-video__poster" onClick={() => setStarted(true)}>
-          <Play size={48} />
-          <span>Play video</span>
-        </button>
-      ) : (
-        <video
-          ref={videoRef}
-          src={videoUrl}
-          controls
-          onTimeUpdate={handleTimeUpdate}
-          onEnded={() => {
-            onProgress?.(1);
-            onComplete?.();
-          }}
-        />
-      )}
+    <div className="mbw-video mbw-video--hosted">
+      <div className="mbw-video__frame">
+        {!started ? (
+          <button type="button" className="mbw-video__poster" onClick={() => setStarted(true)}>
+            <span className="mbw-video__poster-icon" aria-hidden="true">
+              <Play size={28} fill="currentColor" strokeWidth={0} />
+            </span>
+            <span className="mbw-video__poster-label">{title}</span>
+          </button>
+        ) : (
+          <VideoPlayer
+            videoUrl={videoUrl}
+            videoRef={videoRef}
+            onTimeUpdate={handleTimeUpdate}
+            onEnded={() => {
+              onProgress?.(1);
+              onComplete?.();
+            }}
+          />
+        )}
+      </div>
+      <p className="muted mbw-video__hint">
+        Watch the full video to unlock submission. Progress is tracked automatically.
+      </p>
       <div className="mbw-video__progress">
         <div className="mbw-video__bar" style={{ width: `${Math.min(100, watchPercent * 100)}%` }} />
         <span className="muted">{Math.round(watchPercent * 100)}% watched</span>

@@ -91,7 +91,10 @@ export default function CXBatches() {
                 <Link to={`/cx/batches/${b.id}`} className="cx-batch-row">
                   <span className="cx-batch-row__name">{b.name}</span>
                   {b.description && <span className="cx-batch-row__desc muted">{b.description}</span>}
-                  <span className="cx-batch-row__count">{(b.memberIds || []).length} learners</span>
+                  <span className="cx-batch-row__count">
+                    {(b.memberIds || []).length} in batch
+                  </span>
+                  <span className="cx-batch-row__hint muted">Manage members →</span>
                 </Link>
               </li>
             ))}

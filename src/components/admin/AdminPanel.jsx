@@ -27,6 +27,8 @@ import {
   addMemberToGroup,
   addCourseToGroup,
   setBatchModerators,
+  removeMemberFromGroup,
+  moveMemberToGroup,
 } from '../../services/groupService';
 import { PROGRAM_OPTIONS, PROGRAMS, getProgramShortLabel } from '../../data/programTypes';
 import { filterBatchesForModerator } from '../../utils/batchScope';
@@ -63,6 +65,7 @@ import {
 } from 'lucide-react';
 import ConfirmDialog from '../ConfirmDialog';
 import UserProgressModal from './UserProgressModal';
+import { formatUserCreatedAt, inferUserOrigin } from '../../utils/userOrigin';
 import AnnouncementManager from './AnnouncementManager';
 import { useConfirm } from '../../hooks/useConfirm';
 import { getAnnouncements } from '../../services/announcementService';
@@ -984,7 +987,8 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                       {u.blocked && <span className="badge badge-blocked">Blocked</span>}
                     </div>
                     <div className="user-row__meta muted">
-                      Courses: {(u.enrolledCourses || []).length} · Streak: {u.streak ?? 0} · Activities:{' '}
+                      Joined: {formatUserCreatedAt(u.createdAt)} · {inferUserOrigin(u)} · Courses:{' '}
+                      {(u.enrolledCourses || []).length} · Streak: {u.streak ?? 0} · Activities:{' '}
                       {activityCountByUser[u.id] || 0}
                     </div>
                   </div>
@@ -1277,6 +1281,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                           .map((u) => (
                             <option key={u.id} value={u.id}>
                               {u.displayName || u.email}
+                              {u.batchName && u.batchId !== g.id ? ` (${u.batchName})` : ''}
                             </option>
                           ))}
                       </select>
@@ -1295,6 +1300,47 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                         ))}
                       </select>
                     </div>
+                    {(g.memberIds || []).length > 0 && (
+                      <ul className="batch-member-chips">
+                        {(g.memberIds || []).map((uid) => {
+                          const u = users.find((x) => x.id === uid);
+                          return (
+                            <li key={uid} className="batch-member-chip">
+                              <span>{u?.displayName || u?.email || uid.slice(0, 8)}</span>
+                              {groups.filter((b) => b.id !== g.id).length > 0 && (
+                                <select
+                                  defaultValue=""
+                                  title="Move to batch"
+                                  onChange={(e) => {
+                                    if (e.target.value) {
+                                      moveMemberToGroup(uid, e.target.value).then(load);
+                                    }
+                                    e.target.value = '';
+                                  }}
+                                >
+                                  <option value="">Move</option>
+                                  {groups
+                                    .filter((b) => b.id !== g.id)
+                                    .map((b) => (
+                                      <option key={b.id} value={b.id}>
+                                        {b.name}
+                                      </option>
+                                    ))}
+                                </select>
+                              )}
+                              <button
+                                type="button"
+                                className="batch-member-chip__remove"
+                                title="Remove from batch"
+                                onClick={() => removeMemberFromGroup(g.id, uid).then(load)}
+                              >
+                                ×
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
                   </div>
                   <button type="button" className="btn btn-sm btn-danger" onClick={() => deleteGroup(g.id).then(load)}>
                     Delete

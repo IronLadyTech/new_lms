@@ -4,42 +4,56 @@ import { useProgramAdapter } from '../../hooks/useProgramAdapter';
 import { useCxData } from '../../hooks/useCxData';
 import { getProgramLabel } from '../../data/programTypes';
 import { SUBMISSION_STATUS } from '../../services/mbwService';
-import { filterStudentsForBatches } from '../../utils/batchScope';
+import { filterStudentsForBatches, studentsInBatch, countBatchAssignedLearners } from '../../utils/batchScope';
+import {
+  buildSubmissionIndex,
+  buildModuleTaskBreakdown,
+  countCompletedCells,
+  isCxSubmissionComplete,
+} from '../../utils/cxMetrics';
 import ParticipantListModal from '../../components/cx/ParticipantListModal';
 
 export default function CXDashboards() {
   const { program, adapter } = useProgramAdapter();
-  const { batches, students, tasks, submissions, loading } = useCxData(program, adapter);
+  const { batches, users, students, tasks, submissions, loading, error } = useCxData(program, adapter);
   const [modal, setModal] = useState(null);
   const [taskBatchFilter, setTaskBatchFilter] = useState('all');
 
+  const assignedLearnerCount = useMemo(
+    () => countBatchAssignedLearners(students, batches, users),
+    [students, batches, users]
+  );
+  const unassignedLearnerCount = Math.max(0, students.length - assignedLearnerCount);
+
   const stats = useMemo(() => {
-    const completed = submissions.filter((s) => s.status === SUBMISSION_STATUS.COMPLETED).length;
     const pending = submissions.filter((s) =>
       [SUBMISSION_STATUS.SUBMITTED, SUBMISSION_STATUS.UNDER_REVIEW].includes(s.status)
     ).length;
+    const completedCells = countCompletedCells(students, tasks, submissions);
     const possible = students.length * tasks.length;
     return {
-      completed,
+      completed: completedCells,
       pending,
-      completionRate: possible ? Math.round((completed / possible) * 100) : 0,
+      completionRate: possible ? Math.round((completedCells / possible) * 100) : 0,
     };
   }, [submissions, students, tasks]);
 
   const perBatch = useMemo(
     () =>
       batches.map((b) => {
-        const ids = new Set(b.memberIds || []);
-        const subs = submissions.filter((s) => ids.has(s.userId));
-        const done = subs.filter((s) => s.status === SUBMISSION_STATUS.COMPLETED).length;
-        const possible = ids.size * tasks.length;
+        const batchLearners = studentsInBatch(b, users);
+        const batchSubs = submissions.filter((s) =>
+          batchLearners.some((learner) => learner.id === s.userId)
+        );
+        const done = countCompletedCells(batchLearners, tasks, batchSubs);
+        const possible = batchLearners.length * tasks.length;
         return {
           batch: b,
-          learners: ids.size,
+          learners: batchLearners.length,
           pct: possible ? Math.round((done / possible) * 100) : 0,
         };
       }),
-    [batches, submissions, tasks]
+    [batches, submissions, tasks, users]
   );
 
   // Students scoped to the selected batch (or all batches)
@@ -53,28 +67,25 @@ export default function CXDashboards() {
     return batches.find((b) => b.id === taskBatchFilter)?.name || 'Selected batch';
   }, [taskBatchFilter, batches]);
 
-  const perTaskBreakdown = useMemo(() => {
-    if (!adapter.hasTasks) return [];
-    const subMap = {};
-    submissions.forEach((s) => {
-      if (!subMap[s.userId]) subMap[s.userId] = {};
-      subMap[s.userId][s.taskId] = s;
-    });
-    return tasks.map((t) => {
-      const completed = taskWiseStudents.filter(
-        (s) => subMap[s.id]?.[t.id]?.status === SUBMISSION_STATUS.COMPLETED
-      );
-      const notCompleted = taskWiseStudents.filter(
-        (s) => subMap[s.id]?.[t.id]?.status !== SUBMISSION_STATUS.COMPLETED
-      );
-      return { task: t, completed, notCompleted };
-    });
-  }, [tasks, taskWiseStudents, submissions, adapter.hasTasks]);
+  const perModuleBreakdown = useMemo(
+    () => buildModuleTaskBreakdown(taskWiseStudents, tasks, submissions),
+    [tasks, taskWiseStudents, submissions]
+  );
 
   return (
     <div className="page cx-page">
       <h1>Dashboards</h1>
       <p className="page-sub">{getProgramLabel(program)} · overall metrics</p>
+
+      {error && <p className="cx-error">{error}</p>}
+
+      {!loading && students.length > 0 && unassignedLearnerCount > 0 && (
+        <p className="cx-hint muted">
+          {assignedLearnerCount} learner{assignedLearnerCount === 1 ? '' : 's'} assigned to batches ·{' '}
+          {unassignedLearnerCount} on {getProgramLabel(program)} but not in a batch yet (assign via Admin →
+          Batches to fix batch comparison counts).
+        </p>
+      )}
 
       {modal && (
         <ParticipantListModal
@@ -139,7 +150,7 @@ export default function CXDashboards() {
           {adapter.hasTasks && (
             <section className="cx-section">
               <div className="cx-section__head">
-                <h2>Task-wise breakdown</h2>
+                <h2>Module-wise breakdown</h2>
                 <label className="cx-board__filter">
                   Batch{' '}
                   <select
@@ -158,42 +169,62 @@ export default function CXDashboards() {
               <p className="muted cx-taskwise-sub">
                 {selectedBatchLabel} · {taskWiseStudents.length} participants · click a count to see details
               </p>
-              {perTaskBreakdown.length === 0 ? (
+              {perModuleBreakdown.length === 0 ? (
                 <p className="muted">No tasks defined.</p>
               ) : (
-                <div className="cx-taskwise-table">
-                  <div className="cx-taskwise-head">
-                    <span>Task</span>
-                    <span>Completed</span>
-                    <span>Not completed</span>
-                  </div>
-                  {perTaskBreakdown.map(({ task, completed, notCompleted }) => (
-                    <div key={task.id} className="cx-taskwise-row">
-                      <span className="cx-taskwise-name">{task.title}</span>
-                      <button
-                        type="button"
-                        className="cx-count-btn cx-count-btn--done"
-                        onClick={() =>
-                          setModal({
-                            title: `${task.title} — Completed (${selectedBatchLabel})`,
-                            participants: completed,
-                          })
-                        }
-                      >
-                        {completed.length}
-                      </button>
-                      <button
-                        type="button"
-                        className="cx-count-btn cx-count-btn--pending"
-                        onClick={() =>
-                          setModal({
-                            title: `${task.title} — Not completed (${selectedBatchLabel})`,
-                            participants: notCompleted,
-                          })
-                        }
-                      >
-                        {notCompleted.length}
-                      </button>
+                <div className="cx-module-stack">
+                  {perModuleBreakdown.map((mod) => (
+                    <div key={mod.id} className="cx-module cx-module--open cx-module--static">
+                      <div className="cx-module__head cx-module__head--static">
+                        <div className="cx-module__titles">
+                          <span className="cx-module__title">{mod.title}</span>
+                          {mod.subtitle && (
+                            <span className="cx-module__subtitle muted">{mod.subtitle}</span>
+                          )}
+                        </div>
+                        <div className="cx-module__meta">
+                          <span className="cx-module__count">{mod.tasks.length} tasks</span>
+                          <span className="cx-module__pct">{mod.completionPct}% done</span>
+                        </div>
+                      </div>
+                      <div className="cx-module__body">
+                        <div className="cx-taskwise-table">
+                          <div className="cx-taskwise-head">
+                            <span>Task</span>
+                            <span>Completed</span>
+                            <span>Not completed</span>
+                          </div>
+                          {mod.taskRows.map(({ task, completed, notCompleted }) => (
+                            <div key={task.id} className="cx-taskwise-row">
+                              <span className="cx-taskwise-name">{task.title}</span>
+                              <button
+                                type="button"
+                                className="cx-count-btn cx-count-btn--done"
+                                onClick={() =>
+                                  setModal({
+                                    title: `${mod.title} · ${task.title} — Completed (${selectedBatchLabel})`,
+                                    participants: completed,
+                                  })
+                                }
+                              >
+                                {completed.length}
+                              </button>
+                              <button
+                                type="button"
+                                className="cx-count-btn cx-count-btn--pending"
+                                onClick={() =>
+                                  setModal({
+                                    title: `${mod.title} · ${task.title} — Not completed (${selectedBatchLabel})`,
+                                    participants: notCompleted,
+                                  })
+                                }
+                              >
+                                {notCompleted.length}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>

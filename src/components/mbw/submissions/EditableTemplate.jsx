@@ -10,8 +10,10 @@ export default function EditableTemplate({ task, submission, canSubmit, onSave }
   useEffect(() => {
     if (submission?.templateData?.rows?.length) {
       setRows(submission.templateData.rows);
+    } else {
+      setRows(createErrcRows());
     }
-  }, [submission?.templateData]);
+  }, [task.id, submission?.templateData]);
 
   const updateCell = (rowIdx, col, value) => {
     setRows((prev) => prev.map((r, i) => (i === rowIdx ? { ...r, [col]: value } : r)));

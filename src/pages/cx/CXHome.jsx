@@ -106,7 +106,7 @@ function SessionReminderModal({ batch, onClose }) {
 export default function CXHome() {
   const { profile } = useAuth();
   const { program, adapter } = useProgramAdapter();
-  const { batches, students, tasks, submissions, loading, error, refresh } = useCxData(program, adapter);
+  const { batches, users, students, tasks, submissions, loading, error, refresh } = useCxData(program, adapter);
   const navigate = useNavigate();
 
   const [remindingId, setRemindingId] = useState(null); // userId_taskId being reminded
@@ -206,7 +206,7 @@ export default function CXHome() {
         <>
           <section className="cx-section">
             <div className="cx-section__head">
-              <h2>Task tracking</h2>
+              <h2>Module-wise tracking</h2>
             </div>
             {loading ? (
               <p className="muted">Loading…</p>

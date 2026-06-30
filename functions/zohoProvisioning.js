@@ -126,7 +126,7 @@ async function applyEntitlements(db, uid, record, profile = {}) {
   if (ent.lmsUsername) updates.lmsUsername = ent.lmsUsername.toLowerCase();
   if (ent.zohoLeadId) updates.zohoLeadId = ent.zohoLeadId;
   if (record?.LMS_User_Id) updates.moodleUserId = String(record.LMS_User_Id);
-  if (record?.id && record?.Username) updates.zohoIlUserId = String(record.id);
+  if (record?.id) updates.zohoIlUserId = String(record.id);
   if (ent.displayName && !profile.displayName) updates.displayName = ent.displayName;
 
   const batch = record?.batch || record?.Batch;
@@ -192,11 +192,11 @@ async function ensureAuthUser(ent) {
   });
 }
 
-async function provisionFromRecord(db, record, { applyPassword = true } = {}) {
+async function provisionFromRecord(db, record, { applyPassword = true, skipUnpaidCheck = false } = {}) {
   const ent = parseEntitlementsFromRecord(record);
   if (!ent.email) return { ok: false, reason: 'No email on record' };
 
-  if (ent.paymentStatus === PAYMENT_STATUS.UNPAID) {
+  if (!skipUnpaidCheck && ent.paymentStatus === PAYMENT_STATUS.UNPAID) {
     return {
       ok: false,
       reason: 'Payment status unpaid — run after registration fee Completed',
@@ -278,14 +278,48 @@ async function provisionFromRegistrationWebhook(db, body, deps) {
   );
 }
 
+/** First login — create Firebase user when Zoho IL_Users credentials match. */
+async function provisionFromLoginCredentials(db, email, password, deps) {
+  const trimmedEmail = email?.trim();
+  const trimmedPassword = password?.trim();
+  if (!trimmedEmail || !trimmedPassword || trimmedPassword.length < 6) {
+    return { ok: false, reason: 'Email and password are required' };
+  }
+
+  const ilUser = await deps.findIlUserRecord(trimmedEmail, trimmedEmail, deps, {});
+  if (!ilUser) return { ok: false, reason: 'No IL_Users record for this email' };
+
+  const zohoPassword = (ilUser.LMS_Password || ilUser.Password || '').trim();
+  if (!zohoPassword || zohoPassword !== trimmedPassword) {
+    return { ok: false, reason: 'Password does not match Zoho IL_Users record' };
+  }
+
+  const existing = await getAuthUserByEmail(trimmedEmail);
+  if (existing) return { ok: true, alreadyExists: true, uid: existing.uid };
+
+  const record = mergeProvisioningRecord(null, ilUser, {
+    email: trimmedEmail,
+    password: trimmedPassword,
+    username: ilUser.Username || trimmedEmail,
+  });
+  if (!record.LMS_Payment_Status) {
+    record.LMS_Payment_Status = 'register';
+  }
+
+  return provisionFromRecord(db, record, { applyPassword: true, skipUnpaidCheck: true });
+}
+
 module.exports = {
   mergeProvisioningRecord,
   parseEntitlementsFromRecord,
   applyEntitlements,
+  /** @deprecated alias — use applyEntitlements */
+  applyEntitlementsFromLead: applyEntitlements,
   provisionFromRecord,
   provisionUserFromLead,
   provisionUserFromEmail,
   provisionFromRegistrationWebhook,
+  provisionFromLoginCredentials,
   ensureCourseEnrollment,
   shouldApplyProvisioningPassword,
   isValidBatchName,

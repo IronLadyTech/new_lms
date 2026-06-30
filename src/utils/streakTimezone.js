@@ -18,9 +18,26 @@ const weekdayFormatter = new Intl.DateTimeFormat('en-US', {
   weekday: 'short',
 });
 
+export function toValidDate(value) {
+  if (value == null || value === '') return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  if (typeof value?.toDate === 'function') {
+    const d = value.toDate();
+    return d instanceof Date && !Number.isNaN(d.getTime()) ? d : null;
+  }
+  if (typeof value === 'object' && typeof value.seconds === 'number') {
+    const d = new Date(value.seconds * 1000);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 /** Returns YYYY-MM-DD in the canonical timezone. */
 export function getDateKey(date = new Date(), timeZone = STREAK_TIMEZONE) {
-  const parts = dateKeyFormatter.formatToParts(date);
+  const resolved = toValidDate(date);
+  if (!resolved) return null;
+  const parts = dateKeyFormatter.formatToParts(resolved);
   const y = parts.find((p) => p.type === 'year')?.value;
   const m = parts.find((p) => p.type === 'month')?.value;
   const d = parts.find((p) => p.type === 'day')?.value;

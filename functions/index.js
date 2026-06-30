@@ -429,6 +429,75 @@ exports.zohoProvisionUser = onCall(async (request) => {
   return zoho.provisionUserFromEmail(db, email);
 });
 
+// ── Zoho CRM — admin: browse Leads / IL_Users directory ─────────
+exports.zohoListLeads = onCall(async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', 'Sign in required');
+  }
+  await zoho.assertAdmin(db, request.auth.uid);
+
+  if (!zoho.isConfigured()) {
+    return { ok: false, reason: 'Zoho secrets are not configured' };
+  }
+
+  const { page = 1, perPage = 50 } = request.data || {};
+  return zoho.listLeadsPage({ page, perPage });
+});
+
+exports.zohoListIlUsers = onCall(async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', 'Sign in required');
+  }
+  await zoho.assertAdmin(db, request.auth.uid);
+
+  if (!zoho.isConfigured()) {
+    return { ok: false, reason: 'Zoho secrets are not configured' };
+  }
+
+  const { page = 1, perPage = 50 } = request.data || {};
+  return zoho.listIlUsersPage({ page, perPage });
+});
+
+// ── Zoho CRM — first login: create Firebase user from IL_Users credentials ─
+exports.ensureZohoUserOnLogin = onCall(async (request) => {
+  if (!zoho.isConfigured()) {
+    return { ok: false, reason: 'Zoho not configured' };
+  }
+
+  const email = request.data?.email?.trim();
+  const password = request.data?.password;
+  if (!email) {
+    throw new HttpsError('invalid-argument', 'Email is required');
+  }
+  if (typeof password !== 'string' || password.length < 6) {
+    throw new HttpsError('invalid-argument', 'A valid password is required');
+  }
+
+  return zoho.provisionFromLoginCredentials(db, email, password);
+});
+
+exports.zohoDiagnoseIlUser = onCall(async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', 'Sign in required');
+  }
+  await zoho.assertAdmin(db, request.auth.uid);
+
+  if (!zoho.isConfigured()) {
+    return { ok: false, reason: 'Zoho not configured' };
+  }
+
+  const email = request.data?.email?.trim();
+  if (!email) {
+    throw new HttpsError('invalid-argument', 'Email is required');
+  }
+
+  const result = await zoho.diagnoseIlUserLookup(email, request.data?.username, {
+    phone: request.data?.phone,
+    ilUserRecordId: request.data?.zohoIlUserId,
+  });
+  return { ok: Boolean(result.found), ...result };
+});
+
 exports.zohoLeadWebhook = onRequest({ cors: true }, async (req, res) => {
   if (req.method !== 'POST') {
     res.status(405).send('Method not allowed');

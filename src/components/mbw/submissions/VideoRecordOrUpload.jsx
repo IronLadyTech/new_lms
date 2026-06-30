@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { MBW_STORAGE_ENABLED, uploadMbwFile } from '../../../services/mbwService';
+import TaskTemplateDownloads from './TaskTemplateDownloads';
 
 export default function VideoRecordOrUpload({ task, submission, canSubmit, userId, onSubmit }) {
   const [mode, setMode] = useState('record');
@@ -83,6 +84,7 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
 
   return (
     <div className="mbw-submission mbw-video-record">
+      <TaskTemplateDownloads taskId={task.id} task={task} />
       {saved && submission?.videoUrl && (
         <div className="mbw-submission__saved">
           <video src={submission.videoUrl} controls className="mbw-video-record__playback" />

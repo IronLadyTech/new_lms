@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, ShieldCheck, LifeBuoy } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { updateUserProfile } from '../../services/userService';
-import { isAdminRole, getRoleLabel } from '../../utils/roles';
+import { getRoleLabel, isModeratorOnly, isFullAdmin } from '../../utils/roles';
 import { ROLES } from '../../utils/roles';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
 import ThemeToggle from '../../components/ThemeToggle';
@@ -74,7 +74,13 @@ export default function Profile() {
           Open Super Admin panel
         </button>
       )}
-      {isAdminRole(role) && role !== ROLES.SUPERADMIN && (
+      {isModeratorOnly(role) && (
+        <button type="button" className="btn btn-outline btn-block profile-admin-btn" onClick={() => navigate('/cx/home')}>
+          <LayoutDashboard size={18} strokeWidth={2} />
+          Open CX dashboard
+        </button>
+      )}
+      {isFullAdmin(role) && role !== ROLES.SUPERADMIN && (
         <button type="button" className="btn btn-outline btn-block profile-admin-btn" onClick={() => navigate('/admin')}>
           <LayoutDashboard size={18} strokeWidth={2} />
           Open Admin dashboard

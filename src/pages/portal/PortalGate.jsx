@@ -1,6 +1,6 @@
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { ROLES, isAdminRole, isModeratorOnly } from '../../utils/roles';
+import { ROLES, isModeratorOnly, isFullAdmin } from '../../utils/roles';
 import ThemeToggle from '../../components/ThemeToggle';
 
 export default function PortalGate() {
@@ -15,13 +15,15 @@ export default function PortalGate() {
     );
   }
 
-  if (!isAdminRole(role)) {
-    navigate('/app/home', { replace: true });
-    return null;
+  if (isModeratorOnly(role)) {
+    return <Navigate to="/cx/home" replace />;
+  }
+
+  if (!isFullAdmin(role)) {
+    return <Navigate to="/app/home" replace />;
   }
 
   const isSuperAdmin = role === ROLES.SUPERADMIN;
-  const cxtView = isModeratorOnly(role);
   const adminPath = isSuperAdmin ? '/superadmin' : '/admin';
 
   return (
@@ -33,21 +35,16 @@ export default function PortalGate() {
         <img src="/logo.png" alt="Iron Lady" className="logo-mark lg portal-gate__logo" />
         <h1>Welcome back{profile?.displayName ? `, ${profile.displayName}` : ''}</h1>
         <p className="portal-gate__sub">
-          You are signed in as{' '}
-          <strong>{isSuperAdmin ? 'Super Admin' : cxtView ? 'Customer Expression' : 'Admin'}</strong>. How would
-          you like to continue?
+          You are signed in as <strong>{isSuperAdmin ? 'Super Admin' : 'Admin'}</strong>. How would you like to
+          continue?
         </p>
 
         <div className="portal-gate__actions">
           <button type="button" className="portal-gate__btn portal-gate__btn--admin" onClick={() => navigate(adminPath)}>
-            <span className="portal-gate__icon">{cxtView ? '📋' : '⚙️'}</span>
-            <span className="portal-gate__btn-title">
-              {cxtView ? 'Open my batches' : 'Open admin section'}
-            </span>
+            <span className="portal-gate__icon">⚙️</span>
+            <span className="portal-gate__btn-title">Open admin section</span>
             <span className="portal-gate__btn-desc">
-              {cxtView
-                ? 'Track your learners, tasks, and batch progress'
-                : 'Manage users, courses, resources, batches & track progress'}
+              Manage users, courses, resources, batches & track progress
             </span>
           </button>
 

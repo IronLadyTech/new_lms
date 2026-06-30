@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MBW_STORAGE_ENABLED, uploadMbwFile } from '../../../services/mbwService';
+import TaskTemplateDownloads from './TaskTemplateDownloads';
 
 export default function FileUpload({ task, submission, canSubmit, userId, onSubmit }) {
   const [file, setFile] = useState(null);
@@ -8,13 +9,27 @@ export default function FileUpload({ task, submission, canSubmit, userId, onSubm
 
   const skipped = submission?.storageSkipped;
   const saved = submission?.fileUrl || (submission?.fileName && !skipped);
+  const submitLabel = task.uploadSubmitLabel || 'Submit file';
+  const skipLabel = task.uploadSkipLabel || 'Continue without uploading';
+  const uploadKind = task.uploadKind || 'file';
 
   const handleUpload = async () => {
     if (!file) return;
     setUploading(true);
     setError('');
     try {
-      const uploaded = await uploadMbwFile(userId, task.id, file, 'resume');
+      if (!MBW_STORAGE_ENABLED) {
+        await onSubmit({
+          fileName: file.name,
+          localFallback: true,
+          fileSize: file.size,
+          fileType: file.type,
+        });
+        setFile(null);
+        return;
+      }
+
+      const uploaded = await uploadMbwFile(userId, task.id, file, uploadKind);
       await onSubmit({
         fileUrl: uploaded.url,
         fileName: uploaded.fileName,
@@ -35,7 +50,7 @@ export default function FileUpload({ task, submission, canSubmit, userId, onSubm
     try {
       await onSubmit({
         storageSkipped: true,
-        fileName: 'Resume upload skipped',
+        fileName: task.uploadSkipLabel ? 'Upload skipped' : 'Resume upload skipped',
       });
     } catch (e) {
       setError(e.message || 'Could not save');
@@ -44,30 +59,9 @@ export default function FileUpload({ task, submission, canSubmit, userId, onSubm
     }
   };
 
-  const RESUME_TEMPLATES = [
-    { label: 'Entrepreneur Resume Template', file: '/templates/Entrepreneur Resume Template.docx' },
-    { label: 'Iron Lady Resume Template', file: '/templates/Iron Lady Resume Template.doc' },
-  ];
-
   return (
     <div className="mbw-submission">
-      <div className="mbw-submission__templates">
-        <p className="mbw-submission__templates-label">
-          <strong>Sample Templates</strong> — download a template to get started:
-        </p>
-        <div className="mbw-submission__templates-list">
-          {RESUME_TEMPLATES.map((t) => (
-            <a
-              key={t.file}
-              href={t.file}
-              download
-              className="btn btn-outline btn-sm"
-            >
-              ⬇ {t.label}
-            </a>
-          ))}
-        </div>
-      </div>
+      <TaskTemplateDownloads taskId={task.id} task={task} />
       {saved && (
         <div className="mbw-submission__saved">
           <strong>Submitted file:</strong>{' '}
@@ -82,7 +76,7 @@ export default function FileUpload({ task, submission, canSubmit, userId, onSubm
       )}
       {skipped && (
         <div className="mbw-submission__saved">
-          <p className="muted">You chose to continue without uploading. You can upload your resume later.</p>
+          <p className="muted">You chose to continue without uploading. You can upload your file later.</p>
         </div>
       )}
       <input
@@ -93,7 +87,8 @@ export default function FileUpload({ task, submission, canSubmit, userId, onSubm
       />
       {!MBW_STORAGE_ENABLED && (
         <p className="mbw-task__hint muted">
-          Cloud storage is not configured yet — file pick and submit still work on this device.
+          Cloud storage is not enabled — your file name is saved and the task completes; re-upload after
+          storage is configured to attach the file in the cloud.
         </p>
       )}
       {error && <p className="alert alert-error">{error}</p>}
@@ -104,16 +99,16 @@ export default function FileUpload({ task, submission, canSubmit, userId, onSubm
           disabled={!canSubmit || !file || uploading}
           onClick={handleUpload}
         >
-          {uploading ? 'Uploading…' : 'Submit resume'}
+          {uploading ? 'Uploading…' : submitLabel}
         </button>
-        {!saved && !skipped && (
+        {!saved && !skipped && task.optional && (
           <button
             type="button"
             className="btn btn-outline"
             disabled={uploading}
             onClick={handleSkip}
           >
-            Continue without uploading
+            {skipLabel}
           </button>
         )}
       </div>

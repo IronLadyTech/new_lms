@@ -41,8 +41,8 @@ export const SUBMISSION_STATUS = {
 /** Instructor review workflow — off for now; set true when admin review is re-enabled. */
 export const MBW_REVIEW_ENABLED = false;
 
-/** Firebase Storage uploads — off until storage is configured. */
-export const MBW_STORAGE_ENABLED = false;
+/** Firebase Storage uploads for MBW resume / video tasks. Off by default until bucket + rules are live. */
+export const MBW_STORAGE_ENABLED = import.meta.env.VITE_MBW_STORAGE_ENABLED === 'true';
 
 export function taskNeedsReview(task) {
   return MBW_REVIEW_ENABLED && !!task?.reviewRequired;
@@ -71,7 +71,7 @@ export const PRE_SESSION_TASKS = [
     title: '27 Principles Video',
     type: TASK_TYPES.TEXT,
     requiresWatch: true,
-    videoUrl: '',
+    videoUrl: 'https://www.youtube.com/watch?v=uo9xA5xiRWY',
     unlockDate: null,
     reviewRequired: false,
     description: 'Watch the video, then submit 3 key learnings.',
@@ -99,7 +99,7 @@ export const PRE_SESSION_TASKS = [
     title: 'ERRC Framework',
     type: TASK_TYPES.EDITABLE_TEMPLATE,
     requiresWatch: true,
-    videoUrl: '',
+    videoUrl: 'https://d3jv3ztk062m9h.cloudfront.net/videos/ERRC%20edited/output/ERRC%20edited.m3u8',
     unlockDate: null,
     reviewRequired: false,
     description: 'Watch the ERRC video, then fill your activity grid (editable anytime).',
@@ -160,6 +160,8 @@ export const PRE_SESSION_TASKS = [
     optional: true,
     description: 'Watch the guidance video, then upload your updated resume when ready.',
     accept: '.pdf,.doc,.docx',
+    uploadSubmitLabel: 'Submit resume',
+    uploadKind: 'resume',
   },
   {
     id: 'mbw-live-session',
@@ -232,6 +234,8 @@ export const Q1_TASKS = [
     reviewRequired: false,
     description: 'Upload your updated C-Suite Resume.',
     accept: '.pdf,.doc,.docx',
+    uploadSubmitLabel: 'Submit resume',
+    uploadKind: 'resume',
   },
   {
     id: 'q1-linkedin-update',
@@ -320,13 +324,14 @@ export const Q1_TASKS = [
     phase: 'quarter-1',
     week: 'Wk6',
     title: 'Your Position in the Bell Curve',
-    type: TASK_TYPES.TEXT,
+    type: TASK_TYPES.FILE_UPLOAD,
     requiresWatch: false,
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Share your current position in the bell curve and 1 action you want to take.',
-    placeholder: 'My position:\n\n1 action I will take:',
+    description: 'Complete the Bell Curve Position worksheet using the template below, then upload it.',
+    accept: '.pdf,.doc,.docx',
+    uploadSubmitLabel: 'Upload worksheet',
   },
   {
     id: 'q1-suvarna-session',
@@ -360,13 +365,14 @@ export const Q1_TASKS = [
     phase: 'quarter-1',
     week: 'Wk8',
     title: 'Milestone Table (Delta 2)',
-    type: TASK_TYPES.TEXT,
+    type: TASK_TYPES.FILE_UPLOAD,
     requiresWatch: false,
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Fill in and share your updated Milestone Table for Delta 2.',
-    placeholder: 'Your Milestone Table updates…',
+    description: 'Fill in your Milestone Table using the Delta Table template, then upload your file.',
+    accept: '.pdf,.doc,.docx,.pptx',
+    uploadSubmitLabel: 'Upload milestone table',
   },
   {
     id: 'q1-session3',
@@ -538,13 +544,14 @@ export const Q2_TASKS = [
     phase: 'quarter-2',
     week: 'Wk17',
     title: 'Strategy — First Draft',
-    type: TASK_TYPES.TEXT,
+    type: TASK_TYPES.FILE_UPLOAD,
     requiresWatch: false,
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Create the first draft of your strategy for one business outcome.',
-    placeholder: 'Business outcome:\n\nStrategy draft:',
+    description: 'Complete the strategy document template for one business outcome, then upload it.',
+    accept: '.pdf,.doc,.docx',
+    uploadSubmitLabel: 'Upload strategy draft',
   },
   {
     id: 'q2-super-powers-video',
@@ -1017,13 +1024,14 @@ export const Q4_TASKS = [
     phase: 'quarter-4',
     week: 'Wk42',
     title: 'Multi-View Strategy',
-    type: TASK_TYPES.TEXT,
+    type: TASK_TYPES.FILE_UPLOAD,
     requiresWatch: false,
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Create your strategy considering different views — customer, investor, business owner, etc. Share your strategy document.',
-    placeholder: 'Customer view:\nInvestor view:\nBusiness owner view:\n\nStrategy:',
+    description: 'Create your multi-view strategy using the template below, then upload your document.',
+    accept: '.pdf,.doc,.docx',
+    uploadSubmitLabel: 'Upload strategy document',
   },
   {
     id: 'q4-suvarna-session',
@@ -1307,12 +1315,11 @@ export async function saveSubmission(userId, taskId, payload, { batchId = 'defau
   if (db) {
     try {
       const ref = doc(db, MBW_SUBMISSIONS, subId);
-      const existing = await getDoc(ref);
-      if (existing.exists()) {
-        await updateDoc(ref, data);
-      } else {
-        await setDoc(ref, { ...data, createdAt: serverTimestamp() });
-      }
+      const writeData = getLocalSubmission(userId, taskId)
+        ? data
+        : { ...data, createdAt: serverTimestamp() };
+      // merge create/update in one call — updateDoc on a missing doc returns permission-denied.
+      await setDoc(ref, writeData, { merge: true });
       const qualifying = [SUBMISSION_STATUS.SUBMITTED, SUBMISSION_STATUS.UNDER_REVIEW, SUBMISSION_STATUS.COMPLETED];
       if (qualifying.includes(payload.status)) {
         recordSubmissionEvent({
@@ -1324,7 +1331,7 @@ export async function saveSubmission(userId, taskId, payload, { batchId = 'defau
       }
       return { id: subId, ...payload, taskId, userId, batchId };
     } catch (err) {
-      console.warn('Firestore save failed, using localStorage', err);
+      console.warn('Firestore save failed, using localStorage', err?.code, err?.message || err);
     }
   }
 
@@ -1332,6 +1339,17 @@ export async function saveSubmission(userId, taskId, payload, { batchId = 'defau
 }
 
 export async function uploadMbwFile(userId, taskId, file, kind = 'file') {
+  if (!MBW_STORAGE_ENABLED) {
+    return {
+      url: null,
+      path: null,
+      fileName: file.name,
+      localFallback: true,
+      size: file.size,
+      type: file.type,
+    };
+  }
+
   try {
     const { url, path, fileName } = await uploadFile(file, `mbw/${userId}/${taskId}/${kind}`, {
       uploadedBy: userId,

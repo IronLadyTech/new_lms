@@ -13,7 +13,7 @@ import {
 import { auth } from '../firebase/config';
 import { getUserProfile, createUserProfile, ensureSuperAdminIfOwner } from '../services/userService';
 import { initNotifications } from '../services/notificationService';
-import { syncPasswordResetToZoho, syncCredentialBeforeReset } from '../services/zohoService';
+import { syncPasswordResetToZoho, syncCredentialBeforeReset, ensureZohoUserOnLogin, isZohoConfigured } from '../services/zohoService';
 import { ROLES } from '../utils/roles';
 import { isSuperAdminEmail } from '../utils/constants';
 import {
@@ -112,7 +112,10 @@ export function AuthProvider({ children }) {
     await createUserProfile(cred.user.uid, { email, displayName, role: ROLES.STUDENT });
     await loadProfile(cred.user);
     try {
-      await syncPasswordResetToZoho(password, { phase: 'login' });
+      const syncResult = await syncPasswordResetToZoho(password, { phase: 'login' });
+      if (!syncResult?.ok || !syncResult?.ilUsersUpdated) {
+        console.warn('Zoho credential sync on signup:', syncResult);
+      }
     } catch (err) {
       console.warn('Zoho credential sync failed on signup:', err.message);
     }
@@ -123,7 +126,15 @@ export function AuthProvider({ children }) {
     setError(null);
     clearGuestSession();
     requireAuth();
-    const cred = await signInWithEmailAndPassword(auth, email, password);
+    const trimmedEmail = email?.trim();
+    if (isZohoConfigured()) {
+      try {
+        await ensureZohoUserOnLogin(trimmedEmail, password);
+      } catch (err) {
+        console.warn('Zoho first-login provision skipped:', err.message);
+      }
+    }
+    const cred = await signInWithEmailAndPassword(auth, trimmedEmail, password);
     const existing = await getUserProfile(cred.user.uid);
     if (!existing) {
       await createUserProfile(cred.user.uid, {
@@ -134,7 +145,10 @@ export function AuthProvider({ children }) {
     }
     await loadProfile(cred.user);
     try {
-      await syncPasswordResetToZoho(password, { phase: 'login' });
+      const syncResult = await syncPasswordResetToZoho(password, { phase: 'login' });
+      if (!syncResult?.ok || !syncResult?.ilUsersUpdated || syncResult?.ilMetaSynced === false) {
+        console.warn('Zoho credential sync on login:', syncResult);
+      }
     } catch (err) {
       console.warn('Zoho credential sync failed on login:', err.message);
     }

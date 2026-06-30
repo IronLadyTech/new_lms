@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 function isValidUrl(str) {
   try {
@@ -10,7 +10,12 @@ function isValidUrl(str) {
 }
 
 export default function LinkSubmission({ task, submission, canSubmit, onSubmit }) {
-  const [link, setLink] = useState(submission?.linkValue || '');
+  const [link, setLink] = useState('');
+
+  useEffect(() => {
+    setLink(submission?.linkValue || '');
+  }, [task.id, submission?.linkValue]);
+
   const saved = submission?.linkValue;
 
   return (

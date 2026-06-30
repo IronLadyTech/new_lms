@@ -9,7 +9,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { getDateKey } from '../utils/streakTimezone';
+import { getDateKey, getTodayKey, toValidDate } from '../utils/streakTimezone';
 import { markPresentFromSubmission } from './attendanceService';
 
 const LEARNER_SUBMISSIONS = 'learner_submissions';
@@ -46,7 +46,7 @@ export async function recordSubmissionEvent({
   if (!db || !learnerId) return null;
 
   const ts = timestamp || serverTimestamp();
-  const dateKey = getDateKey(timestamp?.toDate ? timestamp.toDate() : timestamp ? new Date(timestamp) : new Date());
+  const dateKey = getDateKey(toValidDate(timestamp) || new Date()) || getTodayKey();
   const dedupeId = `${learnerId}_${courseId}_${problemId || 'general'}_${dateKey}_${isCorrect ? 'ok' : 'miss'}`;
 
   const ref = doc(db, LEARNER_SUBMISSIONS, dedupeId);
@@ -142,7 +142,7 @@ export function mapActivitiesToSubmissionEvents(activities = []) {
         problemId: meta.problemId || meta.taskId || meta.resourceType || a.type || a.title || null,
         isCorrect: true,
         timestamp: a.createdAt,
-        dateKey: getDateKey(a.createdAt.toDate?.() || a.createdAt),
+        dateKey: getDateKey(toValidDate(a.createdAt) || new Date()) || getTodayKey(),
         _legacy: true,
       };
     })
@@ -153,7 +153,7 @@ export function mapActivitiesToSubmissionEvents(activities = []) {
 export function mapMbwSubmissionsToEvents(submissions = [], learnerId) {
   const list = Array.isArray(submissions) ? submissions : Object.values(submissions || {});
   const qualifying = ['submitted', 'under_review', 'completed'];
-  return submissions
+  return list
     .filter((s) => qualifying.includes(s.status))
     .map((s) => ({
       id: `mbw-${s.taskId || s.id}`,
@@ -165,17 +165,20 @@ export function mapMbwSubmissionsToEvents(submissions = [], learnerId) {
       dateKey: null,
       _legacy: true,
     }))
-    .map((e) => ({
-      ...e,
-      dateKey: e.timestamp ? getDateKey(e.timestamp.toDate?.() || e.timestamp) : getDateKey(),
-    }));
+    .map((e) => {
+      const when = toValidDate(e.timestamp);
+      return {
+        ...e,
+        dateKey: when ? getDateKey(when) : getTodayKey(),
+      };
+    });
 }
 
 export function mergeSubmissionEvents(...lists) {
   const byKey = new Map();
   lists.flat().forEach((e) => {
     if (!e?.learnerId) return;
-    const dateKey = e.dateKey || (e.timestamp ? getDateKey(e.timestamp.toDate?.() || e.timestamp) : '');
+    const dateKey = e.dateKey || getDateKey(toValidDate(e.timestamp) || new Date()) || getTodayKey();
     const dedupeKey = `${e.learnerId}_${e.courseId || 'general'}_${e.problemId || 'general'}_${dateKey}_${e.isCorrect ? 'ok' : 'miss'}`;
     const existing = byKey.get(dedupeKey);
     if (!existing || (existing._legacy && !e._legacy)) {

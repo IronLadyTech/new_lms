@@ -1,8 +1,11 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    function userDoc() {
-      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data;
+    function userRole() {
+      return request.auth != null
+        && firestore.exists(/databases/(default)/documents/users/$(request.auth.uid))
+        ? firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role
+        : '';
     }
 
     function isBootstrapOwner() {
@@ -15,7 +18,7 @@ service firebase.storage {
       return request.auth != null
         && (
           isBootstrapOwner()
-          || userDoc().role in ['moderator', 'admin', 'superadmin']
+          || userRole() in ['moderator', 'admin', 'superadmin']
         );
     }
 
@@ -23,7 +26,7 @@ service firebase.storage {
       return request.auth != null
         && (
           isBootstrapOwner()
-          || userDoc().role in ['admin', 'superadmin']
+          || userRole() in ['admin', 'superadmin']
         );
     }
 

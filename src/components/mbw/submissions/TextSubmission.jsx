@@ -1,7 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import TaskTemplateDownloads from './TaskTemplateDownloads';
 
 export default function TextSubmission({ task, submission, canSubmit, onSubmit, readOnly }) {
-  const [text, setText] = useState(submission?.textValue || '');
+  const [text, setText] = useState('');
+
+  useEffect(() => {
+    setText(submission?.textValue || '');
+  }, [task.id, submission?.textValue]);
 
   const saved = submission?.textValue;
 
@@ -16,6 +21,7 @@ export default function TextSubmission({ task, submission, canSubmit, onSubmit, 
 
   return (
     <div className="mbw-submission">
+      <TaskTemplateDownloads taskId={task.id} task={task} />
       <label htmlFor={`text-${task.id}`}>{task.description}</label>
       <textarea
         id={`text-${task.id}`}

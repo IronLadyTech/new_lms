@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { isAdminRole, isGuestRole } from '../../utils/roles';
+import { isAdminRole, isGuestRole, isModeratorOnly } from '../../utils/roles';
 import { ROLES } from '../../utils/roles';
 import ThemeToggle from '../../components/ThemeToggle';
 
@@ -235,7 +235,17 @@ export default function AuthPage({ mode = 'login' }) {
 }
 
 function redirectByRole(role, navigate) {
-  if (isAdminRole(role)) navigate('/portal', { replace: true });
-  else if (isGuestRole(role)) navigate('/app/home', { replace: true });
-  else navigate('/app/home', { replace: true });
+  if (isModeratorOnly(role)) {
+    navigate('/cx/home', { replace: true });
+    return;
+  }
+  if (isAdminRole(role)) {
+    navigate('/portal', { replace: true });
+    return;
+  }
+  if (isGuestRole(role)) {
+    navigate('/app/home', { replace: true });
+    return;
+  }
+  navigate('/app/home', { replace: true });
 }

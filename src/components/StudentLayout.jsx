@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { isAdminRole } from '../utils/roles';
+import { isAdminRole, isModeratorOnly } from '../utils/roles';
 import BottomNav from './BottomNav';
 import NotificationBell from './NotificationBell';
 import ThemeToggle from './ThemeToggle';
@@ -61,8 +61,11 @@ export default function StudentLayout() {
           <ThemeToggle compact />
           <NotificationBell />
           {showAdminLink && (
-            <Link to="/portal" className="app-header__link app-header__link--admin">
-              Admin
+            <Link
+              to={isModeratorOnly(role) ? '/cx/home' : '/portal'}
+              className="app-header__link app-header__link--admin"
+            >
+              {isModeratorOnly(role) ? 'CX' : 'Admin'}
             </Link>
           )}
           <Link to="/app/home" className="app-header__link">
