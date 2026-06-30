@@ -34,14 +34,16 @@ export default function TextSubmission({ task, submission, canSubmit, onSubmit, 
       {saved && (
         <p className="muted mbw-submission__saved-note">Previously saved — edit and re-submit to update.</p>
       )}
-      <button
-        type="button"
-        className="btn btn-primary"
-        disabled={!canSubmit || !text.trim()}
-        onClick={() => onSubmit({ textValue: text.trim() })}
-      >
-        Save submission
-      </button>
+      <div className="mbw-submission__actions">
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={!canSubmit || !text.trim()}
+          onClick={() => onSubmit({ textValue: text.trim() })}
+        >
+          Save submission
+        </button>
+      </div>
     </div>
   );
 }

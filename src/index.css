@@ -6182,45 +6182,84 @@ button.streak-heatmap__cell:focus-visible {
 
 @media (max-width: 767px) {
   .mbw-program-page--lesson {
-    padding-bottom: calc(var(--nav-h, 72px) + 7.5rem);
+    --mbw-lesson-sticky-h: 4.75rem;
+    padding-bottom: calc(
+      var(--nav-h, 72px) + env(safe-area-inset-bottom, 0px) + var(--mbw-lesson-sticky-h) + 1.5rem
+    );
+  }
+
+  .mbw-program-page--lesson:has(.mbw-lesson-complete) {
+    --mbw-lesson-sticky-h: 8.5rem;
+  }
+
+  .mbw-program-layout--lesson .mbw-program-lesson-card:has(.mbw-lesson-nav--sticky)::after {
+    content: '';
+    display: block;
+    height: var(--mbw-lesson-sticky-h);
+    pointer-events: none;
+  }
+
+  .mbw-program-lesson-card .mbw-submission__actions,
+  .mbw-program-lesson-card .mbw-submission > .btn-primary {
+    scroll-margin-bottom: calc(
+      var(--nav-h, 72px) + env(safe-area-inset-bottom, 0px) + var(--mbw-lesson-sticky-h) + 1rem
+    );
+    margin-bottom: 0.5rem;
   }
 
   .mbw-lesson-nav--sticky {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: var(--nav-h, 72px);
+    bottom: calc(var(--nav-h, 72px) + env(safe-area-inset-bottom, 0px));
     z-index: 90;
     margin: 0;
-    padding: 0.75rem 0.85rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    padding: 0.55rem 0.75rem;
     background: var(--surface);
     border-top: 1px solid var(--border);
     box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.1);
   }
 
   .mbw-lesson-nav--sticky .mbw-lesson-complete {
-    margin-bottom: 0.65rem;
-    padding: 0.7rem 0.85rem;
+    margin-bottom: 0.55rem;
+    padding: 0.6rem 0.75rem;
   }
 
   .mbw-lesson-nav--sticky .mbw-lesson-nav__actions {
-    flex-direction: column;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0.5rem;
   }
 
   .mbw-lesson-nav--sticky .mbw-lesson-nav__prev,
   .mbw-lesson-nav--sticky .mbw-lesson-nav__next {
-    width: 100%;
+    width: auto;
+    min-height: 2.65rem;
+    padding: 0.6rem 0.85rem;
   }
 
   .mbw-lesson-nav--sticky .mbw-lesson-nav__prev {
-    order: 2;
-    min-height: 2.75rem;
+    order: 0;
+    flex: 0 0 auto;
+    min-width: 6.25rem;
     justify-content: center;
   }
 
   .mbw-lesson-nav--sticky .mbw-lesson-nav__next {
-    order: 1;
-    align-items: flex-start;
+    order: 0;
+    flex: 1 1 auto;
+    align-items: center;
+    flex-direction: row;
+    text-align: left;
+    gap: 0.35rem;
+  }
+
+  .mbw-lesson-nav--sticky .mbw-lesson-nav__next-title {
+    display: none;
+  }
+
+  .mbw-lesson-nav--sticky .mbw-lesson-nav__next-label {
+    font-size: 0.92rem;
   }
 }
 
@@ -6524,6 +6563,8 @@ button.streak-heatmap__cell:focus-visible {
   font-weight: 700;
   font-size: 0.95rem;
   color: var(--mbw-text);
+  line-height: 1.3;
+  word-wrap: break-word;
 }
 
 .mbw-section-card__sub {
@@ -6614,6 +6655,12 @@ button.streak-heatmap__cell:focus-visible {
   padding: 8px 8px 4px;
   color: var(--mbw-text-secondary);
   font-size: 0.9rem;
+}
+
+.mbw-section-card__coming {
+  margin: 0 0 0.75rem;
+  line-height: 1.45;
+  color: var(--mbw-text-secondary);
 }
 
 .mbw-section-card__locked-panel p {
@@ -6956,8 +7003,14 @@ button.streak-heatmap__cell:focus-visible {
     font-size: 0.62rem;
   }
 
-  .student-layout--course .mbw-program-page {
+  .student-layout--course .mbw-program-page:not(.mbw-program-page--lesson) {
     padding-bottom: 24px;
+  }
+
+  .student-layout--course .mbw-program-page.mbw-program-page--lesson {
+    padding-bottom: calc(
+      var(--nav-h, 72px) + env(safe-area-inset-bottom, 0px) + var(--mbw-lesson-sticky-h, 4.75rem) + 1.5rem
+    );
   }
 
   .student-layout--course .mbw-toast {
@@ -7116,13 +7169,47 @@ button.streak-heatmap__cell:focus-visible {
   }
 
   .mbw-section-card__head {
-    padding: 16px;
-    flex-wrap: wrap;
+    padding: 14px 12px;
+    gap: 0.5rem;
+    align-items: flex-start;
   }
 
   .mbw-section-card__mini {
+    flex-shrink: 0;
+    margin-left: auto;
+    align-self: center;
+  }
+
+  .mbw-section-card__chevron {
+    flex-shrink: 0;
+    align-self: center;
+  }
+
+  .mbw-section-card__locked-panel {
+    padding: 0.75rem 0.85rem 1rem;
+  }
+
+  .mbw-section-card__locked-panel .btn {
     width: 100%;
-    text-align: right;
+    justify-content: center;
+  }
+
+  .mbw-program-journey__sections {
+    gap: 12px;
+  }
+
+  .mbw-program-hero__resume {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .mbw-first-time {
+    padding: 1.15rem;
+  }
+
+  .mbw-lesson-row__title {
+    word-wrap: break-word;
+    line-height: 1.35;
   }
 
   .mbw-lesson-row__lock-reason {
@@ -8430,12 +8517,14 @@ a.cx-bar--link:hover .cx-bar__label {
     text-align: center;
   }
 
-  .mbw-lesson-nav--sticky {
-    bottom: calc(var(--nav-h, 72px) + env(safe-area-inset-bottom, 0px));
+  .mbw-program-layout--lesson .mbw-program-lesson-card {
+    padding: 1rem 0.85rem;
   }
 
-  .mbw-program-page--lesson {
-    padding-bottom: calc(var(--nav-h, 72px) + env(safe-area-inset-bottom, 0px) + 7.5rem);
+  .mbw-errc-card__field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 4.5rem;
   }
 
   .mbw-task__header h1 {
@@ -8453,6 +8542,264 @@ a.cx-bar--link:hover .cx-bar__label {
   .mbw-submission input[type='text'],
   .mbw-submission input[type='file'] {
     max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .mbw-submission__templates {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .mbw-submission__templates-list .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .mbw-submission__template-figure {
+    max-width: none;
+    width: 100%;
+  }
+
+  .mbw-task__meta {
+    flex-wrap: wrap;
+    gap: 0.35rem 0.5rem;
+  }
+
+  .mbw-task__eyebrow {
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
+  .mbw-dash-card {
+    padding: 1rem 0.85rem;
+  }
+
+  .mbw-dash-card .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ── Student pages — full mobile layout ─────────────────────── */
+@media (max-width: 767px) {
+  .page {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .student-main {
+    padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 0.75rem);
+  }
+
+  .section h2 {
+    line-height: 1.4;
+    word-wrap: break-word;
+  }
+
+  .home-analytics-section {
+    margin-bottom: 1.25rem;
+  }
+
+  .streak-analytics,
+  .streak-attendance,
+  .streak-heatmap-card {
+    padding: 0.85rem 0.9rem;
+  }
+
+  .streak-attendance__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .streak-attendance__filters {
+    width: 100%;
+  }
+
+  .streak-attendance__select,
+  .streak-attendance__date {
+    flex: 1 1 calc(50% - 0.25rem);
+    min-width: 0;
+    width: auto;
+  }
+
+  .streak-heatmap-card__head {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .streak-block {
+    border-radius: 12px;
+  }
+
+  .streak-nudge {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .streak-nudge .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .course-card__body {
+    padding: 0.85rem 1rem 1rem;
+  }
+
+  .course-card h2 {
+    font-size: 1.05rem;
+    line-height: 1.3;
+  }
+
+  .course-card p {
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  .course-card__actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .list-cards--courses .list-cards__course {
+    flex-wrap: wrap;
+  }
+
+  .list-cards__course-link {
+    flex: 1 1 calc(100% - 3.5rem);
+  }
+
+  .event-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .event-actions .btn,
+  .event-actions__btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .event-preview-card__media {
+    width: 3.75rem;
+    height: 3.75rem;
+  }
+
+  .learner-calendar__month-head {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .learner-calendar__month-head strong {
+    display: block;
+    font-size: 0.95rem;
+  }
+
+  .learner-calendar__month-head .muted {
+    font-size: 0.75rem;
+  }
+
+  .event-calendar__nav {
+    align-items: center;
+  }
+
+  .event-calendar__nav .btn {
+    flex-shrink: 0;
+    min-width: 2.75rem;
+    padding-left: 0.65rem;
+    padding-right: 0.65rem;
+  }
+
+  .event-calendar__sidebar {
+    min-width: 0;
+  }
+
+  .event-calendar__event-card {
+    padding: 0.85rem;
+  }
+
+  .event-calendar__event-card-head {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .course-detail .course-thumb--hero {
+    max-height: 10rem;
+  }
+
+  .course-detail .resource-item > div {
+    min-width: 0;
+  }
+
+  .profile-form input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .support-card {
+    padding: 1rem 0.85rem;
+  }
+
+  .support-card__head {
+    flex-wrap: wrap;
+    gap: 0.65rem;
+  }
+
+  .ticket-thread__meta {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .mbw-program-page--overview {
+    --mbw-shell-pad-x: 0.85rem;
+    padding-left: var(--mbw-shell-pad-x);
+    padding-right: var(--mbw-shell-pad-x);
+  }
+
+  .mbw-program-page__back {
+    display: inline-flex;
+    padding: 0.35rem 0;
+    min-height: 44px;
+    align-items: center;
+  }
+
+  .mbw-program-hero__next {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .mbw-lesson-topbar {
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+  }
+
+  .mbw-lesson-topbar__section {
+    font-size: 0.82rem;
+    word-wrap: break-word;
+  }
+
+  .mbw-program-layout--lesson .mbw-program-lesson-card {
+    border-radius: 12px;
+    border-left: none;
+    border-right: none;
+  }
+
+  .mbw-task__desc {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .mbw-errc-card__field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 4.5rem;
+  }
+
+  .mbw-submission > .btn-primary,
+  .mbw-submission > .btn-outline,
+  .mbw-submission__actions .btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 
@@ -8476,6 +8823,63 @@ a.cx-bar--link:hover .cx-bar__label {
   .bottom-nav__item {
     min-height: 44px;
     padding: 0.25rem 0.15rem;
+  }
+
+  .event-calendar__grid--rich {
+    grid-auto-rows: 4.25rem;
+    gap: 3px;
+  }
+
+  .event-calendar__day--rich,
+  .event-calendar__day--rich.event-calendar__day--empty {
+    height: 4.25rem;
+    min-height: 4.25rem;
+    max-height: 4.25rem;
+    padding: 0.2rem;
+  }
+
+  .event-calendar__day-num {
+    font-size: 0.72rem;
+  }
+
+  .event-calendar__chip {
+    font-size: 0.52rem;
+    padding: 0.1rem 0.2rem;
+  }
+
+  .event-calendar__weekdays {
+    font-size: 0.65rem;
+    gap: 2px;
+  }
+
+  .learner-calendar__legend-item {
+    font-size: 0.72rem;
+  }
+
+  .mbw-section-card__sub {
+    font-size: 0.7rem;
+    line-height: 1.35;
+  }
+
+  .mbw-section-card__pay-lock {
+    display: none;
+  }
+
+  .mbw-program-hero__label {
+    font-size: 10px;
+  }
+
+  .mbw-program-hero__tagline {
+    font-size: 0.88rem;
+    line-height: 1.45;
+  }
+
+  .stat-value {
+    font-size: 1.65rem;
+  }
+
+  .announcement-card {
+    padding: 0.85rem 0.9rem;
   }
 }
 

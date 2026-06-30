@@ -91,7 +91,7 @@ export default function EditableTemplate({ task, submission, canSubmit, onSave }
           disabled={!canSubmit || saving}
           onClick={handleSave}
         >
-          {saving ? 'Saving…' : 'Save ERRC grid'}
+          {saving ? 'Saving…' : 'Save submission'}
         </button>
       </div>
     </div>
