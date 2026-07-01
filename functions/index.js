@@ -26,6 +26,7 @@ const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
 const zoho = require('./zoho');
+const { parseWebhookBody, hasWebhookCredentials } = require('./webhookBody');
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -513,17 +514,24 @@ exports.zohoLeadWebhook = onRequest({ cors: true }, async (req, res) => {
     }
   }
 
-  if (!zoho.isConfigured()) {
-    res.status(503).json({ ok: false, reason: 'Zoho not configured' });
+  const body = parseWebhookBody(req);
+
+  if (!zoho.isConfigured() && !hasWebhookCredentials(body)) {
+    res.status(503).json({
+      ok: false,
+      reason: 'Zoho OAuth not configured on Cloud Functions — deploy functions/.env secrets, or include email+password in webhook',
+    });
     return;
   }
 
   try {
-    const body = req.body || {};
     const email = (body.email || body.Email || '').trim();
 
     if (!email) {
-      res.status(400).json({ ok: false, reason: 'email is required' });
+      res.status(400).json({
+        ok: false,
+        reason: 'email is required — check Deluge POST body (form fields must reach zohoLeadWebhook)',
+      });
       return;
     }
 
@@ -537,6 +545,7 @@ exports.zohoLeadWebhook = onRequest({ cors: true }, async (req, res) => {
 
 // ── Storage admin (super-admin only) ──────────────────────────
 const storageAdmin = require('./storage');
+const userAdmin = require('./userAdmin');
 
 exports.storageGetOverview = onCall(async (request) => {
   if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in required');
@@ -581,4 +590,10 @@ exports.storageResetUserStorage = onCall(async (request) => {
   await storageAdmin.assertSuperAdmin(db, request.auth.uid);
   const { userId } = request.data || {};
   return storageAdmin.resetUserStorage(db, userId);
+});
+
+exports.adminDeleteUser = onCall(async (request) => {
+  if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in required');
+  const { userId } = request.data || {};
+  return userAdmin.deleteUserAccount(db, { callerUid: request.auth.uid, userId });
 });

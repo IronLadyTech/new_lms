@@ -69,6 +69,7 @@ import { formatUserCreatedAt, inferUserOrigin } from '../../utils/userOrigin';
 import AnnouncementManager from './AnnouncementManager';
 import { useConfirm } from '../../hooks/useConfirm';
 import { getAnnouncements } from '../../services/announcementService';
+import { deleteUserAccount } from '../../services/userAdminService';
 
 const RESOURCE_TYPES = ['video', 'pdf', 'ppt', 'assignment', 'mock_test'];
 export const ADMIN_TABS = [
@@ -200,6 +201,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
     moderatorIds: [],
   });
   const [userSearch, setUserSearch] = useState('');
+  const [deletingUserId, setDeletingUserId] = useState(null);
   const [progressModalUser, setProgressModalUser] = useState(null);
 
   const roleOptions = isSuperAdmin ? ROLE_OPTIONS_SUPER : ROLE_OPTIONS_ADMIN;
@@ -507,6 +509,37 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
 
   const canBlockUser = (u) =>
     u.id !== user?.uid && !isSuperAdminEmail(u.email) && !isAdminRole(u.role);
+
+  const canDeleteUser = (u) => isSuperAdmin && canBlockUser(u);
+
+  const handleDeleteUser = async (targetUser) => {
+    if (!canDeleteUser(targetUser)) return;
+    const label = targetUser.displayName || targetUser.email;
+    const ok = await confirm({
+      title: 'Delete user permanently',
+      message: `Delete ${label} (${targetUser.email})? This removes their Firebase login, profile, MBW submissions, activity, attendance, support tickets, and uploaded files. This cannot be undone.`,
+      confirmLabel: 'Delete user',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    setError('');
+    setMessage('');
+    setDeletingUserId(targetUser.id);
+    try {
+      const result = await deleteUserAccount(targetUser.id);
+      const parts = [];
+      if (result.mbwSubmissions) parts.push(`${result.mbwSubmissions} submission(s)`);
+      if (result.activities) parts.push(`${result.activities} activit${result.activities === 1 ? 'y' : 'ies'}`);
+      if (result.storageFiles) parts.push(`${result.storageFiles} file(s)`);
+      const detail = parts.length ? ` Removed ${parts.join(', ')}.` : '';
+      setMessage(`${label} has been deleted.${detail}`);
+      load();
+    } catch (err) {
+      setError(err.message || 'Could not delete user.');
+    } finally {
+      setDeletingUserId(null);
+    }
+  };
 
   const handleToggleUserBlock = async (targetUser) => {
     if (!canBlockUser(targetUser)) return;
@@ -960,6 +993,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
             <h2>All users ({users.length})</h2>
             <p className="muted">
               Assign roles, block users who should not access the app, or promote staff to admin.
+              {isSuperAdmin && ' Super admins can permanently delete learner accounts from this list.'}
             </p>
             <div className="admin-form">
               <input
@@ -1022,6 +1056,16 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                       </button>
                     ) : (
                       <span className="muted user-row__protected">Protected account</span>
+                    )}
+                    {canDeleteUser(u) && (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-danger btn-outline"
+                        disabled={deletingUserId === u.id}
+                        onClick={() => handleDeleteUser(u)}
+                      >
+                        {deletingUserId === u.id ? 'Deleting…' : 'Delete user'}
+                      </button>
                     )}
                   </div>
                 </li>

@@ -127,14 +127,44 @@ export function AuthProvider({ children }) {
     clearGuestSession();
     requireAuth();
     const trimmedEmail = email?.trim();
+    let zohoProvision = null;
     if (isZohoConfigured()) {
       try {
-        await ensureZohoUserOnLogin(trimmedEmail, password);
+        zohoProvision = await ensureZohoUserOnLogin(trimmedEmail, password);
       } catch (err) {
         console.warn('Zoho first-login provision skipped:', err.message);
       }
     }
-    const cred = await signInWithEmailAndPassword(auth, trimmedEmail, password);
+    let cred;
+    try {
+      cred = await signInWithEmailAndPassword(auth, trimmedEmail, password);
+    } catch (err) {
+      if (err?.code === 'auth/invalid-credential') {
+        const zohoReason = zohoProvision?.reason;
+        if (zohoReason === 'Password does not match Zoho IL_Users record') {
+          throw new Error(
+            'That password does not match your Iron Lady registration record. Use the exact password from your welcome email (copy with no extra spaces).'
+          );
+        }
+        if (zohoReason === 'No IL_Users record for this email') {
+          throw new Error(
+            'No registration account found for this email yet. Complete Pre-IL registration payment first, or contact Iron Lady support.'
+          );
+        }
+        if (zohoProvision?.alreadyExists) {
+          throw new Error(
+            'An LMS account already exists for this email with a different password. Use Forgot password on the login page.'
+          );
+        }
+        if (zohoProvision?.ok === false && zohoReason) {
+          throw new Error(`Sign-in failed: ${zohoReason}`);
+        }
+        throw new Error(
+          'Invalid email or password. Sign in with your registration email (not username) and the password from your Iron Lady welcome email.'
+        );
+      }
+      throw err;
+    }
     const existing = await getUserProfile(cred.user.uid);
     if (!existing) {
       await createUserProfile(cred.user.uid, {

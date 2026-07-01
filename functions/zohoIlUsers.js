@@ -320,7 +320,7 @@ function ilUserToCredentialFields(ilUser) {
   return {
     Email: ilUser[emailField] ?? ilUser.Email,
     Username: ilUser[usernameField] ?? ilUser.Username,
-    Password: ilUser.Password,
+    Password: ilUser.LMS_Password || ilUser.Password,
     LMS_User_Id: ilUser.LMS_User_Id,
     Phone: ilUser.Phone,
     id: ilUser.id,
