@@ -8,8 +8,8 @@ function HexBadge({ value }) {
       <svg viewBox="0 0 88 96" className="streak-hex-badge__shape">
         <defs>
           <linearGradient id="hexGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#38bdf8" />
-            <stop offset="100%" stopColor="#2563eb" />
+            <stop offset="0%" stopColor="#F52929" />
+            <stop offset="100%" stopColor="#C8102E" />
           </linearGradient>
         </defs>
         <polygon

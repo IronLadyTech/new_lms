@@ -18,7 +18,7 @@ import { TICKET_STATUSES, statusLabel, categoryLabel } from '../../services/tick
 import { downloadCsv, tsToIso } from '../../utils/csvExport';
 import { useTheme } from '../../context/ThemeContext';
 
-const CHART_COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#14b8a6', '#6366f1', '#ef4444', '#06b6d4'];
+const CHART_COLORS = ['#F52929', '#F5B301', '#22c55e', '#FF5A77', '#231F20', '#C8102E', '#16a34a', '#EBEADC'];
 
 function useChartTheme() {
   const { theme } = useTheme();
@@ -309,7 +309,7 @@ export default function AdminOverviewCharts({
               <XAxis dataKey="day" tick={{ fill: tickFill, fontSize: 12 }} />
               <YAxis allowDecimals={false} tick={{ fill: tickFill, fontSize: 12 }} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="count" name="Actions" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="count" name="Actions" fill={CHART_COLORS[0]} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
