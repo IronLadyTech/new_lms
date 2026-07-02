@@ -280,9 +280,29 @@ img.logo-mark {
 
 .btn-google {
   width: 100%;
-  background: white;
-  color: #1f2937;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  background: var(--surface-2);
+  color: var(--text);
   border: 1px solid var(--border);
+}
+
+.btn-google:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--surface);
+}
+
+.btn-google__icon {
+  flex-shrink: 0;
+}
+
+.auth-login-hint {
+  margin: 0.65rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--muted);
 }
 
 .btn-guest {
@@ -726,15 +746,37 @@ html:has(.student-layout--mbw) #root {
   margin-bottom: 0.5rem;
 }
 
+.course-card__badge--mbw {
+  background: #c8102e;
+}
+
+.course-card__badge--lep {
+  background: #1d4ed8;
+}
+
+.course-card__badge--100bm {
+  background: #b45309;
+}
+
+.course-card__title,
 .course-card h2 {
   margin: 0 0 0.5rem;
   font-size: 1.1rem;
 }
 
+.course-card__desc,
 .course-card p {
   margin: 0 0 1rem;
   color: var(--muted);
   font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.course-card__desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .course-card__actions {
@@ -3827,9 +3869,117 @@ html:has(.student-layout--mbw) #root {
   }
 }
 
-/* Home hero banner carousel — full slide visible, native 1600×559 ratio on all screens */
+/* Home hero banner carousel — full bleed marketing slides */
 .home-page {
   overflow-x: clip;
+}
+
+.home-welcome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  padding: 1.15rem 1.25rem;
+  border-radius: calc(var(--radius) + 2px);
+  border: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+  box-shadow: var(--shadow-md);
+}
+
+.home-welcome__eyebrow {
+  margin: 0 0 0.2rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.home-welcome__title {
+  margin: 0;
+  font-size: clamp(1.35rem, 4vw, 1.75rem);
+  line-height: 1.2;
+}
+
+.home-welcome__sub {
+  margin: 0.35rem 0 0;
+  font-size: 0.92rem;
+  color: var(--muted);
+  max-width: 36rem;
+}
+
+.home-welcome__cta {
+  width: auto;
+  min-width: 11rem;
+  flex-shrink: 0;
+}
+
+.home-section-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.home-section-title a {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.home-courses-section .page-sub {
+  margin-bottom: 1rem;
+}
+
+.home-get-started {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.2rem;
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+  background: var(--surface-2);
+}
+
+.home-get-started__icon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+  color: var(--primary);
+}
+
+.home-get-started__title {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.home-get-started__text {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  max-width: 34rem;
+}
+
+.home-secondary {
+  margin-bottom: 1.5rem;
+}
+
+.home-analytics-section {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+.home-analytics-section .home-section-title {
+  margin-bottom: 0.85rem;
 }
 
 .home-page .home-banner-carousel {
@@ -3877,7 +4027,7 @@ html:has(.student-layout--mbw) #root {
   height: auto;
   max-width: 100%;
   aspect-ratio: 1600 / 559;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
   user-select: none;
   -webkit-user-drag: none;
@@ -4006,11 +4156,6 @@ html:has(.student-layout--mbw) #root {
 
 .streak-analytics {
   margin-bottom: 0;
-}
-
-.home-analytics-section {
-  margin-top: 0;
-  margin-bottom: 1.5rem;
 }
 
 .streak-analytics__summary {
@@ -8598,6 +8743,25 @@ a.cx-bar--link:hover .cx-bar__label {
 
   .home-analytics-section {
     margin-bottom: 1.25rem;
+  }
+
+  .home-welcome {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+  }
+
+  .home-welcome__cta {
+    width: 100%;
+  }
+
+  .home-get-started {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .course-card__desc {
+    -webkit-line-clamp: 2;
   }
 
   .streak-analytics,

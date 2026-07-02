@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Sparkles } from 'lucide-react';
 import { useStreakAnalytics } from '../../hooks/useStreakAnalytics';
 import { useAttendanceAnalytics } from '../../hooks/useAttendanceAnalytics';
 import CurrentStreakCard from './CurrentStreakCard';
@@ -8,7 +9,12 @@ import SubmissionHeatmap from './SubmissionHeatmap';
 import AttendanceSection from './AttendanceSection';
 import AnalyticsInsights from './AnalyticsInsights';
 
-export default function StreakAnalyticsModule({ learnerId, courses = [], showBrowseLink = true }) {
+export default function StreakAnalyticsModule({
+  learnerId,
+  courses = [],
+  showBrowseLink = true,
+  homeVariant = false,
+}) {
   const navigate = useNavigate();
   const { summary, loading, warning, isLive, retry } = useStreakAnalytics(learnerId);
 
@@ -35,6 +41,13 @@ export default function StreakAnalyticsModule({ learnerId, courses = [], showBro
   const streakBroken =
     (summary?.currentStreak || 0) === 0 && (summary?.daysSinceLastActivity || 0) >= 1;
 
+  const hasActivity =
+    (summary?.totalCorrect || 0) > 0 ||
+    (summary?.currentStreak || 0) > 0 ||
+    (summary?.longestStreak || 0) > 0;
+
+  const hasAttendanceData = attendance.gridMonths?.length > 0;
+
   const handleResumePractice = useCallback(() => {
     const enrolled = courses.filter((c) => c.id && c.id !== 'general');
     const mbw = enrolled.find((c) => c.code === 'MBW');
@@ -55,6 +68,26 @@ export default function StreakAnalyticsModule({ learnerId, courses = [], showBro
       navigate('/app/home#courses');
     }
   }, [courses, navigate]);
+
+  if (homeVariant && !loading && !hasActivity && !hasAttendanceData) {
+    return (
+      <section className="home-get-started" aria-label="Getting started">
+        <span className="home-get-started__icon" aria-hidden>
+          <Sparkles size={22} strokeWidth={2} />
+        </span>
+        <div>
+          <h3 className="home-get-started__title">Start building your streak</h3>
+          <p className="home-get-started__text muted">
+            Complete your first MBW task or lesson — consistency unlocks streaks, attendance, and
+            progress insights here.
+          </p>
+        </div>
+        <button type="button" className="btn btn-primary btn-sm" onClick={handleResumePractice}>
+          Start learning
+        </button>
+      </section>
+    );
+  }
 
   return (
     <section className="streak-analytics" aria-label="Streak and attendance analytics">
@@ -78,25 +111,27 @@ export default function StreakAnalyticsModule({ learnerId, courses = [], showBro
         )}
       </div>
 
-      <AttendanceSection
-        courses={enrolledCourses}
-        courseId={courseId}
-        onCourseChange={setCourseId}
-        range={attendance.range}
-        onRangeChange={attendance.setRange}
-        gridMonths={attendance.gridMonths}
-        analytics={attendance.analytics}
-        loading={attendance.loading}
-        error={attendance.error}
-        onRetry={attendance.retry}
-      />
+      {(!homeVariant || hasAttendanceData) && (
+        <AttendanceSection
+          courses={enrolledCourses}
+          courseId={courseId}
+          onCourseChange={setCourseId}
+          range={attendance.range}
+          onRangeChange={attendance.setRange}
+          gridMonths={attendance.gridMonths}
+          analytics={attendance.analytics}
+          loading={attendance.loading}
+          error={attendance.error}
+          onRetry={attendance.retry}
+        />
+      )}
 
-      <div className="streak-block">
-        <SubmissionHeatmap dailyCounts={summary?.dailyCounts || []} loading={loading} />
-        {!loading && (
-          <CurrentStreakCard currentStreak={summary?.currentStreak || 0} />
-        )}
-      </div>
+      {hasActivity && (
+        <div className="streak-block">
+          <SubmissionHeatmap dailyCounts={summary?.dailyCounts || []} loading={loading} />
+          {!loading && <CurrentStreakCard currentStreak={summary?.currentStreak || 0} />}
+        </div>
+      )}
 
       <AnalyticsInsights
         insights={mergedInsights}

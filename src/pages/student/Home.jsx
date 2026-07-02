@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getCourses, getAssignments } from '../../services/courseService';
@@ -13,6 +13,13 @@ import EventPreviewCard from '../../components/EventPreviewCard';
 import EventDetailActions from '../../components/EventDetailActions';
 import HomeBannerCarousel from '../../components/HomeBannerCarousel';
 import StreakAnalyticsModule from '../../components/analytics/StreakAnalyticsModule';
+
+function timeGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
 export default function Home() {
   const { user, profile, refreshProfile, isGuest } = useAuth();
@@ -36,7 +43,7 @@ export default function Home() {
         const [list, allAnnouncements, acts, events] = await Promise.all([
           getCourses(),
           getAnnouncements(),
-          getUserActivities(user.uid, 1),
+          getUserActivities(user.uid, 3),
           getEvents(),
         ]);
         if (cancelled) return;
@@ -90,102 +97,126 @@ export default function Home() {
     [courses, enrolled]
   );
 
+  const firstName = profile?.displayName?.trim().split(/\s+/)[0] || '';
+  const mbwCourse = enrolledCourses.find((c) => c.code === 'MBW');
+  const soloEnrolled = enrolledCourses.length === 1 ? enrolledCourses[0] : null;
+
   const handleEnroll = async (courseId, courseTitle) => {
     if (!profile || isGuest) return;
     await enrollInCourse(user.uid, courseId, courseTitle);
     refreshProfile();
   };
 
+  const scrollToCourses = useCallback(() => {
+    document.getElementById('home-courses')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
   return (
     <div className="page home-page">
       <HomeBannerCarousel />
 
-      {!isGuest && user?.uid && (
-        <section className="section home-analytics-section">
-          <StreakAnalyticsModule learnerId={user.uid} courses={enrolledCourses} showBrowseLink={false} />
+      {!isGuest && !loading && (
+        <section className="home-welcome" aria-label="Welcome">
+          <div className="home-welcome__copy">
+            <p className="home-welcome__eyebrow">{timeGreeting()}</p>
+            <h1 className="home-welcome__title">{firstName ? `${firstName}` : 'Welcome back'}</h1>
+            <p className="home-welcome__sub">
+              {enrolledCourses.length > 0
+                ? 'Pick up where you left off or explore your programs below.'
+                : 'Browse programs below and enroll to start learning.'}
+            </p>
+          </div>
+          {mbwCourse ? (
+            <Link to="/app/mbw" className="btn btn-primary home-welcome__cta">
+              Continue MBW tasks
+            </Link>
+          ) : soloEnrolled ? (
+            <Link
+              to={soloEnrolled.code === 'MBW' ? '/app/mbw' : `/app/course/${soloEnrolled.id}`}
+              className="btn btn-primary home-welcome__cta"
+            >
+              Continue {soloEnrolled.code}
+            </Link>
+          ) : (
+            <button type="button" className="btn btn-primary home-welcome__cta" onClick={scrollToCourses}>
+              Browse courses
+            </button>
+          )}
         </section>
       )}
 
-      <h1 id="home-courses">Courses</h1>
-      <p className="page-sub">MBW & LEP programs — tap to open or enroll</p>
+      <section id="home-courses" className="section home-courses-section">
+        <h2 className="home-section-title">Courses</h2>
+        <p className="page-sub">MBW &amp; LEP programs — tap to open or enroll</p>
 
-      {!isGuest && enrolledCourses.some((c) => c.code === 'MBW') && (
-        <section className="section mbw-dash-card">
-          <h2>MBW Pre-Session Tasks</h2>
-          <p className="mbw-dash-card__text">
-            Continue your Iron Lady MBW journey — complete tasks in order and track your progress.
-          </p>
-          <Link to="/app/mbw" className="btn btn-primary btn-sm">
-            Open MBW tasks →
-          </Link>
-        </section>
-      )}
+        {isGuest ? (
+          <GuestLockedPanel title="Courses locked" />
+        ) : loading ? (
+          <p className="muted">Loading courses…</p>
+        ) : courses.length === 0 ? (
+          <p className="muted">No courses yet. Ask your admin to add courses from the admin panel.</p>
+        ) : (
+          <div className="course-grid">
+            {sortedCourses.map((course) => {
+              const isEnrolled = enrolled.includes(course.id);
+              return (
+                <article key={course.id} className="course-card">
+                  <CourseThumbnail course={course} size="card" />
+                  <div className="course-card__body">
+                    <div className={`course-card__badge course-card__badge--${(course.code || '').toLowerCase()}`}>
+                      {course.code}
+                    </div>
+                    <h3 className="course-card__title">{course.title}</h3>
+                    <p className="course-card__desc">{course.description}</p>
+                    <div className="course-card__actions">
+                      {isEnrolled ? (
+                        course.code === 'MBW' ? (
+                          <Link to="/app/mbw" className="btn btn-primary btn-sm">
+                            Open tasks
+                          </Link>
+                        ) : (
+                          <Link to={`/app/course/${course.id}`} className="btn btn-primary btn-sm">
+                            Continue
+                          </Link>
+                        )
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-sm"
+                          onClick={() => handleEnroll(course.id, course.title)}
+                        >
+                          Enroll
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       {!isGuest && announcements.length > 0 && (
         <section className="section announcement-section">
-          <h2>Announcements</h2>
+          <h2 className="home-section-title">Announcements</h2>
           <AnnouncementFeed announcements={announcements} userId={user.uid} />
         </section>
       )}
 
-      {isGuest ? (
-        <GuestLockedPanel title="Courses locked" />
-      ) : loading ? (
-        <p className="muted">Loading courses…</p>
-      ) : courses.length === 0 ? (
-        <p className="muted">No courses yet. Ask your admin to add courses from the admin panel.</p>
-      ) : (
-        <div className="course-grid">
-          {sortedCourses.map((course) => {
-            const isEnrolled = enrolled.includes(course.id);
-            return (
-              <article key={course.id} className="course-card">
-                <CourseThumbnail course={course} size="card" />
-                <div className="course-card__body">
-                  <div className="course-card__badge">{course.code}</div>
-                  <h2>{course.title}</h2>
-                  <p>{course.description}</p>
-                  <div className="course-card__actions">
-                    {isEnrolled ? (
-                      course.code === 'MBW' ? (
-                        <Link to="/app/mbw" className="btn btn-primary btn-sm">
-                          Open tasks
-                        </Link>
-                      ) : (
-                        <Link to={`/app/course/${course.id}`} className="btn btn-primary btn-sm">
-                          Continue
-                        </Link>
-                      )
-                    ) : (
-                      <button
-                        type="button"
-                        className="btn btn-outline btn-sm"
-                        onClick={() => handleEnroll(course.id, course.title)}
-                      >
-                        Enroll
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      )}
-
-      {!isGuest && (
+      {!isGuest && !loading && (
         <>
-          <section className="section">
-            <h2>Last activity</h2>
+          <section className="section home-secondary">
+            <h2 className="home-section-title">Last activity</h2>
             {activities.length === 0 ? (
-              <p className="muted">No activity yet. Start a lesson!</p>
+              <p className="muted">No activity yet. Open a course and start a lesson.</p>
             ) : (
-              <ActivityLogList activities={activities.slice(0, 1)} courseMap={courseMap} />
+              <ActivityLogList activities={activities} courseMap={courseMap} />
             )}
           </section>
 
-          <section className="section">
-            <h2>
+          <section className="section home-secondary">
+            <h2 className="home-section-title">
               Upcoming events · <Link to="/app/calendar">View calendar</Link>
             </h2>
             {upcomingEvents.length === 0 ? (
@@ -202,8 +233,8 @@ export default function Home() {
             )}
           </section>
 
-          <section className="section">
-            <h2>Pending assignments</h2>
+          <section className="section home-secondary">
+            <h2 className="home-section-title">Pending assignments</h2>
             {pendingAssignments.length === 0 ? (
               <p className="muted">All caught up!</p>
             ) : (
@@ -217,9 +248,20 @@ export default function Home() {
               </ul>
             )}
           </section>
+
+          {user?.uid && (
+            <section className="section home-analytics-section">
+              <h2 className="home-section-title">Your progress</h2>
+              <StreakAnalyticsModule
+                learnerId={user.uid}
+                courses={enrolledCourses}
+                showBrowseLink={false}
+                homeVariant
+              />
+            </section>
+          )}
         </>
       )}
-
     </div>
   );
 }

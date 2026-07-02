@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { Home, LineChart, CalendarDays, MessageCircle, User } from 'lucide-react';
 
 const TABS = [
-  { to: '/app/dashboard', label: 'Home', Icon: Home },
+  { to: '/app/home', label: 'Home', Icon: Home },
   { to: '/app/calendar', label: 'Calendar', Icon: CalendarDays },
   { to: '/app/progress', label: 'Progress', Icon: LineChart },
   { to: '/app/support', label: 'Support', Icon: MessageCircle },

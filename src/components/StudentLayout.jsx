@@ -68,9 +68,6 @@ export default function StudentLayout() {
               {isModeratorOnly(role) ? 'CX' : 'Admin'}
             </Link>
           )}
-          <Link to="/app/home" className="app-header__link">
-            Courses
-          </Link>
         </div>
       </header>
       <main

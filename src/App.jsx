@@ -5,7 +5,6 @@ import StudentLayout from './components/StudentLayout';
 import AuthPage from './pages/auth/AuthPage';
 import AuthActionPage from './pages/auth/AuthActionPage';
 import Home from './pages/student/Home';
-import Dashboard from './pages/student/Dashboard';
 import Progress from './pages/student/Progress';
 import Profile from './pages/student/Profile';
 import Support from './pages/student/Support';
@@ -69,7 +68,7 @@ export default function App() {
       >
         <Route index element={<Navigate to="home" replace />} />
         <Route path="home" element={<Home />} />
-        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="dashboard" element={<Navigate to="/app/home" replace />} />
         <Route path="progress" element={<Progress />} />
         <Route path="calendar" element={<Calendar />} />
         <Route path="profile" element={<Profile />} />

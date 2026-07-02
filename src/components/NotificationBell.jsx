@@ -34,7 +34,7 @@ function buildNotifications(events, tickets, announcements, userId) {
         kind: 'announcement',
         title: a.title,
         body: tagged ? `${a.body.slice(0, 80)} · You're tagged` : a.body.slice(0, 100),
-        link: '/app/dashboard',
+        link: '/app/home',
       });
     });
 

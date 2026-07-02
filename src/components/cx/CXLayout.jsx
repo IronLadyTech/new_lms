@@ -1,4 +1,5 @@
 import { Outlet, Link } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { isFullAdmin, isModeratorOnly } from '../../utils/roles';
 import ThemeToggle from '../ThemeToggle';
@@ -6,8 +7,12 @@ import CXBottomNav from './CXBottomNav';
 import { useProgramAdapter } from '../../hooks/useProgramAdapter';
 
 export default function CXLayout() {
-  const { role } = useAuth();
+  const { role, refreshProfile } = useAuth();
   const { adapter } = useProgramAdapter();
+
+  useEffect(() => {
+    refreshProfile();
+  }, [refreshProfile]);
 
   return (
     <div className="student-layout cx-layout">

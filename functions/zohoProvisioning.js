@@ -108,12 +108,23 @@ function shouldApplyProvisioningPassword(profile, ent, existedBefore) {
   return false;
 }
 
+const STAFF_ROLES = new Set(['moderator', 'admin', 'superadmin']);
+
+function isStaffProfile(profile) {
+  return STAFF_ROLES.has((profile?.role || 'student').toLowerCase());
+}
+
 async function applyEntitlements(db, uid, record, profile = {}) {
   const ent = parseEntitlementsFromRecord(record);
   if (!ent.email) return { applied: false, reason: 'No email on record' };
 
+  const staffProgramLocked = isStaffProfile(profile);
+
   const updates = { updatedAt: new Date(), zohoEntitlementsSyncedAt: new Date() };
-  if (ent.program) updates.program = ent.program;
+  // CX moderators/admins: program scope is set in LMS Admin — never overwrite from Zoho Lead.
+  if (ent.program && !staffProgramLocked) {
+    updates.program = ent.program;
+  }
 
   if (ent.paymentStatus) {
     updates.paymentStatus = maxPaymentStatus(profile.paymentStatus, ent.paymentStatus);
@@ -135,13 +146,16 @@ async function applyEntitlements(db, uid, record, profile = {}) {
   await db.collection('users').doc(uid).update(updates);
 
   let merged = { ...profile, ...updates };
-  if (ent.program || updates.program) {
-    merged = await ensureCourseEnrollment(db, uid, merged, ent.program || updates.program);
+  const programForEnrollment = staffProgramLocked ? profile.program : ent.program || updates.program;
+  if (programForEnrollment && !staffProgramLocked) {
+    merged = await ensureCourseEnrollment(db, uid, merged, programForEnrollment);
   }
+
+  const resolvedProgram = staffProgramLocked ? profile.program || ent.program : updates.program || ent.program;
 
   const mergedEnt = {
     ...ent,
-    program: updates.program || ent.program,
+    program: resolvedProgram,
     paymentStatus: updates.paymentStatus || ent.paymentStatus,
     accessTier: updates.accessTier || ent.accessTier,
   };
