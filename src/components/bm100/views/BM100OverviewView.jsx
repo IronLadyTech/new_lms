@@ -1,0 +1,70 @@
+import { ChevronDown } from 'lucide-react';
+import BM100ProgramJourney from '../program/BM100ProgramJourney';
+import BM100FirstTimePanel from '../program/BM100FirstTimePanel';
+import MBWSubmissionsArchive from '../../mbw/MBWSubmissionsArchive';
+import CourseRecordingsPanel from '../../course/CourseRecordingsPanel';
+
+export default function BM100OverviewView({
+  showFirstTime,
+  onStartFirst,
+  profile,
+  sectionProgress,
+  expandedSectionId,
+  currentSectionId,
+  onToggleSection,
+  taskStates,
+  nextTaskId,
+  onSelectLesson,
+  submissionCount,
+  archiveOpen,
+  onToggleArchive,
+  recordings = [],
+}) {
+  return (
+    <>
+      {showFirstTime && <BM100FirstTimePanel onStart={onStartFirst} />}
+
+      <BM100ProgramJourney
+        sectionProgress={sectionProgress}
+        profile={profile}
+        expandedSectionId={expandedSectionId}
+        currentSectionId={currentSectionId}
+        onToggleSection={onToggleSection}
+        taskStates={taskStates}
+        activeTaskId={nextTaskId}
+        nextTaskId={nextTaskId}
+        onSelectLesson={onSelectLesson}
+      />
+
+      <div className="mbw-program-recordings">
+        <CourseRecordingsPanel recordings={recordings} program={profile?.program || '100bm'} />
+      </div>
+
+      {submissionCount > 0 && (
+        <section className="mbw-archive-panel mbw-program-card">
+          <button
+            type="button"
+            className="mbw-archive-panel__toggle"
+            aria-expanded={archiveOpen}
+            onClick={onToggleArchive}
+          >
+            <span>
+              My submissions
+              <span className="mbw-archive-panel__count">{submissionCount}</span>
+            </span>
+            <ChevronDown
+              size={18}
+              className={`mbw-archive-panel__chevron${archiveOpen ? ' is-open' : ''}`}
+              aria-hidden
+            />
+          </button>
+          {archiveOpen && (
+            <div className="mbw-archive-panel__body">
+              <MBWSubmissionsArchive taskStates={taskStates} onOpenTask={onSelectLesson} compact />
+            </div>
+          )}
+        </section>
+      )}
+    </>
+  );
+}
