@@ -3,10 +3,12 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import useTaskEngine from '../../hooks/useTaskEngine';
 import useMbwEnrollment from '../../hooks/useMbwEnrollment';
+import useBatchRecordings from '../../hooks/useBatchRecordings';
 import MBWToast from '../../components/mbw/MBWToast';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
 import MBWProgramHero from '../../components/mbw/program/MBWProgramHero';
 import MBWLessonTopbar from '../../components/mbw/program/MBWLessonTopbar';
+import LessonCurriculumDrawer from '../../components/mbw/program/LessonCurriculumDrawer';
 import MBWProgramSkeleton from '../../components/mbw/program/MBWProgramSkeleton';
 import MBWOverviewView from '../../components/mbw/views/MBWOverviewView';
 import MBWLessonView from '../../components/mbw/views/MBWLessonView';
@@ -24,9 +26,11 @@ export default function MBWPage() {
   const { user, profile, isGuest } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const { enrolled } = useMbwEnrollment();
+  const { recordings } = useBatchRecordings();
 
   const [expandedSectionId, setExpandedSectionId] = useState('pre-preparation');
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const [outlineOpen, setOutlineOpen] = useState(false);
   const [toast, setToast] = useState('');
   const [successBanner, setSuccessBanner] = useState('');
 
@@ -104,6 +108,12 @@ export default function MBWPage() {
     const timer = window.setTimeout(() => scrollToLessonPanel(), 50);
     return () => window.clearTimeout(timer);
   }, [lessonIdFromUrl, activeState?.task.id, scrollToLessonPanel]);
+
+  useEffect(() => {
+    if (lessonMode && activeState?.task.phase) {
+      setExpandedSectionId(activeState.task.phase);
+    }
+  }, [lessonMode, activeState?.task.phase]);
 
   const openTask = useCallback(
     (taskId) => {
@@ -214,9 +224,12 @@ export default function MBWPage() {
             <MBWLessonTopbar
               cohortLabel={getCohortLabel(profile)}
               lessonTitle={getModuleLabel(activeState.task)}
+              sectionPhase={activeState.task.phase}
               completedMilestones={completedMilestones}
               totalMilestones={totalMilestones}
               onBack={closeLesson}
+              onOpenOutline={() => setOutlineOpen(true)}
+              showOutlineButton
             />
           ) : (
             <MBWProgramHero
@@ -286,10 +299,27 @@ export default function MBWPage() {
                   submissionCount={submissionCount}
                   archiveOpen={archiveOpen}
                   onToggleArchive={() => setArchiveOpen((o) => !o)}
+                  recordings={recordings}
                 />
               )}
             </div>
           </div>
+
+          {lessonMode && activeState && (
+            <LessonCurriculumDrawer
+              open={outlineOpen}
+              onClose={() => setOutlineOpen(false)}
+              sectionProgress={sectionProgress}
+              profile={profile}
+              expandedSectionId={expandedSectionId ?? activeState.task.phase}
+              currentSectionId={currentSectionId}
+              onToggleSection={handleToggleSection}
+              taskStates={taskStates}
+              activeTaskId={activeTaskId}
+              nextTaskId={nextTaskId}
+              onSelectLesson={openTask}
+            />
+          )}
         </>
       )}
 

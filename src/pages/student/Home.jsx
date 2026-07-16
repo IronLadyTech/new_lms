@@ -5,14 +5,26 @@ import { getCourses, getAssignments } from '../../services/courseService';
 import { getAnnouncements, getActiveAnnouncementsForUser } from '../../services/announcementService';
 import { enrollInCourse, getUserActivities } from '../../services/userService';
 import { getEvents } from '../../services/eventService';
-import GuestLockedPanel from '../../components/GuestLockedPanel';
 import AnnouncementFeed from '../../components/AnnouncementFeed';
 import ActivityLogList, { buildCourseMap } from '../../components/ActivityLogList';
 import CourseThumbnail from '../../components/CourseThumbnail';
-import EventPreviewCard from '../../components/EventPreviewCard';
-import EventDetailActions from '../../components/EventDetailActions';
+import CourseCard from '../../components/home/CourseCard';
 import HomeBannerCarousel from '../../components/HomeBannerCarousel';
 import StreakAnalyticsModule from '../../components/analytics/StreakAnalyticsModule';
+import HomeDashboardHero, { HomeDashboardHeroCta } from '../../components/home/HomeDashboardHero';
+import HomeQuickStats from '../../components/home/HomeQuickStats';
+import HomeContinueCard from '../../components/home/HomeContinueCard';
+import HomeSchedulePanel from '../../components/home/HomeSchedulePanel';
+import GuestHomePreview from '../../components/home/GuestHomePreview';
+import DashboardSkeleton from '../../components/ui/DashboardSkeleton';
+import useMbwEnrollment from '../../hooks/useMbwEnrollment';
+import useTaskEngine from '../../hooks/useTaskEngine';
+import {
+  computeSectionProgress,
+  getTotalMilestones,
+  getCompletedMilestones,
+} from '../../utils/mbwProgramUtils';
+import { getProgramTasksPath } from '../../utils/programTaskRoutes';
 
 function timeGreeting() {
   const hour = new Date().getHours();
@@ -97,9 +109,24 @@ export default function Home() {
     [courses, enrolled]
   );
 
+  const { isEnrolled: mbwEnrolled } = useMbwEnrollment();
+  const engine = useTaskEngine(mbwEnrolled && !isGuest ? user?.uid : null);
+  const mbwProgress = useMemo(() => {
+    if (!mbwEnrolled) return null;
+    const sp = computeSectionProgress(engine.taskStates, profile);
+    const total = getTotalMilestones(sp);
+    const completed = getCompletedMilestones(sp);
+    if (!total) return null;
+    return {
+      pct: Math.round((completed / total) * 100),
+      label: `${completed} of ${total} milestones`,
+    };
+  }, [mbwEnrolled, engine.taskStates, profile]);
+
   const firstName = profile?.displayName?.trim().split(/\s+/)[0] || '';
   const mbwCourse = enrolledCourses.find((c) => c.code === 'MBW');
   const soloEnrolled = enrolledCourses.length === 1 ? enrolledCourses[0] : null;
+  const continueCourse = mbwCourse || soloEnrolled || enrolledCourses[0] || null;
 
   const handleEnroll = async (courseId, courseTitle) => {
     if (!profile || isGuest) return;
@@ -111,94 +138,111 @@ export default function Home() {
     document.getElementById('home-courses')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
+  const heroSubline =
+    enrolledCourses.length > 0
+      ? 'Pick up where you left off or explore your programs below.'
+      : 'Browse programs below and enroll to start learning.';
+
+  const heroCta = mbwCourse ? (
+    <HomeDashboardHeroCta to="/app/mbw">Continue MBW tasks</HomeDashboardHeroCta>
+  ) : soloEnrolled ? (
+    <HomeDashboardHeroCta
+      to={getProgramTasksPath(soloEnrolled.code) || `/app/course/${soloEnrolled.id}`}
+    >
+      Continue {soloEnrolled.code}
+    </HomeDashboardHeroCta>
+  ) : (
+    <HomeDashboardHeroCta onClick={scrollToCourses}>Browse programs</HomeDashboardHeroCta>
+  );
+
+  const quickStats = [
+    {
+      id: 'programs',
+      label: 'Programs',
+      value: enrolledCourses.length,
+      hint: `of ${courses.length}`,
+    },
+    {
+      id: 'pending',
+      label: 'Pending',
+      value: pendingAssignments.length,
+      hint: 'assignments',
+    },
+    {
+      id: 'events',
+      label: 'Upcoming',
+      value: upcomingEvents.length,
+      hint: 'events',
+    },
+    {
+      id: 'activity',
+      label: 'Recent',
+      value: activities.length,
+      hint: 'actions',
+    },
+  ];
+
   return (
-    <div className="page home-page">
+    <div className="page home-page dashboard-page">
       <HomeBannerCarousel />
 
+      {!isGuest && loading && <DashboardSkeleton />}
+
       {!isGuest && !loading && (
-        <section className="home-welcome" aria-label="Welcome">
-          <div className="home-welcome__copy">
-            <p className="home-welcome__eyebrow">{timeGreeting()}</p>
-            <h1 className="home-welcome__title">{firstName ? `${firstName}` : 'Welcome back'}</h1>
-            <p className="home-welcome__sub">
-              {enrolledCourses.length > 0
-                ? 'Pick up where you left off or explore your programs below.'
-                : 'Browse programs below and enroll to start learning.'}
-            </p>
+        <div className="dashboard-shell">
+          <HomeDashboardHero
+            greeting={timeGreeting()}
+            firstName={firstName}
+            program={profile?.program}
+            subline={heroSubline}
+            cta={heroCta}
+          />
+
+          <HomeQuickStats stats={quickStats} />
+
+          <div className="dashboard-main-row">
+            <HomeContinueCard
+              course={continueCourse}
+              nextLabel={
+                mbwCourse
+                  ? 'Master of Business Warfare — quarterly leadership journey'
+                  : continueCourse?.description?.slice(0, 80)
+              }
+              enrolledCount={enrolledCourses.length}
+              progress={continueCourse?.code === 'MBW' ? mbwProgress : null}
+            />
+            <HomeSchedulePanel events={upcomingEvents} />
           </div>
-          {mbwCourse ? (
-            <Link to="/app/mbw" className="btn btn-primary home-welcome__cta">
-              Continue MBW tasks
-            </Link>
-          ) : soloEnrolled ? (
-            <Link
-              to={soloEnrolled.code === 'MBW' ? '/app/mbw' : `/app/course/${soloEnrolled.id}`}
-              className="btn btn-primary home-welcome__cta"
-            >
-              Continue {soloEnrolled.code}
-            </Link>
-          ) : (
-            <button type="button" className="btn btn-primary home-welcome__cta" onClick={scrollToCourses}>
-              Browse courses
-            </button>
-          )}
-        </section>
+        </div>
       )}
 
-      <section id="home-courses" className="section home-courses-section">
-        <h2 className="home-section-title">Courses</h2>
-        <p className="page-sub">MBW &amp; LEP programs — tap to open or enroll</p>
+      <section id="home-courses" className="section dashboard-programs">
+        <h2 className="home-section-title">Your programs</h2>
+        <p className="page-sub">MBW, LEP &amp; 100BM — open or enroll to begin</p>
 
         {isGuest ? (
-          <GuestLockedPanel title="Courses locked" />
+          <GuestHomePreview />
         ) : loading ? (
           <p className="muted">Loading courses…</p>
         ) : courses.length === 0 ? (
           <p className="muted">No courses yet. Ask your admin to add courses from the admin panel.</p>
         ) : (
-          <div className="course-grid">
-            {sortedCourses.map((course) => {
-              const isEnrolled = enrolled.includes(course.id);
-              return (
-                <article key={course.id} className="course-card">
-                  <CourseThumbnail course={course} size="card" />
-                  <div className="course-card__body">
-                    <div className={`course-card__badge course-card__badge--${(course.code || '').toLowerCase()}`}>
-                      {course.code}
-                    </div>
-                    <h3 className="course-card__title">{course.title}</h3>
-                    <p className="course-card__desc">{course.description}</p>
-                    <div className="course-card__actions">
-                      {isEnrolled ? (
-                        course.code === 'MBW' ? (
-                          <Link to="/app/mbw" className="btn btn-primary btn-sm">
-                            Open tasks
-                          </Link>
-                        ) : (
-                          <Link to={`/app/course/${course.id}`} className="btn btn-primary btn-sm">
-                            Continue
-                          </Link>
-                        )
-                      ) : (
-                        <button
-                          type="button"
-                          className="btn btn-outline btn-sm"
-                          onClick={() => handleEnroll(course.id, course.title)}
-                        >
-                          Enroll
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
+          <div className="course-grid course-grid--rich">
+            {sortedCourses.map((course) => (
+              <CourseCard
+                key={course.id}
+                course={course}
+                isEnrolled={enrolled.includes(course.id)}
+                onEnroll={handleEnroll}
+                progress={course.code === 'MBW' ? mbwProgress : null}
+              />
+            ))}
           </div>
         )}
       </section>
 
       {!isGuest && announcements.length > 0 && (
-        <section className="section announcement-section">
+        <section className="section dashboard-secondary">
           <h2 className="home-section-title">Announcements</h2>
           <AnnouncementFeed announcements={announcements} userId={user.uid} />
         </section>
@@ -206,51 +250,33 @@ export default function Home() {
 
       {!isGuest && !loading && (
         <>
-          <section className="section home-secondary">
-            <h2 className="home-section-title">Last activity</h2>
-            {activities.length === 0 ? (
-              <p className="muted">No activity yet. Open a course and start a lesson.</p>
-            ) : (
-              <ActivityLogList activities={activities} courseMap={courseMap} />
-            )}
-          </section>
+          <div className="dashboard-secondary-row">
+            <section className="section dashboard-secondary">
+              <h2 className="home-section-title">Last activity</h2>
+              {activities.length === 0 ? (
+                <p className="muted">No activity yet. Open a program and start a lesson.</p>
+              ) : (
+                <ActivityLogList activities={activities} courseMap={courseMap} />
+              )}
+            </section>
 
-          <section className="section home-secondary">
-            <h2 className="home-section-title">
-              Upcoming events · <Link to="/app/calendar">View calendar</Link>
-            </h2>
-            {upcomingEvents.length === 0 ? (
-              <p className="muted">No upcoming events scheduled.</p>
-            ) : (
-              <ul className="list-cards list-cards--events">
-                {upcomingEvents.map((ev) => (
-                  <li key={ev.id} className="event-preview-list__item">
-                    <EventPreviewCard event={ev} />
-                    <EventDetailActions event={ev} compact />
-                  </li>
-                ))}
-              </ul>
+            {pendingAssignments.length > 0 && (
+              <section className="section dashboard-secondary">
+                <h2 className="home-section-title">Pending assignments</h2>
+                <ul className="list-cards">
+                  {pendingAssignments.map((a) => (
+                    <li key={a.id}>
+                      <strong>{a.title}</strong>
+                      <span className="muted"> — {a.courseTitle}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
             )}
-          </section>
-
-          <section className="section home-secondary">
-            <h2 className="home-section-title">Pending assignments</h2>
-            {pendingAssignments.length === 0 ? (
-              <p className="muted">All caught up!</p>
-            ) : (
-              <ul className="list-cards">
-                {pendingAssignments.map((a) => (
-                  <li key={a.id}>
-                    <strong>{a.title}</strong>
-                    <span className="muted"> — {a.courseTitle}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+          </div>
 
           {user?.uid && (
-            <section className="section home-analytics-section">
+            <section className="section dashboard-progress">
               <h2 className="home-section-title">Your progress</h2>
               <StreakAnalyticsModule
                 learnerId={user.uid}

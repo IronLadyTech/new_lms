@@ -12,14 +12,48 @@ import {
 } from '../../../utils/mbwProgramUtils';
 import { SUBMISSION_STATUS } from '../../../services/mbwService';
 
-function SectionDot({ status }) {
-  const cls =
-    status === MBW_SECTION_STATUS.DONE
-      ? 'done'
-      : status === MBW_SECTION_STATUS.IN_PROGRESS
-        ? 'active'
-        : 'locked';
-  return <span className={`mbw-section-card__dot mbw-section-card__dot--${cls}`} aria-hidden />;
+// Behance-inspired per-module progress ring (gold fill = progress accent).
+// Only shown on unlocked sections.
+function SectionRing({ done, total, status }) {
+  const pct = total ? Math.round((Math.min(done, total) / total) * 100) : 0;
+  const isDone = status === MBW_SECTION_STATUS.DONE || (total > 0 && done >= total);
+  const size = 44;
+  const stroke = 4;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const offset = c - (Math.min(100, Math.max(0, pct)) / 100) * c;
+
+  return (
+    <span
+      className={`mbw-section-ring${isDone ? ' mbw-section-ring--done' : ''}`}
+      role="img"
+      aria-label={`${pct}% complete — ${done} of ${total}`}
+    >
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
+        <circle
+          className="mbw-section-ring__track"
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          strokeWidth={stroke}
+        />
+        <circle
+          className="mbw-section-ring__fill"
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          strokeWidth={stroke}
+          strokeDasharray={c}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </svg>
+      <span className="mbw-section-ring__pct">{pct}%</span>
+    </span>
+  );
 }
 
 export default function MBWProgramSection({
@@ -39,39 +73,76 @@ export default function MBWProgramSection({
   const paymentLocked = isRegistrationPaymentLocked(section, sectionProgress, profile);
   const panelId = `mbw-section-${section.id}`;
 
+  const usesEngine = section.usesTaskEngine && Array.isArray(taskStates) && taskStates.length > 0;
+  const isDoneSection =
+    progress.status === MBW_SECTION_STATUS.DONE || (progress.total > 0 && progress.done >= progress.total);
+
+  // Resume target for this section's CTA (next task in section → first incomplete → first)
+  const resumeId = (() => {
+    if (!usesEngine) return null;
+    const ids = taskStates.map((ts) => ts.task.id);
+    if (nextTaskId && ids.includes(nextTaskId)) return nextTaskId;
+    const firstIncomplete = taskStates.find((ts) => !ts.isComplete);
+    return (firstIncomplete || taskStates[0]).task.id;
+  })();
+
+  const ctaLabel = isDoneSection ? 'Review' : progress.done > 0 ? 'Continue' : 'Start';
+
   return (
     <article
       className={`mbw-section-card${expanded ? ' is-expanded' : ''}${isCurrent ? ' is-current' : ''}${!progress.unlocked ? ' is-section-locked' : ''}${paymentLocked ? ' is-payment-locked' : ''}`}
     >
-      <h3 className="mbw-section-card__heading">
-        <button
-          type="button"
-          className="mbw-section-card__head"
-          aria-expanded={expanded}
-          aria-controls={panelId}
-          onClick={onToggle}
-        >
-          <SectionDot status={progress.status} />
-          <span className="mbw-section-card__titles">
-            <span className="mbw-section-card__name">{section.title}</span>
-            <span className="mbw-section-card__sub">{section.subtitle}</span>
-          </span>
-          <span className="mbw-section-card__mini">
-            {progress.done}/{progress.total}
-          </span>
-          {paymentLocked && (
-            <span
-              className="mbw-section-card__pay-lock"
-              title={REGISTRATION_PAYMENT_LOCK_TOOLTIP}
-              aria-label={REGISTRATION_PAYMENT_LOCK_TOOLTIP}
-              role="img"
-            >
-              <Lock size={16} strokeWidth={2.25} aria-hidden />
+      <div className="mbw-section-card__head">
+        <h3 className="mbw-section-card__heading">
+          <button
+            type="button"
+            className="mbw-section-card__toggle"
+            aria-expanded={expanded}
+            aria-controls={panelId}
+            onClick={onToggle}
+          >
+            <span className="mbw-section-card__titles">
+              <span className="mbw-section-card__name">{section.title}</span>
+              <span className="mbw-section-card__sub">{section.subtitle}</span>
             </span>
+            <ChevronDown size={18} className="mbw-section-card__chevron" aria-hidden />
+          </button>
+        </h3>
+
+        <div className="mbw-section-card__action">
+          {!progress.unlocked ? (
+            <button
+              type="button"
+              className="btn btn-sm mbw-section-card__cta mbw-section-card__cta--locked"
+              disabled
+              aria-label={paymentLocked ? REGISTRATION_PAYMENT_LOCK_TOOLTIP : 'Locked'}
+            >
+              <Lock size={14} strokeWidth={2.25} aria-hidden />
+              Start
+            </button>
+          ) : (
+            <>
+              {resumeId ? (
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm mbw-section-card__cta"
+                  onClick={() => onSelectLesson?.(resumeId)}
+                >
+                  {ctaLabel}
+                </button>
+              ) : section.unlockCta ? (
+                <Link
+                  to={section.unlockCta.href}
+                  className="btn btn-outline btn-sm mbw-section-card__cta"
+                >
+                  {section.unlockCta.label}
+                </Link>
+              ) : null}
+              <SectionRing done={progress.done} total={progress.total} status={progress.status} />
+            </>
           )}
-          <ChevronDown size={18} className="mbw-section-card__chevron" aria-hidden />
-        </button>
-      </h3>
+        </div>
+      </div>
 
       <div id={panelId} className="mbw-section-card__panel" hidden={!expanded}>
         {!progress.unlocked && lockDisplay ? (

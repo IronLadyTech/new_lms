@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { Check, Minus, X } from 'lucide-react';
 import {
   ATTENDANCE_STATUS,
   attendanceTooltip,
@@ -6,9 +7,9 @@ import {
 import { getTodayKey } from '../../utils/streakTimezone';
 
 const LEGEND = [
-  { status: ATTENDANCE_STATUS.PRESENT, label: 'Present', icon: '✓', className: 'present' },
-  { status: ATTENDANCE_STATUS.ABSENT, label: 'Absent', icon: '✗', className: 'absent' },
-  { status: ATTENDANCE_STATUS.WEEK_OFF, label: 'Week-off', icon: '—', className: 'weekoff' },
+  { status: ATTENDANCE_STATUS.PRESENT, label: 'Present', Icon: Check, className: 'present' },
+  { status: ATTENDANCE_STATUS.ABSENT, label: 'Absent', Icon: X, className: 'absent' },
+  { status: ATTENDANCE_STATUS.WEEK_OFF, label: 'Week-off', Icon: Minus, className: 'weekoff' },
 ];
 
 export default function AttendanceSection({
@@ -144,6 +145,7 @@ export default function AttendanceSection({
                         );
                       }
                       const legend = LEGEND.find((l) => l.status === status);
+                      const MarkIcon = legend?.Icon;
                       return (
                         <td key={day}>
                           <button
@@ -152,7 +154,7 @@ export default function AttendanceSection({
                             title={attendanceTooltip(dateKey, status)}
                             aria-label={attendanceTooltip(dateKey, status)}
                           >
-                            <span aria-hidden>{legend?.icon}</span>
+                            {MarkIcon ? <MarkIcon size={14} aria-hidden /> : null}
                           </button>
                         </td>
                       );
@@ -163,14 +165,17 @@ export default function AttendanceSection({
             </table>
           </div>
           <div className="streak-attendance__legend">
-            {LEGEND.map((item) => (
+            {LEGEND.map((item) => {
+              const ItemIcon = item.Icon;
+              return (
               <span key={item.status} className="streak-attendance__legend-item">
                 <span className={`streak-attendance__mark streak-attendance__mark--${item.className}`}>
-                  {item.icon}
+                  <ItemIcon size={14} aria-hidden />
                 </span>
                 {item.label}
               </span>
-            ))}
+            );
+            })}
           </div>
         </>
       )}

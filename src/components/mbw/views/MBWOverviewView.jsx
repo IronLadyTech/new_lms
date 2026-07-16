@@ -2,6 +2,7 @@ import { ChevronDown } from 'lucide-react';
 import MBWProgramJourney from '../program/MBWProgramJourney';
 import MBWFirstTimePanel from '../program/MBWFirstTimePanel';
 import MBWSubmissionsArchive from '../MBWSubmissionsArchive';
+import CourseRecordingsPanel from '../../course/CourseRecordingsPanel';
 
 export default function MBWOverviewView({
   showFirstTime,
@@ -17,6 +18,7 @@ export default function MBWOverviewView({
   submissionCount,
   archiveOpen,
   onToggleArchive,
+  recordings = [],
 }) {
   return (
     <>
@@ -33,6 +35,10 @@ export default function MBWOverviewView({
         nextTaskId={nextTaskId}
         onSelectLesson={onSelectLesson}
       />
+
+      <div className="mbw-program-recordings">
+        <CourseRecordingsPanel recordings={recordings} program={profile?.program || 'mbw'} />
+      </div>
 
       {submissionCount > 0 && (
         <section className="mbw-archive-panel mbw-program-card">

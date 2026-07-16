@@ -1,4 +1,5 @@
 import { ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import WatchGatedVideo from './WatchGatedVideo';
 import TextSubmission from './submissions/TextSubmission';
 import LinkSubmission from './submissions/LinkSubmission';
@@ -66,7 +67,13 @@ export default function TaskContent({
           </div>
         ) : (
           <>
-            <p className="mbw-task__eyebrow">Iron Lady · MBW · {getSectionTitle(task.phase)}</p>
+            <nav className="mbw-task__crumbs" aria-label="Breadcrumb">
+              <Link to="/app/mbw">MBW</Link>
+              <span aria-hidden="true">/</span>
+              <Link to="/app/mbw">{getSectionTitle(task.phase)}</Link>
+              <span aria-hidden="true">/</span>
+              <span aria-current="page">{getModuleLabel(task)}</span>
+            </nav>
             <h1>{task.title}</h1>
             <div className="mbw-task__meta">
               <span className="mbw-task__module-label">{getModuleLabel(task)}</span>

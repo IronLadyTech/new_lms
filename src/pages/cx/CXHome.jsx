@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Bell, Check, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useProgramAdapter } from '../../hooks/useProgramAdapter';
 import { useCxData } from '../../hooks/useCxData';
-import { getProgramLabel } from '../../data/programTypes';
 import { SUBMISSION_STATUS } from '../../services/mbwService';
 import { sendTaskReminder, sendSessionReminder } from '../../services/notificationService';
 import TaskTrackingBoard from '../../components/cx/TaskTrackingBoard';
+import CxDashboardHero from '../../components/cx/CxDashboardHero';
+import CxQuickStats from '../../components/cx/CxQuickStats';
 
 function timeAgo(ts) {
   const ms = ts?.seconds ? ts.seconds * 1000 : ts?.toMillis?.() || null;
@@ -46,7 +48,7 @@ function SessionReminderModal({ batch, onClose }) {
             </p>
           </div>
           <button type="button" className="cx-modal__close" onClick={onClose} aria-label="Close">
-            ✕
+            <X size={18} aria-hidden />
           </button>
         </div>
 
@@ -54,12 +56,12 @@ function SessionReminderModal({ batch, onClose }) {
           {result ? (
             result.error ? (
               <div className="cx-modal-result cx-modal-result--error">
-                <span className="cx-modal-result__icon">✕</span>
+                <span className="cx-modal-result__icon" aria-hidden><X size={18} /></span>
                 <span>{result.error}</span>
               </div>
             ) : (
               <div className="cx-modal-result cx-modal-result--success">
-                <span className="cx-modal-result__icon">✓</span>
+                <span className="cx-modal-result__icon" aria-hidden><Check size={18} /></span>
                 <span>
                   Sent to <strong>{result.sent}</strong> learner{result.sent !== 1 ? 's' : ''}
                   {result.skipped > 0 ? ` · ${result.skipped} without notifications enabled` : ''}
@@ -148,16 +150,32 @@ export default function CXHome() {
   const remindLabel = (key) => {
     if (remindingId === key) return 'Sending…';
     const r = remindResult[key];
-    if (r === 'sent') return 'Sent ✓';
+    if (r === 'sent') return 'Sent';
     if (r === 'no_token') return 'No token';
     if (r === 'error') return 'Failed';
     return 'Remind';
   };
 
+  const learnerCount = useMemo(
+    () => students.length,
+    [students]
+  );
+
+  const cxStats = [
+    { id: 'batches', label: 'Batches', value: batches.length },
+    { id: 'reviews', label: 'Pending reviews', value: pendingReviews.length },
+    { id: 'learners', label: 'Learners', value: learnerCount },
+    { id: 'tasks', label: 'Tasks', value: tasks.length },
+  ];
+
   return (
-    <div className="page cx-page">
-      <h1>Hi, {profile?.displayName?.split(' ')[0] || 'there'}</h1>
-      <p className="page-sub">{getProgramLabel(program)} · Customer Experience dashboard</p>
+    <div className="page cx-page dashboard-page">
+      <CxDashboardHero
+        firstName={profile?.displayName?.split(' ')[0]}
+        program={program}
+        adapter={adapter}
+      />
+      <CxQuickStats stats={cxStats} />
 
       {error && <p className="cx-error">{error}</p>}
 
@@ -194,7 +212,8 @@ export default function CXHome() {
                   title="Send session reminder to all learners in this batch"
                   onClick={() => setSessionBatch(b)}
                 >
-                  🔔 Session reminder
+                  <Bell size={14} aria-hidden />
+                  Session reminder
                 </button>
               </div>
             ))}
@@ -231,7 +250,7 @@ export default function CXHome() {
             {loading ? (
               <p className="muted">Loading…</p>
             ) : pendingReviews.length === 0 ? (
-              <p className="muted">Nothing waiting on you. 🎉</p>
+              <p className="muted">Nothing waiting on you.</p>
             ) : (
               <ul className="cx-review-list">
                 {pendingReviews.map((s) => {

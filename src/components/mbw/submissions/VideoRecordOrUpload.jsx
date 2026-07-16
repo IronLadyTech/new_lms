@@ -1,56 +1,161 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MBW_STORAGE_ENABLED, uploadMbwFile } from '../../../services/mbwService';
 import TaskTemplateDownloads from './TaskTemplateDownloads';
+
+function pickRecorderMime() {
+  const candidates = [
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=vp8,opus',
+    'video/webm',
+  ];
+  if (typeof MediaRecorder === 'undefined') return '';
+  return candidates.find((t) => MediaRecorder.isTypeSupported(t)) || '';
+}
 
 export default function VideoRecordOrUpload({ task, submission, canSubmit, userId, onSubmit }) {
   const [mode, setMode] = useState('record');
   const [recording, setRecording] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(submission?.videoUrl || null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [blob, setBlob] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [rerecord, setRerecord] = useState(false);
   const videoRef = useRef(null);
   const mediaRef = useRef(null);
   const recorderRef = useRef(null);
   const chunksRef = useRef([]);
+  const previewUrlRef = useRef(null);
 
-  const skipped = submission?.storageSkipped;
-  const saved = submission?.videoUrl || skipped;
+  const cloudUrl = submission?.videoUrl || null;
+  const skipped = Boolean(submission?.storageSkipped);
+  const previouslySubmitted = Boolean(cloudUrl || skipped);
+  const showRecorder = rerecord || !previouslySubmitted;
+  const playbackUrl = cloudUrl || previewUrl;
+  const showPreview = Boolean(playbackUrl) && (Boolean(blob) || (previouslySubmitted && !rerecord));
+
+  const revokePreview = () => {
+    if (previewUrlRef.current?.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrlRef.current);
+    }
+    previewUrlRef.current = null;
+  };
+
+  const setPreviewFromBlob = (b) => {
+    revokePreview();
+    const url = URL.createObjectURL(b);
+    previewUrlRef.current = url;
+    setBlob(b);
+    setPreviewUrl(url);
+  };
+
+  useEffect(() => {
+    if (submission?.videoUrl && !rerecord) {
+      setPreviewUrl(submission.videoUrl);
+      previewUrlRef.current = submission.videoUrl;
+    }
+  }, [submission?.videoUrl, rerecord]);
+
+  useEffect(
+    () => () => {
+      mediaRef.current?.getTracks().forEach((t) => t.stop());
+      if (previewUrlRef.current?.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
+    },
+    []
+  );
+
+  const stopCamera = () => {
+    mediaRef.current?.getTracks().forEach((t) => t.stop());
+    mediaRef.current = null;
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  };
+
+  const startRecordAgain = () => {
+    stopCamera();
+    revokePreview();
+    setBlob(null);
+    setPreviewUrl(null);
+    setError('');
+    setRecording(false);
+    chunksRef.current = [];
+    setMode('record');
+    setRerecord(true);
+  };
 
   const startRecord = async () => {
+    setError('');
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user' },
+        audio: true,
+      });
       mediaRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        await videoRef.current.play().catch(() => {});
       }
+
       chunksRef.current = [];
-      const recorder = new MediaRecorder(stream);
+      const mimeType = pickRecorderMime();
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
       recorderRef.current = recorder;
-      recorder.ondataavailable = (e) => chunksRef.current.push(e.data);
-      recorder.onstop = () => {
-        const b = new Blob(chunksRef.current, { type: 'video/webm' });
-        setBlob(b);
-        setPreviewUrl(URL.createObjectURL(b));
-        stream.getTracks().forEach((t) => t.stop());
+
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
       };
-      recorder.start();
+
+      recorder.onstop = () => {
+        stopCamera();
+        const type = recorder.mimeType || mimeType || 'video/webm';
+        const b = new Blob(chunksRef.current, { type });
+        if (!b.size) {
+          setError('Recording was empty. Please try again or upload a file.');
+          setRecording(false);
+          return;
+        }
+        setPreviewFromBlob(b);
+        setRecording(false);
+      };
+
+      recorder.onerror = () => {
+        setError('Recording failed. Please try again or upload a file.');
+        stopCamera();
+        setRecording(false);
+      };
+
+      recorder.start(250);
       setRecording(true);
     } catch {
-      alert('Camera access denied. Use upload instead.');
+      setError('Camera access denied. Use Upload file instead.');
       setMode('upload');
     }
   };
 
   const stopRecord = () => {
-    recorderRef.current?.stop();
-    setRecording(false);
+    const recorder = recorderRef.current;
+    if (!recorder || recorder.state === 'inactive') {
+      setRecording(false);
+      return;
+    }
+    try {
+      if (recorder.state === 'recording') recorder.requestData();
+    } catch {
+      /* ignore */
+    }
+    recorder.stop();
   };
 
   const retake = () => {
+    stopCamera();
+    revokePreview();
     setBlob(null);
     setPreviewUrl(null);
+    setError('');
     chunksRef.current = [];
   };
 
@@ -58,23 +163,47 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
     setUploading(true);
     setError('');
     try {
+      const sourceBlob = file || blob;
+      if (!sourceBlob) {
+        setError('No recording to save. Record or upload a file first.');
+        return;
+      }
+
+      if (file) {
+        setPreviewFromBlob(file);
+      }
+
       if (!MBW_STORAGE_ENABLED) {
         await onSubmit({
           storageSkipped: true,
-          fileName: 'Mirror practice saved (upload pending)',
+          fileName: file?.name || `recording-${Date.now()}.webm`,
+          fileType: sourceBlob.type || 'video/webm',
+          fileSize: sourceBlob.size,
+          hasLocalRecording: true,
         });
+        setRerecord(false);
         return;
       }
 
       const f =
         file ||
-        new File([blob], `mirror-${Date.now()}.webm`, { type: 'video/webm' });
+        new File([blob], `mirror-${Date.now()}.webm`, {
+          type: blob.type || 'video/webm',
+        });
       const uploaded = await uploadMbwFile(userId, task.id, f, 'video');
       await onSubmit({
         videoUrl: uploaded.url,
         fileName: uploaded.fileName,
         localFallback: uploaded.localFallback || false,
+        storageSkipped: false,
       });
+
+      if (uploaded.url) {
+        revokePreview();
+        setPreviewUrl(uploaded.url);
+        previewUrlRef.current = uploaded.url;
+      }
+      setRerecord(false);
     } catch (e) {
       setError(e.message || 'Could not save submission');
     } finally {
@@ -82,21 +211,51 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
     }
   };
 
+  const allowSave = canSubmit || rerecord || previouslySubmitted;
+
   return (
     <div className="mbw-submission mbw-video-record">
       <TaskTemplateDownloads taskId={task.id} task={task} />
-      {saved && submission?.videoUrl && (
+
+      {showPreview && (
         <div className="mbw-submission__saved">
-          <video src={submission.videoUrl} controls className="mbw-video-record__playback" />
-        </div>
-      )}
-      {skipped && (
-        <div className="mbw-submission__saved">
-          <p className="success-text">Mirror practice saved successfully!</p>
+          <video
+            key={playbackUrl}
+            src={playbackUrl}
+            controls
+            playsInline
+            className="mbw-video-record__playback"
+          />
+          {skipped && !cloudUrl && !rerecord && (
+            <p className="muted mbw-task__hint">
+              Recording saved on this device. Cloud playback will be available after storage is enabled.
+            </p>
+          )}
         </div>
       )}
 
-      {!saved && (
+      {previouslySubmitted && !rerecord && !playbackUrl && (
+        <div className="mbw-submission__saved">
+          <p className="success-text">Recording submitted successfully.</p>
+          <p className="muted mbw-task__hint">
+            Playback is unavailable because the file was not uploaded to cloud storage. Re-record if you
+            need to review it here.
+          </p>
+          <button type="button" className="btn btn-outline btn-sm" onClick={startRecordAgain}>
+            Record again
+          </button>
+        </div>
+      )}
+
+      {previouslySubmitted && !rerecord && playbackUrl && (
+        <div className="mbw-submission__actions" style={{ marginTop: '0.75rem' }}>
+          <button type="button" className="btn btn-outline btn-sm" onClick={startRecordAgain}>
+            Record again
+          </button>
+        </div>
+      )}
+
+      {showRecorder && (
         <>
           <div className="mbw-video-record__tabs">
             <button
@@ -117,8 +276,8 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
 
           {!MBW_STORAGE_ENABLED && (
             <p className="mbw-task__hint muted">
-              Cloud storage is not configured yet — your recording is saved on this device and the step
-              will complete when you click Save final.
+              Cloud storage is not enabled yet — you can still record, preview, and complete this step.
+              The video stays on this device until storage is configured.
             </p>
           )}
 
@@ -126,9 +285,20 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
             <div className="mbw-video-record__panel">
               {!previewUrl ? (
                 <>
-                  <video ref={videoRef} className="mbw-video-record__live" muted playsInline />
+                  <video
+                    ref={videoRef}
+                    className="mbw-video-record__live"
+                    muted
+                    playsInline
+                    autoPlay
+                  />
                   {!recording ? (
-                    <button type="button" className="btn btn-primary" disabled={!canSubmit} onClick={startRecord}>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      disabled={!allowSave}
+                      onClick={startRecord}
+                    >
                       Start recording
                     </button>
                   ) : (
@@ -138,22 +308,19 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
                   )}
                 </>
               ) : (
-                <>
-                  <video src={previewUrl} controls className="mbw-video-record__playback" />
-                  <div className="mbw-submission__actions">
-                    <button type="button" className="btn btn-outline" onClick={retake}>
-                      Retake
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      disabled={!canSubmit || uploading}
-                      onClick={() => saveFinal()}
-                    >
-                      {uploading ? 'Saving…' : 'Save final'}
-                    </button>
-                  </div>
-                </>
+                <div className="mbw-submission__actions">
+                  <button type="button" className="btn btn-outline" onClick={retake} disabled={uploading}>
+                    Retake
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={!allowSave || uploading || !blob}
+                    onClick={() => saveFinal()}
+                  >
+                    {uploading ? 'Saving…' : 'Save final'}
+                  </button>
+                </div>
               )}
             </div>
           ) : (
@@ -165,14 +332,18 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
                   const f = e.target.files?.[0];
                   if (f) saveFinal(f);
                 }}
-                disabled={!canSubmit || uploading}
+                disabled={!allowSave || uploading}
               />
             </div>
           )}
         </>
       )}
 
-      {error && <p className="alert alert-error">{error}</p>}
+      {error && (
+        <p className="alert alert-error" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

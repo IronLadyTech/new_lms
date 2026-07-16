@@ -10,6 +10,7 @@ import { getBatchAttendanceSummary } from '../../services/attendanceService';
 import { getTodayKey, addDaysToKey } from '../../utils/streakTimezone';
 import ParticipantListModal from '../../components/cx/ParticipantListModal';
 import BatchMembersPanel from '../../components/cx/BatchMembersPanel';
+import BatchRecordingsPanel from '../../components/cx/BatchRecordingsPanel';
 
 function timeAgo(ts) {
   const ms = ts?.seconds ? ts.seconds * 1000 : ts?.toMillis?.() || null;
@@ -40,7 +41,7 @@ function StatCard({ value, label, variant, onClick }) {
 export default function CXBatchAnalysis() {
   const { batchId } = useParams();
   const navigate = useNavigate();
-  const { role } = useAuth();
+  const { user, role } = useAuth();
   const { program, adapter } = useProgramAdapter();
   const { batches, users, students, tasks, submissions, loading, refresh } = useCxData(program, adapter);
   const [modal, setModal] = useState(null);
@@ -184,6 +185,13 @@ export default function CXBatchAnalysis() {
         role={role}
         onUpdated={refresh}
         onDeleted={() => navigate('/cx/batches', { replace: true })}
+      />
+
+      <BatchRecordingsPanel
+        batch={batch}
+        program={batch.program || program}
+        userId={user?.uid}
+        onChange={refresh}
       />
 
       {/* Summary stat cards */}

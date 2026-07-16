@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
-import { Play } from 'lucide-react';
+import { Play, Video } from 'lucide-react';
 
 function isYouTube(url) {
   return /youtube\.com|youtu\.be/i.test(url || '');
@@ -110,14 +110,22 @@ export default function WatchGatedVideo({
   }
 
   if (isYouTube(videoUrl)) {
+    const pct = Math.min(100, Math.round(watchPercent * 100));
     return (
-      <div className="mbw-video mbw-video--embed">
-        <iframe
-          title={title}
-          src={youtubeEmbed(videoUrl)}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
+      <div className="mbw-video mbw-video--embed lesson-video">
+        <header className="lesson-video__head">
+          <Video size={18} aria-hidden />
+          <h3 className="lesson-video__title">{title}</h3>
+          <span className="lesson-video__pct">{pct}% watched</span>
+        </header>
+        <div className="mbw-video__frame lesson-video__frame">
+          <iframe
+            title={title}
+            src={youtubeEmbed(videoUrl)}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
         <p className="muted mbw-video__hint">
           Watch the full video to unlock submission. If tracking doesn&apos;t update, use the button below.
         </p>
@@ -145,10 +153,16 @@ export default function WatchGatedVideo({
   };
 
   const VideoPlayer = isHls(videoUrl) ? HlsVideoPlayer : NativeVideoPlayer;
+  const pct = Math.min(100, Math.round(watchPercent * 100));
 
   return (
-    <div className="mbw-video mbw-video--hosted">
-      <div className="mbw-video__frame">
+    <div className="mbw-video mbw-video--hosted lesson-video">
+      <header className="lesson-video__head">
+        <Video size={18} aria-hidden />
+        <h3 className="lesson-video__title">{title}</h3>
+        <span className="lesson-video__pct">{pct}% watched</span>
+      </header>
+      <div className="mbw-video__frame lesson-video__frame">
         {!started ? (
           <button type="button" className="mbw-video__poster" onClick={() => setStarted(true)}>
             <span className="mbw-video__poster-icon" aria-hidden="true">

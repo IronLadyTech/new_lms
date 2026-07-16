@@ -98,6 +98,7 @@ export default function AuthPage({ mode = 'login' }) {
           <img src="/logo.png" alt="Iron Lady" className="logo-mark lg" />
           <h1>{isLogin ? 'Welcome back' : 'Create account'}</h1>
           <p>{isLogin ? 'Sign in to continue learning' : 'Sign up with email or Google'}</p>
+          <p className="auth-card__tagline">Elevating a million women to the top</p>
           {isLogin && (
             <p className="auth-login-hint">
               Use your registration email and the password from your Iron Lady welcome email.

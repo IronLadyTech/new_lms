@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   buildSubmissionIndex,
+  buildModuleTaskBreakdown,
   groupTasksByModule,
   isCxSubmissionComplete,
   moduleCompletionPct,
@@ -8,6 +9,7 @@ import {
 import { filterStudentsForBatches } from '../../utils/batchScope';
 import ParticipantListModal from './ParticipantListModal';
 import ModuleTaskGrid from './ModuleTaskGrid';
+import ModuleTaskWise from './ModuleTaskWise';
 
 /**
  * Participant × task status grid, grouped by program module (Pre-Prep, Q1, …).
@@ -20,6 +22,7 @@ export default function TaskTrackingBoard({
   onOpenSubmission,
 }) {
   const [batchFilter, setBatchFilter] = useState('all');
+  const [view, setView] = useState('tasks'); // 'tasks' | 'grid'
   const [modal, setModal] = useState(null);
 
   const subByUser = useMemo(() => buildSubmissionIndex(submissions), [submissions]);
@@ -30,6 +33,11 @@ export default function TaskTrackingBoard({
   );
 
   const moduleGroups = useMemo(() => groupTasksByModule(tasks), [tasks]);
+
+  const taskBreakdown = useMemo(
+    () => buildModuleTaskBreakdown(filteredStudents, tasks, submissions),
+    [filteredStudents, tasks, submissions]
+  );
 
   const { completedStudents, notCompletedStudents } = useMemo(() => {
     const completed = filteredStudents.filter((u) =>
@@ -73,21 +81,52 @@ export default function TaskTrackingBoard({
             {notCompletedStudents.length} not completed
           </button>
         </div>
-        <label className="cx-board__filter">
-          Batch{' '}
-          <select value={batchFilter} onChange={(e) => setBatchFilter(e.target.value)}>
-            <option value="all">All batches</option>
-            {batches.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="cx-board__controls">
+          <div className="cx-board__views" role="group" aria-label="Tracking view">
+            <button
+              type="button"
+              className={`cx-board__view${view === 'tasks' ? ' is-active' : ''}`}
+              aria-pressed={view === 'tasks'}
+              onClick={() => setView('tasks')}
+            >
+              By task
+            </button>
+            <button
+              type="button"
+              className={`cx-board__view${view === 'grid' ? ' is-active' : ''}`}
+              aria-pressed={view === 'grid'}
+              onClick={() => setView('grid')}
+            >
+              By participant
+            </button>
+          </div>
+          <label className="cx-board__filter">
+            Batch{' '}
+            <select value={batchFilter} onChange={(e) => setBatchFilter(e.target.value)}>
+              <option value="all">All batches</option>
+              {batches.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
 
       {filteredStudents.length === 0 ? (
         <p className="muted">No learners in this batch yet.</p>
+      ) : view === 'tasks' ? (
+        <div className="cx-module-stack">
+          {taskBreakdown.map((mod, i) => (
+            <ModuleTaskWise
+              key={mod.id}
+              module={mod}
+              onShowParticipants={(title, participants) => setModal({ title, participants })}
+              defaultOpen={i === 0}
+            />
+          ))}
+        </div>
       ) : (
         <div className="cx-module-stack">
           {moduleGroups.map((mod, i) => (

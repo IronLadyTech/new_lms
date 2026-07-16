@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { X } from 'lucide-react';
 
 export default function ParticipantListModal({ title, participants, onClose }) {
   useEffect(() => {
@@ -12,7 +13,9 @@ export default function ParticipantListModal({ title, participants, onClose }) {
       <div className="cx-plist-panel" onClick={(e) => e.stopPropagation()}>
         <div className="cx-plist-header">
           <h3 className="cx-plist-title">{title}</h3>
-          <button type="button" className="cx-plist-close" onClick={onClose} aria-label="Close">✕</button>
+          <button type="button" className="cx-plist-close" onClick={onClose} aria-label="Close">
+            <X size={18} aria-hidden />
+          </button>
         </div>
         {participants.length === 0 ? (
           <p className="muted cx-plist-empty">No participants in this group.</p>

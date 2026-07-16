@@ -60,6 +60,78 @@ export async function deleteGroup(groupId) {
   await deleteDoc(doc(db, GROUPS, groupId));
 }
 
+/**
+ * Session recordings live on the batch (group) doc as a `recordings` array.
+ * CX moderators can write groups, and batch members can read them — so no
+ * Firestore rules change is needed. (serverTimestamp() is not allowed inside
+ * array elements, so addedAt is a client ISO string.)
+ *
+ * Each entry may include phaseId (e.g. pre-preparation, onboarding) so CX
+ * can attach unlisted YouTube links under the correct program phase.
+ */
+export async function addBatchRecording(groupId, recording) {
+  const entry = {
+    id: recording.id || `rec_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    title: recording.title,
+    url: recording.url,
+    date: recording.date || '',
+    phaseId: recording.phaseId || '',
+    addedBy: recording.addedBy || null,
+    addedAt: new Date().toISOString(),
+  };
+  await updateDoc(doc(db, GROUPS, groupId), {
+    recordings: arrayUnion(entry),
+    updatedAt: serverTimestamp(),
+  });
+  return entry;
+}
+
+export async function updateBatchRecording(groupId, recordingId, patch) {
+  const group = await getGroup(groupId);
+  if (!group) throw new Error('Batch not found');
+  const recordings = Array.isArray(group.recordings) ? group.recordings : [];
+  const idx = recordings.findIndex((r) => r.id === recordingId);
+  if (idx < 0) throw new Error('Recording not found');
+
+  const next = recordings.map((r, i) =>
+    i === idx
+      ? {
+          ...r,
+          ...patch,
+          id: r.id,
+          updatedAt: new Date().toISOString(),
+        }
+      : r
+  );
+
+  await updateDoc(doc(db, GROUPS, groupId), {
+    recordings: next,
+    updatedAt: serverTimestamp(),
+  });
+  return next[idx];
+}
+
+export async function removeBatchRecording(groupId, recording) {
+  const group = await getGroup(groupId);
+  if (!group) throw new Error('Batch not found');
+  const recordings = Array.isArray(group.recordings) ? group.recordings : [];
+  const next = recordings.filter((r) => r.id !== recording.id);
+
+  // Prefer id-based remove so partial field mismatches (e.g. new phaseId) still work
+  if (next.length !== recordings.length) {
+    await updateDoc(doc(db, GROUPS, groupId), {
+      recordings: next,
+      updatedAt: serverTimestamp(),
+    });
+    return;
+  }
+
+  await updateDoc(doc(db, GROUPS, groupId), {
+    recordings: arrayRemove(recording),
+    updatedAt: serverTimestamp(),
+  });
+}
+
 export async function setBatchModerators(groupId, moderatorIds) {
   await updateDoc(doc(db, GROUPS, groupId), {
     moderatorIds: moderatorIds || [],

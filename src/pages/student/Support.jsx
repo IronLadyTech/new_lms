@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { LifeBuoy, Inbox, MessageSquarePlus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import {
   createTicket,
@@ -15,6 +16,9 @@ import {
 import GuestLockedPanel from '../../components/GuestLockedPanel';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { useConfirm } from '../../hooks/useConfirm';
+import PageHeader from '../../components/ui/PageHeader';
+import SectionCard from '../../components/ui/SectionCard';
+import EmptyState from '../../components/ui/EmptyState';
 
 function formatTime(ts) {
   if (!ts) return '';
@@ -32,7 +36,7 @@ export default function Support() {
   const [form, setForm] = useState({ category: 'course', subject: '', message: '' });
   const [reply, setReply] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [notice, setNotice] = useState('');
+  const [notice, setNotice] = useState(null); // { text, ok }
   const [editingTicketId, setEditingTicketId] = useState(null);
   const [editForm, setEditForm] = useState({ subject: '', category: 'course' });
 
@@ -62,7 +66,7 @@ export default function Support() {
     e.preventDefault();
     if (!user) return;
     setSubmitting(true);
-    setNotice('');
+    setNotice(null);
     try {
       const ticket = await createTicket({
         userId: user.uid,
@@ -73,11 +77,11 @@ export default function Support() {
         message: form.message,
       });
       setForm({ category: 'course', subject: '', message: '' });
-      setNotice('Ticket submitted. Super Admin will respond soon.');
+      setNotice({ text: 'Ticket submitted. Super Admin will respond soon.', ok: true });
       await loadTickets();
       setSelectedId(ticket.id);
     } catch (err) {
-      setNotice(err.message);
+      setNotice({ text: err.message, ok: false });
     } finally {
       setSubmitting(false);
     }
@@ -97,7 +101,7 @@ export default function Support() {
       setReply('');
       setMessages(await getTicketMessages(selectedId));
     } catch (err) {
-      setNotice(err.message);
+      setNotice({ text: err.message, ok: false });
     } finally {
       setSubmitting(false);
     }
@@ -113,17 +117,17 @@ export default function Support() {
     e.preventDefault();
     if (!editingTicketId) return;
     setSubmitting(true);
-    setNotice('');
+    setNotice(null);
     try {
       await updateTicket(editingTicketId, {
         subject: editForm.subject.trim(),
         category: editForm.category,
       });
       setEditingTicketId(null);
-      setNotice('Ticket updated.');
+      setNotice({ text: 'Ticket updated.', ok: true });
       await loadTickets();
     } catch (err) {
-      setNotice(err.message);
+      setNotice({ text: err.message, ok: false });
     } finally {
       setSubmitting(false);
     }
@@ -138,15 +142,15 @@ export default function Support() {
     });
     if (!ok) return;
     setSubmitting(true);
-    setNotice('');
+    setNotice(null);
     try {
       await deleteTicket(ticketId);
       if (selectedId === ticketId) setSelectedId(null);
       if (editingTicketId === ticketId) setEditingTicketId(null);
-      setNotice('Ticket deleted.');
+      setNotice({ text: 'Ticket deleted.', ok: true });
       await loadTickets();
     } catch (err) {
-      setNotice(err.message);
+      setNotice({ text: err.message, ok: false });
     } finally {
       setSubmitting(false);
     }
@@ -157,7 +161,7 @@ export default function Support() {
   if (isGuest) {
     return (
       <div className="page support-page">
-        <h1>Help &amp; support</h1>
+        <PageHeader eyebrow="Help" icon={LifeBuoy} title="Help & support" />
         <GuestLockedPanel title="Support locked" />
       </div>
     );
@@ -165,17 +169,30 @@ export default function Support() {
 
   return (
     <div className="page support-page">
-      <h1>Help &amp; support</h1>
-      <p className="page-sub">Report course, login, or payment issues. Messages go to Super Admin.</p>
+      <PageHeader
+        eyebrow="Help"
+        icon={LifeBuoy}
+        title="Help & support"
+        subtitle="Report course, login, or payment issues. Messages go to Super Admin."
+      />
 
       {notice && (
-        <p className={notice.includes('submitted') || notice.includes('updated') || notice.includes('deleted') ? 'success-text' : 'alert alert-error'}>{notice}</p>
+        <p
+          className={`alert ${notice.ok ? 'alert-success' : 'alert-error'}`}
+          role={notice.ok ? 'status' : 'alert'}
+        >
+          {notice.text}
+        </p>
       )}
 
-      <section className="section ticket-form-section">
-        <h2>Create a ticket</h2>
+      <SectionCard title="Create a ticket" icon={MessageSquarePlus} className="support-section">
         <form className="admin-form admin-form--stacked" onSubmit={handleCreate}>
-          <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} required>
+          <select
+            value={form.category}
+            onChange={(e) => setForm({ ...form, category: e.target.value })}
+            required
+            aria-label="Category"
+          >
             {TICKET_CATEGORIES.map((c) => (
               <option key={c.value} value={c.value}>
                 {c.label}
@@ -187,6 +204,7 @@ export default function Support() {
             value={form.subject}
             onChange={(e) => setForm({ ...form, subject: e.target.value })}
             required
+            aria-label="Subject"
           />
           <textarea
             placeholder="Describe your issue…"
@@ -194,19 +212,27 @@ export default function Support() {
             onChange={(e) => setForm({ ...form, message: e.target.value })}
             rows={4}
             required
+            aria-label="Message"
           />
           <button type="submit" className="btn btn-primary" disabled={submitting}>
             {submitting ? 'Sending…' : 'Submit ticket'}
           </button>
         </form>
-      </section>
+      </SectionCard>
 
-      <section className="section">
-        <h2>My tickets</h2>
+      <SectionCard title="My tickets" icon={Inbox} className="support-section">
         {loading ? (
-          <p className="muted">Loading…</p>
+          <div className="dashboard-skeleton" aria-busy="true">
+            <div className="dashboard-skeleton__block" style={{ minHeight: '3.5rem' }} />
+            <div className="dashboard-skeleton__block" style={{ minHeight: '3.5rem' }} />
+            <div className="dashboard-skeleton__block" style={{ minHeight: '3.5rem' }} />
+          </div>
         ) : tickets.length === 0 ? (
-          <p className="muted">No tickets yet.</p>
+          <EmptyState
+            icon={Inbox}
+            title="No tickets yet"
+            message="Raised a question above? Your tickets and replies from the team will show up here."
+          />
         ) : (
           <div className="ticket-layout">
             <ul className="ticket-list">
@@ -218,8 +244,12 @@ export default function Support() {
                     onClick={() => setSelectedId(t.id)}
                   >
                     <strong>{t.subject}</strong>
-                    <span className={`ticket-status ticket-status--${t.status}`}>{statusLabel(t.status)}</span>
-                    <span className="muted">{categoryLabel(t.category)} · {formatTime(t.createdAt)}</span>
+                    <span className={`ticket-status ticket-status--${t.status}`}>
+                      {statusLabel(t.status)}
+                    </span>
+                    <span className="muted">
+                      {categoryLabel(t.category)} · {formatTime(t.createdAt)}
+                    </span>
                   </button>
                 </li>
               ))}
@@ -230,13 +260,23 @@ export default function Support() {
                 <div className="ticket-thread__header">
                   <h3>{selected.subject}</h3>
                   <div className="ticket-thread__header-actions">
-                    <span className={`ticket-status ticket-status--${selected.status}`}>{statusLabel(selected.status)}</span>
+                    <span className={`ticket-status ticket-status--${selected.status}`}>
+                      {statusLabel(selected.status)}
+                    </span>
                     {selected.status === TICKET_STATUSES.OPEN && (
                       <>
-                        <button type="button" className="btn btn-outline btn-sm" onClick={() => startEditTicket(selected)}>
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-sm"
+                          onClick={() => startEditTicket(selected)}
+                        >
                           Edit
                         </button>
-                        <button type="button" className="btn btn-danger btn-sm" onClick={() => handleDeleteTicket(selected.id)}>
+                        <button
+                          type="button"
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleDeleteTicket(selected.id)}
+                        >
                           Delete
                         </button>
                       </>
@@ -245,11 +285,15 @@ export default function Support() {
                 </div>
 
                 {editingTicketId === selected.id && (
-                  <form className="admin-form admin-form--stacked ticket-edit-form" onSubmit={handleSaveEdit}>
+                  <form
+                    className="admin-form admin-form--stacked ticket-edit-form"
+                    onSubmit={handleSaveEdit}
+                  >
                     <select
                       value={editForm.category}
                       onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
                       required
+                      aria-label="Category"
                     >
                       {TICKET_CATEGORIES.map((c) => (
                         <option key={c.value} value={c.value}>
@@ -261,12 +305,21 @@ export default function Support() {
                       value={editForm.subject}
                       onChange={(e) => setEditForm({ ...editForm, subject: e.target.value })}
                       required
+                      aria-label="Subject"
                     />
                     <div className="ticket-actions">
-                      <button type="submit" className="btn btn-primary btn-sm" disabled={submitting}>
+                      <button
+                        type="submit"
+                        className="btn btn-primary btn-sm"
+                        disabled={submitting}
+                      >
                         Save changes
                       </button>
-                      <button type="button" className="btn btn-outline btn-sm" onClick={() => setEditingTicketId(null)}>
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        onClick={() => setEditingTicketId(null)}
+                      >
                         Cancel
                       </button>
                     </div>
@@ -296,6 +349,7 @@ export default function Support() {
                       onChange={(e) => setReply(e.target.value)}
                       rows={2}
                       required
+                      aria-label="Reply"
                     />
                     <button type="submit" className="btn btn-outline btn-sm" disabled={submitting}>
                       Send reply
@@ -309,7 +363,7 @@ export default function Support() {
             )}
           </div>
         )}
-      </section>
+      </SectionCard>
       <ConfirmDialog {...dialogProps} />
     </div>
   );

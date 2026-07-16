@@ -1,0 +1,41 @@
+---
+description: Iron Lady brand, product, and UI reference — use COMPANY_CONTEXT.md for all UI and feature work
+alwaysApply: true
+---
+
+# Iron Lady — Brand & Product Context
+
+**Before UI, copy, or feature work**, read `COMPANY_CONTEXT.md` at the project root. It is the canonical source for brand, programs, tone, and design. Do not invent program names, pricing, contact details, or brand colors.
+
+## When to consult it
+
+- New or updated pages, components, empty states, modals, emails, notifications
+- User-facing copy (headlines, CTAs, tooltips, errors, onboarding)
+- Program-specific flows (student, CX/moderator, admin)
+- Theming, typography, spacing, and visual polish
+
+## Quick reference
+
+| Area | Use |
+|------|-----|
+| **Tagline** | Elevating a million women to the top |
+| **Tone** | Direct, ambitious, anti-“balance”; Business War Tactics; winning mindset — not generic empowerment |
+| **Programs** | `lep`, `100bm`, `mbw` — match names/structure in `src/data/programTypes.js` and context doc |
+| **Primary red** | `#F52929` (buttons/links); hover `#D41F1F`; deep `#C8102E` — see `src/index.css` tokens |
+| **Backgrounds** | Cream `#F7F6E4`, warm beige `#EBEADC` |
+| **Headings** | Gemunu Libre |
+| **Body / UI** | Fira Sans |
+| **Support** | admin@iamironlady.com |
+| **Site** | https://iamironlady.com |
+
+## UI & feature rules
+
+1. **Align with marketing site** — CTAs, program hierarchy, and visual language should feel like iamironlady.com, adapted for LMS usability.
+2. **Program-aware** — Respect entitlements (guest preview vs paid unlock); MBW quarterly modules match website Q1–Q4.
+3. **Copy** — Prefer site terminology: B-HAG, Business War Tactics, C-Suite League, shameless pitching, maximize (not balance).
+4. **CTAs** — Use patterns from context doc: Explore Programs, Get Started, Apply for the Program, Speak to our Counsellor.
+5. **No drift** — Avoid off-brand palettes (e.g. generic blue as primary), stock “empowerment” clichés, or wrong program labels.
+
+## Conflict resolution
+
+If code and `COMPANY_CONTEXT.md` disagree on **brand/product**, update code toward the context doc. If the doc is outdated vs live site, note it and prefer verified facts in the doc until updated.

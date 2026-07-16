@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { isFullAdmin, isModeratorOnly } from '../../utils/roles';
 import ThemeToggle from '../ThemeToggle';
 import CXBottomNav from './CXBottomNav';
+import SkipLink from '../ui/SkipLink';
 import { useProgramAdapter } from '../../hooks/useProgramAdapter';
 
 export default function CXLayout() {
@@ -16,6 +17,7 @@ export default function CXLayout() {
 
   return (
     <div className="student-layout cx-layout">
+      <SkipLink targetId="cx-main-content" />
       <header className="app-header">
         <div className="app-header__brand">
           <img src="/logo.png" alt="Iron Lady" className="logo-mark" />
@@ -36,7 +38,7 @@ export default function CXLayout() {
           )}
         </div>
       </header>
-      <main className="student-main cx-main">
+      <main id="cx-main-content" className="student-main cx-main">
         <Outlet />
       </main>
       <CXBottomNav />

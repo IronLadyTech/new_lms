@@ -1,0 +1,28 @@
+---
+description: UI/UX Pro Max — design system, accessibility, and interaction standards for Iron Lady LMS
+alwaysApply: true
+---
+
+# UI/UX Pro Max (Iron Lady LMS)
+
+When building or changing UI, follow **ui-ux-pro-max** skill workflow:
+
+1. Read `design-system/iron-lady-lms/MASTER.md`
+2. Check `design-system/iron-lady-lms/pages/[page].md` for page overrides
+3. Brand colors/fonts: `COMPANY_CONTEXT.md` overrides generic plugin palette
+
+## Non-negotiable UX rules
+
+- **Icons:** Lucide (`lucide-react`) only — no emojis as UI icons
+- **Clickable:** `cursor: pointer` on buttons, links, cards with click handlers
+- **Focus:** Visible `:focus-visible` ring using `var(--primary-ring)`
+- **Motion:** 150–300ms transitions; respect `prefers-reduced-motion`
+- **Touch:** Min 44×44px tap targets on mobile nav and primary actions
+- **Loading:** Skeleton or spinner — never frozen blank UI
+- **Contrast:** 4.5:1 body text; test light and dark themes
+- **Layout:** No hover transforms that shift surrounding content (use shadow/opacity)
+- **Safe areas:** Bottom nav clearance via `student-layout` padding
+
+## Design system path
+
+`design-system/iron-lady-lms/` — persisted from ui-ux-pro-max plugin (Iron Lady brand overrides applied)

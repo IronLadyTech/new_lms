@@ -12,6 +12,7 @@ import {
   isCxSubmissionComplete,
 } from '../../utils/cxMetrics';
 import ParticipantListModal from '../../components/cx/ParticipantListModal';
+import CxCharts from '../../components/cx/CxCharts';
 
 export default function CXDashboards() {
   const { program, adapter } = useProgramAdapter();
@@ -72,10 +73,30 @@ export default function CXDashboards() {
     [tasks, taskWiseStudents, submissions]
   );
 
+  const chartData = useMemo(() => {
+    const taskById = Object.fromEntries(tasks.map((t) => [t.id, t]));
+    const possible = students.length * tasks.length;
+    const completed = stats.completed;
+    const awaiting = submissions.filter(
+      (s) =>
+        [SUBMISSION_STATUS.SUBMITTED, SUBMISSION_STATUS.UNDER_REVIEW].includes(s.status) &&
+        !isCxSubmissionComplete(s, taskById[s.taskId])
+    ).length;
+    const notSubmitted = Math.max(0, possible - completed - awaiting);
+    return {
+      statusData: [
+        { name: 'Done', value: completed },
+        { name: 'Waiting for review', value: awaiting },
+        { name: 'Not started', value: notSubmitted },
+      ],
+      batchData: perBatch.map(({ batch, pct }) => ({ name: batch.name, pct })),
+    };
+  }, [tasks, students, submissions, stats, perBatch]);
+
   return (
     <div className="page cx-page">
-      <h1>Dashboards</h1>
-      <p className="page-sub">{getProgramLabel(program)} · overall metrics</p>
+      <h1>Overview</h1>
+      <p className="page-sub">{getProgramLabel(program)} · how your learners are progressing</p>
 
       {error && <p className="cx-error">{error}</p>}
 
@@ -113,19 +134,45 @@ export default function CXDashboards() {
                 <>
                   <div className="cx-stat">
                     <span className="cx-stat__value">{stats.completionRate}%</span>
-                    <span className="cx-stat__label">Completion</span>
+                    <span className="cx-stat__label">Tasks done</span>
                   </div>
                   <div className="cx-stat">
                     <span className="cx-stat__value">{stats.pending}</span>
-                    <span className="cx-stat__label">Awaiting review</span>
+                    <span className="cx-stat__label">Waiting for review</span>
                   </div>
                 </>
               )}
             </div>
           </section>
 
+          {adapter.hasTasks && (
+            <section className="cx-section">
+              <div className="cx-section__head">
+                <h2>How your learners are doing</h2>
+              </div>
+              <p className="cx-analytics-summary">
+                Across <strong>{students.length}</strong> learner
+                {students.length === 1 ? '' : 's'}, <strong>{stats.completionRate}%</strong> of all
+                tasks are done.{' '}
+                {stats.pending > 0 ? (
+                  <>
+                    <strong>{stats.pending}</strong> task{stats.pending === 1 ? '' : 's'} waiting for
+                    your review.
+                  </>
+                ) : (
+                  'Nothing is waiting for your review right now.'
+                )}
+              </p>
+              <CxCharts
+                statusData={chartData.statusData}
+                batchData={chartData.batchData}
+                donutPct={stats.completionRate}
+              />
+            </section>
+          )}
+
           <section className="cx-section">
-            <h2>Batch comparison</h2>
+            <h2>Batches at a glance</h2>
             {perBatch.length === 0 ? (
               <p className="muted">No {adapter.shortLabel} batches yet.</p>
             ) : (
@@ -150,7 +197,7 @@ export default function CXDashboards() {
           {adapter.hasTasks && (
             <section className="cx-section">
               <div className="cx-section__head">
-                <h2>Module-wise breakdown</h2>
+                <h2>Task-by-task progress</h2>
                 <label className="cx-board__filter">
                   Batch{' '}
                   <select
@@ -196,7 +243,19 @@ export default function CXDashboards() {
                           </div>
                           {mod.taskRows.map(({ task, completed, notCompleted }) => (
                             <div key={task.id} className="cx-taskwise-row">
-                              <span className="cx-taskwise-name">{task.title}</span>
+                              <button
+                                type="button"
+                                className="cx-taskwise-name cx-taskwise-name--btn"
+                                title="See who hasn't completed this yet"
+                                onClick={() =>
+                                  setModal({
+                                    title: `${mod.title} · ${task.title} — Not completed (${selectedBatchLabel})`,
+                                    participants: notCompleted,
+                                  })
+                                }
+                              >
+                                {task.title}
+                              </button>
                               <button
                                 type="button"
                                 className="cx-count-btn cx-count-btn--done"

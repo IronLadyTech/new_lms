@@ -10,8 +10,8 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
 } from 'recharts';
+import ChartFrame from '../ui/ChartFrame';
 import { Download } from 'lucide-react';
 import { ROLES, getRoleLabel } from '../../utils/roles';
 import { TICKET_STATUSES, statusLabel, categoryLabel } from '../../services/ticketService';
@@ -270,9 +270,9 @@ export default function AdminOverviewCharts({
           {roleData.length === 0 ? (
             <EmptyChart message="No users yet." />
           ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <PieChart>
-                <Pie data={roleData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={78} label>
+            <ChartFrame>{(w, h) => (
+              <PieChart width={w} height={h}>
+                <Pie data={roleData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={78} label isAnimationActive={false}>
                   {roleData.map((_, i) => (
                     <Cell key={roleData[i].name} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                   ))}
@@ -280,7 +280,7 @@ export default function AdminOverviewCharts({
                 <Tooltip contentStyle={tooltipStyle} />
                 <Legend />
               </PieChart>
-            </ResponsiveContainer>
+            )}</ChartFrame>
           )}
         </ChartCard>
 
@@ -288,9 +288,9 @@ export default function AdminOverviewCharts({
           {ticketData.length === 0 ? (
             <EmptyChart message="No tickets yet." />
           ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <PieChart>
-                <Pie data={ticketData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={78} label>
+            <ChartFrame>{(w, h) => (
+              <PieChart width={w} height={h}>
+                <Pie data={ticketData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={78} label isAnimationActive={false}>
                   {ticketData.map((_, i) => (
                     <Cell key={ticketData[i].name} fill={CHART_COLORS[(i + 2) % CHART_COLORS.length]} />
                   ))}
@@ -298,35 +298,35 @@ export default function AdminOverviewCharts({
                 <Tooltip contentStyle={tooltipStyle} />
                 <Legend />
               </PieChart>
-            </ResponsiveContainer>
+            )}</ChartFrame>
           )}
         </ChartCard>
 
         <ChartCard title="Activity (7 days)" subtitle="Daily user actions">
-          <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={activityData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+          <ChartFrame>{(w, h) => (
+            <BarChart width={w} height={h} data={activityData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
               <XAxis dataKey="day" tick={{ fill: tickFill, fontSize: 12 }} />
               <YAxis allowDecimals={false} tick={{ fill: tickFill, fontSize: 12 }} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="count" name="Actions" fill={CHART_COLORS[0]} radius={[6, 6, 0, 0]} />
+              <Bar dataKey="count" name="Actions" fill={CHART_COLORS[0]} radius={[6, 6, 0, 0]} isAnimationActive={false} />
             </BarChart>
-          </ResponsiveContainer>
+          )}</ChartFrame>
         </ChartCard>
 
         <ChartCard title="Enrollments by course" subtitle="Top courses">
           {enrollmentData.length === 0 ? (
             <EmptyChart message="No enrollments yet." />
           ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={enrollmentData} layout="vertical" margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
+            <ChartFrame>{(w, h) => (
+              <BarChart width={w} height={h} data={enrollmentData} layout="vertical" margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
                 <XAxis type="number" allowDecimals={false} tick={{ fill: tickFill, fontSize: 12 }} />
                 <YAxis type="category" dataKey="name" width={90} tick={{ fill: tickFill, fontSize: 11 }} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Bar dataKey="count" name="Learners" fill="#22c55e" radius={[0, 6, 6, 0]} />
+                <Bar dataKey="count" name="Learners" fill="#22c55e" radius={[0, 6, 6, 0]} isAnimationActive={false} />
               </BarChart>
-            </ResponsiveContainer>
+            )}</ChartFrame>
           )}
         </ChartCard>
 
@@ -334,9 +334,9 @@ export default function AdminOverviewCharts({
           {resourceTypeData.length === 0 ? (
             <EmptyChart message="No resources yet." />
           ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <PieChart>
-                <Pie data={resourceTypeData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={78} label>
+            <ChartFrame>{(w, h) => (
+              <PieChart width={w} height={h}>
+                <Pie data={resourceTypeData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={78} label isAnimationActive={false}>
                   {resourceTypeData.map((_, i) => (
                     <Cell key={resourceTypeData[i].name} fill={CHART_COLORS[(i + 4) % CHART_COLORS.length]} />
                   ))}
@@ -344,20 +344,20 @@ export default function AdminOverviewCharts({
                 <Tooltip contentStyle={tooltipStyle} />
                 <Legend />
               </PieChart>
-            </ResponsiveContainer>
+            )}</ChartFrame>
           )}
         </ChartCard>
 
         <ChartCard title="New signups (7 days)" subtitle="Daily registrations">
-          <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={signupData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+          <ChartFrame>{(w, h) => (
+            <BarChart width={w} height={h} data={signupData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
               <XAxis dataKey="day" tick={{ fill: tickFill, fontSize: 12 }} />
               <YAxis allowDecimals={false} tick={{ fill: tickFill, fontSize: 12 }} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="count" name="Signups" fill="#f59e0b" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="count" name="Signups" fill="#f59e0b" radius={[6, 6, 0, 0]} isAnimationActive={false} />
             </BarChart>
-          </ResponsiveContainer>
+          )}</ChartFrame>
         </ChartCard>
       </div>
     </div>
