@@ -51,8 +51,14 @@ export default function HomeBannerCarousel({ banners = HOME_BANNERS, autoMs = HO
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
+      onTouchStart={(e) => {
+        setPaused(true);
+        handleTouchStart(e);
+      }}
+      onTouchEnd={(e) => {
+        handleTouchEnd(e);
+        window.setTimeout(() => setPaused(false), 5000);
+      }}
     >
       <div className="home-banner-carousel__viewport">
         <div

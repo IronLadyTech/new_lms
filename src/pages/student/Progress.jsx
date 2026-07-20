@@ -423,7 +423,7 @@ export default function Progress() {
             as="section"
             actions={
               resourceFilterOptions.length > 1 ? (
-                <div className="progress-filter" role="tablist" aria-label="Filter resources by program">
+                <div className="progress-filter mobile-scroll-row" role="tablist" aria-label="Filter resources by program">
                   {resourceFilterOptions.map((option) => (
                     <button
                       key={option.id}

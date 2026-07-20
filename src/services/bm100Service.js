@@ -198,7 +198,7 @@ export async function saveSubmission(userId, taskId, payload, { batchId = 'defau
   return saveLocalSubmission(userId, taskId, { ...payload, batchId });
 }
 
-export async function uploadBm100File(userId, taskId, file, kind = 'file') {
+export async function uploadBm100File(userId, taskId, file, kind = 'file', options = {}) {
   if (!BM100_STORAGE_ENABLED) {
     return {
       url: null,
@@ -211,12 +211,17 @@ export async function uploadBm100File(userId, taskId, file, kind = 'file') {
   }
 
   try {
-    const { url, path, fileName } = await uploadFile(file, `bm100/${userId}/${taskId}/${kind}`, {
-      uploadedBy: userId,
-      source: 'bm100',
-      sourceId: `${userId}_${taskId}`,
-      sourceLabel: `100BM ${kind} — ${taskId}`,
-    });
+    const { url, path, fileName } = await uploadFile(
+      file,
+      `bm100/${userId}/${taskId}/${kind}`,
+      {
+        uploadedBy: userId,
+        source: 'bm100',
+        sourceId: `${userId}_${taskId}`,
+        sourceLabel: `100BM ${kind} — ${taskId}`,
+      },
+      options
+    );
     return { url, path, fileName };
   } catch (err) {
     console.warn('Storage upload failed', err);

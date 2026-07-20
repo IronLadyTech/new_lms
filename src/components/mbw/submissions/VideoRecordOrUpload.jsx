@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { MBW_STORAGE_ENABLED, uploadMbwFile } from '../../../services/mbwService';
+import { saveSubmissionBlob, submissionBlobKey } from '../../../utils/submissionBlobStore';
 import TaskTemplateDownloads from './TaskTemplateDownloads';
+
+const MAX_RECORDING_SECONDS = 300;
+const MAX_UPLOAD_BYTES = 200 * 1024 * 1024;
 
 function pickRecorderMime() {
   const candidates = [
@@ -18,6 +22,8 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
   const [previewUrl, setPreviewUrl] = useState(null);
   const [blob, setBlob] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(null);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [error, setError] = useState('');
   const [rerecord, setRerecord] = useState(false);
   const videoRef = useRef(null);
@@ -25,6 +31,8 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
   const recorderRef = useRef(null);
   const chunksRef = useRef([]);
   const previewUrlRef = useRef(null);
+  const recordTimerRef = useRef(null);
+  const uploadAbortRef = useRef(null);
 
   const cloudUrl = submission?.videoUrl || null;
   const skipped = Boolean(submission?.storageSkipped);
@@ -61,11 +69,36 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
       if (previewUrlRef.current?.startsWith('blob:')) {
         URL.revokeObjectURL(previewUrlRef.current);
       }
+      if (recordTimerRef.current) clearInterval(recordTimerRef.current);
+      uploadAbortRef.current?.abort();
     },
     []
   );
 
+  const clearRecordTimer = () => {
+    if (recordTimerRef.current) {
+      clearInterval(recordTimerRef.current);
+      recordTimerRef.current = null;
+    }
+    setRecordingSeconds(0);
+  };
+
+  const startRecordTimer = () => {
+    clearRecordTimer();
+    setRecordingSeconds(0);
+    recordTimerRef.current = setInterval(() => {
+      setRecordingSeconds((s) => {
+        if (s + 1 >= MAX_RECORDING_SECONDS) {
+          stopRecord();
+          setError(`Recording stopped at ${MAX_RECORDING_SECONDS / 60} minute limit. Save or retake.`);
+        }
+        return s + 1;
+      });
+    }, 1000);
+  };
+
   const stopCamera = () => {
+    clearRecordTimer();
     mediaRef.current?.getTracks().forEach((t) => t.stop());
     mediaRef.current = null;
     if (videoRef.current) {
@@ -130,6 +163,7 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
 
       recorder.start(250);
       setRecording(true);
+      startRecordTimer();
     } catch {
       setError('Camera access denied. Use Upload file instead.');
       setMode('upload');
@@ -161,7 +195,9 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
 
   const saveFinal = async (file) => {
     setUploading(true);
+    setUploadProgress(null);
     setError('');
+    uploadAbortRef.current = new AbortController();
     try {
       const sourceBlob = file || blob;
       if (!sourceBlob) {
@@ -169,9 +205,21 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
         return;
       }
 
+      if (sourceBlob.size > MAX_UPLOAD_BYTES) {
+        setError('File is too large. Please record a shorter clip or compress the video.');
+        return;
+      }
+
       if (file) {
         setPreviewFromBlob(file);
       }
+
+      const blobKind = (sourceBlob.type || '').startsWith('audio/') ? 'audio' : 'video';
+      await saveSubmissionBlob(submissionBlobKey('mbw', userId, task.id), sourceBlob, {
+        kind: blobKind,
+        fileName: file?.name || `recording-${Date.now()}.webm`,
+        fileType: sourceBlob.type || 'video/webm',
+      }).catch(() => {});
 
       if (!MBW_STORAGE_ENABLED) {
         await onSubmit({
@@ -190,7 +238,10 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
         new File([blob], `mirror-${Date.now()}.webm`, {
           type: blob.type || 'video/webm',
         });
-      const uploaded = await uploadMbwFile(userId, task.id, f, 'video');
+      const uploaded = await uploadMbwFile(userId, task.id, f, 'video', {
+        onProgress: setUploadProgress,
+        signal: uploadAbortRef.current.signal,
+      });
       await onSubmit({
         videoUrl: uploaded.url,
         fileName: uploaded.fileName,
@@ -206,9 +257,15 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
       }
       setRerecord(false);
     } catch (e) {
-      setError(e.message || 'Could not save submission');
+      if (e?.name === 'AbortError') {
+        setError('Upload cancelled.');
+      } else {
+        setError(e.message || 'Could not save submission');
+      }
     } finally {
       setUploading(false);
+      setUploadProgress(null);
+      uploadAbortRef.current = null;
     }
   };
 
@@ -304,7 +361,7 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
                     </button>
                   ) : (
                     <button type="button" className="btn btn-danger" onClick={stopRecord}>
-                      Stop
+                      Stop ({recordingSeconds}s / {MAX_RECORDING_SECONDS}s max)
                     </button>
                   )}
                 </>
@@ -338,6 +395,20 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
             </div>
           )}
         </>
+      )}
+
+      {uploading && uploadProgress != null && (
+        <div className="mbw-upload-progress" role="status" aria-live="polite">
+          <div className="mbw-upload-progress__bar" style={{ width: `${uploadProgress}%` }} />
+          <span className="mbw-upload-progress__label">Uploading… {uploadProgress}%</span>
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={() => uploadAbortRef.current?.abort()}
+          >
+            Cancel upload
+          </button>
+        </div>
       )}
 
       {error && (

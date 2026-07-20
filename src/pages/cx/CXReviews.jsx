@@ -208,7 +208,7 @@ export default function CXReviews() {
         </div>
         <div className="cx-panel__body">
           <div className="cx-reviews-toolbar">
-            <div className="cx-tab-bar cx-tab-bar--inline" role="tablist" aria-label="Queue filter">
+            <div className="cx-tab-bar cx-tab-bar--inline mobile-scroll-row" role="tablist" aria-label="Queue filter">
               {QUEUE_FILTERS.map((f) => (
                 <button
                   key={f.id}

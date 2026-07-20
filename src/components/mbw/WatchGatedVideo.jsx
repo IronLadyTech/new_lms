@@ -32,6 +32,8 @@ function NativeVideoPlayer({ videoUrl, videoRef, onTimeUpdate, onEnded }) {
       ref={videoRef}
       controls
       autoPlay
+      playsInline
+      muted
       onTimeUpdate={onTimeUpdate}
       onEnded={onEnded}
     />
@@ -75,6 +77,8 @@ function HlsVideoPlayer({ videoUrl, videoRef, onTimeUpdate, onEnded }) {
       ref={videoRef}
       controls
       autoPlay
+      playsInline
+      muted
       onTimeUpdate={onTimeUpdate}
       onEnded={onEnded}
     />

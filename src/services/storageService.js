@@ -3,7 +3,7 @@
  */
 
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
 
 function ext(name) {
@@ -62,16 +62,42 @@ export async function registerStorageObject({
   );
 }
 
-export async function uploadFile(file, folder, meta = {}) {
+export async function uploadFile(file, folder, meta = {}, options = {}) {
   if (!storage) throw new Error('Firebase Storage is not configured.');
   if (!file) throw new Error('No file selected.');
 
+  const { onProgress, signal } = options;
   const safeName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
   const path = `${folder}/${safeName}`;
   const fileRef = ref(storage, path);
 
-  await uploadBytes(fileRef, file);
-  const url = await getDownloadURL(fileRef);
+  const uploadTask = uploadBytesResumable(fileRef, file);
+
+  await new Promise((resolve, reject) => {
+    if (signal) {
+      const onAbort = () => {
+        uploadTask.cancel();
+        reject(new DOMException('Upload cancelled', 'AbortError'));
+      };
+      if (signal.aborted) {
+        onAbort();
+        return;
+      }
+      signal.addEventListener('abort', onAbort, { once: true });
+    }
+
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        if (!onProgress || !snapshot.totalBytes) return;
+        onProgress(Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100));
+      },
+      reject,
+      resolve
+    );
+  });
+
+  const url = await getDownloadURL(uploadTask.snapshot.ref);
 
   const result = { url, path, fileName: file.name, extension: ext(file.name) };
 

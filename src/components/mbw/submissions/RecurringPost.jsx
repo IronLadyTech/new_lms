@@ -3,6 +3,8 @@ import { currentWeekLabel } from '../../../services/mbwService';
 
 export default function RecurringPost({ task, submission, canSubmit, onAddPost }) {
   const [link, setLink] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
   const weekLabel = currentWeekLabel();
   const entries = submission?.weekEntries || [];
   const thisWeek = entries.find((e) => e.weekLabel === weekLabel);
@@ -44,14 +46,27 @@ export default function RecurringPost({ task, submission, canSubmit, onAddPost }
       <button
         type="button"
         className="btn btn-primary"
-        disabled={!canSubmit || !link.trim()}
+        disabled={!canSubmit || !link.trim() || saving}
         onClick={async () => {
-          await onAddPost(link.trim());
-          setLink('');
+          setSaving(true);
+          setError('');
+          try {
+            await onAddPost(link.trim());
+            setLink('');
+          } catch (e) {
+            setError(e.message || 'Could not save post link.');
+          } finally {
+            setSaving(false);
+          }
         }}
       >
-        Submit post link
+        {saving ? 'Saving…' : 'Submit post link'}
       </button>
+      {error && (
+        <p className="alert alert-error" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

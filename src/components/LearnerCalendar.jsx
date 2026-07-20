@@ -4,6 +4,7 @@ import EventImage from './EventImage';
 import EventPreviewCard from './EventPreviewCard';
 import EventDetailActions from './EventDetailActions';
 import { normalizeEventLink } from '../utils/eventLinks';
+import { CalendarDays, List } from 'lucide-react';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -48,11 +49,32 @@ function groupByDate(eventList) {
   }, {});
 }
 
+function useMobileDefaultAgenda() {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 640px)').matches : false
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)');
+    const onChange = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  return isMobile;
+}
+
 export default function LearnerCalendar({ events, initialDate = '', focusEventId = '' }) {
   const today = new Date();
   const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
   const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDate, setSelectedDate] = useState(todayStr);
+  const isMobile = useMobileDefaultAgenda();
+  const [viewMode, setViewMode] = useState('month');
+
+  useEffect(() => {
+    setViewMode(isMobile ? 'agenda' : 'month');
+  }, [isMobile]);
 
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
@@ -61,6 +83,15 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
   const eventsByDate = useMemo(() => groupByDate(monthEvents), [monthEvents]);
   const selectedEvents = useMemo(() => eventsForDate(events, selectedDate), [events, selectedDate]);
   const upcoming = useMemo(() => events.filter((e) => e.date >= todayStr).slice(0, 6), [events, todayStr]);
+
+  const agendaGroups = useMemo(() => {
+    const sorted = [...monthEvents].sort((a, b) => {
+      const dateCmp = a.date.localeCompare(b.date);
+      if (dateCmp !== 0) return dateCmp;
+      return (a.time || '').localeCompare(b.time || '');
+    });
+    return Object.entries(groupByDate(sorted));
+  }, [monthEvents]);
 
   const calendarDays = useMemo(() => {
     const firstDay = new Date(year, month, 1).getDay();
@@ -108,7 +139,7 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
         ))}
       </div>
 
-      {upcoming.length > 0 && (
+      {upcoming.length > 0 && viewMode === 'month' && (
         <section className="learner-calendar__upcoming">
           <h2>Upcoming events</h2>
           <ul className="learner-calendar__upcoming-list">
@@ -124,103 +155,152 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
 
       <div className="event-calendar__layout">
         <div className="event-calendar__grid-wrap">
-          <div className="event-calendar__nav">
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => setViewDate(new Date(year, month - 1, 1))}>
+          <div className="event-calendar__nav learner-calendar__nav">
+            <button type="button" className="btn btn-outline btn-sm" onClick={() => setViewDate(new Date(year, month - 1, 1))} aria-label="Previous month">
               ←
             </button>
             <div className="learner-calendar__month-head">
               <strong>{monthLabel}</strong>
               <span className="muted">{monthEvents.length} event{monthEvents.length === 1 ? '' : 's'} this month</span>
             </div>
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => setViewDate(new Date(year, month + 1, 1))}>
+            <button type="button" className="btn btn-outline btn-sm" onClick={() => setViewDate(new Date(year, month + 1, 1))} aria-label="Next month">
               →
             </button>
           </div>
 
-          <div className="event-calendar__weekdays">
-            {WEEKDAYS.map((d) => (
-              <span key={d}>{d}</span>
-            ))}
+          <div className="learner-calendar__view-toggle mobile-scroll-row" role="tablist" aria-label="Calendar view">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewMode === 'agenda'}
+              className={`learner-calendar__view-btn${viewMode === 'agenda' ? ' is-active' : ''}`}
+              onClick={() => setViewMode('agenda')}
+            >
+              <List size={16} aria-hidden />
+              Agenda
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewMode === 'month'}
+              className={`learner-calendar__view-btn${viewMode === 'month' ? ' is-active' : ''}`}
+              onClick={() => setViewMode('month')}
+            >
+              <CalendarDays size={16} aria-hidden />
+              Month
+            </button>
           </div>
 
-          <div className="event-calendar__grid event-calendar__grid--rich">
-            {calendarDays.map((day, i) => {
-              if (!day) {
-                return (
-                  <span
-                    key={`empty-${i}`}
-                    className="event-calendar__day event-calendar__day--rich event-calendar__day--empty"
-                    aria-hidden
-                  />
-                );
-              }
-
-              const ds = toDateStr(year, month, day);
-              const dayEvents = eventsByDate[ds] || [];
-              const isToday = ds === todayStr;
-              const isSelected = ds === selectedDate;
-
-              return (
-                <button
-                  key={ds}
-                  type="button"
-                  className={`event-calendar__day event-calendar__day--rich${dayEvents.length ? ' has-events' : ''}${isToday ? ' is-today' : ''}${isSelected ? ' is-selected' : ''}`}
-                  onClick={() => handleSelectDay(day)}
-                >
-                  <span className="event-calendar__day-num">{day}</span>
-                  {dayEvents.length > 0 && (
-                    <div className="event-calendar__day-events">
-                      {dayEvents.slice(0, 2).map((ev) => (
-                        <span
-                          key={ev.id}
-                          className={`event-calendar__chip event-calendar__chip--${ev.type || 'general'}`}
-                          title={`${ev.time ? `${ev.time} · ` : ''}${ev.title}`}
-                        >
-                          {ev.time && <span className="event-calendar__chip-time">{ev.time.slice(0, 5)}</span>}
-                          <span className="event-calendar__chip-title">{ev.title}</span>
-                        </span>
+          {viewMode === 'agenda' ? (
+            <div className="learner-calendar__agenda">
+              {agendaGroups.length === 0 ? (
+                <p className="muted learner-calendar__agenda-empty">No events scheduled this month.</p>
+              ) : (
+                agendaGroups.map(([dateStr, dayEvents]) => (
+                  <section key={dateStr} className="learner-calendar__agenda-day">
+                    <h3 className="learner-calendar__agenda-date">{formatDisplayDate(dateStr)}</h3>
+                    <ul className="learner-calendar__agenda-list">
+                      {dayEvents.map((ev) => (
+                        <li key={ev.id} id={`learner-event-${ev.id}`} className="learner-calendar__agenda-item">
+                          <EventPreviewCard event={ev} onClick={() => jumpToDate(ev.date)} />
+                          <EventDetailActions event={ev} compact />
+                        </li>
                       ))}
-                      {dayEvents.length > 2 && (
-                        <span className="event-calendar__chip event-calendar__chip--more">+{dayEvents.length - 2} more</span>
+                    </ul>
+                  </section>
+                ))
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="event-calendar__weekdays">
+                {WEEKDAYS.map((d) => (
+                  <span key={d}>{d}</span>
+                ))}
+              </div>
+
+              <div className="event-calendar__grid event-calendar__grid--rich">
+                {calendarDays.map((day, i) => {
+                  if (!day) {
+                    return (
+                      <span
+                        key={`empty-${i}`}
+                        className="event-calendar__day event-calendar__day--rich event-calendar__day--empty"
+                        aria-hidden
+                      />
+                    );
+                  }
+
+                  const ds = toDateStr(year, month, day);
+                  const dayEvents = eventsByDate[ds] || [];
+                  const isToday = ds === todayStr;
+                  const isSelected = ds === selectedDate;
+
+                  return (
+                    <button
+                      key={ds}
+                      type="button"
+                      className={`event-calendar__day event-calendar__day--rich${dayEvents.length ? ' has-events' : ''}${isToday ? ' is-today' : ''}${isSelected ? ' is-selected' : ''}`}
+                      onClick={() => handleSelectDay(day)}
+                    >
+                      <span className="event-calendar__day-num">{day}</span>
+                      {dayEvents.length > 0 && (
+                        <div className="event-calendar__day-events">
+                          {dayEvents.slice(0, 2).map((ev) => (
+                            <span
+                              key={ev.id}
+                              className={`event-calendar__chip event-calendar__chip--${ev.type || 'general'}`}
+                              title={`${ev.time ? `${ev.time} · ` : ''}${ev.title}`}
+                            >
+                              {ev.time && <span className="event-calendar__chip-time">{ev.time.slice(0, 5)}</span>}
+                              <span className="event-calendar__chip-title">{ev.title}</span>
+                            </span>
+                          ))}
+                          {dayEvents.length > 2 && (
+                            <span className="event-calendar__chip event-calendar__chip--more">+{dayEvents.length - 2} more</span>
+                          )}
+                        </div>
                       )}
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
 
-        <aside className="event-calendar__sidebar learner-calendar__sidebar">
-          <h3>{formatDisplayDate(selectedDate)}</h3>
-          {selectedEvents.length === 0 ? (
-            <p className="muted">No events on this day. Tap a highlighted date to see scheduled items.</p>
-          ) : (
-            <ul className="event-calendar__event-list">
-              {selectedEvents.map((ev) => (
-                <li
-                  key={ev.id}
-                  id={`learner-event-${ev.id}`}
-                  className={`event-calendar__event-card event-calendar__event-card--${ev.type || 'general'}${focusEventId === ev.id ? ' is-focused' : ''}`}
-                >
-                  <EventImage src={ev.imageUrl} alt={ev.title} />
-                  <div className="event-calendar__event-card-head">
-                    <strong>{ev.title}</strong>
-                    <span className={`badge badge-event badge-event--${ev.type || 'general'}`}>{formatEventType(ev.type)}</span>
-                  </div>
-                  {ev.time && <span className="event-calendar__event-time">{ev.time}</span>}
-                  {ev.description && <p className="muted">{ev.description}</p>}
-                  {ev.linkUrl && (
-                    <a href={normalizeEventLink(ev.linkUrl)} target="_blank" rel="noreferrer" className="link-inline">
-                      Open event link
-                    </a>
-                  )}
-                  <EventDetailActions event={ev} compact />
-                </li>
-              ))}
-            </ul>
-          )}
-        </aside>
+        {viewMode === 'month' && (
+          <aside className="event-calendar__sidebar learner-calendar__sidebar">
+            <h3>{formatDisplayDate(selectedDate)}</h3>
+            {selectedEvents.length === 0 ? (
+              <p className="muted">No events on this day. Tap a highlighted date to see scheduled items.</p>
+            ) : (
+              <ul className="event-calendar__event-list">
+                {selectedEvents.map((ev) => (
+                  <li
+                    key={ev.id}
+                    id={`learner-event-${ev.id}`}
+                    className={`event-calendar__event-card event-calendar__event-card--${ev.type || 'general'}${focusEventId === ev.id ? ' is-focused' : ''}`}
+                  >
+                    <EventImage src={ev.imageUrl} alt={ev.title} />
+                    <div className="event-calendar__event-card-head">
+                      <strong>{ev.title}</strong>
+                      <span className={`badge badge-event badge-event--${ev.type || 'general'}`}>{formatEventType(ev.type)}</span>
+                    </div>
+                    {ev.time && <span className="event-calendar__event-time">{ev.time}</span>}
+                    {ev.description && <p className="muted">{ev.description}</p>}
+                    {ev.linkUrl && (
+                      <a href={normalizeEventLink(ev.linkUrl)} target="_blank" rel="noreferrer" className="link-inline">
+                        Open event link
+                      </a>
+                    )}
+                    <EventDetailActions event={ev} compact />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </aside>
+        )}
       </div>
     </div>
   );

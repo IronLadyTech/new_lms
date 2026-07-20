@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { BM100_STORAGE_ENABLED, uploadBm100File } from '../../../services/bm100Service';
+import { saveSubmissionBlob, submissionBlobKey } from '../../../utils/submissionBlobStore';
 import BM100TaskTemplateDownloads from './BM100TaskTemplateDownloads';
+
+const MAX_RECORDING_SECONDS = 300;
+const MAX_UPLOAD_BYTES = 200 * 1024 * 1024;
 
 function pickRecorderMime() {
   const candidates = [
@@ -12,12 +16,14 @@ function pickRecorderMime() {
   return candidates.find((t) => MediaRecorder.isTypeSupported(t)) || '';
 }
 
-export default function BM100VideoRecordOrUpload({ task, submission, canSubmit, userId, onSubmit }) {
+export default function VideoRecordOrUpload({ task, submission, canSubmit, userId, onSubmit }) {
   const [mode, setMode] = useState('record');
   const [recording, setRecording] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [blob, setBlob] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(null);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [error, setError] = useState('');
   const [rerecord, setRerecord] = useState(false);
   const videoRef = useRef(null);
@@ -25,6 +31,8 @@ export default function BM100VideoRecordOrUpload({ task, submission, canSubmit, 
   const recorderRef = useRef(null);
   const chunksRef = useRef([]);
   const previewUrlRef = useRef(null);
+  const recordTimerRef = useRef(null);
+  const uploadAbortRef = useRef(null);
 
   const cloudUrl = submission?.videoUrl || null;
   const skipped = Boolean(submission?.storageSkipped);
@@ -61,11 +69,36 @@ export default function BM100VideoRecordOrUpload({ task, submission, canSubmit, 
       if (previewUrlRef.current?.startsWith('blob:')) {
         URL.revokeObjectURL(previewUrlRef.current);
       }
+      if (recordTimerRef.current) clearInterval(recordTimerRef.current);
+      uploadAbortRef.current?.abort();
     },
     []
   );
 
+  const clearRecordTimer = () => {
+    if (recordTimerRef.current) {
+      clearInterval(recordTimerRef.current);
+      recordTimerRef.current = null;
+    }
+    setRecordingSeconds(0);
+  };
+
+  const startRecordTimer = () => {
+    clearRecordTimer();
+    setRecordingSeconds(0);
+    recordTimerRef.current = setInterval(() => {
+      setRecordingSeconds((s) => {
+        if (s + 1 >= MAX_RECORDING_SECONDS) {
+          stopRecord();
+          setError(`Recording stopped at ${MAX_RECORDING_SECONDS / 60} minute limit. Save or retake.`);
+        }
+        return s + 1;
+      });
+    }, 1000);
+  };
+
   const stopCamera = () => {
+    clearRecordTimer();
     mediaRef.current?.getTracks().forEach((t) => t.stop());
     mediaRef.current = null;
     if (videoRef.current) {
@@ -130,6 +163,7 @@ export default function BM100VideoRecordOrUpload({ task, submission, canSubmit, 
 
       recorder.start(250);
       setRecording(true);
+      startRecordTimer();
     } catch {
       setError('Camera access denied. Use Upload file instead.');
       setMode('upload');
@@ -161,7 +195,9 @@ export default function BM100VideoRecordOrUpload({ task, submission, canSubmit, 
 
   const saveFinal = async (file) => {
     setUploading(true);
+    setUploadProgress(null);
     setError('');
+    uploadAbortRef.current = new AbortController();
     try {
       const sourceBlob = file || blob;
       if (!sourceBlob) {
@@ -169,9 +205,21 @@ export default function BM100VideoRecordOrUpload({ task, submission, canSubmit, 
         return;
       }
 
+      if (sourceBlob.size > MAX_UPLOAD_BYTES) {
+        setError('File is too large. Please record a shorter clip or compress the video.');
+        return;
+      }
+
       if (file) {
         setPreviewFromBlob(file);
       }
+
+      const blobKind = (sourceBlob.type || '').startsWith('audio/') ? 'audio' : 'video';
+      await saveSubmissionBlob(submissionBlobKey('100bm', userId, task.id), sourceBlob, {
+        kind: blobKind,
+        fileName: file?.name || `recording-${Date.now()}.webm`,
+        fileType: sourceBlob.type || 'video/webm',
+      }).catch(() => {});
 
       if (!BM100_STORAGE_ENABLED) {
         await onSubmit({
@@ -187,10 +235,13 @@ export default function BM100VideoRecordOrUpload({ task, submission, canSubmit, 
 
       const f =
         file ||
-        new File([blob], `bm100-${Date.now()}.webm`, {
+        new File([blob], `mirror-${Date.now()}.webm`, {
           type: blob.type || 'video/webm',
         });
-      const uploaded = await uploadBm100File(userId, task.id, f, task.uploadKind || 'video');
+      const uploaded = await uploadBm100File(userId, task.id, f, 'video', {
+        onProgress: setUploadProgress,
+        signal: uploadAbortRef.current.signal,
+      });
       await onSubmit({
         videoUrl: uploaded.url,
         fileName: uploaded.fileName,
@@ -206,9 +257,15 @@ export default function BM100VideoRecordOrUpload({ task, submission, canSubmit, 
       }
       setRerecord(false);
     } catch (e) {
-      setError(e.message || 'Could not save submission');
+      if (e?.name === 'AbortError') {
+        setError('Upload cancelled.');
+      } else {
+        setError(e.message || 'Could not save submission');
+      }
     } finally {
       setUploading(false);
+      setUploadProgress(null);
+      uploadAbortRef.current = null;
     }
   };
 
@@ -304,7 +361,7 @@ export default function BM100VideoRecordOrUpload({ task, submission, canSubmit, 
                     </button>
                   ) : (
                     <button type="button" className="btn btn-danger" onClick={stopRecord}>
-                      Stop
+                      Stop ({recordingSeconds}s / {MAX_RECORDING_SECONDS}s max)
                     </button>
                   )}
                 </>
@@ -328,7 +385,7 @@ export default function BM100VideoRecordOrUpload({ task, submission, canSubmit, 
             <div className="mbw-video-record__panel">
               <input
                 type="file"
-                accept={task.accept || 'video/*,audio/*'}
+                accept="video/*"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   if (f) saveFinal(f);
@@ -338,6 +395,20 @@ export default function BM100VideoRecordOrUpload({ task, submission, canSubmit, 
             </div>
           )}
         </>
+      )}
+
+      {uploading && uploadProgress != null && (
+        <div className="mbw-upload-progress" role="status" aria-live="polite">
+          <div className="mbw-upload-progress__bar" style={{ width: `${uploadProgress}%` }} />
+          <span className="mbw-upload-progress__label">Uploading… {uploadProgress}%</span>
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={() => uploadAbortRef.current?.abort()}
+          >
+            Cancel upload
+          </button>
+        </div>
       )}
 
       {error && (

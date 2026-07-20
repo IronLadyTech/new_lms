@@ -42,6 +42,11 @@ export function submissionPreview(sub, task) {
   if (!sub) return null;
   if (sub._local) return 'Saved on this device — sync pending';
   if (sub.textValue?.trim()) return sub.textValue.trim().slice(0, 120);
+  if (sub.weekEntries?.length) {
+    const latest = sub.weekEntries[sub.weekEntries.length - 1];
+    const count = (latest?.links || []).length || (latest?.linkValue ? 1 : 0);
+    return `${latest?.weekLabel || 'This week'} — ${count} post${count === 1 ? '' : 's'}`;
+  }
   if (sub.linkValue?.trim()) return sub.linkValue.trim();
   if (sub.fileName?.trim() && !sub.storageSkipped) return sub.fileName.trim();
   if (sub.storageSkipped) {
@@ -51,7 +56,6 @@ export function submissionPreview(sub, task) {
   }
   if (sub.videoUrl) return 'Video submitted';
   if (sub.templateData?.rows?.length) return `ERRC grid (${sub.templateData.rows.length} rows)`;
-  if (sub.weekEntries?.length) return `${sub.weekEntries.length} week(s) of posts`;
   if (sub.checkedItems?.length) {
     const total = task?.checklistItems?.length;
     return total ? `${sub.checkedItems.length}/${total} practices done` : `${sub.checkedItems.length} practice(s) done`;

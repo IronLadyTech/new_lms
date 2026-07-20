@@ -53,9 +53,14 @@ export default function BM100LessonView({
 
           <div className="mbw-lesson-nav__actions">
             {showPrevCta ? (
-              <button type="button" className="btn btn-outline mbw-lesson-nav__prev" onClick={onPrevious}>
+              <button
+                type="button"
+                className="btn btn-outline mbw-lesson-nav__prev"
+                onClick={onPrevious}
+                aria-label="Previous lesson"
+              >
                 <ChevronLeft size={18} aria-hidden />
-                <span>Previous</span>
+                <span className="mbw-lesson-nav__prev-label">Previous</span>
               </button>
             ) : null}
 
@@ -64,6 +69,7 @@ export default function BM100LessonView({
                 type="button"
                 className="btn btn-primary mbw-lesson-nav__next"
                 onClick={onNext}
+                aria-label={taskComplete ? 'Next lesson' : 'Continue lesson'}
               >
                 <span className="mbw-lesson-nav__next-label">
                   {taskComplete ? 'Next lesson' : 'Continue'}

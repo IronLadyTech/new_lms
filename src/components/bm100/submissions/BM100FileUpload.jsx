@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { BM100_STORAGE_ENABLED, uploadBm100File } from '../../../services/bm100Service';
+import { saveSubmissionBlob, submissionBlobKey } from '../../../utils/submissionBlobStore';
 import BM100TaskTemplateDownloads from './BM100TaskTemplateDownloads';
 
-export default function BM100FileUpload({ task, submission, canSubmit, userId, onSubmit }) {
+export default function FileUpload({ task, submission, canSubmit, userId, onSubmit }) {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(null);
   const [error, setError] = useState('');
+  const uploadAbortRef = useRef(null);
 
   const skipped = submission?.storageSkipped;
   const saved = submission?.fileUrl || (submission?.fileName && !skipped);
@@ -16,31 +19,59 @@ export default function BM100FileUpload({ task, submission, canSubmit, userId, o
   const handleUpload = async () => {
     if (!file) return;
     setUploading(true);
+    setUploadProgress(null);
     setError('');
+    uploadAbortRef.current = new AbortController();
     try {
       if (!BM100_STORAGE_ENABLED) {
+        await saveSubmissionBlob(submissionBlobKey('100bm', userId, task.id), file, {
+          kind: 'file',
+          fileName: file.name,
+          fileType: file.type,
+        }).catch(() => {});
         await onSubmit({
           fileName: file.name,
           localFallback: true,
           fileSize: file.size,
           fileType: file.type,
+          hasLocalRecording: true,
+          storageSkipped: true,
         });
         setFile(null);
         return;
       }
 
-      const uploaded = await uploadBm100File(userId, task.id, file, uploadKind);
+      const uploaded = await uploadBm100File(userId, task.id, file, uploadKind, {
+        onProgress: setUploadProgress,
+        signal: uploadAbortRef.current.signal,
+      });
+      if (!uploaded.url) {
+        await saveSubmissionBlob(submissionBlobKey('100bm', userId, task.id), file, {
+          kind: 'file',
+          fileName: file.name,
+          fileType: file.type,
+        }).catch(() => {});
+      }
       await onSubmit({
         fileUrl: uploaded.url,
         fileName: uploaded.fileName,
         filePath: uploaded.path,
         localFallback: uploaded.localFallback || false,
+        storageSkipped: !uploaded.url,
+        hasLocalRecording: !uploaded.url,
+        fileType: file.type,
       });
       setFile(null);
     } catch (e) {
-      setError(e.message || 'Upload failed');
+      if (e?.name === 'AbortError') {
+        setError('Upload cancelled.');
+      } else {
+        setError(e.message || 'Upload failed');
+      }
     } finally {
       setUploading(false);
+      setUploadProgress(null);
+      uploadAbortRef.current = null;
     }
   };
 
@@ -50,7 +81,7 @@ export default function BM100FileUpload({ task, submission, canSubmit, userId, o
     try {
       await onSubmit({
         storageSkipped: true,
-        fileName: task.uploadSkipLabel ? 'Upload skipped' : 'File upload skipped',
+        fileName: task.uploadSkipLabel ? 'Upload skipped' : 'Resume upload skipped',
       });
     } catch (e) {
       setError(e.message || 'Could not save');
@@ -92,6 +123,19 @@ export default function BM100FileUpload({ task, submission, canSubmit, userId, o
         </p>
       )}
       {error && <p className="alert alert-error">{error}</p>}
+      {uploading && uploadProgress != null && (
+        <div className="mbw-upload-progress" role="status" aria-live="polite">
+          <div className="mbw-upload-progress__bar" style={{ width: `${uploadProgress}%` }} />
+          <span className="mbw-upload-progress__label">Uploading… {uploadProgress}%</span>
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={() => uploadAbortRef.current?.abort()}
+          >
+            Cancel upload
+          </button>
+        </div>
+      )}
       <div className="mbw-submission__actions">
         <button
           type="button"

@@ -16,6 +16,7 @@ import { BM100_PROGRAM_SECTIONS } from '../../data/bm100ProgramStructure';
 import { getBm100TaskTemplates } from '../../data/bm100TaskTemplates';
 import BM100TaskTemplateDownloads from './submissions/BM100TaskTemplateDownloads';
 import LearnerReviewFeedback from '../submissions/LearnerReviewFeedback';
+import LearnerSubmissionPreview from '../submissions/LearnerSubmissionPreview';
 
 function getSectionTitle(phase) {
   return BM100_PROGRAM_SECTIONS.find((s) => s.id === phase)?.title ?? '100BM';
@@ -43,6 +44,12 @@ export default function BM100TaskContent({
   const showExtraTemplates =
     task.type !== TASK_TYPES.FILE_UPLOAD && getBm100TaskTemplates(task.id, task).length > 0;
   const primary = getPrimaryStatus(status, isComplete);
+  const showSubmittedPreview =
+    Boolean(submission) &&
+    isComplete &&
+    !canSubmit &&
+    task.type !== TASK_TYPES.EDITABLE_TEMPLATE &&
+    task.type !== TASK_TYPES.WATCH_ONLY;
 
   const handleSubmit = async (fields) => {
     const result = await onSubmit(fields);
@@ -164,6 +171,15 @@ export default function BM100TaskContent({
             <p className="mbw-task__hint">Watch at least 90% of the video to unlock the form below.</p>
           )}
 
+          {showSubmittedPreview ? (
+            <LearnerSubmissionPreview
+              submission={submission}
+              task={task}
+              userId={userId}
+              program="100bm"
+            />
+          ) : (
+            <>
           {task.type === TASK_TYPES.WATCH_ONLY && (
             <WatchOnly task={task} submission={submission} />
           )}
@@ -173,6 +189,7 @@ export default function BM100TaskContent({
               task={task}
               submission={submission}
               canSubmit={canSubmit}
+              readOnly={!canSubmit && Boolean(submission?.textValue)}
               onSubmit={handleSubmit}
             />
           )}
@@ -227,6 +244,8 @@ export default function BM100TaskContent({
               canSubmit={canSubmit}
               onSubmit={handleSubmit}
             />
+          )}
+            </>
           )}
 
           <LearnerReviewFeedback submission={submission} />

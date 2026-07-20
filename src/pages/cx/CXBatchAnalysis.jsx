@@ -352,7 +352,59 @@ export default function CXBatchAnalysis() {
         {members.length === 0 ? (
           <p className="muted">No learners in this batch yet.</p>
         ) : (
-          <div className="cx-learner-table-wrap">
+          <>
+            <ul className="cx-learner-cards" aria-label="Learners">
+              {perLearner.map(({ learner, done }) => {
+                const att = attendance[learner.id];
+                const attPct = att?.total > 0 ? Math.round((att.present / att.total) * 100) : null;
+                return (
+                  <li key={learner.id} className="cx-learner-card">
+                    <div className="cx-learner-card__head">
+                      <span className="cx-learner-name">{learner.displayName || learner.email}</span>
+                      <span className="cx-learner-sub muted">{learner.phone || learner.email}</span>
+                    </div>
+                    <div className="cx-learner-card__meta-row muted">
+                      <span>Last active: {timeAgo(learner.lastActivityAt)}</span>
+                      {adapter.hasTasks && (
+                        <span>
+                          Tasks:{' '}
+                          <span
+                            className={
+                              done === tasks.length && tasks.length > 0
+                                ? 'cx-badge cx-badge--done'
+                                : undefined
+                            }
+                          >
+                            {done}/{tasks.length}
+                          </span>
+                        </span>
+                      )}
+                      {attendanceStats && (
+                        <span>
+                          Attendance:{' '}
+                          {attPct != null ? (
+                            <span
+                              className={
+                                attPct < 60
+                                  ? 'cx-badge cx-badge--danger'
+                                  : attPct >= 80
+                                  ? 'cx-badge cx-badge--done'
+                                  : undefined
+                              }
+                            >
+                              {attPct}%
+                            </span>
+                          ) : (
+                            '—'
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="cx-learner-table-wrap cx-learner-table-wrap--desktop">
             <table className="cx-learner-table">
               <thead>
                 <tr>
@@ -412,7 +464,8 @@ export default function CXBatchAnalysis() {
                 })}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
         {!adapter.hasTasks && members.length > 0 && (
           <p className="muted" style={{ marginTop: '0.75rem' }}>

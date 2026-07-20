@@ -2,12 +2,13 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { isAdminRole, isModeratorOnly } from '../utils/roles';
-import BottomNav from './BottomNav';
+import { Shield } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import ThemeToggle from './ThemeToggle';
 import HeaderStreak from './HeaderStreak';
 import BlockedPanel from './BlockedPanel';
 import SkipLink from './ui/SkipLink';
+import BottomNav from './BottomNav';
 
 export default function StudentLayout() {
   const { role, isGuest, isBlocked, refreshProfile } = useAuth();
@@ -68,8 +69,12 @@ export default function StudentLayout() {
             <Link
               to={isModeratorOnly(role) ? '/cx/home' : '/portal'}
               className="app-header__link app-header__link--admin"
+              aria-label={isModeratorOnly(role) ? 'CX portal' : 'Admin portal'}
             >
-              {isModeratorOnly(role) ? 'CX' : 'Admin'}
+              <Shield size={18} strokeWidth={2} className="app-header__admin-icon" aria-hidden />
+              <span className="app-header__admin-label">
+                {isModeratorOnly(role) ? 'CX' : 'Admin'}
+              </span>
             </Link>
           )}
         </div>

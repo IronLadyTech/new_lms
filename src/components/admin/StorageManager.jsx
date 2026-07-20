@@ -424,7 +424,7 @@ export default function StorageManager({ users = [] }) {
             {objects.length === 0 ? (
               <p className="muted">No files match filters. Run a bucket scan if the registry is empty.</p>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
+              <div className="table-scroll-wrap">
                 <table className="admin-table" style={{ width: '100%', fontSize: '0.875rem' }}>
                   <thead>
                     <tr>

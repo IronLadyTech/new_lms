@@ -329,7 +329,7 @@ export default function CXDashboards() {
       <CxProgramEnrollmentBar enabled={canSwitchProgram} />
 
       {adapter.hasTasks && (
-        <div className="cx-tab-bar" role="tablist" aria-label="Analytics views">
+        <div className="cx-tab-bar mobile-scroll-row" role="tablist" aria-label="Analytics views">
           {TABS.map((tab) => (
             <button
               key={tab.id}

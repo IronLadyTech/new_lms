@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import {
   Bell,
@@ -18,8 +19,17 @@ import { getUserSubmissions as getBm100Submissions, getStaticTasks as getBm100Ta
 import { PROGRAMS } from '../data/programTypes';
 import { getReviewOutcomeMeta } from '../utils/submissionReview';
 import { calendarEventUrl } from './EventPreviewCard';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 const DISMISSED_KEY = 'ilms_dismissed_notifications';
+
+const KIND_LABELS = {
+  review: 'Review',
+  event: 'Event',
+  ticket: 'Support',
+  assigned: 'Support',
+  announcement: 'News',
+};
 
 function getDismissed() {
   try {
@@ -31,6 +41,22 @@ function getDismissed() {
 
 function setDismissed(ids) {
   localStorage.setItem(DISMISSED_KEY, JSON.stringify(ids));
+}
+
+function useSwipeDismiss(onDismiss) {
+  const startX = useRef(null);
+
+  return {
+    onTouchStart: (event) => {
+      startX.current = event.touches[0]?.clientX ?? null;
+    },
+    onTouchEnd: (event) => {
+      if (startX.current == null) return;
+      const endX = event.changedTouches[0]?.clientX ?? startX.current;
+      if (startX.current - endX > 72) onDismiss();
+      startX.current = null;
+    },
+  };
 }
 
 function reviewedAtKey(ts) {
@@ -134,6 +160,44 @@ function buildReviewItems(submissionsMap, tasks, program) {
     .sort((a, b) => reviewedAtKey(b.reviewedAt).localeCompare(reviewedAtKey(a.reviewedAt)));
 }
 
+function NotificationListItem({ notification, onDismiss, onNavigate }) {
+  const swipe = useSwipeDismiss(onDismiss);
+
+  return (
+    <li
+      className={`notification-bell__item notification-bell__item--${notification.kind}`}
+      {...swipe}
+    >
+      <Link to={notification.link} className="notification-bell__link" onClick={onNavigate}>
+        <span className="notification-bell__item-icon">
+          {notification.kind === 'event' && <CalendarDays size={18} />}
+          {notification.kind === 'assigned' && <UserCheck size={18} />}
+          {notification.kind === 'ticket' && <MessageCircle size={18} />}
+          {notification.kind === 'announcement' && <Megaphone size={18} />}
+          {notification.kind === 'review' && <ClipboardCheck size={18} />}
+        </span>
+        <span className="notification-bell__item-copy">
+          <span className="notification-bell__item-top">
+            <span className="notification-bell__kind">{KIND_LABELS[notification.kind] || 'Update'}</span>
+            <strong>{notification.title}</strong>
+          </span>
+          {notification.body ? (
+            <span className="notification-bell__body-text muted">{notification.body}</span>
+          ) : null}
+        </span>
+      </Link>
+      <button
+        type="button"
+        className="notification-bell__dismiss"
+        onClick={onDismiss}
+        aria-label={`Dismiss ${notification.title}`}
+      >
+        <X size={16} />
+      </button>
+    </li>
+  );
+}
+
 export default function NotificationBell() {
   const { user, profile, isGuest } = useAuth();
   const [open, setOpen] = useState(false);
@@ -142,6 +206,10 @@ export default function NotificationBell() {
   const [announcements, setAnnouncements] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [dismissed, setDismissedState] = useState(getDismissed);
+  const panelRef = useRef(null);
+  const closeNotifications = () => setOpen(false);
+
+  useFocusTrap(open, panelRef, { onEscape: closeNotifications });
 
   useEffect(() => {
     if (!user || isGuest) return undefined;
@@ -188,6 +256,17 @@ export default function NotificationBell() {
   const visible = notifications.filter((n) => !dismissed.includes(n.id));
   const count = visible.length;
 
+  useEffect(() => {
+    if (!open) return undefined;
+    const prevOverflow = document.body.style.overflow;
+    document.body.classList.add('notification-sheet-open');
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.classList.remove('notification-sheet-open');
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [open]);
+
   const dismissOne = (id) => {
     const next = [...new Set([...dismissed, id])];
     setDismissedState(next);
@@ -202,6 +281,69 @@ export default function NotificationBell() {
 
   if (isGuest || !user) return null;
 
+  const overlay = open
+    ? createPortal(
+        <div className="notification-bell__overlay-root">
+          <button
+            type="button"
+            className="notification-bell__backdrop"
+            onClick={closeNotifications}
+            aria-label="Close notifications"
+          />
+          <div
+            className="notification-bell__panel"
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Notifications"
+          >
+            <div className="notification-bell__sheet-handle" aria-hidden />
+            <div className="notification-bell__head">
+              <div className="notification-bell__head-text">
+                <strong>Notifications</strong>
+                {count > 0 && (
+                  <span className="notification-bell__head-count muted">{count} new</span>
+                )}
+              </div>
+              <div className="notification-bell__head-actions">
+                {count > 0 && (
+                  <button type="button" className="btn btn-sm btn-outline" onClick={dismissAll}>
+                    Clear all
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="notification-bell__close"
+                  onClick={closeNotifications}
+                  aria-label="Close notifications"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            <div className="notification-bell__body">
+              <ul className="notification-bell__list">
+                {visible.length === 0 ? (
+                  <li className="notification-bell__empty muted">No new notifications.</li>
+                ) : (
+                  visible.map((n) => (
+                    <NotificationListItem
+                      key={n.id}
+                      notification={n}
+                      onDismiss={() => dismissOne(n.id)}
+                      onNavigate={() => setOpen(false)}
+                    />
+                  ))
+                )}
+              </ul>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )
+    : null;
+
   return (
     <div className={`notification-bell${open ? ' is-open' : ''}`}>
       <button
@@ -209,58 +351,12 @@ export default function NotificationBell() {
         className="notification-bell__trigger"
         onClick={() => setOpen((v) => !v)}
         aria-label={`Notifications${count ? `, ${count} new` : ''}`}
+        aria-expanded={open}
       >
         <Bell size={18} strokeWidth={2} />
         {count > 0 && <span className="notification-bell__badge">{count > 9 ? '9+' : count}</span>}
       </button>
-
-      {open && (
-        <>
-          <button type="button" className="notification-bell__backdrop" onClick={() => setOpen(false)} aria-label="Close notifications" />
-          <div className="notification-bell__panel">
-            <div className="notification-bell__head">
-              <strong>Notifications</strong>
-              <div className="notification-bell__head-actions">
-                {count > 0 && (
-                  <button type="button" className="btn btn-sm btn-outline" onClick={dismissAll}>
-                    Clear all
-                  </button>
-                )}
-                <button type="button" className="notification-bell__close" onClick={() => setOpen(false)}>
-                  <X size={16} />
-                </button>
-              </div>
-            </div>
-
-            <ul className="notification-bell__list">
-              {visible.length === 0 ? (
-                <li className="notification-bell__empty muted">No new notifications.</li>
-              ) : (
-                visible.map((n) => (
-                  <li key={n.id} className={`notification-bell__item notification-bell__item--${n.kind}`}>
-                    <Link to={n.link} className="notification-bell__link" onClick={() => setOpen(false)}>
-                      <span className="notification-bell__item-icon">
-                        {n.kind === 'event' && <CalendarDays size={16} />}
-                        {n.kind === 'assigned' && <UserCheck size={16} />}
-                        {n.kind === 'ticket' && <MessageCircle size={16} />}
-                        {n.kind === 'announcement' && <Megaphone size={16} />}
-                        {n.kind === 'review' && <ClipboardCheck size={16} />}
-                      </span>
-                      <span>
-                        <strong>{n.title}</strong>
-                        <span className="muted">{n.body}</span>
-                      </span>
-                    </Link>
-                    <button type="button" className="notification-bell__dismiss" onClick={() => dismissOne(n.id)} aria-label="Dismiss">
-                      <X size={14} />
-                    </button>
-                  </li>
-                ))
-              )}
-            </ul>
-          </div>
-        </>
-      )}
+      {overlay}
     </div>
   );
 }

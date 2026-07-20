@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Share2 } from 'lucide-react';
 import { buildHeatmapWeeks } from '../../services/streakAnalyticsService';
 import { formatDisplayDate, getTodayKey } from '../../utils/streakTimezone';
@@ -13,6 +13,14 @@ export default function SubmissionHeatmap({ dailyCounts = [], loading }) {
     () => buildHeatmapWeeks(dailyCounts, 52),
     [dailyCounts]
   );
+
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !weeks.length) return;
+    el.scrollLeft = el.scrollWidth;
+  }, [weeks.length, dailyCounts.length]);
 
   const handleShare = async () => {
     const text = `My submission streak on LMS — ${dailyCounts.reduce((s, d) => s + d.count, 0)} correct submissions!`;
@@ -59,7 +67,12 @@ export default function SubmissionHeatmap({ dailyCounts = [], loading }) {
         </p>
       ) : (
         <div className="streak-heatmap__body">
-          <div className="streak-heatmap__scroll" role="img" aria-label="Submission activity heatmap">
+          <div
+            className="streak-heatmap__scroll"
+            ref={scrollRef}
+            role="img"
+            aria-label="Submission activity heatmap"
+          >
             <div className="streak-heatmap__chart">
               <div className="streak-heatmap__months" aria-hidden>
                 {weeks.map((_, wi) => {

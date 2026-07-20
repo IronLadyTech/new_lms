@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 export default function ConfirmDialog({
   open,
@@ -11,6 +12,10 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
 }) {
+  const panelRef = useRef(null);
+
+  useFocusTrap(open, panelRef, { onEscape: onCancel });
+
   useEffect(() => {
     if (!open) return undefined;
 
@@ -32,7 +37,7 @@ export default function ConfirmDialog({
   return createPortal(
     <div className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
       <button type="button" className="confirm-dialog__backdrop" aria-label="Close" onClick={onCancel} />
-      <div className="confirm-dialog__panel">
+      <div className="confirm-dialog__panel" ref={panelRef}>
         <h3 id="confirm-dialog-title" className="confirm-dialog__title">
           {title}
         </h3>

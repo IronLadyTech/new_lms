@@ -6,3 +6,5 @@ functions/.env
 functions/.env.local
 *.log
 .DS_Store
+test-results
+playwright-report

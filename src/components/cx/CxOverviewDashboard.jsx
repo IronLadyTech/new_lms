@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   BarChart,
   Bar,
@@ -60,6 +60,20 @@ const ASSIGN_COLORS = {
   assigned: '#F52929',
   unassigned: '#9ca3af',
 };
+
+function useMobileChartHeight(defaultHeight = 260, mobileHeight = 220) {
+  const [height, setHeight] = useState(defaultHeight);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)');
+    const update = () => setHeight(mq.matches ? mobileHeight : defaultHeight);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, [defaultHeight, mobileHeight]);
+
+  return height;
+}
 
 function useChartTheme() {
   const { theme } = useTheme();
@@ -123,6 +137,11 @@ export default function CxOverviewDashboard({
   onDrill,
 }) {
   const { tooltipStyle, gridStroke, tickFill } = useChartTheme();
+  const chartHeight = useMobileChartHeight();
+  const compactChart = chartHeight <= 220;
+  const journeyChartHeight = compactChart
+    ? Math.min(420, Math.max(chartHeight, batchStatus.length * 36 + 24))
+    : chartHeight;
 
   const batchStatusTotal = batchStatus.reduce((n, b) => n + (b.total || 0), 0);
   const paymentTotal = paymentByMonth.reduce(
@@ -225,21 +244,53 @@ export default function CxOverviewDashboard({
         {batchStatus.length === 0 ? (
           <EmptyChart message="Add learners to batches to see journey breakdown." />
         ) : (
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={batchStatus} margin={{ top: 12, right: 8, left: 0, bottom: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
-              <XAxis
-                dataKey="name"
-                tick={{ fill: tickFill, fontSize: 11 }}
-                tickFormatter={(v) => truncateLabel(v, 12)}
-                interval={0}
-                angle={batchStatus.length > 2 ? -18 : 0}
-                textAnchor={batchStatus.length > 2 ? 'end' : 'middle'}
-                height={batchStatus.length > 2 ? 56 : 32}
+          <ResponsiveContainer width="100%" height={journeyChartHeight}>
+            <BarChart
+              data={batchStatus}
+              layout={compactChart ? 'vertical' : 'horizontal'}
+              margin={
+                compactChart
+                  ? { top: 8, right: 16, left: 4, bottom: 4 }
+                  : { top: 12, right: 8, left: 0, bottom: 4 }
+              }
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke={gridStroke}
+                vertical={!compactChart}
+                horizontal={compactChart}
               />
-              <YAxis allowDecimals={false} tick={{ fill: tickFill, fontSize: 11 }} width={32} />
+              {compactChart ? (
+                <>
+                  <XAxis
+                    type="number"
+                    allowDecimals={false}
+                    tick={{ fill: tickFill, fontSize: 11 }}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={80}
+                    tick={{ fill: tickFill, fontSize: 11 }}
+                    tickFormatter={(v) => truncateLabel(v, 10)}
+                  />
+                </>
+              ) : (
+                <>
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fill: tickFill, fontSize: 11 }}
+                    tickFormatter={(v) => truncateLabel(v, 12)}
+                    interval={0}
+                    angle={batchStatus.length > 2 ? -18 : 0}
+                    textAnchor={batchStatus.length > 2 ? 'end' : 'middle'}
+                    height={batchStatus.length > 2 ? 56 : 32}
+                  />
+                  <YAxis allowDecimals={false} tick={{ fill: tickFill, fontSize: 11 }} width={32} />
+                </>
+              )}
               <Tooltip contentStyle={tooltipStyle} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              {!compactChart && <Legend wrapperStyle={{ fontSize: 11 }} />}
               {JOURNEY_ORDER.map((key) => (
                 <Bar
                   key={key}
@@ -271,7 +322,7 @@ export default function CxOverviewDashboard({
         {paymentByMonth.length === 0 ? (
           <EmptyChart message="Payment breakdown appears when learners are enrolled." />
         ) : (
-          <ResponsiveContainer width="100%" height={260}>
+          <ResponsiveContainer width="100%" height={chartHeight}>
             <BarChart data={paymentByMonth} margin={{ top: 12, right: 8, left: 0, bottom: 4 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
               <XAxis dataKey="label" tick={{ fill: tickFill, fontSize: 11 }} />
@@ -337,7 +388,7 @@ export default function CxOverviewDashboard({
         {activeTotal === 0 ? (
           <EmptyChart message="No participants enrolled yet." />
         ) : (
-          <ResponsiveContainer width="100%" height={260}>
+          <ResponsiveContainer width="100%" height={chartHeight}>
             <BarChart data={activeStatus} margin={{ top: 12, right: 8, left: 0, bottom: 4 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
               <XAxis dataKey="name" tick={{ fill: tickFill, fontSize: 11 }} />
@@ -401,7 +452,7 @@ export default function CxOverviewDashboard({
           {taskStatusTotal === 0 ? (
             <EmptyChart message="No tasks started yet." />
           ) : (
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height={chartHeight}>
               <PieChart>
                 <Pie
                   data={taskStatusData}
@@ -463,7 +514,7 @@ export default function CxOverviewDashboard({
           {!enrollmentAssignment || enrollmentAssignment.total === 0 ? (
             <EmptyChart message="No participants enrolled yet." />
           ) : (
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height={chartHeight}>
               <BarChart
                 data={[enrollmentAssignment]}
                 margin={{ top: 12, right: 8, left: 0, bottom: 4 }}

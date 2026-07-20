@@ -14,6 +14,7 @@ import { getModuleLabel, getWeekCode, getPrimaryStatus } from '../../utils/mbwDi
 import { getTaskDurationHint } from '../../utils/mbwProgramUtils';
 import { MBW_PROGRAM_SECTIONS } from '../../data/mbwProgramStructure';
 import LearnerReviewFeedback from '../submissions/LearnerReviewFeedback';
+import LearnerSubmissionPreview from '../submissions/LearnerSubmissionPreview';
 
 function getSectionTitle(phase) {
   return MBW_PROGRAM_SECTIONS.find((s) => s.id === phase)?.title ?? 'MBW';
@@ -38,6 +39,12 @@ export default function TaskContent({
   const locked = status === SUBMISSION_STATUS.LOCKED;
   const showVideo = task.requiresWatch || task.type === TASK_TYPES.WATCH_ONLY;
   const primary = getPrimaryStatus(status, isComplete);
+  const showSubmittedPreview =
+    Boolean(submission) &&
+    isComplete &&
+    !canSubmit &&
+    task.type !== TASK_TYPES.EDITABLE_TEMPLATE &&
+    task.type !== TASK_TYPES.WATCH_ONLY;
 
   const handleSubmit = async (fields) => {
     const result = await onSubmit(fields);
@@ -123,6 +130,15 @@ export default function TaskContent({
             <p className="mbw-task__hint">Watch at least 90% of the video to unlock the form below.</p>
           )}
 
+          {showSubmittedPreview ? (
+            <LearnerSubmissionPreview
+              submission={submission}
+              task={task}
+              userId={userId}
+              program="mbw"
+            />
+          ) : (
+            <>
           {task.type === TASK_TYPES.WATCH_ONLY && (
             <WatchOnly task={task} submission={submission} />
           )}
@@ -132,6 +148,7 @@ export default function TaskContent({
               task={task}
               submission={submission}
               canSubmit={canSubmit}
+              readOnly={!canSubmit && Boolean(submission?.textValue)}
               onSubmit={handleSubmit}
             />
           )}
@@ -186,6 +203,8 @@ export default function TaskContent({
               canSubmit={canSubmit}
               onSubmit={handleSubmit}
             />
+          )}
+            </>
           )}
 
           <LearnerReviewFeedback submission={submission} />

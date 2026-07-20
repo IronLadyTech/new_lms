@@ -28,10 +28,12 @@ export default function SubmissionReviewView({ submission, task }) {
     submission.audioUrl ||
     (submission.fileType?.startsWith('audio/') ? submission.fileUrl : null);
   const submittedLabel = formatSubmissionDate(submission.submittedAt);
+  const hasWeekEntries = (submission.weekEntries?.length ?? 0) > 0;
+  const isRecurringPost = task?.type === 'recurring_post' || hasWeekEntries;
 
   return (
     <div className="cx-review-submission">
-      {preview && !submission.textValue && (
+      {preview && !submission.textValue && !isRecurringPost && (
         <p className="muted cx-review-submission__preview">{preview}</p>
       )}
 
@@ -42,7 +44,7 @@ export default function SubmissionReviewView({ submission, task }) {
         </div>
       )}
 
-      {submission.linkValue && (
+      {submission.linkValue && !isRecurringPost && (
         <div className="cx-review-block">
           <h3 className="cx-review-block__title">Link</h3>
           <a href={submission.linkValue} target="_blank" rel="noreferrer">
