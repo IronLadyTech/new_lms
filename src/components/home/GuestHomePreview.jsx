@@ -5,15 +5,9 @@ import { getCourseProgramMeta } from '../../utils/courseDisplay';
 
 /**
  * Guest preview of Iron Lady programs — STATIC data from COMPANY_CONTEXT
- * (no Firestore read, no fake numbers). Replaces the bare locked panel so
- * guests see what they'd get and are invited to sign in.
+ * (no Firestore read, no fake numbers). Journey order: LEP → 100BM → MBW.
  */
 const GUEST_PROGRAMS = [
-  {
-    code: 'MBW',
-    name: 'Master of Business Warfare',
-    desc: 'Advanced C-suite track — quarterly in-person weekends plus monthly online sessions.',
-  },
   {
     code: 'LEP',
     name: 'Leadership Essentials Program',
@@ -24,6 +18,11 @@ const GUEST_PROGRAMS = [
     name: '100 Board Members Program',
     desc: 'Mid–senior acceleration — online cohort with weekly Q&A.',
   },
+  {
+    code: 'MBW',
+    name: 'Master of Business Warfare',
+    desc: 'Advanced C-suite track — quarterly in-person weekends plus monthly online sessions.',
+  },
 ];
 
 export default function GuestHomePreview() {
@@ -31,7 +30,10 @@ export default function GuestHomePreview() {
     <div className="guest-preview">
       <div className="guest-preview__note">
         <Lock size={16} aria-hidden="true" />
-        <span>You&apos;re browsing as a guest. Sign in to enroll and track your progress.</span>
+        <span>
+          You&apos;re browsing as a guest. Journey order: LEP → 100BM → MBW. Sign in to open your
+          enrolled track.
+        </span>
         <Link to="/auth/login" className="btn btn-primary btn-sm">
           Sign in
         </Link>
@@ -42,16 +44,15 @@ export default function GuestHomePreview() {
           const meta = getCourseProgramMeta(p.code);
           const codeKey = p.code.toLowerCase();
           return (
-            <article key={p.code} className={`course-card course-card--rich course-card--${codeKey}`}>
+            <article
+              key={p.code}
+              className={`course-card course-card--rich course-card--stacked course-card--brand-cover course-card--${codeKey}`}
+            >
               <div className="course-card__media">
                 <CourseThumbnail course={{ code: p.code, title: p.name }} size="card" />
-                <span className={`course-card__code course-card__code--${codeKey}`}>{p.code}</span>
               </div>
 
               <div className="course-card__body">
-                <div className="course-card__tags">
-                  <span className={`course-card__tag course-card__tag--${codeKey}`}>{meta.tag}</span>
-                </div>
                 <h3 className="course-card__title">{p.name}</h3>
                 <p className="course-card__desc">{p.desc}</p>
 
@@ -68,7 +69,7 @@ export default function GuestHomePreview() {
 
                 <div className="course-card__actions">
                   <Link to="/auth/login" className="btn btn-primary btn-sm">
-                    Sign in to enroll
+                    Sign in to continue
                   </Link>
                 </div>
               </div>

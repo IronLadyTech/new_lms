@@ -1,19 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getCourses } from '../services/courseService';
-import { normalizeCourseCode } from '../utils/programTaskRoutes';
+import { canAccessProgram } from '../utils/programAccess';
+import { PROGRAMS } from '../data/programTypes';
 
+/** True when the learner is enrolled in 100BM specifically. */
 export default function useBm100Enrollment() {
   const { profile, isGuest } = useAuth();
   const [enrolled, setEnrolled] = useState(null);
+  const [courses, setCourses] = useState([]);
 
   useEffect(() => {
     if (isGuest) {
       setEnrolled(false);
-      return undefined;
-    }
-    if (!profile?.enrolledCourses?.length) {
-      setEnrolled(false);
+      setCourses([]);
       return undefined;
     }
 
@@ -21,10 +21,9 @@ export default function useBm100Enrollment() {
     (async () => {
       try {
         const list = await getCourses();
-        const bm100 = list.find((c) => normalizeCourseCode(c.code) === '100BM');
-        if (!cancelled) {
-          setEnrolled(!!bm100 && profile.enrolledCourses.includes(bm100.id));
-        }
+        if (cancelled) return;
+        setCourses(list);
+        setEnrolled(canAccessProgram(PROGRAMS.BM100, profile, list));
       } catch {
         if (!cancelled) setEnrolled(false);
       }
@@ -35,5 +34,5 @@ export default function useBm100Enrollment() {
     };
   }, [profile, isGuest]);
 
-  return { enrolled, isEnrolled: enrolled === true };
+  return { enrolled, isEnrolled: enrolled === true, courses };
 }

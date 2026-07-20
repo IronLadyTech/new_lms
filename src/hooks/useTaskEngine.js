@@ -9,16 +9,25 @@ import {
   SUBMISSION_STATUS,
   TASK_TYPES,
   currentWeekLabel,
-  taskNeedsReview,
 } from '../services/mbwService';
+import { canLearnerResubmit, submissionUnlocksNext, clearReviewFieldsForResubmit } from '../utils/submissionReview';
 
 export const WATCH_THRESHOLD = 0.9;
 
-function isTaskComplete(status, reviewRequired) {
-  if (status === SUBMISSION_STATUS.COMPLETED) return true;
-  if (!taskNeedsReview({ reviewRequired }) && status === SUBMISSION_STATUS.SUBMITTED) return true;
-  if (!taskNeedsReview({ reviewRequired }) && status === SUBMISSION_STATUS.UNDER_REVIEW) return true;
-  return false;
+function learnerCanSubmit(status, watched, isWatchOnly) {
+  if (status === SUBMISSION_STATUS.LOCKED || isWatchOnly || !watched) return false;
+  if (status === SUBMISSION_STATUS.COMPLETED) return false;
+  if (status === SUBMISSION_STATUS.SUBMITTED || status === SUBMISSION_STATUS.UNDER_REVIEW) return false;
+  return canLearnerResubmit(status) || status === SUBMISSION_STATUS.UNLOCKED;
+}
+
+/** Fully done for learner UI — submitted counts as complete unless CX requests revision. */
+function isTaskComplete(status) {
+  return (
+    status === SUBMISSION_STATUS.COMPLETED
+    || status === SUBMISSION_STATUS.SUBMITTED
+    || status === SUBMISSION_STATUS.UNDER_REVIEW
+  );
 }
 
 function parseUnlockDate(unlockDate) {
@@ -47,7 +56,7 @@ function computeTaskStates(tasks, submissions, watchProgress) {
     const prevComplete =
       index === 0 ||
       (prevTask &&
-        (prevTask.optional || isTaskComplete(prevSub?.status, prevTask.reviewRequired)));
+        (prevTask.optional || submissionUnlocksNext(prevSub?.status)));
 
     const dateOk = isDateUnlocked(task.unlockDate);
 
@@ -71,8 +80,8 @@ function computeTaskStates(tasks, submissions, watchProgress) {
       status,
       watched,
       watchPercent: watchProgress[task.id] ?? sub?.watchProgress ?? 0,
-      canSubmit: status !== SUBMISSION_STATUS.LOCKED && watched && !isWatchOnly,
-      isComplete: isTaskComplete(status, task.reviewRequired),
+      canSubmit: learnerCanSubmit(status, watched, isWatchOnly),
+      isComplete: isTaskComplete(status),
       prevTaskId: prevTask?.id || null,
     };
   });
@@ -132,7 +141,10 @@ export function useTaskEngine(userId) {
   const completedCount = taskStates.filter((t) => t.isComplete).length;
 
   const nextTaskState = useMemo(
-    () => taskStates.find((t) => !t.isComplete && t.status !== SUBMISSION_STATUS.LOCKED),
+    () =>
+      taskStates.find(
+        (t) => !submissionUnlocksNext(t.status) && t.status !== SUBMISSION_STATUS.LOCKED
+      ),
     [taskStates]
   );
 
@@ -170,11 +182,10 @@ export function useTaskEngine(userId) {
         type: task.type,
         status:
           task.type === TASK_TYPES.WATCH_ONLY
-            ? SUBMISSION_STATUS.COMPLETED
+            ? SUBMISSION_STATUS.SUBMITTED
             : submissions[taskId]?.status || SUBMISSION_STATUS.UNLOCKED,
         watchCompleted: true,
         watchProgress: 1,
-        completedAt: task.type === TASK_TYPES.WATCH_ONLY ? new Date().toISOString() : null,
       };
 
       if (task.type === TASK_TYPES.WATCH_ONLY) {
@@ -186,7 +197,7 @@ export function useTaskEngine(userId) {
 
       if (task.type === TASK_TYPES.WATCH_ONLY) {
         return {
-          message: 'Orientation complete!',
+          message: 'Submitted!',
           reviewRequired: false,
           taskId,
         };
@@ -196,81 +207,77 @@ export function useTaskEngine(userId) {
     [tasks, submissions, userId, batchId]
   );
 
+  const finalizeSubmitPayload = (payload, prevSubmission) => ({
+    ...payload,
+    ...clearReviewFieldsForResubmit(prevSubmission),
+  });
+
   const submitTask = useCallback(
     async (taskId, fields) => {
       const task = tasks.find((t) => t.id === taskId);
       if (!task) return null;
 
-      const payload = {
+      const prevSubmission = submissions[taskId];
+      let payload = {
         type: task.type,
         status: SUBMISSION_STATUS.SUBMITTED,
         submittedAt: new Date().toISOString(),
         ...fields,
       };
 
-      if (taskNeedsReview(task)) {
-        payload.status = SUBMISSION_STATUS.UNDER_REVIEW;
-      } else if (task.type === TASK_TYPES.CHECKLIST) {
+      if (task.type === TASK_TYPES.CHECKLIST) {
         const total = task.checklistItems?.length || 0;
         const ticked = Array.isArray(fields.checkedItems) ? fields.checkedItems.length : 0;
         if (total > 0 && ticked >= total) {
-          payload.status = SUBMISSION_STATUS.COMPLETED;
-          payload.completedAt = new Date().toISOString();
+          payload.status = SUBMISSION_STATUS.SUBMITTED;
         } else {
           payload.status = SUBMISSION_STATUS.UNLOCKED;
         }
-      } else {
-        payload.status = SUBMISSION_STATUS.COMPLETED;
-        payload.completedAt = new Date().toISOString();
       }
+
+      payload = finalizeSubmitPayload(payload, prevSubmission);
 
       const saved = await saveSubmission(userId, taskId, payload, { batchId });
       setSubmissions((prev) => ({ ...prev, [taskId]: { ...prev[taskId], ...saved, ...payload } }));
 
-      const needsReview = taskNeedsReview(task);
-      if (task.type === TASK_TYPES.CHECKLIST && payload.status !== SUBMISSION_STATUS.COMPLETED) {
+      if (
+        task.type === TASK_TYPES.CHECKLIST
+        && payload.status !== SUBMISSION_STATUS.SUBMITTED
+      ) {
         return null;
       }
       return {
-        message: needsReview
-          ? 'Submitted — your instructor will review it soon.'
-          : 'Saved successfully!',
-        reviewRequired: needsReview,
-        taskId,
-      };
-    },
-    [tasks, userId, batchId]
-  );
-
-  const saveTemplate = useCallback(
-    async (taskId, templateData) => {
-      const task = tasks.find((t) => t.id === taskId);
-      const payload = {
-        type: TASK_TYPES.EDITABLE_TEMPLATE,
-        templateData,
-        status: submissions[taskId]?.status || SUBMISSION_STATUS.UNLOCKED,
-      };
-
-      if (!taskNeedsReview(task)) {
-        payload.status = SUBMISSION_STATUS.COMPLETED;
-        payload.completedAt = new Date().toISOString();
-        payload.submittedAt = new Date().toISOString();
-      } else {
-        payload.status = SUBMISSION_STATUS.UNDER_REVIEW;
-        payload.submittedAt = new Date().toISOString();
-      }
-
-      const saved = await saveSubmission(userId, taskId, payload, { batchId });
-      setSubmissions((prev) => ({ ...prev, [taskId]: { ...prev[taskId], ...saved, ...payload } }));
-
-      const needsReview = taskNeedsReview(task);
-      return {
-        message: needsReview ? 'ERRC grid submitted for review.' : 'ERRC grid saved!',
-        reviewRequired: needsReview,
+        message: 'Submitted!',
+        reviewRequired: false,
         taskId,
       };
     },
     [tasks, submissions, userId, batchId]
+  );
+
+  const saveTemplate = useCallback(
+    async (taskId, templateData) => {
+      const prevSubmission = submissions[taskId];
+      const payload = finalizeSubmitPayload(
+        {
+          type: TASK_TYPES.EDITABLE_TEMPLATE,
+          templateData,
+          status: SUBMISSION_STATUS.SUBMITTED,
+          submittedAt: new Date().toISOString(),
+        },
+        prevSubmission
+      );
+
+      const saved = await saveSubmission(userId, taskId, payload, { batchId });
+      setSubmissions((prev) => ({ ...prev, [taskId]: { ...prev[taskId], ...saved, ...payload } }));
+
+      return {
+        message: 'Submitted!',
+        reviewRequired: false,
+        taskId,
+      };
+    },
+    [submissions, userId, batchId]
   );
 
   const addRecurringPost = useCallback(
@@ -291,20 +298,22 @@ export function useTaskEngine(userId) {
       const postsNeeded = task?.postsPerWeek || 1;
       const met = links.length >= postsNeeded;
 
-      const payload = {
-        type: TASK_TYPES.RECURRING_POST,
-        weekEntries: updatedEntries,
-        linkValue: mergedEntry.linkValue,
-        status: met ? SUBMISSION_STATUS.COMPLETED : SUBMISSION_STATUS.SUBMITTED,
-        submittedAt: new Date().toISOString(),
-        completedAt: met ? new Date().toISOString() : null,
-      };
+      const payload = finalizeSubmitPayload(
+        {
+          type: TASK_TYPES.RECURRING_POST,
+          weekEntries: updatedEntries,
+          linkValue: mergedEntry.linkValue,
+          status: met ? SUBMISSION_STATUS.SUBMITTED : SUBMISSION_STATUS.UNLOCKED,
+          submittedAt: new Date().toISOString(),
+        },
+        submissions[taskId]
+      );
 
       const saved = await saveSubmission(userId, taskId, payload, { batchId });
       setSubmissions((prev) => ({ ...prev, [taskId]: { ...prev[taskId], ...saved, ...payload } }));
 
       return {
-        message: met ? 'Weekly post goal met — great work!' : 'Post link saved for this week.',
+        message: met ? 'Weekly post goal met — submitted!' : 'Post link saved for this week.',
         reviewRequired: false,
         taskId,
       };

@@ -1,25 +1,43 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, Check, X } from 'lucide-react';
+import {
+  Bell,
+  Check,
+  X,
+  Users,
+  ClipboardCheck,
+  RefreshCw,
+  TrendingUp,
+  Layers,
+  ChevronRight,
+  Inbox,
+  Sparkles,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useProgramAdapter } from '../../hooks/useProgramAdapter';
 import { useCxData } from '../../hooks/useCxData';
+import { isLearnerActionRequired, getSubmissionReviewDisplay } from '../../utils/submissionReview';
 import { SUBMISSION_STATUS } from '../../services/mbwService';
 import { sendTaskReminder, sendSessionReminder } from '../../services/notificationService';
-import TaskTrackingBoard from '../../components/cx/TaskTrackingBoard';
-import CxDashboardHero from '../../components/cx/CxDashboardHero';
-import CxQuickStats from '../../components/cx/CxQuickStats';
+import { countCompletedCells } from '../../utils/cxMetrics';
+import CxKpiStrip from '../../components/cx/CxKpiStrip';
+import DashboardSkeleton from '../../components/ui/DashboardSkeleton';
+import EmptyState from '../../components/ui/EmptyState';
 
 function timeAgo(ts) {
   const ms = ts?.seconds ? ts.seconds * 1000 : ts?.toMillis?.() || null;
   if (!ms) return '';
   const days = Math.floor((Date.now() - ms) / 86400000);
-  if (days <= 0) return 'today';
-  if (days === 1) return '1d ago';
-  return `${days}d ago`;
+  if (days <= 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  return `${days} days ago`;
 }
 
-// ── Session reminder modal ────────────────────────────────────
+function learnerInitial(name, email) {
+  const source = (name || email || '?').trim();
+  return source.charAt(0).toUpperCase();
+}
+
 function SessionReminderModal({ batch, onClose }) {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -42,9 +60,10 @@ function SessionReminderModal({ batch, onClose }) {
       <div className="cx-modal" onClick={(e) => e.stopPropagation()}>
         <div className="cx-modal__header">
           <div>
-            <h3 className="cx-modal__title">Session reminder</h3>
+            <h3 className="cx-modal__title">Send session reminder</h3>
             <p className="cx-modal__sub muted">
-              {batch.name} · {(batch.memberIds || []).length} learner{(batch.memberIds || []).length !== 1 ? 's' : ''}
+              {batch.name} · {(batch.memberIds || []).length} learner
+              {(batch.memberIds || []).length !== 1 ? 's' : ''}
             </p>
           </div>
           <button type="button" className="cx-modal__close" onClick={onClose} aria-label="Close">
@@ -55,16 +74,19 @@ function SessionReminderModal({ batch, onClose }) {
         <div className="cx-modal__body">
           {result ? (
             result.error ? (
-              <div className="cx-modal-result cx-modal-result--error">
-                <span className="cx-modal-result__icon" aria-hidden><X size={18} /></span>
+              <div className="cx-modal-result cx-modal-result--error" role="alert">
+                <span className="cx-modal-result__icon" aria-hidden>
+                  <X size={18} />
+                </span>
                 <span>{result.error}</span>
               </div>
             ) : (
-              <div className="cx-modal-result cx-modal-result--success">
-                <span className="cx-modal-result__icon" aria-hidden><Check size={18} /></span>
+              <div className="cx-modal-result cx-modal-result--success" role="status">
+                <span className="cx-modal-result__icon" aria-hidden>
+                  <Check size={18} />
+                </span>
                 <span>
                   Sent to <strong>{result.sent}</strong> learner{result.sent !== 1 ? 's' : ''}
-                  {result.skipped > 0 ? ` · ${result.skipped} without notifications enabled` : ''}
                 </span>
               </div>
             )
@@ -73,26 +95,19 @@ function SessionReminderModal({ batch, onClose }) {
               <textarea
                 className="cx-review-feedback"
                 rows={3}
-                placeholder={`Session reminder for ${batch.name}. Check your LMS for the latest updates.`}
+                placeholder={`Reminder for ${batch.name}. Check the LMS for updates.`}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 autoFocus
               />
-              <p className="muted" style={{ fontSize: '0.8rem', margin: 0 }}>
-                Leave blank to use the default message.
-              </p>
+              <p className="muted cx-modal__hint">Optional — leave blank for the default message.</p>
             </>
           )}
         </div>
 
         <div className="cx-modal__footer">
           {!result && (
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={sending}
-              onClick={handleSend}
-            >
+            <button type="button" className="btn btn-primary" disabled={sending} onClick={handleSend}>
               {sending ? 'Sending…' : 'Send reminder'}
             </button>
           )}
@@ -108,29 +123,66 @@ function SessionReminderModal({ batch, onClose }) {
 export default function CXHome() {
   const { profile } = useAuth();
   const { program, adapter } = useProgramAdapter();
-  const { batches, users, students, tasks, submissions, loading, error, refresh } = useCxData(program, adapter);
+  const { batches, students, activeTasks, submissions, loading, error, refresh } = useCxData(
+    program,
+    adapter
+  );
   const navigate = useNavigate();
 
-  const [remindingId, setRemindingId] = useState(null); // userId_taskId being reminded
-  const [remindResult, setRemindResult] = useState({}); // { [userId_taskId]: 'sent'|'error'|'no_token' }
-  const [sessionBatch, setSessionBatch] = useState(null); // batch open in modal
+  const [remindingId, setRemindingId] = useState(null);
+  const [remindResult, setRemindResult] = useState({});
+  const [sessionBatch, setSessionBatch] = useState(null);
 
-  const pendingReviews = useMemo(() => {
+  const attentionItems = useMemo(() => {
+    if (!adapter.hasTasks) return [];
+
     const userById = new Map(students.map((s) => [s.id, s]));
-    const taskById = new Map(tasks.map((t) => [t.id, t]));
+    const taskById = new Map(activeTasks.map((t) => [t.id, t]));
+
     return submissions
-      .filter(
-        (s) =>
-          s.status === SUBMISSION_STATUS.SUBMITTED || s.status === SUBMISSION_STATUS.UNDER_REVIEW
-      )
-      .map((s) => ({
-        ...s,
-        learner: userById.get(s.userId),
-        task: taskById.get(s.taskId),
-      }))
-      .filter((s) => s.learner && s.task)
-      .sort((a, b) => (a.submittedAt?.seconds || 0) - (b.submittedAt?.seconds || 0));
-  }, [submissions, students, tasks]);
+      .filter((s) => {
+        if (isLearnerActionRequired(s.status)) return true;
+        return [SUBMISSION_STATUS.SUBMITTED, SUBMISSION_STATUS.UNDER_REVIEW].includes(s.status);
+      })
+      .map((s) => {
+        const needsResubmit = isLearnerActionRequired(s.status);
+        const display = getSubmissionReviewDisplay(s);
+        return {
+          ...s,
+          learner: userById.get(s.userId),
+          task: taskById.get(s.taskId) || {
+            id: s.taskId,
+            title: s.taskTitle || s.title || s.taskId || 'Submitted task',
+          },
+          needsResubmit,
+          statusLabel: needsResubmit ? 'Waiting for resubmit' : 'Ready to review',
+          statusTone: needsResubmit ? display.tone : 'review',
+        };
+      })
+      .filter((s) => s.learner)
+      .sort((a, b) => {
+        const priority = Number(b.needsResubmit) - Number(a.needsResubmit);
+        if (priority) return priority;
+        const aMs =
+          a.submittedAt?.toMillis?.() ||
+          (a.submittedAt?.seconds || 0) * 1000 ||
+          Date.parse(a.submittedAt || '') ||
+          0;
+        const bMs =
+          b.submittedAt?.toMillis?.() ||
+          (b.submittedAt?.seconds || 0) * 1000 ||
+          Date.parse(b.submittedAt || '') ||
+          0;
+        return aMs - bMs;
+      })
+      .slice(0, 8);
+  }, [submissions, students, activeTasks, adapter.hasTasks]);
+
+  const completionRate = useMemo(() => {
+    const completed = countCompletedCells(students, activeTasks, submissions);
+    const possible = students.length * activeTasks.length;
+    return possible ? Math.round((completed / possible) * 100) : 0;
+  }, [students, activeTasks, submissions]);
 
   const openReview = (userId, taskId) => navigate(`/cx/review/${userId}/${taskId}`);
 
@@ -151,151 +203,218 @@ export default function CXHome() {
     if (remindingId === key) return 'Sending…';
     const r = remindResult[key];
     if (r === 'sent') return 'Sent';
-    if (r === 'no_token') return 'No token';
+    if (r === 'no_token') return 'No alert set up';
     if (r === 'error') return 'Failed';
     return 'Remind';
   };
 
-  const learnerCount = useMemo(
-    () => students.length,
-    [students]
-  );
+  const firstName = profile?.displayName?.split(' ')[0];
 
-  const cxStats = [
-    { id: 'batches', label: 'Batches', value: batches.length },
-    { id: 'reviews', label: 'Pending reviews', value: pendingReviews.length },
-    { id: 'learners', label: 'Learners', value: learnerCount },
-    { id: 'tasks', label: 'Tasks', value: tasks.length },
+  const kpiItems = [
+    {
+      id: 'participants',
+      label: 'Participants',
+      value: students.length,
+      icon: Users,
+    },
+    ...(adapter.hasTasks
+      ? [
+          {
+            id: 'attention',
+            label: 'Needs attention',
+            value: attentionItems.length,
+            icon: ClipboardCheck,
+            tone: attentionItems.length > 0 ? 'warning' : undefined,
+          },
+          {
+            id: 'progress',
+            label: 'Tasks completed',
+            value: `${completionRate}%`,
+            icon: TrendingUp,
+          },
+        ]
+      : [
+          {
+            id: 'batches',
+            label: 'Batches',
+            value: batches.length,
+            icon: Layers,
+          },
+        ]),
   ];
 
   return (
-    <div className="page cx-page dashboard-page">
-      <CxDashboardHero
-        firstName={profile?.displayName?.split(' ')[0]}
-        program={program}
-        adapter={adapter}
-      />
-      <CxQuickStats stats={cxStats} />
+    <div className="page cx-page cx-home-page">
+      <header className="cx-home-hero">
+        <div className="cx-home-hero__text">
+          <p className="cx-home-hero__eyebrow">{adapter.shortLabel} program</p>
+          <h1 className="cx-home-hero__title">{firstName ? `Hi, ${firstName}` : 'Home'}</h1>
+          <p className="cx-home-hero__subtitle">
+            See what needs your attention, then open a batch to manage learners.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="btn btn-outline btn-sm cx-home-hero__refresh"
+          onClick={refresh}
+          disabled={loading}
+        >
+          <RefreshCw size={14} aria-hidden />
+          Refresh
+        </button>
+      </header>
 
-      {error && <p className="cx-error">{error}</p>}
+      <CxKpiStrip items={kpiItems} loading={loading} />
 
-      {sessionBatch && (
-        <SessionReminderModal batch={sessionBatch} onClose={() => setSessionBatch(null)} />
+      {error && (
+        <p className="cx-error" role="alert">
+          {error}
+        </p>
       )}
 
-      <section className="cx-section">
-        <div className="cx-section__head">
-          <h2>Batches</h2>
-          <button type="button" className="btn btn-outline btn-sm" onClick={refresh}>
-            Refresh
-          </button>
-        </div>
-        {loading ? (
-          <p className="muted">Loading…</p>
-        ) : batches.length === 0 ? (
-          <p className="muted">
-            No {adapter.shortLabel} batches yet. Create one from the{' '}
-            <Link to="/cx/batches">Batch</Link> tab.
-          </p>
-        ) : (
-          <div className="cx-batch-cards">
-            {batches.map((b) => (
-              <div key={b.id} className="cx-batch-card-wrap">
-                <Link to={`/cx/batches/${b.id}`} className="cx-batch-card">
-                  <strong>{b.name}</strong>
-                  <span className="cx-batch-card__count">{(b.memberIds || []).length}</span>
-                  <span className="muted">learners</span>
-                </Link>
-                <button
-                  type="button"
-                  className="btn btn-outline btn-sm cx-batch-remind-btn"
-                  title="Send session reminder to all learners in this batch"
-                  onClick={() => setSessionBatch(b)}
-                >
-                  <Bell size={14} aria-hidden />
-                  Session reminder
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+      {sessionBatch && <SessionReminderModal batch={sessionBatch} onClose={() => setSessionBatch(null)} />}
 
-      {adapter.hasTasks ? (
-        <>
-          <section className="cx-section">
-            <div className="cx-section__head">
-              <h2>Module-wise tracking</h2>
+      <div className="cx-home-grid">
+        {adapter.hasTasks && (
+          <section className="cx-panel cx-home-panel cx-home-panel--primary" aria-labelledby="cx-attention-heading">
+            <div className="cx-panel__head">
+              <h2 id="cx-attention-heading" className="cx-panel__title">
+                Needs your attention
+                {attentionItems.length > 0 && (
+                  <span className="cx-panel__count">{attentionItems.length}</span>
+                )}
+              </h2>
             </div>
-            {loading ? (
-              <p className="muted">Loading…</p>
-            ) : (
-              <TaskTrackingBoard
-                students={students}
-                batches={batches}
-                tasks={tasks}
-                submissions={submissions}
-                onOpenSubmission={openReview}
-              />
-            )}
-          </section>
-
-          <section className="cx-section">
-            <div className="cx-section__head">
-              <h2>Pending reviews</h2>
-              {pendingReviews.length > 0 && (
-                <span className="cx-count-badge">{pendingReviews.length}</span>
+            <div className="cx-panel__body">
+              {loading ? (
+                <DashboardSkeleton rows={3} />
+              ) : attentionItems.length === 0 ? (
+                <EmptyState
+                  icon={Sparkles}
+                  title="You're all caught up"
+                  message="New submissions and resubmits will show up here. Use Reviews in the menu to browse everything."
+                  className="cx-home-empty-state"
+                />
+              ) : (
+                <ul className="cx-attention-cards">
+                  {attentionItems.map((s) => {
+                    const key = `${s.userId}_${s.taskId}`;
+                    const alreadySent = remindResult[key] === 'sent';
+                    const displayName = s.learner.displayName || s.learner.email;
+                    return (
+                      <li key={s.id || key} className="cx-attention-card">
+                        <div className="cx-attention-card__avatar" aria-hidden="true">
+                          {learnerInitial(displayName, s.learner.email)}
+                        </div>
+                        <div className="cx-attention-card__body">
+                          <div className="cx-attention-card__top">
+                            <span className="cx-attention-card__who">{displayName}</span>
+                            <span
+                              className={`cx-attention-card__status mbw-status-pill mbw-status-pill--${s.statusTone}`}
+                            >
+                              {s.statusLabel}
+                            </span>
+                          </div>
+                          <p className="cx-attention-card__task">{s.task.title}</p>
+                          <p className="cx-attention-card__meta muted">
+                            {timeAgo(s.submittedAt || s.updatedAt)}
+                          </p>
+                        </div>
+                        <div className="cx-attention-card__actions">
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm"
+                            onClick={() => openReview(s.userId, s.taskId)}
+                          >
+                            Review
+                          </button>
+                          {s.needsResubmit && (
+                            <button
+                              type="button"
+                              className={`btn btn-outline btn-sm${remindResult[key] === 'sent' ? ' cx-remind-btn--sent' : ''}`}
+                              disabled={remindingId === key || alreadySent}
+                              onClick={() => handleTaskRemind(s.userId, s.taskId)}
+                            >
+                              {remindLabel(key)}
+                            </button>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
             </div>
-            {loading ? (
-              <p className="muted">Loading…</p>
-            ) : pendingReviews.length === 0 ? (
-              <p className="muted">Nothing waiting on you.</p>
-            ) : (
-              <ul className="cx-review-list">
-                {pendingReviews.map((s) => {
-                  const key = `${s.userId}_${s.taskId}`;
-                  const alreadySent = remindResult[key] === 'sent';
-                  return (
-                    <li key={s.id || key} className="cx-review-list-item">
-                      <button
-                        type="button"
-                        className="cx-review-item"
-                        onClick={() => openReview(s.userId, s.taskId)}
-                      >
-                        <span className="cx-review-item__who">
-                          {s.learner.displayName || s.learner.email}
-                        </span>
-                        <span className="cx-review-item__task">{s.task.title}</span>
-                        <span className="cx-review-item__age muted">
-                          {timeAgo(s.submittedAt || s.updatedAt)}
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        className={`btn btn-sm btn-outline cx-remind-btn${remindResult[key] === 'sent' ? ' cx-remind-btn--sent' : ''}${remindResult[key] === 'error' ? ' cx-remind-btn--error' : ''}`}
-                        disabled={remindingId === key || alreadySent}
-                        onClick={() => handleTaskRemind(s.userId, s.taskId)}
-                        title="Send push notification reminder to this learner"
-                      >
-                        {remindLabel(key)}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
           </section>
-        </>
-      ) : (
-        <section className="cx-section">
-          <h2>Task tracking</h2>
-          <p className="muted">
-            Task tracking for {adapter.shortLabel} is coming soon — the journey for this program has
-            not been defined yet. Batch and attendance insights are available meanwhile.
-          </p>
-        </section>
-      )}
+        )}
+
+        <aside className="cx-home-sidebar">
+          <section className="cx-panel cx-home-panel" aria-labelledby="cx-batches-heading">
+            <div className="cx-panel__head">
+              <h2 id="cx-batches-heading" className="cx-panel__title">
+                Your batches
+              </h2>
+              <span className="cx-panel__meta muted">{batches.length} total</span>
+            </div>
+            <div className="cx-panel__body">
+              {loading ? (
+                <DashboardSkeleton rows={2} />
+              ) : batches.length === 0 ? (
+                <EmptyState
+                  icon={Inbox}
+                  title="No batches yet"
+                  message="Go to Batches in the menu to create one and add learners."
+                  className="cx-home-empty-state cx-home-empty-state--compact"
+                />
+              ) : (
+                <ul className="cx-batch-cards-home">
+                  {batches.map((b) => {
+                    const count = (b.memberIds || []).length;
+                    return (
+                      <li key={b.id}>
+                        <article className="cx-batch-card-home">
+                          <Link to={`/cx/batches/${b.id}`} className="cx-batch-card-home__link">
+                            <span className="cx-batch-card-home__icon" aria-hidden="true">
+                              <Layers size={18} />
+                            </span>
+                            <span className="cx-batch-card-home__text">
+                              <span className="cx-batch-card-home__name">{b.name}</span>
+                              <span className="cx-batch-card-home__count">
+                                {count} learner{count === 1 ? '' : 's'}
+                              </span>
+                            </span>
+                            <ChevronRight size={18} className="cx-batch-card-home__chevron" aria-hidden />
+                          </Link>
+                          <button
+                            type="button"
+                            className="btn btn-outline btn-sm cx-batch-card-home__remind"
+                            title="Send session reminder to this batch"
+                            onClick={() => setSessionBatch(b)}
+                          >
+                            <Bell size={14} aria-hidden />
+                            Remind
+                          </button>
+                        </article>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </section>
+
+          {!adapter.hasTasks && (
+            <section className="cx-panel cx-home-panel cx-home-panel--note">
+              <div className="cx-panel__body">
+                <p className="muted cx-home-note">
+                  Task reviews for {adapter.shortLabel} are not set up yet. You can still manage
+                  batches and session recordings from the menu.
+                </p>
+              </div>
+            </section>
+          )}
+        </aside>
+      </div>
     </div>
   );
 }

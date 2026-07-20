@@ -9,6 +9,8 @@ import {
   serverTimestamp,
   arrayUnion,
   arrayRemove,
+  query,
+  where,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { PROGRAMS } from '../data/programTypes';
@@ -19,6 +21,28 @@ const GROUPS = 'groups';
 export async function getGroups() {
   const snap = await getDocs(collection(db, GROUPS));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/** Prefer this for CX — fewer reads when many non-program batches exist. */
+export async function getGroupsByProgram(program = PROGRAMS.MBW) {
+  if (!db) return [];
+  try {
+    const snap = await getDocs(query(collection(db, GROUPS), where('program', '==', program)));
+    const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    // Legacy MBW batches may omit program — include them only for MBW.
+    if (program === PROGRAMS.MBW) {
+      const all = await getGroups();
+      const byId = new Map(rows.map((g) => [g.id, g]));
+      all.forEach((g) => {
+        if (!g.program || g.program === PROGRAMS.MBW) byId.set(g.id, g);
+      });
+      return [...byId.values()];
+    }
+    return rows;
+  } catch (err) {
+    console.warn('getGroupsByProgram failed, falling back to getGroups', err?.code || err);
+    return (await getGroups()).filter((g) => (g.program || PROGRAMS.MBW) === program);
+  }
 }
 
 export async function getGroup(groupId) {
@@ -66,8 +90,9 @@ export async function deleteGroup(groupId) {
  * Firestore rules change is needed. (serverTimestamp() is not allowed inside
  * array elements, so addedAt is a client ISO string.)
  *
- * Each entry may include phaseId (e.g. pre-preparation, onboarding) so CX
- * can attach unlisted YouTube links under the correct program phase.
+ * Each entry may include phaseId (e.g. pre-preparation, onboarding) and
+ * sessionId (program task id) so CX can attach unlisted YouTube links under
+ * the correct session within a phase.
  */
 export async function addBatchRecording(groupId, recording) {
   const entry = {
@@ -76,6 +101,7 @@ export async function addBatchRecording(groupId, recording) {
     url: recording.url,
     date: recording.date || '',
     phaseId: recording.phaseId || '',
+    sessionId: recording.sessionId || '',
     addedBy: recording.addedBy || null,
     addedAt: new Date().toISOString(),
   };

@@ -1,21 +1,27 @@
-import { NavLink } from 'react-router-dom';
-import { Home, Layers, LineChart, User } from 'lucide-react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { Home, Layers, LineChart, ClipboardCheck, User } from 'lucide-react';
 
 const TABS = [
   { to: '/cx/home', label: 'Home', Icon: Home },
-  { to: '/cx/batches', label: 'Batch', Icon: Layers },
-  { to: '/cx/dashboards', label: 'Dashboards', Icon: LineChart },
+  { to: '/cx/dashboards', label: 'Analytics', Icon: LineChart },
+  { to: '/cx/batches', label: 'Batches', Icon: Layers, matchPrefix: '/cx/batches' },
+  { to: '/cx/reviews', label: 'Reviews', Icon: ClipboardCheck, matchPrefix: '/cx/review' },
   { to: '/cx/profile', label: 'Profile', Icon: User },
 ];
 
 export default function CXBottomNav() {
+  const { pathname } = useLocation();
+
   return (
     <nav className="bottom-nav" aria-label="CX navigation">
-      {TABS.map(({ to, label, Icon }) => (
+      {TABS.map(({ to, label, Icon, matchPrefix }) => (
         <NavLink
           key={to}
           to={to}
-          className={({ isActive }) => `bottom-nav__item ${isActive ? 'active' : ''}`}
+          className={({ isActive }) => {
+            const active = isActive || (matchPrefix && pathname.startsWith(matchPrefix));
+            return `bottom-nav__item ${active ? 'active' : ''}`;
+          }}
         >
           <span className="bottom-nav__icon">
             <Icon size={20} strokeWidth={2} />

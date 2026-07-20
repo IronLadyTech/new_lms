@@ -71,7 +71,10 @@ service cloud.firestore {
 
     function learnerMbwStatusOk() {
       return !request.resource.data.keys().hasAny(['status'])
-        || request.resource.data.status in ['unlocked', 'submitted', 'under_review', 'completed'];
+        || request.resource.data.status in [
+          'unlocked', 'submitted', 'under_review',
+          'needs_improvement', 'rejected', 'completed'
+        ];
     }
 
     match /users/{userId} {
@@ -226,8 +229,13 @@ service cloud.firestore {
           && isOwnMbwSubmissionId()
           && resource.data.userId == request.auth.uid
           && request.resource.data.userId == request.auth.uid
-          && !request.resource.data.diff(resource.data).affectedKeys()
-               .hasAny(['reviewedBy', 'reviewedAt', 'feedback'])
+          // A learner may never SET review fields, but must be able to CLEAR them
+          // on resubmit. So either the update leaves all review keys untouched, or
+          // it removes every one of them (none remain in the resulting doc).
+          && (!request.resource.data.diff(resource.data).affectedKeys()
+                 .hasAny(['reviewedBy', 'reviewedAt', 'feedback', 'reviewOutcome'])
+              || !request.resource.data.keys()
+                   .hasAny(['reviewedBy', 'reviewedAt', 'feedback', 'reviewOutcome']))
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status'])
               || learnerMbwStatusOk()));
       allow delete: if hasStaffAccess();
@@ -260,8 +268,13 @@ service cloud.firestore {
           && isOwnBm100SubmissionId()
           && resource.data.userId == request.auth.uid
           && request.resource.data.userId == request.auth.uid
-          && !request.resource.data.diff(resource.data).affectedKeys()
-               .hasAny(['reviewedBy', 'reviewedAt', 'feedback'])
+          // A learner may never SET review fields, but must be able to CLEAR them
+          // on resubmit. So either the update leaves all review keys untouched, or
+          // it removes every one of them (none remain in the resulting doc).
+          && (!request.resource.data.diff(resource.data).affectedKeys()
+                 .hasAny(['reviewedBy', 'reviewedAt', 'feedback', 'reviewOutcome'])
+              || !request.resource.data.keys()
+                   .hasAny(['reviewedBy', 'reviewedAt', 'feedback', 'reviewOutcome']))
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status'])
               || learnerMbwStatusOk()));
       allow delete: if hasStaffAccess();

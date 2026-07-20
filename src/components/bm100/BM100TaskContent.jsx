@@ -15,6 +15,7 @@ import { getTaskDurationHint } from '../../utils/bm100ProgramUtils';
 import { BM100_PROGRAM_SECTIONS } from '../../data/bm100ProgramStructure';
 import { getBm100TaskTemplates } from '../../data/bm100TaskTemplates';
 import BM100TaskTemplateDownloads from './submissions/BM100TaskTemplateDownloads';
+import LearnerReviewFeedback from '../submissions/LearnerReviewFeedback';
 
 function getSectionTitle(phase) {
   return BM100_PROGRAM_SECTIONS.find((s) => s.id === phase)?.title ?? '100BM';
@@ -41,7 +42,7 @@ export default function BM100TaskContent({
   const resourceLinks = Array.isArray(task.resourceLinks) ? task.resourceLinks.filter((r) => r?.url) : [];
   const showExtraTemplates =
     task.type !== TASK_TYPES.FILE_UPLOAD && getBm100TaskTemplates(task.id, task).length > 0;
-  const primary = getPrimaryStatus(status, isComplete, task.reviewRequired);
+  const primary = getPrimaryStatus(status, isComplete);
 
   const handleSubmit = async (fields) => {
     const result = await onSubmit(fields);
@@ -228,11 +229,7 @@ export default function BM100TaskContent({
             />
           )}
 
-          {submission?.feedback && (
-            <div className="alert alert-warning">
-              <strong>Instructor feedback:</strong> {submission.feedback}
-            </div>
-          )}
+          <LearnerReviewFeedback submission={submission} />
         </section>
       )}
     </div>

@@ -1,20 +1,30 @@
 import { useState } from 'react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { SUBMISSION_STATUS } from '../../services/mbwService';
 import { isCxSubmissionComplete } from '../../utils/cxMetrics';
+import { getSubmissionReviewDisplay } from '../../utils/submissionReview';
 
-function statusCellClass(status) {
-  if (status === SUBMISSION_STATUS.COMPLETED) return 'mbw-admin-cell--done';
-  if (status === SUBMISSION_STATUS.UNDER_REVIEW) return 'mbw-admin-cell--review';
-  if (status === SUBMISSION_STATUS.SUBMITTED) return 'mbw-admin-cell--submitted';
-  if (status === SUBMISSION_STATUS.UNLOCKED) return 'mbw-admin-cell--open';
+function statusCellClass(sub, done) {
+  if (done) return 'mbw-admin-cell--done';
+  const display = getSubmissionReviewDisplay(sub);
+  if (display.tone === 'review') return 'mbw-admin-cell--review';
+  if (display.tone === 'improvement') return 'mbw-admin-cell--improvement';
+  if (display.tone === 'rejected') return 'mbw-admin-cell--rejected';
+  if (sub?.status === SUBMISSION_STATUS.SUBMITTED) return 'mbw-admin-cell--submitted';
+  if (sub?.status === SUBMISSION_STATUS.UNLOCKED) return 'mbw-admin-cell--open';
   return 'mbw-admin-cell--locked';
 }
 
-function statusShort(status) {
-  if (status === SUBMISSION_STATUS.COMPLETED) return 'Done';
-  if (status === SUBMISSION_STATUS.UNDER_REVIEW) return 'Review';
-  if (status === SUBMISSION_STATUS.SUBMITTED) return 'Sent';
-  if (status === SUBMISSION_STATUS.UNLOCKED) return 'Open';
+function statusShort(sub, done) {
+  if (done) return 'Done';
+  const display = getSubmissionReviewDisplay(sub);
+  if (display.tone === 'review') return 'Review';
+  if (display.tone === 'improvement') return 'Revise';
+  if (display.tone === 'rejected') return 'Reject';
+  if (sub?.status === SUBMISSION_STATUS.SUBMITTED || sub?.status === SUBMISSION_STATUS.UNDER_REVIEW) {
+    return 'Submitted';
+  }
+  if (sub?.status === SUBMISSION_STATUS.UNLOCKED) return 'Open';
   return '—';
 }
 
@@ -41,8 +51,8 @@ export default function ModuleTaskGrid({
         <div className="cx-module__meta">
           <span className="cx-module__count">{tasks.length} tasks</span>
           <span className="cx-module__pct">{completionPct}% done</span>
-          <span className="cx-module__chev" aria-hidden>
-            {open ? '▾' : '▸'}
+          <span className="cx-module__chev cx-module__chev-icon" aria-hidden>
+            {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           </span>
         </div>
       </button>
@@ -70,13 +80,12 @@ export default function ModuleTaskGrid({
                   </td>
                   {tasks.map((t) => {
                     const sub = subByUser[u.id]?.[t.id];
-                    const st = sub?.status || SUBMISSION_STATUS.LOCKED;
                     const done = isCxSubmissionComplete(sub, t);
                     const clickable = sub && onOpenSubmission;
                     return (
                       <td
                         key={t.id}
-                        className={`mbw-admin-cell ${statusCellClass(done ? SUBMISSION_STATUS.COMPLETED : st)}`}
+                        className={`mbw-admin-cell ${statusCellClass(sub, done)}`}
                         title={t.title}
                       >
                         {clickable ? (
@@ -85,10 +94,10 @@ export default function ModuleTaskGrid({
                             className="cx-cell-btn"
                             onClick={() => onOpenSubmission(u.id, t.id)}
                           >
-                            {done ? 'Done' : statusShort(st)}
+                            {statusShort(sub, done)}
                           </button>
                         ) : (
-                          done ? 'Done' : statusShort(st)
+                          statusShort(sub, done)
                         )}
                       </td>
                     );

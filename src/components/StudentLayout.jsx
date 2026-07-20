@@ -51,9 +51,7 @@ export default function StudentLayout() {
 
   return (
     <div
-      className={`student-layout${isLightShell ? ' student-layout--mbw' : ''}${
-        isProgramTaskRoute ? ' student-layout--course' : ''
-      }`}
+      className={`student-layout student-layout--course${isLightShell ? ' student-layout--mbw' : ''}`}
     >
       <SkipLink />
       <header className="app-header">

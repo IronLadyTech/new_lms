@@ -3,7 +3,8 @@ import { Share2 } from 'lucide-react';
 import { buildHeatmapWeeks } from '../../services/streakAnalyticsService';
 import { formatDisplayDate, getTodayKey } from '../../utils/streakTimezone';
 
-const WEEKDAY_LABELS = ['Sun', 'Mon', '', 'Wed', '', 'Fri', ''];
+/** Alternating day labels (every other row) — Sun, Tue, Thu, Sat */
+const WEEKDAY_LABELS = ['Sun', '', 'Tue', '', 'Thu', '', 'Sat'];
 const LEGEND_LEVELS = [1, 2, 3, 4, 5];
 
 export default function SubmissionHeatmap({ dailyCounts = [], loading }) {
@@ -57,50 +58,52 @@ export default function SubmissionHeatmap({ dailyCounts = [], loading }) {
           No submissions yet — start practicing to build your streak.
         </p>
       ) : (
-        <>
+        <div className="streak-heatmap__body">
           <div className="streak-heatmap__scroll" role="img" aria-label="Submission activity heatmap">
-            <div className="streak-heatmap__months" aria-hidden>
-              {weeks.map((_, wi) => {
-                const label = monthLabels.find((m) => m.weekIndex === wi);
-                return (
-                  <span key={`m-${wi}`} className="streak-heatmap__month">
-                    {label?.label || ''}
-                  </span>
-                );
-              })}
-            </div>
-            <div className="streak-heatmap__grid-wrap">
-              <div className="streak-heatmap__weekdays" aria-hidden>
-                {WEEKDAY_LABELS.map((lbl, i) => (
-                  <span key={i} className="streak-heatmap__weekday">
-                    {lbl}
-                  </span>
-                ))}
+            <div className="streak-heatmap__chart">
+              <div className="streak-heatmap__months" aria-hidden>
+                {weeks.map((_, wi) => {
+                  const label = monthLabels.find((m) => m.weekIndex === wi);
+                  return (
+                    <span key={`m-${wi}`} className="streak-heatmap__month">
+                      {label?.label || ''}
+                    </span>
+                  );
+                })}
               </div>
-              <div className="streak-heatmap__grid">
-                {weeks.map((week, wi) => (
-                  <div key={`w-${wi}`} className="streak-heatmap__week-col">
-                    {week.map((cell) => (
-                      <button
-                        key={cell.date}
-                        type="button"
-                        className={`streak-heatmap__cell streak-heatmap__cell--l${cell.level}${
-                          cell.date === today ? ' streak-heatmap__cell--today' : ''
-                        }`}
-                        title={
-                          cell.count > 0
-                            ? `${cell.count} correct submission${cell.count > 1 ? 's' : ''} on ${formatDisplayDate(cell.date)}`
-                            : `No practice on ${formatDisplayDate(cell.date)}`
-                        }
-                        aria-label={
-                          cell.count > 0
-                            ? `${cell.count} correct submissions on ${formatDisplayDate(cell.date)}`
-                            : `No practice on ${formatDisplayDate(cell.date)}`
-                        }
-                      />
-                    ))}
-                  </div>
-                ))}
+              <div className="streak-heatmap__grid-wrap">
+                <div className="streak-heatmap__weekdays" aria-hidden>
+                  {WEEKDAY_LABELS.map((lbl, i) => (
+                    <span key={i} className="streak-heatmap__weekday">
+                      {lbl}
+                    </span>
+                  ))}
+                </div>
+                <div className="streak-heatmap__grid">
+                  {weeks.map((week, wi) => (
+                    <div key={`w-${wi}`} className="streak-heatmap__week-col">
+                      {week.map((cell) => (
+                        <button
+                          key={cell.date}
+                          type="button"
+                          className={`streak-heatmap__cell streak-heatmap__cell--l${cell.level}${
+                            cell.date === today ? ' streak-heatmap__cell--today' : ''
+                          }`}
+                          title={
+                            cell.count > 0
+                              ? `${cell.count} correct submission${cell.count > 1 ? 's' : ''} on ${formatDisplayDate(cell.date)}`
+                              : `No practice on ${formatDisplayDate(cell.date)}`
+                          }
+                          aria-label={
+                            cell.count > 0
+                              ? `${cell.count} correct submissions on ${formatDisplayDate(cell.date)}`
+                              : `No practice on ${formatDisplayDate(cell.date)}`
+                          }
+                        />
+                      ))}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -117,7 +120,7 @@ export default function SubmissionHeatmap({ dailyCounts = [], loading }) {
             </span>
             <span className="streak-heatmap__legend-label">More Practice</span>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

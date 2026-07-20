@@ -6,6 +6,7 @@ import useBm100Enrollment from '../../hooks/useBm100Enrollment';
 import useBatchRecordings from '../../hooks/useBatchRecordings';
 import MBWToast from '../../components/mbw/MBWToast';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
+import ProgramLockedPanel from '../../components/ProgramLockedPanel';
 import MBWProgramSkeleton from '../../components/mbw/program/MBWProgramSkeleton';
 import BM100ProgramHero from '../../components/bm100/program/BM100ProgramHero';
 import BM100LessonTopbar from '../../components/bm100/program/BM100LessonTopbar';
@@ -21,11 +22,13 @@ import {
   getCohortLabel,
 } from '../../utils/bm100ProgramUtils';
 import { getModuleLabel } from '../../utils/mbwDisplay';
+import { getProgramAccessState } from '../../utils/programAccess';
+import { PROGRAMS } from '../../data/programTypes';
 
 export default function BM100Page() {
   const { user, profile, isGuest } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { enrolled } = useBm100Enrollment();
+  const { enrolled, courses } = useBm100Enrollment();
   const { recordings } = useBatchRecordings();
 
   const [expandedSectionId, setExpandedSectionId] = useState('onboarding');
@@ -205,15 +208,15 @@ export default function BM100Page() {
   }
 
   if (enrolled === false) {
+    const access = getProgramAccessState(PROGRAMS.BM100, profile, courses);
     return (
       <div className="page mbw-program-page">
-        <div className="mbw-program-enroll">
-          <h1>100 Board Members</h1>
-          <p>Enrol in the 100BM program from Courses to access your journey.</p>
-          <Link to="/app/home" className="btn btn-primary">
-            Go to Courses
-          </Link>
-        </div>
+        <ProgramLockedPanel
+          title="100BM is locked for your account"
+          message={access.message}
+          state={access.state}
+          programLabel="100BM"
+        />
       </div>
     );
   }

@@ -1,5 +1,8 @@
 /** Human-readable MBW labels for UI (week codes like Wk1-12 stay secondary). */
 
+import { SUBMISSION_STATUS } from '../services/mbwService';
+import { getSubmissionReviewDisplay, isLearnerActionRequired } from './submissionReview';
+
 export function getModuleLabel(task) {
   const n = (task.order ?? 0) + 1;
   return `Module ${n} — ${task.title}`;
@@ -9,16 +12,29 @@ export function getWeekCode(task) {
   return task.week || '';
 }
 
-import { MBW_REVIEW_ENABLED } from '../services/mbwService';
-
-export function getPrimaryStatus(status, isComplete, reviewRequired) {
-  if (isComplete) return { label: 'Completed', tone: 'done' };
-  if (status === 'under_review' && MBW_REVIEW_ENABLED && reviewRequired) {
-    return { label: 'Under review', tone: 'review' };
+export function getPrimaryStatus(status, isComplete) {
+  if (isLearnerActionRequired(status)) {
+    const display = getSubmissionReviewDisplay({ status });
+    return { label: display.learnerLabel || display.label, tone: display.tone };
   }
-  if (status === 'under_review') return { label: 'Completed', tone: 'done' };
-  if (status === 'submitted') return { label: 'Submitted', tone: 'pending' };
-  if (status === 'locked') return { label: 'Locked', tone: 'locked' };
+
+  if (
+    status === SUBMISSION_STATUS.SUBMITTED
+    || status === SUBMISSION_STATUS.UNDER_REVIEW
+  ) {
+    return { label: 'Submitted', tone: 'done' };
+  }
+
+  if (isComplete || status === SUBMISSION_STATUS.COMPLETED) {
+    return { label: 'Completed', tone: 'done' };
+  }
+
+  const display = getSubmissionReviewDisplay({ status });
+  if (display.tone !== 'locked' && display.tone !== 'open') {
+    return { label: display.label, tone: display.tone };
+  }
+
+  if (status === SUBMISSION_STATUS.LOCKED) return { label: 'Locked', tone: 'locked' };
   return { label: 'In progress', tone: 'open' };
 }
 
@@ -41,6 +57,5 @@ export function submissionPreview(sub, task) {
     return total ? `${sub.checkedItems.length}/${total} practices done` : `${sub.checkedItems.length} practice(s) done`;
   }
   if (sub.watchCompleted) return 'Video watched';
-  if (task?.title) return task.title;
-  return 'Saved';
+  return null;
 }

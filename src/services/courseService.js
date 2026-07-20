@@ -11,6 +11,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { mergeInQuery } from '../utils/firestoreChunks';
 
 const COURSES = 'courses';
 const RESOURCES = 'resources';
@@ -61,6 +62,18 @@ export async function getResources(courseId) {
     : collection(db, RESOURCES);
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/** Fetch resources for multiple courses in batched `in` queries. */
+export async function getResourcesForCourses(courseIds = []) {
+  if (!courseIds.length) return [];
+  const byId = await mergeInQuery(courseIds, async (chunk) => {
+    const snap = await getDocs(
+      query(collection(db, RESOURCES), where('courseId', 'in', chunk))
+    );
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  });
+  return [...byId.values()];
 }
 
 export async function createResource(data) {

@@ -1,17 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getCourses, getAssignments } from '../../services/courseService';
 import { getAnnouncements, getActiveAnnouncementsForUser } from '../../services/announcementService';
-import { enrollInCourse, getUserActivities } from '../../services/userService';
+import { getUserActivities } from '../../services/userService';
 import { getEvents } from '../../services/eventService';
 import AnnouncementFeed from '../../components/AnnouncementFeed';
 import ActivityLogList, { buildCourseMap } from '../../components/ActivityLogList';
-import CourseThumbnail from '../../components/CourseThumbnail';
 import CourseCard from '../../components/home/CourseCard';
 import HomeBannerCarousel from '../../components/HomeBannerCarousel';
 import StreakAnalyticsModule from '../../components/analytics/StreakAnalyticsModule';
-import HomeDashboardHero, { HomeDashboardHeroCta } from '../../components/home/HomeDashboardHero';
+import HomeDashboardHero from '../../components/home/HomeDashboardHero';
 import HomeQuickStats from '../../components/home/HomeQuickStats';
 import HomeContinueCard from '../../components/home/HomeContinueCard';
 import HomeSchedulePanel from '../../components/home/HomeSchedulePanel';
@@ -24,7 +23,13 @@ import {
   getTotalMilestones,
   getCompletedMilestones,
 } from '../../utils/mbwProgramUtils';
-import { getProgramTasksPath } from '../../utils/programTaskRoutes';
+import {
+  canAccessProgram,
+  getContinueProgram,
+  getProgramAccessState,
+  sortCoursesForDashboard,
+} from '../../utils/programAccess';
+import { PROGRAMS } from '../../data/programTypes';
 
 function timeGreeting() {
   const hour = new Date().getHours();
@@ -34,7 +39,7 @@ function timeGreeting() {
 }
 
 export default function Home() {
-  const { user, profile, refreshProfile, isGuest } = useAuth();
+  const { user, profile, isGuest } = useAuth();
   const [courses, setCourses] = useState([]);
   const [courseMap, setCourseMap] = useState({});
   const [announcements, setAnnouncements] = useState([]);
@@ -102,17 +107,19 @@ export default function Home() {
     [courses, enrolled]
   );
   const sortedCourses = useMemo(
-    () =>
-      [...courses].sort(
-        (a, b) => Number(enrolled.includes(b.id)) - Number(enrolled.includes(a.id))
-      ),
-    [courses, enrolled]
+    () => sortCoursesForDashboard(courses, profile),
+    [courses, profile]
+  );
+  const accessibleCourses = useMemo(
+    () => courses.filter((c) => canAccessProgram(c.code, profile, courses)),
+    [courses, profile]
   );
 
   const { isEnrolled: mbwEnrolled } = useMbwEnrollment();
-  const engine = useTaskEngine(mbwEnrolled && !isGuest ? user?.uid : null);
+  const canOpenMbw = canAccessProgram(PROGRAMS.MBW, profile, courses) || mbwEnrolled;
+  const engine = useTaskEngine(canOpenMbw && !isGuest ? user?.uid : null);
   const mbwProgress = useMemo(() => {
-    if (!mbwEnrolled) return null;
+    if (!canOpenMbw) return null;
     const sp = computeSectionProgress(engine.taskStates, profile);
     const total = getTotalMilestones(sp);
     const completed = getCompletedMilestones(sp);
@@ -121,45 +128,27 @@ export default function Home() {
       pct: Math.round((completed / total) * 100),
       label: `${completed} of ${total} milestones`,
     };
-  }, [mbwEnrolled, engine.taskStates, profile]);
+  }, [canOpenMbw, engine.taskStates, profile]);
 
   const firstName = profile?.displayName?.trim().split(/\s+/)[0] || '';
-  const mbwCourse = enrolledCourses.find((c) => c.code === 'MBW');
-  const soloEnrolled = enrolledCourses.length === 1 ? enrolledCourses[0] : null;
-  const continueCourse = mbwCourse || soloEnrolled || enrolledCourses[0] || null;
-
-  const handleEnroll = async (courseId, courseTitle) => {
-    if (!profile || isGuest) return;
-    await enrollInCourse(user.uid, courseId, courseTitle);
-    refreshProfile();
-  };
-
-  const scrollToCourses = useCallback(() => {
-    document.getElementById('home-courses')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, []);
+  const continueCourse =
+    getContinueProgram(profile, courses) ||
+    accessibleCourses[0] ||
+    null;
+  const mbwCourse = canOpenMbw
+    ? courses.find((c) => c.code === 'MBW') || null
+    : null;
 
   const heroSubline =
-    enrolledCourses.length > 0
-      ? 'Pick up where you left off or explore your programs below.'
-      : 'Browse programs below and enroll to start learning.';
-
-  const heroCta = mbwCourse ? (
-    <HomeDashboardHeroCta to="/app/mbw">Continue MBW tasks</HomeDashboardHeroCta>
-  ) : soloEnrolled ? (
-    <HomeDashboardHeroCta
-      to={getProgramTasksPath(soloEnrolled.code) || `/app/course/${soloEnrolled.id}`}
-    >
-      Continue {soloEnrolled.code}
-    </HomeDashboardHeroCta>
-  ) : (
-    <HomeDashboardHeroCta onClick={scrollToCourses}>Browse programs</HomeDashboardHeroCta>
-  );
+    accessibleCourses.length > 0
+      ? 'Pick up where you left off — only your enrolled programs are unlocked.'
+      : 'Your Iron Lady path is LEP → 100BM → MBW. Explore each program below to learn more.';
 
   const quickStats = [
     {
       id: 'programs',
-      label: 'Programs',
-      value: enrolledCourses.length,
+      label: 'Open',
+      value: accessibleCourses.length,
       hint: `of ${courses.length}`,
     },
     {
@@ -195,7 +184,6 @@ export default function Home() {
             firstName={firstName}
             program={profile?.program}
             subline={heroSubline}
-            cta={heroCta}
           />
 
           <HomeQuickStats stats={quickStats} />
@@ -208,7 +196,7 @@ export default function Home() {
                   ? 'Master of Business Warfare — quarterly leadership journey'
                   : continueCourse?.description?.slice(0, 80)
               }
-              enrolledCount={enrolledCourses.length}
+              enrolledCount={accessibleCourses.length}
               progress={continueCourse?.code === 'MBW' ? mbwProgress : null}
             />
             <HomeSchedulePanel events={upcomingEvents} />
@@ -218,7 +206,7 @@ export default function Home() {
 
       <section id="home-courses" className="section dashboard-programs">
         <h2 className="home-section-title">Your programs</h2>
-        <p className="page-sub">MBW, LEP &amp; 100BM — open or enroll to begin</p>
+        <p className="page-sub">Journey order: LEP → 100BM → MBW — locked programs stay visible as upcoming</p>
 
         {isGuest ? (
           <GuestHomePreview />
@@ -232,9 +220,8 @@ export default function Home() {
               <CourseCard
                 key={course.id}
                 course={course}
-                isEnrolled={enrolled.includes(course.id)}
-                onEnroll={handleEnroll}
-                progress={course.code === 'MBW' ? mbwProgress : null}
+                access={getProgramAccessState(course.code, profile, courses)}
+                progress={course.code === 'MBW' && canOpenMbw ? mbwProgress : null}
               />
             ))}
           </div>
@@ -280,7 +267,7 @@ export default function Home() {
               <h2 className="home-section-title">Your progress</h2>
               <StreakAnalyticsModule
                 learnerId={user.uid}
-                courses={enrolledCourses}
+                courses={accessibleCourses}
                 showBrowseLink={false}
                 homeVariant
               />

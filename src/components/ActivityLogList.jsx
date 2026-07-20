@@ -11,13 +11,19 @@ export default function ActivityLogList({
   courseMap = {},
   emptyMessage = 'No activity yet.',
 }) {
-  if (activities.length === 0) {
+  const sortedActivities = [...activities].sort((a, b) => {
+    const ta = a.createdAt?.toMillis?.() ?? (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+    const tb = b.createdAt?.toMillis?.() ?? (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+    return tb - ta;
+  });
+
+  if (sortedActivities.length === 0) {
     return <p className="muted">{emptyMessage}</p>;
   }
 
   return (
     <ul className="activity-list">
-      {activities.map((a) => (
+      {sortedActivities.map((a) => (
         <li key={a.id} className="activity-list__item">
           <span className="activity-type">{formatActivityTypeLabel(a.type)}</span>
           <div className="activity-list__body">

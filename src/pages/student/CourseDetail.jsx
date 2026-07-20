@@ -6,7 +6,7 @@ import { Clock, Layers, PlayCircle } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
 
-import { getCourse, getResources } from '../../services/courseService';
+import { getCourse, getCourses, getResources } from '../../services/courseService';
 
 import { getEvents } from '../../services/eventService';
 
@@ -21,6 +21,7 @@ import CourseUpcomingPanel from '../../components/course/CourseUpcomingPanel';
 import CourseRecordingsPanel from '../../components/course/CourseRecordingsPanel';
 
 import GuestLockedPanel from '../../components/GuestLockedPanel';
+import ProgramLockedPanel from '../../components/ProgramLockedPanel';
 
 import CourseThumbnail from '../../components/CourseThumbnail';
 
@@ -47,6 +48,7 @@ import {
 } from '../../utils/mbwProgramUtils';
 
 import { getCourseProgramMeta } from '../../utils/courseDisplay';
+import { getProgramAccessState } from '../../utils/programAccess';
 
 
 
@@ -69,6 +71,8 @@ export default function CourseDetail() {
   const [recordings, setRecordings] = useState([]);
 
   const [events, setEvents] = useState([]);
+
+  const [allCourses, setAllCourses] = useState([]);
 
 
 
@@ -151,6 +155,7 @@ export default function CourseDetail() {
       const c = await getCourse(courseId);
 
       setCourse(c);
+        getCourses().then((list) => setAllCourses(list)).catch(() => setAllCourses([]));
 
       const r = await getResources(courseId);
 
@@ -310,11 +315,30 @@ export default function CourseDetail() {
 
 
 
+  
+  const programAccess = getProgramAccessState(course.code, profile, allCourses.length ? allCourses : [course]);
+
+  if (!isGuest && !programAccess.canAccess) {
+    return (
+      <div className="page course-detail">
+        <Link to="/app/home" className="back-link">
+          ← Programs
+        </Link>
+        <ProgramLockedPanel
+          title={`${course.code || 'Program'} is locked for your account`}
+          message={programAccess.message}
+          state={programAccess.state}
+          programLabel={course.code || 'this program'}
+        />
+      </div>
+    );
+  }
+
   const meta = getCourseProgramMeta(course.code);
 
   const codeKey = (course.code || '').toLowerCase();
 
-  const isEnrolled = profile?.enrolledCourses?.includes(course.id);
+  const isEnrolled = programAccess.enrolled || profile?.enrolledCourses?.includes(course.id);
 
   const openResources = resources.filter((r) => !r.locked && r.url).length;
 

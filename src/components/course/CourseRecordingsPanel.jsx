@@ -4,9 +4,14 @@ import {
   getRecordingPhaseTitle,
   RECORDING_PHASE_OTHER,
 } from '../../data/batchRecordingPhases';
+import {
+  getBatchRecordingSessions,
+  getSessionTitle,
+  sortRecordingsBySessionOrder,
+} from '../../utils/batchRecordingSessions';
 
 /**
- * Learner-facing batch session recordings (added by CX), grouped by phase.
+ * Learner-facing batch session recordings (added by CX), grouped by phase and session.
  * Read-only. Renders nothing when the batch has no recordings.
  */
 export default function CourseRecordingsPanel({ recordings = [], program }) {
@@ -26,12 +31,26 @@ export default function CourseRecordingsPanel({ recordings = [], program }) {
 
   const blocks = [
     ...phases
-      .map((p) => ({ ...p, items: byPhase[p.id] }))
+      .map((p) => ({
+        ...p,
+        items: sortRecordingsBySessionOrder(byPhase[p.id], program, p.id),
+        sessions: getBatchRecordingSessions(program, p.id),
+      }))
       .filter((p) => p.items.length > 0),
     ...(other.length
-      ? [{ ...RECORDING_PHASE_OTHER, items: other }]
+      ? [{ ...RECORDING_PHASE_OTHER, items: other, sessions: [] }]
       : []),
   ];
+
+  const displayTitle = (rec, sessions) => {
+    const session = sessions.find((s) => s.id === rec.sessionId);
+    return session?.title || rec.title || getSessionTitle(program, rec.sessionId);
+  };
+
+  const displayWeek = (rec, sessions) => {
+    const session = sessions.find((s) => s.id === rec.sessionId);
+    return session?.week || '';
+  };
 
   return (
     <section className="section course-recordings" aria-labelledby="course-recordings-title">
@@ -53,7 +72,12 @@ export default function CourseRecordingsPanel({ recordings = [], program }) {
                     <Video size={18} />
                   </span>
                   <div className="cx-recording-item__body">
-                    <strong>{rec.title}</strong>
+                    {displayWeek(rec, phase.sessions) && (
+                      <span className="muted cx-recording-item__week">
+                        {displayWeek(rec, phase.sessions)}
+                      </span>
+                    )}
+                    <strong>{displayTitle(rec, phase.sessions)}</strong>
                     {rec.date && <span className="muted">{rec.date}</span>}
                   </div>
                   <a

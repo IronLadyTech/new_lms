@@ -7,6 +7,9 @@ import {
   getDocs,
   query,
   where,
+  orderBy,
+  limit,
+  documentId,
   serverTimestamp,
   arrayUnion,
 } from 'firebase/firestore';
@@ -14,6 +17,8 @@ import { db } from '../firebase/config';
 import { ROLES } from '../utils/roles';
 import { isSuperAdminEmail } from '../utils/constants';
 import { recordSubmissionEvent } from './submissionEventService';
+import { PROGRAMS } from '../data/programTypes';
+import { mergeInQuery } from '../utils/firestoreChunks';
 
 const USERS = 'users';
 const ACTIVITIES = 'activities';
@@ -212,20 +217,102 @@ export async function logUserActivity(uid, { type, courseId, title, metadata }) 
 }
 
 export async function getUserActivities(uid, limitCount = 20) {
-  const q = query(collection(db, ACTIVITIES), where('userId', '==', uid));
-  const snap = await getDocs(q);
-  const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  items.sort((a, b) => {
-    const ta = a.createdAt?.toMillis?.() ?? 0;
-    const tb = b.createdAt?.toMillis?.() ?? 0;
-    return tb - ta;
-  });
-  return items.slice(0, limitCount);
+  try {
+    const q = query(
+      collection(db, ACTIVITIES),
+      where('userId', '==', uid),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } catch (e) {
+    const message = String(e?.message || '');
+    if (!message.includes('index')) throw e;
+
+    const snap = await getDocs(query(collection(db, ACTIVITIES), where('userId', '==', uid)));
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    items.sort((a, b) => {
+      const ta = a.createdAt?.toMillis?.() ?? 0;
+      const tb = b.createdAt?.toMillis?.() ?? 0;
+      return tb - ta;
+    });
+    return items.slice(0, limitCount);
+  }
 }
 
 export async function getAllUsers() {
   const snap = await getDocs(collection(db, USERS));
   const users = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  users.sort((a, b) => {
+    const ta = a.createdAt?.toMillis?.() ?? 0;
+    const tb = b.createdAt?.toMillis?.() ?? 0;
+    return tb - ta;
+  });
+  return users;
+}
+
+/** Fetch specific user docs by id (chunked `in` queries). */
+export async function getUsersByIds(ids = []) {
+  if (!db || !ids.length) return [];
+  const map = await mergeInQuery(ids, async (chunk) => {
+    const snap = await getDocs(query(collection(db, USERS), where(documentId(), 'in', chunk)));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  });
+  return [...map.values()];
+}
+
+/**
+ * CX-scoped learner load — avoids reading the entire users collection.
+ * Pulls by program, by batchId, and by batch memberIds (chunked `in` queries).
+ */
+export async function getUsersForCxProgram(program, batches = []) {
+  if (!db) return [];
+
+  const byId = new Map();
+  const addSnap = (snap) => {
+    snap.docs.forEach((d) => byId.set(d.id, { id: d.id, ...d.data() }));
+  };
+
+  const programKey = program || PROGRAMS.MBW;
+  const batchIds = (batches || []).map((b) => b.id).filter(Boolean);
+  const memberIds = [...new Set((batches || []).flatMap((b) => b.memberIds || []))];
+
+  const firstPass = [
+    getDocs(query(collection(db, USERS), where('program', '==', programKey)))
+      .then(addSnap)
+      .catch((err) => console.warn('CX users by program failed', err?.code || err)),
+  ];
+
+  if (batchIds.length) {
+    firstPass.push(
+      mergeInQuery(batchIds, async (chunk) => {
+        const snap = await getDocs(query(collection(db, USERS), where('batchId', 'in', chunk)));
+        return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      })
+        .then((map) => map.forEach((u, id) => byId.set(id, u)))
+        .catch((err) => console.warn('CX users by batchId failed', err?.code || err))
+    );
+  }
+
+  await Promise.all(firstPass);
+
+  const missingMemberIds = memberIds.filter((id) => !byId.has(id));
+  if (missingMemberIds.length) {
+    try {
+      const map = await mergeInQuery(missingMemberIds, async (chunk) => {
+        const snap = await getDocs(
+          query(collection(db, USERS), where(documentId(), 'in', chunk))
+        );
+        return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      });
+      map.forEach((u, id) => byId.set(id, u));
+    } catch (err) {
+      console.warn('CX users by memberId failed', err?.code || err);
+    }
+  }
+
+  const users = [...byId.values()];
   users.sort((a, b) => {
     const ta = a.createdAt?.toMillis?.() ?? 0;
     const tb = b.createdAt?.toMillis?.() ?? 0;

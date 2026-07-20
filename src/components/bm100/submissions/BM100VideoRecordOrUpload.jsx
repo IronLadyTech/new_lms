@@ -195,7 +195,8 @@ export default function BM100VideoRecordOrUpload({ task, submission, canSubmit, 
         videoUrl: uploaded.url,
         fileName: uploaded.fileName,
         localFallback: uploaded.localFallback || false,
-        storageSkipped: false,
+        storageSkipped: !uploaded.url,
+        hasLocalRecording: !uploaded.url,
       });
 
       if (uploaded.url) {

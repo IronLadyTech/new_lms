@@ -14,9 +14,12 @@ export default function StreakAnalyticsModule({
   courses = [],
   showBrowseLink = true,
   homeVariant = false,
+  progressVariant = false,
+  analytics = null,
 }) {
   const navigate = useNavigate();
-  const { summary, loading, warning, isLive, retry } = useStreakAnalytics(learnerId);
+  const internal = useStreakAnalytics(analytics ? null : learnerId);
+  const { summary, loading, warning, isLive, retry } = analytics || internal;
 
   const enrolledCourses = useMemo(
     () => (courses.length ? courses : [{ id: 'general', code: 'ALL', title: 'All courses' }]),
@@ -49,14 +52,23 @@ export default function StreakAnalyticsModule({
   const hasAttendanceData = attendance.gridMonths?.length > 0;
 
   const handleResumePractice = useCallback(() => {
-    const enrolled = courses.filter((c) => c.id && c.id !== 'general');
+    const enrolled = courses.filter((c) => c.id && c.id !== 'general' && !String(c.id).startsWith('program-'));
     const mbw = enrolled.find((c) => c.code === 'MBW');
     if (mbw) {
       navigate('/app/mbw');
       return;
     }
+    const bm100 = enrolled.find((c) => c.code === '100BM');
+    if (bm100) {
+      navigate('/app/100bm');
+      return;
+    }
     if (enrolled.length === 1) {
       navigate(`/app/course/${enrolled[0].id}`);
+      return;
+    }
+    if (progressVariant) {
+      document.getElementById('progress-programs')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
     const scrollToCourses = () => {
@@ -67,30 +79,37 @@ export default function StreakAnalyticsModule({
     } else {
       navigate('/app/home#courses');
     }
-  }, [courses, navigate]);
+  }, [courses, navigate, progressVariant]);
 
-  if (homeVariant && !loading && !hasActivity && !hasAttendanceData) {
+  if ((homeVariant || progressVariant) && !loading && !hasActivity && !hasAttendanceData) {
     return (
-      <section className="home-get-started" aria-label="Getting started">
+      <section
+        className={`home-get-started${progressVariant ? ' home-get-started--progress' : ''}`}
+        aria-label="Getting started"
+      >
         <span className="home-get-started__icon" aria-hidden>
           <Sparkles size={22} strokeWidth={2} />
         </span>
         <div>
           <h3 className="home-get-started__title">Start building your streak</h3>
           <p className="home-get-started__text muted">
-            Complete your first MBW task or lesson — consistency unlocks streaks, attendance, and
-            progress insights here.
+            {progressVariant
+              ? 'Open a lesson or submit a task in your enrolled program — daily momentum fuels your streak.'
+              : 'Complete your first MBW task or lesson — consistency unlocks streaks, attendance, and progress insights here.'}
           </p>
         </div>
         <button type="button" className="btn btn-primary btn-sm" onClick={handleResumePractice}>
-          Start learning
+          {progressVariant ? 'Go to my program' : 'Start learning'}
         </button>
       </section>
     );
   }
 
   return (
-    <section className="streak-analytics" aria-label="Streak and attendance analytics">
+    <section
+      className={`streak-analytics${progressVariant ? ' streak-analytics--progress' : ''}`}
+      aria-label="Streak and attendance analytics"
+    >
       {warning && (
         <p className="streak-warning" role="status">
           {warning}

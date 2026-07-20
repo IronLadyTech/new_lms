@@ -1,21 +1,49 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useProgramAdapter } from '../../hooks/useProgramAdapter';
-import {
-  getSubmission,
-  reviewSubmission,
-  submissionDocId,
-  SUBMISSION_STATUS,
-} from '../../services/mbwService';
+import { SUBMISSION_STATUS } from '../../services/mbwService';
 import { getUserProfile } from '../../services/userService';
-import { sendTaskReminder } from '../../services/notificationService';
-import ErrcReadOnlyTable from '../../components/mbw/ErrcReadOnlyTable';
+import SubmissionReviewView from '../../components/cx/SubmissionReviewView';
+import DashboardSkeleton from '../../components/ui/DashboardSkeleton';
+import {
+  REVIEW_OUTCOME,
+  getReviewOutcomeMeta,
+  getSubmissionReviewDisplay,
+  formatReviewedAt,
+  statusForReviewOutcome,
+} from '../../utils/submissionReview';
+import { sendReviewNotification } from '../../services/notificationService';
+
+const OUTCOME_OPTIONS = [
+  {
+    id: REVIEW_OUTCOME.APPROVED,
+    label: 'Approved',
+    description: 'Mark complete — learner can move on.',
+    icon: CheckCircle,
+    variant: 'primary',
+  },
+  {
+    id: REVIEW_OUTCOME.NEEDS_IMPROVEMENT,
+    label: 'Needs improvement',
+    description: 'Learner can revise and resubmit.',
+    icon: AlertTriangle,
+    variant: 'outline',
+  },
+  {
+    id: REVIEW_OUTCOME.REJECTED,
+    label: 'Rejected',
+    description: 'Submission did not meet requirements — learner must redo.',
+    icon: XCircle,
+    variant: 'outline',
+  },
+];
 
 export default function CXTaskReview() {
   const { userId, taskId } = useParams();
   const { user } = useAuth();
-  const { adapter } = useProgramAdapter();
+  const { program, adapter } = useProgramAdapter();
   const navigate = useNavigate();
 
   const [learner, setLearner] = useState(null);
@@ -23,24 +51,29 @@ export default function CXTaskReview() {
   const [submission, setSubmission] = useState(null);
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState('');
+  const [outcome, setOutcome] = useState(REVIEW_OUTCOME.APPROVED);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [savedOutcome, setSavedOutcome] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
+      setSaved(false);
       try {
         const [profile, taskList, sub] = await Promise.all([
           getUserProfile(userId),
           adapter.getTasks(),
-          getSubmission(userId, taskId),
+          adapter.getSubmission(userId, taskId),
         ]);
         if (cancelled) return;
         setLearner(profile);
         setTasks(taskList);
         setSubmission(sub);
         setFeedback(sub?.feedback || '');
+        setOutcome(sub?.reviewOutcome || REVIEW_OUTCOME.APPROVED);
       } catch (e) {
         if (!cancelled) setError(e.message || 'Failed to load submission');
       } finally {
@@ -53,20 +86,61 @@ export default function CXTaskReview() {
   }, [userId, taskId, adapter]);
 
   const task = useMemo(() => tasks.find((t) => t.id === taskId), [tasks, taskId]);
+  const reviewDisplay = getSubmissionReviewDisplay(submission);
+  const hasSubmission = Boolean(
+    submission
+      && submission.status !== SUBMISSION_STATUS.LOCKED
+      && submission.status !== SUBMISSION_STATUS.UNLOCKED
+  );
 
-  const handleReview = async (approved) => {
+  const handleSaveReview = async (e) => {
+    e.preventDefault();
+    if (!submission) return;
+
+    if (
+      (outcome === REVIEW_OUTCOME.NEEDS_IMPROVEMENT || outcome === REVIEW_OUTCOME.REJECTED)
+      && !feedback.trim()
+    ) {
+      setError('Add feedback so the learner knows what to improve.');
+      return;
+    }
+
     setSaving(true);
     setError('');
     try {
-      await reviewSubmission(submissionDocId(userId, taskId), {
-        approved,
+      const subId = adapter.submissionDocId(userId, taskId);
+      await adapter.reviewSubmission(subId, {
+        outcome,
         feedback: feedback.trim(),
         reviewerId: user?.uid,
       });
-      navigate('/cx/home', { replace: true });
-    } catch (e) {
-      console.error(e);
-      setError(e.message || 'Could not save review');
+      setSaved(true);
+      setSavedOutcome(outcome);
+      setSubmission((prev) => ({
+        ...prev,
+        status: statusForReviewOutcome(outcome),
+        reviewOutcome: outcome,
+        feedback: feedback.trim(),
+        reviewedAt: new Date(),
+      }));
+      try {
+        if (
+          outcome === REVIEW_OUTCOME.NEEDS_IMPROVEMENT
+          || outcome === REVIEW_OUTCOME.REJECTED
+        ) {
+          await sendReviewNotification({
+            userId,
+            taskId,
+            taskTitle: task?.title,
+            outcome,
+            feedback: feedback.trim(),
+          });
+        }
+      } catch (notifyErr) {
+        console.warn('Review saved but notification failed', notifyErr);
+      }
+    } catch (err) {
+      setError(err.message || 'Could not save review');
     } finally {
       setSaving(false);
     }
@@ -75,98 +149,128 @@ export default function CXTaskReview() {
   if (loading) {
     return (
       <div className="page cx-page">
-        <p className="muted">Loading submission…</p>
+        <DashboardSkeleton rows={5} />
       </div>
     );
   }
 
   return (
-    <div className="page cx-page">
-      <Link to="/cx/home" className="back-link">
-        ← Back to home
+    <div className="page cx-page cx-review-page">
+      <Link to="/cx/reviews" className="back-link">
+        ← Back to reviews
       </Link>
-      <h1>{task?.title || 'Task review'}</h1>
-      <p className="page-sub">
-        {learner ? learner.displayName || learner.email : userId}
-        {learner?.batchName ? ` · ${learner.batchName}` : ''}
-      </p>
 
-      {error && <p className="cx-error">{error}</p>}
+      <header className="cx-review-page__header">
+        <div>
+          <p className="cx-review-page__eyebrow muted">{task?.week || 'Task review'}</p>
+          <h1>{task?.title || 'Task review'}</h1>
+          <p className="page-sub">
+            {learner ? learner.displayName || learner.email : userId}
+            {learner?.batchName ? ` · ${learner.batchName}` : ''}
+          </p>
+        </div>
+        {submission && (
+          <span className={`mbw-status-pill mbw-status-pill--${reviewDisplay.tone}`}>
+            {reviewDisplay.label}
+          </span>
+        )}
+      </header>
 
-      {!submission ? (
-        <p className="muted">No submission found for this task.</p>
+      {error && (
+        <p className="cx-error" role="alert">
+          {error}
+        </p>
+      )}
+
+      {saved && (
+        <div className="alert alert-success cx-review-page__saved" role="status">
+          {savedOutcome === REVIEW_OUTCOME.APPROVED
+            ? 'Review saved. The learner can continue to the next task.'
+            : 'Review saved. The learner will be notified to revise and resubmit.'}
+        </div>
+      )}
+
+      {!hasSubmission ? (
+        <section className="cx-section">
+          <p className="muted">This participant has not submitted this task yet.</p>
+        </section>
       ) : (
         <>
           <section className="cx-section">
             <h2>Submission</h2>
-            <p className="muted">
-              Status: <strong>{submission.status}</strong>
-            </p>
-            {submission.textValue && <p className="cx-review-text">{submission.textValue}</p>}
-            {submission.linkValue && (
-              <p>
-                <a href={submission.linkValue} target="_blank" rel="noreferrer">
-                  {submission.linkValue}
-                </a>
-              </p>
-            )}
-            {submission.fileUrl && (
-              <p>
-                <a href={submission.fileUrl} target="_blank" rel="noreferrer">
-                  {submission.fileName || 'Attached file'}
-                </a>
-              </p>
-            )}
-            {submission.videoUrl && (
-              <video src={submission.videoUrl} controls className="cx-review-video" />
-            )}
-            {submission.templateData?.rows && (
-              <ErrcReadOnlyTable rows={submission.templateData.rows} />
-            )}
-            {submission.weekEntries?.length > 0 && (
-              <ul className="cx-batch-list">
-                {submission.weekEntries.map((e, i) => (
-                  <li key={i} className="cx-batch-row cx-batch-row--static">
-                    <span className="cx-batch-row__name">{e.weekLabel}</span>
-                    <span className="cx-batch-row__count">
-                      {(e.links || [e.linkValue]).filter(Boolean).join(', ')}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <SubmissionReviewView submission={submission} task={task} />
           </section>
 
-          <section className="cx-section">
-            <h2>Review</h2>
-            <textarea
-              className="cx-review-feedback"
-              rows={4}
-              placeholder="Feedback for the learner (optional on approve, recommended on changes)"
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-            />
-            <div className="cx-review-actions">
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={saving || submission.status === SUBMISSION_STATUS.COMPLETED}
-                onClick={() => handleReview(true)}
-              >
-                {saving ? 'Saving…' : 'Approve'}
-              </button>
-              <button
-                type="button"
-                className="btn btn-outline"
-                disabled={saving}
-                onClick={() => handleReview(false)}
-              >
-                Request changes
-              </button>
-            </div>
-            {submission.status === SUBMISSION_STATUS.COMPLETED && (
-              <p className="muted">This task is already approved.</p>
+          <section className="cx-section cx-review-form">
+            <h2>Your review</h2>
+            {submission.reviewedAt && (
+              <p className="muted cx-review-form__prev">
+                Last reviewed {formatReviewedAt(submission.reviewedAt)}
+                {submission.reviewOutcome && (
+                  <> · {getReviewOutcomeMeta(submission.reviewOutcome)?.label}</>
+                )}
+              </p>
             )}
+
+            <form onSubmit={handleSaveReview}>
+              <fieldset className="cx-review-outcomes">
+                <legend className="cx-review-outcomes__legend">Review status</legend>
+                {OUTCOME_OPTIONS.map((opt) => {
+                  const Icon = opt.icon;
+                  const selected = outcome === opt.id;
+                  return (
+                    <label
+                      key={opt.id}
+                      className={`cx-review-outcome${selected ? ' is-selected' : ''}`}
+                    >
+                      <input
+                        type="radio"
+                        name="review-outcome"
+                        value={opt.id}
+                        checked={selected}
+                        onChange={() => setOutcome(opt.id)}
+                      />
+                      <span className="cx-review-outcome__icon" aria-hidden="true">
+                        <Icon size={18} />
+                      </span>
+                      <span className="cx-review-outcome__text">
+                        <strong>{opt.label}</strong>
+                        <span className="muted">{opt.description}</span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </fieldset>
+
+              <label className="field cx-review-form__feedback">
+                <span className="field__label">Feedback for the learner</span>
+                <textarea
+                  className="cx-review-feedback"
+                  rows={5}
+                  placeholder="Share specific, actionable feedback. Required for Needs improvement and Rejected."
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  aria-required={
+                    outcome === REVIEW_OUTCOME.NEEDS_IMPROVEMENT
+                    || outcome === REVIEW_OUTCOME.REJECTED
+                  }
+                />
+              </label>
+
+              <div className="cx-review-actions">
+                <button type="submit" className="btn btn-primary" disabled={saving}>
+                  {saving ? 'Saving…' : 'Save review'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  disabled={saving}
+                  onClick={() => navigate('/cx/reviews')}
+                >
+                  Back to queue
+                </button>
+              </div>
+            </form>
           </section>
         </>
       )}

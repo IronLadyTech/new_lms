@@ -46,6 +46,12 @@ service firebase.storage {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
 
+    // 100BM task uploads — owner writes; CX/admin staff can read for review.
+    match /bm100/{userId}/{allPaths=**} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isStaffUser());
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
     match /events/{allPaths=**} {
       allow read: if request.auth != null;
       allow write: if isAdminUser();

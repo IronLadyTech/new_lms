@@ -1,10 +1,11 @@
-import { SUBMISSION_STATUS, TASK_TYPES, taskNeedsReview } from '../services/bm100Service';
+import { SUBMISSION_STATUS, TASK_TYPES } from '../services/bm100Service';
 import {
   BM100_PROGRAM_SECTIONS,
   BM100_SECTION_STATUS,
   BM100_GATE_TYPES,
 } from '../data/bm100ProgramStructure';
 import { hasFullProgramAccess, normalizePaymentStatus, PAYMENT_STATUS } from '../data/accessTiers';
+import { submissionUnlocksNext } from './submissionReview';
 
 export const REGISTRATION_PAYMENT_LOCK_TOOLTIP =
   'You have paid only the registration amount. Complete full program payment to unlock this section.';
@@ -27,7 +28,7 @@ export function isPreparationComplete(taskStates) {
   if (!taskStates?.length) return false;
   const prepTasks = taskStates.filter((ts) => ts.task.phase === 'onboarding');
   if (!prepTasks.length) return false;
-  return prepTasks.every((ts) => ts.isComplete || ts.task.optional);
+  return prepTasks.every((ts) => ts.task.optional || submissionUnlocksNext(ts.status));
 }
 
 function sectionComplete(sectionId, sectionProgress) {
@@ -52,7 +53,9 @@ export function computeSectionProgress(taskStates, profile = null) {
   BM100_PROGRAM_SECTIONS.forEach((section) => {
     if (section.usesTaskEngine) {
       const sectionTasks = taskStates.filter((ts) => ts.task.phase === section.id);
-      const done = sectionTasks.filter((ts) => ts.isComplete || ts.task.optional).length;
+      const done = sectionTasks.filter(
+        (ts) => ts.task.optional || submissionUnlocksNext(ts.status) || ts.isComplete
+      ).length;
       const total = sectionTasks.length;
       const unlocked = resolveGate(section.gate, progress, taskStates, profile);
 
@@ -137,10 +140,10 @@ export function getLessonRowState(taskState, activeTaskId, nextTaskId) {
   }
 
   if (
-    submission?.status === SUBMISSION_STATUS.UNDER_REVIEW ||
-    submission?.status === SUBMISSION_STATUS.SUBMITTED
+    submission?.status === SUBMISSION_STATUS.NEEDS_IMPROVEMENT
+    || submission?.status === SUBMISSION_STATUS.REJECTED
   ) {
-    return { visual: 'pending', reason: null, clickable: true };
+    return { visual: 'current', reason: 'Action required — review feedback and resubmit', clickable: true };
   }
 
   if (id === activeTaskId || id === nextTaskId) {
@@ -178,7 +181,6 @@ export function getTaskDurationHint(task) {
   if (task.type === TASK_TYPES.VIDEO_RECORD) return '~5 min recording';
   if (task.type === TASK_TYPES.EDITABLE_TEMPLATE) return 'Template';
   if (task.type === TASK_TYPES.CHECKLIST) return 'Checklist';
-  if (taskNeedsReview(task)) return 'Review required';
   return '~10 min';
 }
 

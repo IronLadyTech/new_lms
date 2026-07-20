@@ -78,6 +78,18 @@ export async function sendTaskReminder(userId, taskId) {
   return data;
 }
 
+export async function sendReviewNotification({
+  userId,
+  taskId,
+  taskTitle,
+  outcome,
+  feedback,
+}) {
+  const fn = httpsCallable(functions, 'sendReviewNotification');
+  const { data } = await fn({ userId, taskId, taskTitle, outcome, feedback });
+  return data;
+}
+
 export async function sendSessionReminder(batchId, message) {
   const fn = httpsCallable(functions, 'sendSessionReminder');
   const { data } = await fn({ batchId, message });

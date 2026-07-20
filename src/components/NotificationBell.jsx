@@ -1,10 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bell, CalendarDays, Megaphone, MessageCircle, UserCheck, X } from 'lucide-react';
+import {
+  Bell,
+  CalendarDays,
+  ClipboardCheck,
+  Megaphone,
+  MessageCircle,
+  UserCheck,
+  X,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getEvents } from '../services/eventService';
 import { getAnnouncements, getActiveAnnouncementsForUser } from '../services/announcementService';
 import { getUserTickets, statusLabel, TICKET_STATUSES } from '../services/ticketService';
+import { getUserSubmissions as getMbwSubmissions, getStaticTasks as getMbwTasks } from '../services/mbwService';
+import { getUserSubmissions as getBm100Submissions, getStaticTasks as getBm100Tasks } from '../services/bm100Service';
+import { PROGRAMS } from '../data/programTypes';
+import { getReviewOutcomeMeta } from '../utils/submissionReview';
 import { calendarEventUrl } from './EventPreviewCard';
 
 const DISMISSED_KEY = 'ilms_dismissed_notifications';
@@ -21,7 +33,19 @@ function setDismissed(ids) {
   localStorage.setItem(DISMISSED_KEY, JSON.stringify(ids));
 }
 
-function buildNotifications(events, tickets, announcements, userId) {
+function reviewedAtKey(ts) {
+  if (!ts) return '';
+  if (typeof ts === 'string') return ts;
+  if (ts.seconds) return String(ts.seconds);
+  if (ts.toMillis) return String(ts.toMillis());
+  try {
+    return new Date(ts).toISOString();
+  } catch {
+    return '';
+  }
+}
+
+function buildNotifications(events, tickets, announcements, reviews, userId) {
   const today = new Date().toISOString().slice(0, 10);
   const items = [];
 
@@ -37,6 +61,20 @@ function buildNotifications(events, tickets, announcements, userId) {
         link: '/app/home',
       });
     });
+
+  reviews.slice(0, 12).forEach((r) => {
+    const meta = getReviewOutcomeMeta(r.outcome);
+    const statusLabelText = meta?.learnerLabel || 'Reviewed';
+    items.push({
+      id: `review-${r.taskId}-${reviewedAtKey(r.reviewedAt)}`,
+      kind: 'review',
+      title: `Review: ${r.taskTitle}`,
+      body: r.feedback
+        ? `${statusLabelText} — ${r.feedback.slice(0, 90)}`
+        : `${statusLabelText}. Open the task to see details.`,
+      link: r.link,
+    });
+  });
 
   events
     .filter((e) => e.date >= today)
@@ -79,25 +117,52 @@ function buildNotifications(events, tickets, announcements, userId) {
   return items;
 }
 
+function buildReviewItems(submissionsMap, tasks, program) {
+  const taskById = Object.fromEntries(tasks.map((t) => [t.id, t]));
+  const basePath = program === PROGRAMS.BM100 ? '/app/100bm' : '/app/mbw';
+
+  return Object.values(submissionsMap || {})
+    .filter((s) => s?.reviewedAt && (s.reviewOutcome || s.feedback))
+    .map((s) => ({
+      taskId: s.taskId,
+      taskTitle: taskById[s.taskId]?.title || s.taskId,
+      outcome: s.reviewOutcome,
+      feedback: s.feedback || '',
+      reviewedAt: s.reviewedAt,
+      link: `${basePath}?lesson=${encodeURIComponent(s.taskId)}`,
+    }))
+    .sort((a, b) => reviewedAtKey(b.reviewedAt).localeCompare(reviewedAtKey(a.reviewedAt)));
+}
+
 export default function NotificationBell() {
-  const { user, isGuest } = useAuth();
+  const { user, profile, isGuest } = useAuth();
   const [open, setOpen] = useState(false);
   const [events, setEvents] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [dismissed, setDismissedState] = useState(getDismissed);
 
   useEffect(() => {
     if (!user || isGuest) return undefined;
     let cancelled = false;
+    const program = profile?.program || PROGRAMS.MBW;
 
     const load = async () => {
       try {
-        const [ev, tk, ann] = await Promise.all([getEvents(), getUserTickets(user.uid), getAnnouncements()]);
+        const getSubs = program === PROGRAMS.BM100 ? getBm100Submissions : getMbwSubmissions;
+        const tasks = program === PROGRAMS.BM100 ? getBm100Tasks() : getMbwTasks();
+        const [ev, tk, ann, subs] = await Promise.all([
+          getEvents(),
+          getUserTickets(user.uid),
+          getAnnouncements(),
+          getSubs(user.uid),
+        ]);
         if (!cancelled) {
           setEvents(ev);
           setTickets(tk);
           setAnnouncements(ann);
+          setReviews(buildReviewItems(subs, tasks, program));
         }
       } catch (e) {
         console.error(e);
@@ -114,11 +179,11 @@ export default function NotificationBell() {
       clearInterval(interval);
       window.removeEventListener('focus', onFocus);
     };
-  }, [user, isGuest]);
+  }, [user, isGuest, profile?.program]);
 
   const notifications = useMemo(
-    () => buildNotifications(events, tickets, announcements, user?.uid),
-    [events, tickets, announcements, user?.uid]
+    () => buildNotifications(events, tickets, announcements, reviews, user?.uid),
+    [events, tickets, announcements, reviews, user?.uid]
   );
   const visible = notifications.filter((n) => !dismissed.includes(n.id));
   const count = visible.length;
@@ -179,6 +244,7 @@ export default function NotificationBell() {
                         {n.kind === 'assigned' && <UserCheck size={16} />}
                         {n.kind === 'ticket' && <MessageCircle size={16} />}
                         {n.kind === 'announcement' && <Megaphone size={16} />}
+                        {n.kind === 'review' && <ClipboardCheck size={16} />}
                       </span>
                       <span>
                         <strong>{n.title}</strong>

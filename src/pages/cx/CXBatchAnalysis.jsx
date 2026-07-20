@@ -11,6 +11,7 @@ import { getTodayKey, addDaysToKey } from '../../utils/streakTimezone';
 import ParticipantListModal from '../../components/cx/ParticipantListModal';
 import BatchMembersPanel from '../../components/cx/BatchMembersPanel';
 import BatchRecordingsPanel from '../../components/cx/BatchRecordingsPanel';
+import DashboardSkeleton from '../../components/ui/DashboardSkeleton';
 
 function timeAgo(ts) {
   const ms = ts?.seconds ? ts.seconds * 1000 : ts?.toMillis?.() || null;
@@ -43,7 +44,7 @@ export default function CXBatchAnalysis() {
   const navigate = useNavigate();
   const { user, role } = useAuth();
   const { program, adapter } = useProgramAdapter();
-  const { batches, users, students, tasks, submissions, loading, refresh } = useCxData(program, adapter);
+  const { batches, users, students, activeTasks: tasks, submissions, loading, refresh } = useCxData(program, adapter);
   const [modal, setModal] = useState(null);
   const [attendance, setAttendance] = useState({});
   const [attendanceLoading, setAttendanceLoading] = useState(false);
@@ -132,7 +133,7 @@ export default function CXBatchAnalysis() {
   if (loading) {
     return (
       <div className="page cx-page">
-        <p className="muted">Loading…</p>
+        <DashboardSkeleton rows={8} />
       </div>
     );
   }

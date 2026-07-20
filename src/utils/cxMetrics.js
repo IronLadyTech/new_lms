@@ -1,12 +1,20 @@
-import { SUBMISSION_STATUS, taskNeedsReview } from '../services/mbwService';
+import { SUBMISSION_STATUS } from '../services/mbwService';
 import { PROGRAMS } from '../data/programTypes';
 import { MBW_PROGRAM_SECTIONS } from '../data/mbwProgramStructure';
 
-/** Phases currently live for CX dashboards — avoids diluting metrics with locked future quarters. */
+/** Phases currently live for CX dashboards — avoids diluting metrics with locked future quarters.
+ *  Reviews always use the full task list (not this filter). */
 export const CX_ACTIVE_PHASES = {
   [PROGRAMS.MBW]: ['pre-preparation', 'quarter-1'],
   [PROGRAMS.LEP]: [],
-  [PROGRAMS.BM100]: [],
+  [PROGRAMS.BM100]: [
+    'onboarding',
+    'phase-1-foundation',
+    'phase-2-pitch-strategy',
+    'phase-3-board-ready',
+    'phase-4-challenges',
+    'graduation',
+  ],
 };
 
 export function filterCxTasks(tasks, program = PROGRAMS.MBW) {
@@ -64,35 +72,27 @@ export function moduleCompletionPct(students, moduleTasks, submissions) {
 
 export function buildModuleTaskBreakdown(students, tasks, submissions) {
   const index = buildSubmissionIndex(submissions);
-  const taskById = Object.fromEntries(tasks.map((t) => [t.id, t]));
 
   return groupTasksByModule(tasks).map((mod) => ({
     ...mod,
     completionPct: moduleCompletionPct(students, mod.tasks, submissions),
     taskRows: mod.tasks.map((t) => ({
       task: t,
-      completed: students.filter((s) =>
-        isCxSubmissionComplete(index[s.id]?.[t.id], taskById[t.id])
-      ),
-      notCompleted: students.filter(
-        (s) => !isCxSubmissionComplete(index[s.id]?.[t.id], taskById[t.id])
-      ),
+      completed: students.filter((s) => isCxSubmissionComplete(index[s.id]?.[t.id])),
+      notCompleted: students.filter((s) => !isCxSubmissionComplete(index[s.id]?.[t.id])),
     })),
   }));
 }
 
-/** Matches learner MBW completion logic (review off → submitted counts as done). */
-export function isCxSubmissionComplete(submission, task) {
+/** Matches learner completion: submitted or approved counts as done. */
+export function isCxSubmissionComplete(submission) {
   if (!submission) return false;
   const status = submission.status;
-  if (status === SUBMISSION_STATUS.COMPLETED) return true;
-  const reviewRequired = task?.reviewRequired ?? false;
-  if (!taskNeedsReview({ reviewRequired })) {
-    return (
-      status === SUBMISSION_STATUS.SUBMITTED || status === SUBMISSION_STATUS.UNDER_REVIEW
-    );
-  }
-  return false;
+  return (
+    status === SUBMISSION_STATUS.COMPLETED
+    || status === SUBMISSION_STATUS.SUBMITTED
+    || status === SUBMISSION_STATUS.UNDER_REVIEW
+  );
 }
 
 export function buildSubmissionIndex(submissions = []) {
@@ -106,12 +106,11 @@ export function buildSubmissionIndex(submissions = []) {
 
 export function countCompletedCells(students, tasks, submissions) {
   const index = buildSubmissionIndex(submissions);
-  const taskById = Object.fromEntries(tasks.map((t) => [t.id, t]));
   let done = 0;
   students.forEach((student) => {
     tasks.forEach((task) => {
       const sub = index[student.id]?.[task.id];
-      if (isCxSubmissionComplete(sub, taskById[task.id] || task)) done += 1;
+      if (isCxSubmissionComplete(sub)) done += 1;
     });
   });
   return done;

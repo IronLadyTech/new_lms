@@ -21,6 +21,7 @@ import CXBatches from './pages/cx/CXBatches';
 import CXBatchAnalysis from './pages/cx/CXBatchAnalysis';
 import CXDashboards from './pages/cx/CXDashboards';
 import CXProfile from './pages/cx/CXProfile';
+import CXReviews from './pages/cx/CXReviews';
 import CXTaskReview from './pages/cx/CXTaskReview';
 import { ROLES } from './utils/roles';
 import { isAdminRole, isModeratorOnly } from './utils/roles';
@@ -91,6 +92,7 @@ export default function App() {
         <Route path="home" element={<CXHome />} />
         <Route path="batches" element={<CXBatches />} />
         <Route path="batches/:batchId" element={<CXBatchAnalysis />} />
+        <Route path="reviews" element={<CXReviews />} />
         <Route path="dashboards" element={<CXDashboards />} />
         <Route path="profile" element={<CXProfile />} />
         <Route path="review/:userId/:taskId" element={<CXTaskReview />} />

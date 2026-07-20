@@ -6,6 +6,7 @@ import useMbwEnrollment from '../../hooks/useMbwEnrollment';
 import useBatchRecordings from '../../hooks/useBatchRecordings';
 import MBWToast from '../../components/mbw/MBWToast';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
+import ProgramLockedPanel from '../../components/ProgramLockedPanel';
 import MBWProgramHero from '../../components/mbw/program/MBWProgramHero';
 import MBWLessonTopbar from '../../components/mbw/program/MBWLessonTopbar';
 import LessonCurriculumDrawer from '../../components/mbw/program/LessonCurriculumDrawer';
@@ -21,11 +22,13 @@ import {
   getCohortLabel,
 } from '../../utils/mbwProgramUtils';
 import { getModuleLabel } from '../../utils/mbwDisplay';
+import { getProgramAccessState } from '../../utils/programAccess';
+import { PROGRAMS } from '../../data/programTypes';
 
 export default function MBWPage() {
   const { user, profile, isGuest } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { enrolled } = useMbwEnrollment();
+  const { enrolled, courses } = useMbwEnrollment();
   const { recordings } = useBatchRecordings();
 
   const [expandedSectionId, setExpandedSectionId] = useState('pre-preparation');
@@ -188,15 +191,15 @@ export default function MBWPage() {
   }
 
   if (enrolled === false) {
+    const access = getProgramAccessState(PROGRAMS.MBW, profile, courses);
     return (
       <div className="page mbw-program-page">
-        <div className="mbw-program-enroll">
-          <h1>Master of Business Warfare</h1>
-          <p>Enrol in the 1-year MBW program from Courses to access your journey.</p>
-          <Link to="/app/home" className="btn btn-primary">
-            Go to Courses
-          </Link>
-        </div>
+        <ProgramLockedPanel
+          title="MBW is locked for your account"
+          message={access.message}
+          state={access.state}
+          programLabel="MBW"
+        />
       </div>
     );
   }

@@ -13,6 +13,7 @@ import { TASK_TYPES, SUBMISSION_STATUS } from '../../services/mbwService';
 import { getModuleLabel, getWeekCode, getPrimaryStatus } from '../../utils/mbwDisplay';
 import { getTaskDurationHint } from '../../utils/mbwProgramUtils';
 import { MBW_PROGRAM_SECTIONS } from '../../data/mbwProgramStructure';
+import LearnerReviewFeedback from '../submissions/LearnerReviewFeedback';
 
 function getSectionTitle(phase) {
   return MBW_PROGRAM_SECTIONS.find((s) => s.id === phase)?.title ?? 'MBW';
@@ -36,7 +37,7 @@ export default function TaskContent({
   const { task, submission, status, watched, canSubmit, isComplete, prevTaskId } = taskState;
   const locked = status === SUBMISSION_STATUS.LOCKED;
   const showVideo = task.requiresWatch || task.type === TASK_TYPES.WATCH_ONLY;
-  const primary = getPrimaryStatus(status, isComplete, task.reviewRequired);
+  const primary = getPrimaryStatus(status, isComplete);
 
   const handleSubmit = async (fields) => {
     const result = await onSubmit(fields);
@@ -187,11 +188,7 @@ export default function TaskContent({
             />
           )}
 
-          {submission?.feedback && (
-            <div className="alert alert-warning">
-              <strong>Instructor feedback:</strong> {submission.feedback}
-            </div>
-          )}
+          <LearnerReviewFeedback submission={submission} />
         </section>
       )}
     </div>

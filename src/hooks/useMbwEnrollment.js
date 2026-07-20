@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getCourses } from '../services/courseService';
+import { canAccessProgram } from '../utils/programAccess';
+import { PROGRAMS } from '../data/programTypes';
 
+/** True when the learner is enrolled in MBW specifically. */
 export default function useMbwEnrollment() {
   const { profile, isGuest } = useAuth();
   const [enrolled, setEnrolled] = useState(null);
+  const [courses, setCourses] = useState([]);
 
   useEffect(() => {
     if (isGuest) {
       setEnrolled(false);
-      return undefined;
-    }
-    if (!profile?.enrolledCourses?.length) {
-      setEnrolled(false);
+      setCourses([]);
       return undefined;
     }
 
@@ -20,10 +21,9 @@ export default function useMbwEnrollment() {
     (async () => {
       try {
         const list = await getCourses();
-        const mbw = list.find((c) => c.code === 'MBW');
-        if (!cancelled) {
-          setEnrolled(!!mbw && profile.enrolledCourses.includes(mbw.id));
-        }
+        if (cancelled) return;
+        setCourses(list);
+        setEnrolled(canAccessProgram(PROGRAMS.MBW, profile, list));
       } catch {
         if (!cancelled) setEnrolled(false);
       }
@@ -34,5 +34,5 @@ export default function useMbwEnrollment() {
     };
   }, [profile, isGuest]);
 
-  return { enrolled, isEnrolled: enrolled === true };
+  return { enrolled, isEnrolled: enrolled === true, courses };
 }

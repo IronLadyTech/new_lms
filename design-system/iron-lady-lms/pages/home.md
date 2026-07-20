@@ -18,8 +18,15 @@ Use `DashboardSkeleton` — no plain "Loading…" text alone.
 ## Copy
 - Tagline: "Elevating a million women to the top"
 - Empty schedule: "No live sessions scheduled — check back soon."
+- Programs subtitle: journey order LEP → 100BM → MBW; locked stay visible as upcoming
+
+## Program access
+- Cards sorted LEP → 100BM → MBW
+- States: open (enrolled/included), upcoming (next step), locked
+- No self-enroll into locked tracks — CTA is Speak to our Counsellor
+- Direct `/app/mbw` and `/app/100bm` blocked with ProgramLockedPanel when not entitled
 
 ## CTAs
-- MBW enrolled → "Continue MBW tasks"
-- Single course → "Continue {code}"
+- MBW access → "Continue MBW tasks"
+- Single open program → "Continue {code}"
 - None → "Browse programs"

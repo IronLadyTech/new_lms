@@ -15,10 +15,12 @@ import {
   LabelList,
 } from 'recharts';
 import { useTheme } from '../../context/ThemeContext';
+import CxChartDrillLegend from './CxChartDrillLegend';
 
 // Iron Lady palette. Keys are plain-language labels shown to CX staff.
 const STATUS_COLORS = {
   Done: '#22c55e',
+  'Action required': '#F5B301',
   'Waiting for review': '#F5B301',
   'Not started': '#9ca3af',
 };
@@ -40,7 +42,7 @@ function useChartTheme() {
   }, [theme]);
 }
 
-function ChartCard({ title, subtitle, children }) {
+function ChartCard({ title, subtitle, legend, children }) {
   return (
     <div className="admin-chart-card">
       <div className="admin-chart-card__head">
@@ -48,22 +50,71 @@ function ChartCard({ title, subtitle, children }) {
         {subtitle && <p className="muted">{subtitle}</p>}
       </div>
       <div className="admin-chart-card__body">{children}</div>
+      {legend && <div className="cx-crm-chart__foot">{legend}</div>}
     </div>
   );
+}
+
+function segmentClick(onDrill, descriptor, count) {
+  if (!onDrill || !count) return;
+  onDrill(descriptor);
 }
 
 function EmptyChart({ message }) {
   return <p className="admin-chart__empty muted">{message}</p>;
 }
 
-export default function CxCharts({ statusData = [], batchData = [], donutPct = 0 }) {
+export default function CxCharts({
+  statusData = [],
+  batchData = [],
+  donutPct = 0,
+  batchOnly = false,
+  onDrill,
+}) {
   const { tooltipStyle, gridStroke, tickFill } = useChartTheme();
   const statusTotal = statusData.reduce((sum, d) => sum + d.value, 0);
   const hasStatus = statusTotal > 0;
 
+  const batchLegend = useMemo(
+    () =>
+      batchData
+        .map((row) => ({
+          key: row.batchId || row.name,
+          label: row.name,
+          count: row.learners ?? 0,
+          color: '#F52929',
+          descriptor: {
+            chartId: 'batchCompletion',
+            seriesKey: 'all',
+            category: row.batchId || row.name,
+          },
+        }))
+        .filter((item) => item.count > 0),
+    [batchData]
+  );
+
+  const statusLegend = useMemo(
+    () =>
+      statusData
+        .filter((d) => d.value > 0)
+        .map((d) => ({
+          key: d.name,
+          label: d.name,
+          count: d.value,
+          color: STATUS_COLORS[d.name],
+          descriptor: { chartId: 'taskStatus', seriesKey: d.name },
+        })),
+    [statusData]
+  );
+
   return (
-    <div className="admin-charts-grid">
-      <ChartCard title="Task completion" subtitle="Everyone in your program">
+    <div className={`admin-charts-grid${batchOnly ? ' admin-charts-grid--single' : ''}`}>
+      {!batchOnly && (
+      <ChartCard
+        title="Task completion"
+        subtitle="Everyone in your program"
+        legend={<CxChartDrillLegend items={statusLegend} onDrill={onDrill} />}
+      >
         {!hasStatus ? (
           <EmptyChart message="No tasks started yet." />
         ) : (
@@ -85,7 +136,14 @@ export default function CxCharts({ statusData = [], batchData = [], donutPct = 0
                   strokeWidth={2}
                 >
                   {statusData.map((d) => (
-                    <Cell key={d.name} fill={STATUS_COLORS[d.name] || '#F52929'} />
+                    <Cell
+                      key={d.name}
+                      fill={STATUS_COLORS[d.name] || '#F52929'}
+                      style={{ cursor: onDrill && d.value > 0 ? 'pointer' : undefined }}
+                      onClick={() =>
+                        segmentClick(onDrill, { chartId: 'taskStatus', seriesKey: d.name }, d.value)
+                      }
+                    />
                   ))}
                   <Label
                     position="center"
@@ -104,15 +162,20 @@ export default function CxCharts({ statusData = [], batchData = [], donutPct = 0
                     }}
                   />
                 </Pie>
-                <Tooltip contentStyle={tooltipStyle} formatter={(v, n) => [`${v} tasks`, n]} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(v, n) => [`${v} participants`, n]} />
                 <Legend />
               </PieChart>
             )}
           </ChartFrame>
         )}
       </ChartCard>
+      )}
 
-      <ChartCard title="How each batch is doing" subtitle="Share of tasks finished">
+      <ChartCard
+        title="How each batch is doing"
+        subtitle="Share of tasks finished — click a bar to see participants"
+        legend={<CxChartDrillLegend items={batchLegend} onDrill={onDrill} />}
+      >
         {batchData.length === 0 ? (
           <EmptyChart message="No batches yet." />
         ) : (
@@ -136,6 +199,18 @@ export default function CxCharts({ statusData = [], batchData = [], donutPct = 0
                   radius={[0, 6, 6, 0]}
                   minPointSize={2}
                   isAnimationActive={false}
+                  style={{ cursor: onDrill ? 'pointer' : undefined }}
+                  onClick={(row) =>
+                    segmentClick(
+                      onDrill,
+                      {
+                        chartId: 'batchCompletion',
+                        seriesKey: 'all',
+                        category: row.batchId || row.name,
+                      },
+                      row.learners
+                    )
+                  }
                 >
                   <LabelList
                     dataKey="pct"

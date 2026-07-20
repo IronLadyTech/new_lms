@@ -198,6 +198,76 @@ exports.sendTaskReminder = onCall(async (request) => {
   return { sent };
 });
 
+// ── CX: notify learner that their task was reviewed ───────────
+exports.sendReviewNotification = onCall(async (request) => {
+  if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in required');
+  await zoho.assertStaff(db, request.auth.uid);
+
+  const { userId, taskId, taskTitle: titleFromClient, outcome, feedback } = request.data || {};
+  if (!userId || !taskId) throw new HttpsError('invalid-argument', 'userId and taskId required');
+
+  const [userDoc, mbwTaskDoc, bm100TaskDoc] = await Promise.all([
+    db.collection('users').doc(userId).get(),
+    db.collection('mbw_tasks').doc(taskId).get(),
+    db.collection('bm100_tasks').doc(taskId).get(),
+  ]);
+
+  if (!userDoc.exists) throw new HttpsError('not-found', 'User not found');
+
+  const { fcmToken, displayName } = userDoc.data();
+  if (!fcmToken) return { sent: false, reason: 'no_token' };
+
+  const taskTitle =
+    titleFromClient
+    || (mbwTaskDoc.exists && mbwTaskDoc.data().title)
+    || (bm100TaskDoc.exists && bm100TaskDoc.data().title)
+    || taskId;
+
+  const firstName = (displayName || '').split(' ')[0] || 'there';
+  const outcomeLabel =
+    outcome === 'approved'
+      ? 'Approved'
+      : outcome === 'needs_improvement'
+        ? 'Needs improvement'
+        : outcome === 'rejected'
+          ? 'Rejected'
+          : 'Updated';
+
+  const feedbackSnippet = feedback ? String(feedback).trim().slice(0, 100) : '';
+  const body = feedbackSnippet
+    ? `Hi ${firstName}, "${taskTitle}" was reviewed: ${outcomeLabel}. ${feedbackSnippet}`
+    : `Hi ${firstName}, your task "${taskTitle}" was reviewed: ${outcomeLabel}. Open the LMS to see details.`;
+
+  const sent = await trySend({
+    token: fcmToken,
+    notification: {
+      title: 'Task review ready',
+      body,
+    },
+    data: {
+      type: 'task_review',
+      taskId: String(taskId),
+      userId: String(userId),
+      outcome: String(outcome || ''),
+    },
+  }, userId);
+
+  if (sent) {
+    await db.collection('notifications').add({
+      type: 'task_review',
+      sentTo: userId,
+      sentBy: request.auth.uid,
+      taskId,
+      taskTitle,
+      outcome: outcome || '',
+      feedback: feedbackSnippet,
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  }
+
+  return { sent };
+});
+
 // ── CX: send session reminder to all learners in a batch ──────
 exports.sendSessionReminder = onCall(async (request) => {
   if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in required');
