@@ -19,13 +19,25 @@ export const GUEST_PROFILE = {
 };
 
 export function isGuestSessionActive() {
-  return sessionStorage.getItem(GUEST_SESSION_KEY) === '1';
+  try {
+    return sessionStorage.getItem(GUEST_SESSION_KEY) === '1';
+  } catch {
+    return false;
+  }
 }
 
 export function startGuestSession() {
-  sessionStorage.setItem(GUEST_SESSION_KEY, '1');
+  try {
+    sessionStorage.setItem(GUEST_SESSION_KEY, '1');
+  } catch {
+    /* private mode — guest flag may not persist */
+  }
 }
 
 export function clearGuestSession() {
-  sessionStorage.removeItem(GUEST_SESSION_KEY);
+  try {
+    sessionStorage.removeItem(GUEST_SESSION_KEY);
+  } catch {
+    /* ignore */
+  }
 }

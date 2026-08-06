@@ -13,6 +13,7 @@ export default function MBWProgramJourney({
   nextTaskId,
   onSelectLesson,
   autoScroll = true,
+  embedded = false,
 }) {
   const currentRef = useRef(null);
 
@@ -23,15 +24,16 @@ export default function MBWProgramJourney({
 
   return (
     <nav className="mbw-program-journey" aria-label="MBW program curriculum">
-      <h2 className="mbw-program-journey__title">Your journey</h2>
+      {!embedded && <h2 className="mbw-program-journey__title">Your journey</h2>}
       <div className="mbw-program-journey__sections">
-        {MBW_PROGRAM_SECTIONS.map((section) => (
+        {MBW_PROGRAM_SECTIONS.map((section, index) => (
           <div
             key={section.id}
             ref={section.id === currentSectionId ? currentRef : undefined}
           >
             <MBWProgramSection
               section={section}
+              sectionIndex={index + 1}
               sectionProgress={sectionProgress}
               profile={profile}
               expanded={expandedSectionId === section.id}

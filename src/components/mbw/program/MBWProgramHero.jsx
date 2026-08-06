@@ -1,19 +1,8 @@
-import { ChevronRight } from 'lucide-react';
 import { MBW_PROGRAM_META } from '../../../data/mbwProgramStructure';
-import { getModuleLabel } from '../../../utils/mbwDisplay';
 import MBWProgramProgressBand from './MBWProgramProgressBand';
 
-export default function MBWProgramHero({
-  cohortLabel,
-  completedMilestones,
-  totalMilestones,
-  nextTaskState,
-  onResume,
-  resumeLabel = 'Resume',
-}) {
-  const showNext =
-    nextTaskState && !nextTaskState.isComplete && nextTaskState.status !== 'locked';
-
+/** Identity + progress only — the next action and its CTA live in ProgramNextStep. */
+export default function MBWProgramHero({ cohortLabel, completedMilestones, totalMilestones }) {
   return (
     <header className="mbw-program-hero">
       <div className="mbw-program-hero__inner">
@@ -27,17 +16,6 @@ export default function MBWProgramHero({
           completedMilestones={completedMilestones}
           totalMilestones={totalMilestones}
         />
-
-        {showNext && (
-          <p className="mbw-program-hero__next">
-            <span className="mbw-program-hero__next-label">Next up</span>
-            {getModuleLabel(nextTaskState.task)}
-          </p>
-        )}
-
-        <button type="button" className="mbw-program-hero__resume btn btn-primary" onClick={onResume}>
-          {resumeLabel} <ChevronRight size={18} />
-        </button>
       </div>
     </header>
   );

@@ -12,7 +12,8 @@ import { getUserSubmissions } from '../services/mbwService';
 
 const POLL_MS = 45000;
 
-export function useStreakAnalytics(learnerId) {
+export function useStreakAnalytics(learnerId, options = {}) {
+  const activityLimit = options.activityLimit ?? 500;
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [warning, setWarning] = useState(null);
@@ -24,7 +25,7 @@ export function useStreakAnalytics(learnerId) {
     if (!learnerId) return [];
     try {
       const [activities, mbwSubs] = await Promise.all([
-        getUserActivities(learnerId, 500),
+        getUserActivities(learnerId, activityLimit),
         getUserSubmissions(learnerId).catch(() => ({})),
       ]);
       return mergeSubmissionEvents(
@@ -35,7 +36,7 @@ export function useStreakAnalytics(learnerId) {
       console.warn('Legacy streak data load failed', err);
       return [];
     }
-  }, [learnerId]);
+  }, [learnerId, activityLimit]);
 
   const refreshData = useCallback(async () => {
     if (!learnerId) {

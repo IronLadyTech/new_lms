@@ -130,7 +130,7 @@ export default function Home() {
     };
   }, [canOpenMbw, engine.taskStates, profile]);
 
-  const firstName = profile?.displayName?.trim().split(/\s+/)[0] || '';
+  const firstName = String(profile?.displayName ?? '').trim().split(/\s+/)[0] || '';
   const continueCourse =
     getContinueProgram(profile, courses) ||
     accessibleCourses[0] ||

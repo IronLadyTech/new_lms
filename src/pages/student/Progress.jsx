@@ -28,7 +28,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import SectionCard from '../../components/ui/SectionCard';
 import DashboardSkeleton from '../../components/ui/DashboardSkeleton';
 import useTaskEngine from '../../hooks/useTaskEngine';
-import { useStreakAnalytics } from '../../hooks/useStreakAnalytics';
+import { useStreakAnalyticsContext } from '../../context/StreakAnalyticsContext';
 import {
   computeSectionProgress,
   getTotalMilestones,
@@ -88,7 +88,14 @@ export default function Progress() {
   const [activitiesLoading, setActivitiesLoading] = useState(true);
   const [resourceFilter, setResourceFilter] = useState('all');
 
-  const streakAnalytics = useStreakAnalytics(isGuest ? null : user?.uid);
+  const streakAnalytics = useStreakAnalyticsContext() || {
+    summary: null,
+    events: [],
+    loading: true,
+    warning: null,
+    isLive: false,
+    retry: () => {},
+  };
 
   const courses = useMemo(
     () => getEnrolledCourses(profile, allCourses),

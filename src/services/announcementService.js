@@ -2,6 +2,9 @@ import {
   collection,
   doc,
   getDocs,
+  query,
+  orderBy,
+  limit,
   setDoc,
   updateDoc,
   deleteDoc,
@@ -50,7 +53,7 @@ export function isAnnouncementActive(announcement, now = Date.now()) {
 export function isAnnouncementVisibleToUser(announcement, userId) {
   if (!userId || !isAnnouncementActive(announcement)) return false;
   const audience = announcement.audience || 'all';
-  const tagged = announcement.taggedUserIds || [];
+  const tagged = Array.isArray(announcement.taggedUserIds) ? announcement.taggedUserIds : [];
   if (audience === 'tagged') return tagged.includes(userId);
   return true;
 }
@@ -72,7 +75,19 @@ export function formatExpiresIn(announcement) {
 
 export async function getAnnouncements() {
   const snap = await getDocs(collection(db, ANNOUNCEMENTS));
-  const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const items = snap.docs.map((d) => {
+    const data = d.data();
+    const title = typeof data.title === 'string' ? data.title.trim() : String(data.title || '').trim();
+    const body = typeof data.body === 'string' ? data.body : String(data.body ?? '');
+    return {
+      id: d.id,
+      ...data,
+      title: title || 'Announcement',
+      body,
+      taggedUserIds: Array.isArray(data.taggedUserIds) ? data.taggedUserIds : [],
+      taggedUserNames: Array.isArray(data.taggedUserNames) ? data.taggedUserNames : [],
+    };
+  });
   items.sort((a, b) => {
     const ta = a.createdAt?.toMillis?.() || 0;
     const tb = b.createdAt?.toMillis?.() || 0;
@@ -81,12 +96,40 @@ export async function getAnnouncements() {
   return items;
 }
 
+/** Recent active announcements for notification bell — bounded read. */
+export async function getActiveAnnouncements(limitCount = 30) {
+  try {
+    const q = query(collection(db, ANNOUNCEMENTS), orderBy('createdAt', 'desc'), limit(limitCount));
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        ...data,
+        title: (typeof data.title === 'string' ? data.title.trim() : String(data.title || '')) || 'Announcement',
+        body: typeof data.body === 'string' ? data.body : String(data.body ?? ''),
+        taggedUserIds: Array.isArray(data.taggedUserIds) ? data.taggedUserIds : [],
+        taggedUserNames: Array.isArray(data.taggedUserNames) ? data.taggedUserNames : [],
+      };
+    });
+    return items.filter((a) => isAnnouncementActive(a));
+  } catch (e) {
+    const message = String(e?.message || '');
+    if (!message.includes('index')) throw e;
+    const all = await getAnnouncements();
+    return all.filter((a) => isAnnouncementActive(a)).slice(0, limitCount);
+  }
+}
+
 export async function createAnnouncement(data) {
   const duration = data.duration || '24h';
   const ref = doc(collection(db, ANNOUNCEMENTS));
   const announcement = {
-    title: data.title?.trim() || 'Announcement',
-    body: data.body?.trim() || '',
+    title:
+      typeof data.title === 'string'
+        ? data.title.trim() || 'Announcement'
+        : String(data.title ?? 'Announcement'),
+    body: typeof data.body === 'string' ? data.body : String(data.body ?? ''),
     duration,
     audience: data.audience === 'tagged' ? 'tagged' : 'all',
     taggedUserIds: Array.isArray(data.taggedUserIds) ? data.taggedUserIds : [],

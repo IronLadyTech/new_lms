@@ -147,13 +147,105 @@ export function submissionUnlocksNext(status) {
 }
 
 export function formatReviewedAt(ts) {
-  const ms = ts?.seconds ? ts.seconds * 1000 : ts?.toMillis?.() || null;
+  const ms = reviewedAtMs(ts);
   if (!ms) return '';
   return new Date(ms).toLocaleDateString(undefined, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
   });
+}
+
+function reviewedAtMs(ts) {
+  if (!ts) return 0;
+  if (typeof ts === 'string') {
+    const parsed = Date.parse(ts);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+  if (ts.seconds) return ts.seconds * 1000;
+  if (typeof ts.toMillis === 'function') return ts.toMillis();
+  return 0;
+}
+
+function normalizeReviewedAtForStorage(ts) {
+  const ms = reviewedAtMs(ts);
+  return ms ? new Date(ms).toISOString() : new Date().toISOString();
+}
+
+/** Single review round stored on a submission doc or in reviewHistory. */
+export function buildReviewEntry({ outcome, feedback, reviewedBy, reviewedAt }) {
+  return {
+    outcome: outcome || '',
+    feedback: safeReviewText(feedback),
+    reviewedBy: reviewedBy || '',
+    reviewedAt: reviewedAt ? normalizeReviewedAtForStorage(reviewedAt) : null,
+  };
+}
+
+function safeReviewText(value) {
+  if (value == null) return '';
+  return typeof value === 'string' ? value.trim() : String(value).trim();
+}
+
+function reviewEntryKey(entry) {
+  const at = entry?.reviewedAt ? String(entry.reviewedAt) : '';
+  return `${entry?.outcome || ''}|${at}|${(entry?.feedback || '').slice(0, 48)}`;
+}
+
+/** All CX reviews for a submission — persisted history plus the active review fields. */
+export function getSubmissionReviewHistory(submission) {
+  if (!submission) return [];
+
+  const history = Array.isArray(submission.reviewHistory)
+    ? submission.reviewHistory.map((entry) => buildReviewEntry(entry))
+    : [];
+
+  if (submission.reviewOutcome || submission.feedback?.trim() || submission.reviewedAt) {
+    const current = buildReviewEntry({
+      outcome: submission.reviewOutcome,
+      feedback: submission.feedback,
+      reviewedBy: submission.reviewedBy,
+      reviewedAt: submission.reviewedAt,
+    });
+    const currentKey = reviewEntryKey(current);
+    if (!history.some((entry) => reviewEntryKey(entry) === currentKey)) {
+      history.push(current);
+    }
+  }
+
+  return history.sort((a, b) => reviewedAtMs(a.reviewedAt) - reviewedAtMs(b.reviewedAt));
+}
+
+/**
+ * Preserve the active CX review in reviewHistory when a learner resubmits.
+ * CX appends on each review; this covers legacy docs reviewed before history existed.
+ */
+export function archiveReviewHistoryForResubmit(prevSubmission) {
+  if (!prevSubmission) return {};
+
+  const history = Array.isArray(prevSubmission.reviewHistory)
+    ? [...prevSubmission.reviewHistory]
+    : [];
+
+  if (
+    prevSubmission.reviewOutcome
+    || prevSubmission.feedback?.trim()
+    || prevSubmission.reviewedAt
+  ) {
+    const current = buildReviewEntry({
+      outcome: prevSubmission.reviewOutcome,
+      feedback: prevSubmission.feedback,
+      reviewedBy: prevSubmission.reviewedBy,
+      reviewedAt: prevSubmission.reviewedAt,
+    });
+    const currentKey = reviewEntryKey(current);
+    if (!history.some((entry) => reviewEntryKey(entry) === currentKey)) {
+      history.push(current);
+    }
+  }
+
+  if (history.length === 0) return {};
+  return { reviewHistory: history };
 }
 
 /** Clear prior CX review metadata when a learner resubmits. */

@@ -1,8 +1,9 @@
 import { Download, ExternalLink } from 'lucide-react';
-import { getBm100TaskTemplates } from '../../../data/bm100TaskTemplates';
+import { getSubmissionProgramConfig } from './submissionProgramConfig';
 
-export default function BM100TaskTemplateDownloads({ taskId, task }) {
-  const templates = getBm100TaskTemplates(taskId, task);
+export default function TaskTemplateDownloads({ taskId, task, program = 'mbw' }) {
+  const { getTemplates } = getSubmissionProgramConfig(program);
+  const templates = getTemplates(taskId, task);
   if (!templates.length) return null;
 
   return (

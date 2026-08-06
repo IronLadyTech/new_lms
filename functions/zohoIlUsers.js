@@ -209,10 +209,26 @@ async function searchIlUserByCoql(email, username, phone, deps) {
 
   for (const query of queries) {
     const row = await zohoCoql(query, deps);
-    if (row?.id) return row;
+    if (row?.id) {
+      const full = await getIlUserById(row.id, deps);
+      return full || row;
+    }
   }
 
   return null;
+}
+
+function hasUsableIlPassword(record) {
+  const pwd = String(record?.LMS_Password || record?.Password || '').trim();
+  return pwd.length >= 6;
+}
+
+/** COQL/search often return id + email only — fetch full IL_Users row for LMS_Password. */
+async function hydrateIlUserFull(record, deps) {
+  if (!record?.id) return record;
+  if (hasUsableIlPassword(record)) return record;
+  const full = await getIlUserById(record.id, deps);
+  return full || record;
 }
 
 /** IL Registration often holds Email while IL_Users only has Username. */
@@ -265,40 +281,40 @@ async function findIlUserRecord(email, username, deps, options = {}) {
 
   if (trimmedEmail) {
     const byEmailParam = await searchIlUserByEmailParam(trimmedEmail, deps);
-    if (byEmailParam) return byEmailParam;
+    if (byEmailParam) return hydrateIlUserFull(byEmailParam, deps);
 
     const combined = await searchIlUserByEmailOrUsername(trimmedEmail, deps);
-    if (combined) return combined;
+    if (combined) return hydrateIlUserFull(combined, deps);
 
     const byEmail = await searchIlUserByEmail(trimmedEmail, deps);
-    if (byEmail) return byEmail;
+    if (byEmail) return hydrateIlUserFull(byEmail, deps);
 
     if (trimmedEmail !== trimmedEmail.toLowerCase()) {
       const byLowerParam = await searchIlUserByEmailParam(trimmedEmail.toLowerCase(), deps);
-      if (byLowerParam) return byLowerParam;
+      if (byLowerParam) return hydrateIlUserFull(byLowerParam, deps);
       const byLower = await searchIlUserByEmail(trimmedEmail.toLowerCase(), deps);
-      if (byLower) return byLower;
+      if (byLower) return hydrateIlUserFull(byLower, deps);
     }
   }
 
   const userLookup = trimmedUsername || trimmedEmail;
   if (userLookup) {
     const byUsername = await searchIlUserByUsername(userLookup, deps);
-    if (byUsername) return byUsername;
+    if (byUsername) return hydrateIlUserFull(byUsername, deps);
 
     if (userLookup !== userLookup.toLowerCase()) {
       const byLowerUser = await searchIlUserByUsername(userLookup.toLowerCase(), deps);
-      if (byLowerUser) return byLowerUser;
+      if (byLowerUser) return hydrateIlUserFull(byLowerUser, deps);
     }
   }
 
   if (phone) {
     const byPhone = await searchIlUserByPhone(phone, deps);
-    if (byPhone) return byPhone;
+    if (byPhone) return hydrateIlUserFull(byPhone, deps);
   }
 
   const byCoql = await searchIlUserByCoql(trimmedEmail, trimmedUsername, phone, deps);
-  if (byCoql) return byCoql;
+  if (byCoql) return hydrateIlUserFull(byCoql, deps);
 
   const regIlUserId = await findIlUserIdViaRegistration(trimmedEmail, deps);
   if (regIlUserId) {
@@ -317,10 +333,13 @@ async function findIlUserRecord(email, username, deps, options = {}) {
 function ilUserToCredentialFields(ilUser) {
   if (!ilUser) return {};
   const { email: emailField, username: usernameField } = getFieldNames();
+  const password = String(ilUser.LMS_Password || ilUser.Password || '').trim();
   return {
     Email: ilUser[emailField] ?? ilUser.Email,
     Username: ilUser[usernameField] ?? ilUser.Username,
-    Password: ilUser.LMS_Password || ilUser.Password,
+    ...(password
+      ? { Password: password, LMS_Password: password }
+      : {}),
     LMS_User_Id: ilUser.LMS_User_Id,
     Phone: ilUser.Phone,
     id: ilUser.id,
@@ -608,6 +627,8 @@ async function listIlUsersPage({ page = 1, perPage = 50 } = {}, deps) {
 module.exports = {
   getIlUsersModule,
   getIlUserById,
+  hasUsableIlPassword,
+  hydrateIlUserFull,
   searchIlUserByEmail,
   searchIlUserByUsername,
   findIlUserRecord,

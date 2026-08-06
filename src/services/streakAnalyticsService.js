@@ -172,18 +172,19 @@ function generateInsights(summary) {
  * @param {{ rangeStart?: string, rangeEnd?: string }} options
  */
 export function computeStreakSummary(events = [], options = {}) {
+  const list = Array.isArray(events) ? events : [];
   const rangeEnd = options.rangeEnd || getTodayKey();
   const rangeStart =
     options.rangeStart || addDaysToKey(rangeEnd, -364);
 
-  const dailyCounts = buildDailyCounts(events);
+  const dailyCounts = buildDailyCounts(list);
   const activeDates = new Set(dailyCounts.map((d) => d.date));
   const sortedActive = [...activeDates].sort();
 
   const currentStreak = computeCurrentStreak(activeDates);
   const longest = computeLongestStreak(sortedActive);
 
-  const correctEvents = qualifyingEvents(events);
+  const correctEvents = qualifyingEvents(list);
   const correctDateKeys = correctEvents
     .map((e) => eventDateKey(e))
     .filter(Boolean)
@@ -201,7 +202,7 @@ export function computeStreakSummary(events = [], options = {}) {
   const daysSinceLastActivity = lastActive ? daysBetweenKeys(lastActive, getTodayKey()) : null;
 
   const trends = computeTrends(dailyCounts);
-  const quality = computeQualityRatio(events);
+  const quality = computeQualityRatio(list);
 
   const base = {
     currentStreak,
@@ -250,7 +251,8 @@ export const HEATMAP_LEGEND = [
 
 /** Build GitHub-style weeks for the last ~52 weeks. */
 export function buildHeatmapWeeks(dailyCounts, weeks = 52) {
-  const countMap = new Map(dailyCounts.map((d) => [d.date, d.count]));
+  const list = Array.isArray(dailyCounts) ? dailyCounts : [];
+  const countMap = new Map(list.map((d) => [d.date, d.count]));
   const today = getTodayKey();
   const end = parseDateKey(today);
   end.setUTCDate(end.getUTCDate() - end.getUTCDay());

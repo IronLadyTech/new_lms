@@ -19,9 +19,11 @@ export default function TaskTrackingBoard({
   batches = [],
   tasks = [],
   submissions = [],
+  program,
   onOpenSubmission,
+  defaultBatchId = 'all',
 }) {
-  const [batchFilter, setBatchFilter] = useState('all');
+  const [batchFilter, setBatchFilter] = useState(defaultBatchId);
   const [view, setView] = useState('tasks'); // 'tasks' | 'grid'
   const [modal, setModal] = useState(null);
 
@@ -32,12 +34,12 @@ export default function TaskTrackingBoard({
     [students, batches, batchFilter]
   );
 
-  const moduleGroups = useMemo(() => groupTasksByModule(tasks), [tasks]);
-
   const taskBreakdown = useMemo(
-    () => buildModuleTaskBreakdown(filteredStudents, tasks, submissions),
-    [filteredStudents, tasks, submissions]
+    () => buildModuleTaskBreakdown(filteredStudents, tasks, submissions, program),
+    [filteredStudents, tasks, submissions, program]
   );
+
+  const moduleGroups = useMemo(() => groupTasksByModule(tasks, program), [tasks, program]);
 
   const { completedStudents, notCompletedStudents } = useMemo(() => {
     const completed = filteredStudents.filter((u) =>

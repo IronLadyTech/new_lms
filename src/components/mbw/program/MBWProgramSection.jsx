@@ -1,16 +1,16 @@
 import { ChevronDown, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { MBW_SECTION_STATUS } from '../../../data/mbwProgramStructure';
-import MBWProgramLessonRow from './MBWProgramLessonRow';
+import ProgramLessonList from './ProgramLessonList';
 import {
   getLessonRowState,
   getTaskTypeIcon,
   getTaskDurationHint,
+  getTaskKindLabel,
   getSectionLockDisplay,
   isRegistrationPaymentLocked,
   REGISTRATION_PAYMENT_LOCK_TOOLTIP,
 } from '../../../utils/mbwProgramUtils';
-import { SUBMISSION_STATUS } from '../../../services/mbwService';
 
 // Behance-inspired per-module progress ring (gold fill = progress accent).
 // Only shown on unlocked sections.
@@ -58,6 +58,7 @@ function SectionRing({ done, total, status }) {
 
 export default function MBWProgramSection({
   section,
+  sectionIndex,
   sectionProgress,
   profile,
   expanded,
@@ -88,6 +89,12 @@ export default function MBWProgramSection({
 
   const ctaLabel = isDoneSection ? 'Review' : progress.done > 0 ? 'Continue' : 'Start';
 
+  const moduleStats = !progress.unlocked
+    ? 'Locked'
+    : progress.total > 0
+      ? `${progress.total} lessons · ${progress.done}/${progress.total} done`
+      : section.subtitle;
+
   return (
     <article
       className={`mbw-section-card${expanded ? ' is-expanded' : ''}${isCurrent ? ' is-current' : ''}${!progress.unlocked ? ' is-section-locked' : ''}${paymentLocked ? ' is-payment-locked' : ''}`}
@@ -102,8 +109,11 @@ export default function MBWProgramSection({
             onClick={onToggle}
           >
             <span className="mbw-section-card__titles">
+              {sectionIndex != null && (
+                <span className="mbw-section-card__module">Module {sectionIndex}</span>
+              )}
               <span className="mbw-section-card__name">{section.title}</span>
-              <span className="mbw-section-card__sub">{section.subtitle}</span>
+              <span className="mbw-section-card__sub">{moduleStats}</span>
             </span>
             <ChevronDown size={18} className="mbw-section-card__chevron" aria-hidden />
           </button>
@@ -155,29 +165,15 @@ export default function MBWProgramSection({
             />
           </div>
         ) : section.usesTaskEngine && taskStates?.length ? (
-          <ul className="mbw-section-card__lessons">
-            {(() => {
-              const firstLockedId = taskStates.find(
-                (ts) => ts.status === SUBMISSION_STATUS.LOCKED
-              )?.task.id;
-              return taskStates.map((ts) => {
-                const rowState = getLessonRowState(ts, activeTaskId, nextTaskId);
-                return (
-                  <li key={ts.task.id}>
-                    <MBWProgramLessonRow
-                      title={ts.task.title}
-                      typeIcon={getTaskTypeIcon(ts.task.type)}
-                      durationHint={getTaskDurationHint(ts.task)}
-                      rowState={rowState}
-                      isActive={ts.task.id === activeTaskId}
-                      showLockReason={ts.task.id === firstLockedId}
-                      onSelect={() => onSelectLesson(ts.task.id)}
-                    />
-                  </li>
-                );
-              });
-            })()}
-          </ul>
+          <ProgramLessonList
+            taskStates={taskStates}
+            activeTaskId={activeTaskId}
+            getRowState={(ts) => getLessonRowState(ts, activeTaskId, nextTaskId)}
+            getTypeIcon={getTaskTypeIcon}
+            getDurationHint={getTaskDurationHint}
+            getKindLabel={getTaskKindLabel}
+            onSelectLesson={onSelectLesson}
+          />
         ) : (
           <div className="mbw-section-card__locked-panel">
             <p className="mbw-section-card__coming">Content for this section is being prepared for your batch.</p>

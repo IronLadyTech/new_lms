@@ -9,6 +9,7 @@ function formatEventType(type) {
 }
 
 export function calendarEventUrl(event) {
+  if (!event?.id || !event?.date) return '/app/calendar';
   return `/app/calendar?date=${encodeURIComponent(event.date)}&event=${encodeURIComponent(event.id)}`;
 }
 

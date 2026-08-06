@@ -7,14 +7,14 @@ import EditableTemplate from '../mbw/submissions/EditableTemplate';
 import WatchOnly from '../mbw/submissions/WatchOnly';
 import RecurringPost from '../mbw/submissions/RecurringPost';
 import ChecklistSubmission from '../mbw/submissions/ChecklistSubmission';
-import BM100FileUpload from './submissions/BM100FileUpload';
-import BM100VideoRecordOrUpload from './submissions/BM100VideoRecordOrUpload';
+import FileUpload from '../submissions/FileUpload';
+import VideoRecordOrUpload from '../submissions/VideoRecordOrUpload';
 import { TASK_TYPES, SUBMISSION_STATUS } from '../../services/bm100Service';
 import { getModuleLabel, getWeekCode, getPrimaryStatus } from '../../utils/mbwDisplay';
 import { getTaskDurationHint } from '../../utils/bm100ProgramUtils';
 import { BM100_PROGRAM_SECTIONS } from '../../data/bm100ProgramStructure';
 import { getBm100TaskTemplates } from '../../data/bm100TaskTemplates';
-import BM100TaskTemplateDownloads from './submissions/BM100TaskTemplateDownloads';
+import TaskTemplateDownloads from '../submissions/TaskTemplateDownloads';
 import LearnerReviewFeedback from '../submissions/LearnerReviewFeedback';
 import LearnerSubmissionPreview from '../submissions/LearnerSubmissionPreview';
 
@@ -160,7 +160,9 @@ export default function BM100TaskContent({
               ))}
             </ul>
           )}
-          {showExtraTemplates && <BM100TaskTemplateDownloads taskId={task.id} task={task} />}
+          {showExtraTemplates && (
+            <TaskTemplateDownloads taskId={task.id} task={task} program="100bm" />
+          )}
         </section>
       )}
 
@@ -212,21 +214,23 @@ export default function BM100TaskContent({
             />
           )}
           {task.type === TASK_TYPES.FILE_UPLOAD && (
-            <BM100FileUpload
+            <FileUpload
               task={task}
               submission={submission}
               canSubmit={canSubmit}
               userId={userId}
               onSubmit={handleSubmit}
+              program="100bm"
             />
           )}
           {task.type === TASK_TYPES.VIDEO_RECORD && (
-            <BM100VideoRecordOrUpload
+            <VideoRecordOrUpload
               task={task}
               submission={submission}
               canSubmit={canSubmit}
               userId={userId}
               onSubmit={handleSubmit}
+              program="100bm"
             />
           )}
           {task.type === TASK_TYPES.RECURRING_POST && (

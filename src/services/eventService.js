@@ -2,6 +2,10 @@ import {
   collection,
   doc,
   getDocs,
+  query,
+  where,
+  orderBy,
+  limit,
   setDoc,
   updateDoc,
   deleteDoc,
@@ -11,16 +15,54 @@ import { db } from '../firebase/config';
 
 const EVENTS = 'events';
 
-export async function getEvents() {
-  const snap = await getDocs(collection(db, EVENTS));
-  const events = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  events.sort((a, b) => {
+function sortEventsByDateTime(events) {
+  return [...events].sort((a, b) => {
     const da = a.date || '';
     const db_ = b.date || '';
     if (da !== db_) return da.localeCompare(db_);
     return (a.time || '').localeCompare(b.time || '');
   });
-  return events;
+}
+
+function dateOffsetIso(days) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+export async function getEvents() {
+  const snap = await getDocs(collection(db, EVENTS));
+  return sortEventsByDateTime(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+}
+
+/**
+ * Bounded event fetch for notification bell / home widgets.
+ * Avoids loading the entire events collection on every poll.
+ */
+export async function getRecentEventsForNotifications({
+  daysBack = 14,
+  daysAhead = 90,
+  limitCount = 40,
+} = {}) {
+  const startDate = dateOffsetIso(-daysBack);
+  const endDate = dateOffsetIso(daysAhead);
+
+  try {
+    const q = query(
+      collection(db, EVENTS),
+      where('date', '>=', startDate),
+      where('date', '<=', endDate),
+      orderBy('date', 'asc'),
+      limit(limitCount)
+    );
+    const snap = await getDocs(q);
+    return sortEventsByDateTime(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  } catch (e) {
+    const message = String(e?.message || '');
+    if (!message.includes('index')) throw e;
+    const snap = await getDocs(query(collection(db, EVENTS), limit(limitCount)));
+    return sortEventsByDateTime(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  }
 }
 
 export async function createEvent(data) {

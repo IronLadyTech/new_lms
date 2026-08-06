@@ -69,7 +69,11 @@ function normalizeProgram(value) {
   if (['lep', 'leadership essentials program', 'leadership essentials'].includes(v) || v.includes('leadership essentials')) {
     return 'lep';
   }
-  if (['100bm', '100 board members program', '100 board members', '100 business minds'].includes(v) || v.includes('100 board')) {
+  if (
+    ['100bm', '100 bm', '100bm program', '100 board members program', '100 board members', '100 business minds'].includes(v) ||
+    /100\s*bm/.test(v) ||
+    v.includes('100 board')
+  ) {
     return '100bm';
   }
   return v || null;
@@ -77,14 +81,16 @@ function normalizeProgram(value) {
 
 /** Pre-IL → IL registration Deluge: paymentstatus "Completed" = registration fee paid. */
 function paymentStatusFromRegistrationPayload(body = {}) {
-  const reg = (body.paymentstatus || body.paymentStatus || '').toString().toLowerCase().trim();
+  // Default params do not apply when callers pass `null` (batch apply / email provision).
+  const payload = body && typeof body === 'object' ? body : {};
+  const reg = (payload.paymentstatus || payload.paymentStatus || '').toString().toLowerCase().trim();
   if (reg === 'completed') return PAYMENT_STATUS.REGISTER;
 
   const prog = (
-    body.programPaymentStatus ||
-    body.MBWPaymentStatus ||
-    body.lepPaymentStatus ||
-    body.hundredBMPaymentStatus ||
+    payload.programPaymentStatus ||
+    payload.MBWPaymentStatus ||
+    payload.lepPaymentStatus ||
+    payload.hundredBMPaymentStatus ||
     ''
   )
     .toString()

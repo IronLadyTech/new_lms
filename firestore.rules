@@ -214,6 +214,18 @@ service cloud.firestore {
           && submissionId[request.auth.uid.size():request.auth.uid.size() + 1] == '_';
       }
 
+      function learnerClearingMbwReviewFields() {
+        return !request.resource.data.keys()
+          .hasAny(['reviewedBy', 'reviewedAt', 'feedback', 'reviewOutcome']);
+      }
+
+      function learnerMbwReviewHistoryOk() {
+        return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reviewHistory'])
+          || (learnerClearingMbwReviewFields()
+              && request.resource.data.reviewHistory.size()
+                 >= resource.data.get('reviewHistory', []).size());
+      }
+
       allow read: if canUseApp() && (
         hasStaffAccess()
         || (resource == null && isOwnMbwSubmissionId())
@@ -236,6 +248,7 @@ service cloud.firestore {
                  .hasAny(['reviewedBy', 'reviewedAt', 'feedback', 'reviewOutcome'])
               || !request.resource.data.keys()
                    .hasAny(['reviewedBy', 'reviewedAt', 'feedback', 'reviewOutcome']))
+          && learnerMbwReviewHistoryOk()
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status'])
               || learnerMbwStatusOk()));
       allow delete: if hasStaffAccess();
@@ -251,6 +264,18 @@ service cloud.firestore {
         return submissionId.size() > request.auth.uid.size() + 1
           && submissionId[0:request.auth.uid.size()] == request.auth.uid
           && submissionId[request.auth.uid.size():request.auth.uid.size() + 1] == '_';
+      }
+
+      function learnerClearingBm100ReviewFields() {
+        return !request.resource.data.keys()
+          .hasAny(['reviewedBy', 'reviewedAt', 'feedback', 'reviewOutcome']);
+      }
+
+      function learnerBm100ReviewHistoryOk() {
+        return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reviewHistory'])
+          || (learnerClearingBm100ReviewFields()
+              && request.resource.data.reviewHistory.size()
+                 >= resource.data.get('reviewHistory', []).size());
       }
 
       allow read: if canUseApp() && (
@@ -275,6 +300,7 @@ service cloud.firestore {
                  .hasAny(['reviewedBy', 'reviewedAt', 'feedback', 'reviewOutcome'])
               || !request.resource.data.keys()
                    .hasAny(['reviewedBy', 'reviewedAt', 'feedback', 'reviewOutcome']))
+          && learnerBm100ReviewHistoryOk()
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status'])
               || learnerMbwStatusOk()));
       allow delete: if hasStaffAccess();

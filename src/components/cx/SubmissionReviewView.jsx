@@ -1,5 +1,6 @@
-import ErrcReadOnlyTable from '../mbw/ErrcReadOnlyTable';
+import TemplateReadOnly from '../mbw/TemplateReadOnly';
 import { submissionPreview } from '../../utils/mbwDisplay';
+import { getSubmissionMediaUrls } from '../../utils/submissionMedia';
 
 function formatSubmissionDate(value) {
   if (!value) return '';
@@ -19,14 +20,7 @@ export default function SubmissionReviewView({ submission, task }) {
   }
 
   const preview = submissionPreview(submission, task);
-  const mediaUrl =
-    submission.videoUrl ||
-    submission.recordingUrl ||
-    submission.videoURL ||
-    (submission.fileType?.startsWith('video/') ? submission.fileUrl : null);
-  const audioUrl =
-    submission.audioUrl ||
-    (submission.fileType?.startsWith('audio/') ? submission.fileUrl : null);
+  const { videoUrl: mediaUrl, audioUrl } = getSubmissionMediaUrls(submission);
   const submittedLabel = formatSubmissionDate(submission.submittedAt);
   const hasWeekEntries = (submission.weekEntries?.length ?? 0) > 0;
   const isRecurringPost = task?.type === 'recurring_post' || hasWeekEntries;
@@ -93,10 +87,10 @@ export default function SubmissionReviewView({ submission, task }) {
         </div>
       )}
 
-      {submission.templateData?.rows && (
+      {submission.templateData && (submission.templateData.rows || submission.templateData.fields) && (
         <div className="cx-review-block">
           <h3 className="cx-review-block__title">Template</h3>
-          <ErrcReadOnlyTable rows={submission.templateData.rows} />
+          <TemplateReadOnly templateData={submission.templateData} task={task} />
         </div>
       )}
 

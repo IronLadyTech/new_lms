@@ -4,6 +4,7 @@ import {
   addBatchRecording,
   updateBatchRecording,
   removeBatchRecording,
+  upsertBatchRecordingForSession,
 } from '../../services/groupService';
 import { normalizeEventLink } from '../../utils/eventLinks';
 import {
@@ -132,37 +133,30 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
     if (existing) {
       const ok = await confirmReplaceIfNeeded(phaseId, form.sessionId, null);
       if (!ok) return;
-
-      setSaving(true);
-      setError('');
-      try {
-        await updateBatchRecording(batch.id, existing.id, {
-          title,
-          url: normalizeEventLink(form.url.trim()),
-          date: form.date,
-          sessionId: form.sessionId,
-        });
-        resetForm();
-        onChange?.();
-      } catch (err) {
-        setError(err.message || 'Could not replace the recording.');
-      } finally {
-        setSaving(false);
-      }
-      return;
     }
 
     setSaving(true);
     setError('');
     try {
-      await addBatchRecording(batch.id, {
-        title,
-        url: normalizeEventLink(form.url.trim()),
-        date: form.date,
-        phaseId,
-        sessionId: form.sessionId,
-        addedBy: userId,
-      });
+      if (form.sessionId) {
+        await upsertBatchRecordingForSession(batch.id, {
+          title,
+          url: normalizeEventLink(form.url.trim()),
+          date: form.date,
+          phaseId,
+          sessionId: form.sessionId,
+          addedBy: userId,
+        });
+      } else {
+        await addBatchRecording(batch.id, {
+          title,
+          url: normalizeEventLink(form.url.trim()),
+          date: form.date,
+          phaseId,
+          sessionId: form.sessionId,
+          addedBy: userId,
+        });
+      }
       resetForm();
       onChange?.();
     } catch (err) {
@@ -215,12 +209,23 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
     setSaving(true);
     setError('');
     try {
-      await updateBatchRecording(batch.id, editingId, {
-        title,
-        url: normalizeEventLink(form.url.trim()),
-        date: form.date,
-        sessionId: form.sessionId,
-      });
+      if (form.sessionId) {
+        await upsertBatchRecordingForSession(batch.id, {
+          title,
+          url: normalizeEventLink(form.url.trim()),
+          date: form.date,
+          phaseId,
+          sessionId: form.sessionId,
+          addedBy: userId,
+        });
+      } else {
+        await updateBatchRecording(batch.id, editingId, {
+          title,
+          url: normalizeEventLink(form.url.trim()),
+          date: form.date,
+          sessionId: form.sessionId,
+        });
+      }
       resetForm();
       onChange?.();
     } catch (err) {
@@ -347,32 +352,34 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
           <strong>{displayTitle}</strong>
           {rec.date && <span className="muted">{rec.date}</span>}
         </div>
-        <a
-          href={rec.url}
-          target="_blank"
-          rel="noreferrer"
-          className="btn btn-outline btn-sm cx-recording-watch"
-        >
-          <ExternalLink size={14} aria-hidden="true" />
-          Open
-        </a>
-        <button
-          type="button"
-          className="btn btn-outline btn-sm"
-          onClick={() => startEdit(rec)}
-          aria-label={`Edit ${displayTitle}`}
-        >
-          <Pencil size={14} aria-hidden="true" />
-          Edit
-        </button>
-        <button
-          type="button"
-          className="btn btn-sm cx-recording-remove"
-          onClick={() => handleRemove(rec)}
-          aria-label={`Remove ${displayTitle}`}
-        >
-          <Trash2 size={14} aria-hidden="true" />
-        </button>
+        <div className="cx-recording-item__actions">
+          <a
+            href={rec.url}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-outline btn-sm cx-recording-watch"
+          >
+            <ExternalLink size={14} aria-hidden="true" />
+            Open
+          </a>
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={() => startEdit(rec)}
+            aria-label={`Edit ${displayTitle}`}
+          >
+            <Pencil size={14} aria-hidden="true" />
+            Edit
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm cx-recording-remove"
+            onClick={() => handleRemove(rec)}
+            aria-label={`Remove ${displayTitle}`}
+          >
+            <Trash2 size={14} aria-hidden="true" />
+          </button>
+        </div>
       </li>
     );
   };
@@ -399,14 +406,16 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
           <strong>{session.title}</strong>
           <span className="muted">No recording yet</span>
         </div>
-        <button
-          type="button"
-          className="btn btn-outline btn-sm cx-recording-phase__add"
-          onClick={() => startAdd(phaseId, session.id)}
-        >
-          <Plus size={14} aria-hidden="true" />
-          Add video link
-        </button>
+        <div className="cx-recording-item__actions">
+          <button
+            type="button"
+            className="btn btn-outline btn-sm cx-recording-phase__add"
+            onClick={() => startAdd(phaseId, session.id)}
+          >
+            <Plus size={14} aria-hidden="true" />
+            Add video link
+          </button>
+        </div>
       </li>
     );
   };

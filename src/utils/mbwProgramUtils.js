@@ -88,6 +88,14 @@ export function computeSectionProgress(taskStates, profile = null) {
   return progress;
 }
 
+/** Phase ids the learner may work on (respects sequence + payment gates). */
+export function getUnlockedPhaseIds(taskStates, profile = null) {
+  const progress = computeSectionProgress(taskStates, profile);
+  return new Set(
+    MBW_PROGRAM_SECTIONS.filter((s) => progress[s.id]?.unlocked).map((s) => s.id)
+  );
+}
+
 export function getCurrentSectionId(sectionProgress) {
   const prep = sectionProgress['pre-preparation'];
   if (prep && prep.status !== MBW_SECTION_STATUS.DONE) return 'pre-preparation';
@@ -146,6 +154,8 @@ export function getLessonRowState(taskState, activeTaskId, nextTaskId) {
 
   return { visual: 'available', reason: null, clickable: true };
 }
+
+export { getTaskKindLabel } from './taskKindLabel';
 
 export function getTaskTypeIcon(type) {
   switch (type) {

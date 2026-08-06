@@ -6,6 +6,8 @@ import { ROLES, isModeratorOnly } from '../../utils/roles';
 import AdminPanel, { ADMIN_TABS, SUPER_ADMIN_TABS, MODERATOR_TABS } from './AdminPanel';
 import AdminNotificationBell from './AdminNotificationBell';
 import ThemeToggle from '../ThemeToggle';
+import WidgetErrorBoundary from '../WidgetErrorBoundary';
+import LayoutErrorBoundary from '../LayoutErrorBoundary';
 
 export default function AdminShell({ title, subtitle, isSuperAdmin = false }) {
   const { signOut, profile, role } = useAuth();
@@ -109,11 +111,15 @@ export default function AdminShell({ title, subtitle, isSuperAdmin = false }) {
           </div>
           <div className="admin-shell__header-actions">
             <ThemeToggle compact />
-            <AdminNotificationBell onTabChange={handleSelectTab} />
+            <WidgetErrorBoundary name="AdminNotificationBell">
+              <AdminNotificationBell onTabChange={handleSelectTab} />
+            </WidgetErrorBoundary>
           </div>
         </header>
 
-        <AdminPanel isSuperAdmin={isSuperAdmin} tab={tab} onTabChange={setTab} />
+        <LayoutErrorBoundary name="admin-panel">
+          <AdminPanel isSuperAdmin={isSuperAdmin} tab={tab} onTabChange={setTab} />
+        </LayoutErrorBoundary>
       </div>
     </div>
   );

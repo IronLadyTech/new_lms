@@ -6,23 +6,21 @@ import { useCxData } from '../../hooks/useCxData';
 import { getProgramLabel } from '../../data/programTypes';
 import { studentsInBatch } from '../../utils/batchScope';
 import { buildSubmissionIndex, buildModuleTaskBreakdown, countCompletedCells, isCxSubmissionComplete } from '../../utils/cxMetrics';
+import {
+  buildLearnerStageRows,
+  buildSectionStageFunnel,
+  filterLearnerStages,
+  STUCK_DAYS,
+} from '../../utils/cxLearnerStage';
+import CxBatchStageFunnel from '../../components/cx/CxBatchStageFunnel';
+import CxLearnerStageTable from '../../components/cx/CxLearnerStageTable';
+import TaskTrackingBoard from '../../components/cx/TaskTrackingBoard';
 import { getBatchAttendanceSummary } from '../../services/attendanceService';
 import { getTodayKey, addDaysToKey } from '../../utils/streakTimezone';
 import ParticipantListModal from '../../components/cx/ParticipantListModal';
 import BatchMembersPanel from '../../components/cx/BatchMembersPanel';
 import BatchRecordingsPanel from '../../components/cx/BatchRecordingsPanel';
 import DashboardSkeleton from '../../components/ui/DashboardSkeleton';
-
-function timeAgo(ts) {
-  const ms = ts?.seconds ? ts.seconds * 1000 : ts?.toMillis?.() || null;
-  if (!ms) return 'Never';
-  const days = Math.floor((Date.now() - ms) / 86400000);
-  if (days <= 0) return 'Today';
-  if (days === 1) return '1d ago';
-  if (days < 30) return `${days}d ago`;
-  const months = Math.floor(days / 30);
-  return months === 1 ? '1mo ago' : `${months}mo ago`;
-}
 
 function StatCard({ value, label, variant, onClick }) {
   return (
@@ -44,8 +42,10 @@ export default function CXBatchAnalysis() {
   const navigate = useNavigate();
   const { user, role } = useAuth();
   const { program, adapter } = useProgramAdapter();
-  const { batches, users, students, activeTasks: tasks, submissions, loading, refresh } = useCxData(program, adapter);
+  const { batches, users, students, tasks, submissions, loading, refresh } = useCxData(program, adapter);
   const [modal, setModal] = useState(null);
+  const [stageFilter, setStageFilter] = useState('all');
+  const [trackingOpen, setTrackingOpen] = useState(false);
   const [attendance, setAttendance] = useState({});
   const [attendanceLoading, setAttendanceLoading] = useState(false);
 
@@ -78,9 +78,26 @@ export default function CXBatchAnalysis() {
   }, [members]);
 
   const perModule = useMemo(
-    () => buildModuleTaskBreakdown(members, tasks, batchSubs),
-    [tasks, batchSubs, members]
+    () => buildModuleTaskBreakdown(members, tasks, batchSubs, program),
+    [tasks, batchSubs, members, program]
   );
+
+  const stageFunnel = useMemo(
+    () => (adapter.hasTasks ? buildSectionStageFunnel(members, tasks, batchSubs, program) : []),
+    [adapter.hasTasks, members, tasks, batchSubs, program]
+  );
+
+  const learnerStages = useMemo(
+    () => (adapter.hasTasks ? buildLearnerStageRows(members, tasks, batchSubs, program) : []),
+    [adapter.hasTasks, members, tasks, batchSubs, program]
+  );
+
+  const filteredStages = useMemo(
+    () => filterLearnerStages(learnerStages, stageFilter),
+    [learnerStages, stageFilter]
+  );
+
+  const stuckLearners = useMemo(() => learnerStages.filter((s) => s.stuck), [learnerStages]);
 
   const perLearner = useMemo(() => {
     const subMap = buildSubmissionIndex(batchSubs);
@@ -220,6 +237,16 @@ export default function CXBatchAnalysis() {
           {adapter.hasTasks && (
             <>
               <StatCard
+                value={stuckLearners.length}
+                label={`Stuck (${STUCK_DAYS}d+)`}
+                variant={stuckLearners.length > 0 ? 'danger' : undefined}
+                onClick={() =>
+                  stuckLearners.length
+                    ? setStageFilter('stuck')
+                    : undefined
+                }
+              />
+              <StatCard
                 value={allTasksCompletedMembers.length}
                 label="All tasks done"
                 variant={allTasksCompletedMembers.length > 0 ? 'success' : undefined}
@@ -270,6 +297,24 @@ export default function CXBatchAnalysis() {
               />
             </div>
           )}
+        </section>
+      )}
+
+      {/* Stage funnel — where each learner sits in the journey */}
+      {adapter.hasTasks && stageFunnel.length > 0 && (
+        <section className="cx-section">
+          <h2>Stage funnel</h2>
+          <p className="page-sub cx-section__intro">
+            See how many learners have completed, started, or not reached each program section. Click a
+            segment to filter the learner list below.
+          </p>
+          <CxBatchStageFunnel
+            funnel={stageFunnel}
+            onSelectParticipants={(title, participants, meta) => {
+              if (meta?.filter) setStageFilter(meta.filter);
+              if (participants?.length) setModal({ title, participants });
+            }}
+          />
         </section>
       )}
 
@@ -346,133 +391,53 @@ export default function CXBatchAnalysis() {
         </section>
       )}
 
-      {/* Learner table */}
+      {/* Learners by stage */}
       <section className="cx-section">
-        <h2>Learners</h2>
+        <h2>Learners by stage</h2>
         {members.length === 0 ? (
           <p className="muted">No learners in this batch yet.</p>
+        ) : adapter.hasTasks ? (
+          <CxLearnerStageTable
+            stages={filteredStages}
+            stageFilter={stageFilter}
+            onStageFilterChange={setStageFilter}
+            sectionOptions={stageFunnel.map((s) => ({ id: s.id, title: s.title }))}
+            attendance={attendance}
+            showAttendance={Boolean(attendanceStats)}
+          />
         ) : (
-          <>
-            <ul className="cx-learner-cards" aria-label="Learners">
-              {perLearner.map(({ learner, done }) => {
-                const att = attendance[learner.id];
-                const attPct = att?.total > 0 ? Math.round((att.present / att.total) * 100) : null;
-                return (
-                  <li key={learner.id} className="cx-learner-card">
-                    <div className="cx-learner-card__head">
-                      <span className="cx-learner-name">{learner.displayName || learner.email}</span>
-                      <span className="cx-learner-sub muted">{learner.phone || learner.email}</span>
-                    </div>
-                    <div className="cx-learner-card__meta-row muted">
-                      <span>Last active: {timeAgo(learner.lastActivityAt)}</span>
-                      {adapter.hasTasks && (
-                        <span>
-                          Tasks:{' '}
-                          <span
-                            className={
-                              done === tasks.length && tasks.length > 0
-                                ? 'cx-badge cx-badge--done'
-                                : undefined
-                            }
-                          >
-                            {done}/{tasks.length}
-                          </span>
-                        </span>
-                      )}
-                      {attendanceStats && (
-                        <span>
-                          Attendance:{' '}
-                          {attPct != null ? (
-                            <span
-                              className={
-                                attPct < 60
-                                  ? 'cx-badge cx-badge--danger'
-                                  : attPct >= 80
-                                  ? 'cx-badge cx-badge--done'
-                                  : undefined
-                              }
-                            >
-                              {attPct}%
-                            </span>
-                          ) : (
-                            '—'
-                          )}
-                        </span>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-            <div className="cx-learner-table-wrap cx-learner-table-wrap--desktop">
-            <table className="cx-learner-table">
-              <thead>
-                <tr>
-                  <th>Name / Phone</th>
-                  <th>Last active</th>
-                  {adapter.hasTasks && <th>Tasks</th>}
-                  {attendanceStats && <th>Attendance</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {perLearner.map(({ learner, done }) => {
-                  const att = attendance[learner.id];
-                  const attPct = att?.total > 0 ? Math.round((att.present / att.total) * 100) : null;
-                  return (
-                    <tr key={learner.id}>
-                      <td>
-                        <span className="cx-learner-name">{learner.displayName || learner.email}</span>
-                        <span className="cx-learner-sub">
-                          {learner.phone || learner.email}
-                        </span>
-                      </td>
-                      <td className="cx-learner-meta">{timeAgo(learner.lastActivityAt)}</td>
-                      {adapter.hasTasks && (
-                        <td>
-                          <span
-                            className={
-                              done === tasks.length && tasks.length > 0
-                                ? 'cx-badge cx-badge--done'
-                                : 'cx-learner-meta'
-                            }
-                          >
-                            {done}/{tasks.length}
-                          </span>
-                        </td>
-                      )}
-                      {attendanceStats && (
-                        <td>
-                          {attPct != null ? (
-                            <span
-                              className={
-                                attPct < 60
-                                  ? 'cx-badge cx-badge--danger'
-                                  : attPct >= 80
-                                  ? 'cx-badge cx-badge--done'
-                                  : 'cx-learner-meta'
-                              }
-                            >
-                              {attPct}%
-                            </span>
-                          ) : (
-                            <span className="cx-learner-meta">—</span>
-                          )}
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            </div>
-          </>
-        )}
-        {!adapter.hasTasks && members.length > 0 && (
-          <p className="muted" style={{ marginTop: '0.75rem' }}>
+          <p className="muted">
             Task analytics for {adapter.shortLabel} will appear once its journey is defined.
           </p>
         )}
       </section>
+
+      {/* Detailed task grid */}
+      {adapter.hasTasks && members.length > 0 && (
+        <section className="cx-section">
+          <button
+            type="button"
+            className="cx-archive-panel__toggle cx-section-toggle"
+            aria-expanded={trackingOpen}
+            onClick={() => setTrackingOpen((v) => !v)}
+          >
+            <span>Detailed task tracking</span>
+            <span className="muted">Participant × task grid</span>
+          </button>
+          {trackingOpen && (
+            <div className="cx-section__body">
+              <TaskTrackingBoard
+                students={members}
+                batches={[batch]}
+                tasks={tasks}
+                submissions={batchSubs}
+                program={program}
+                defaultBatchId={batch.id}
+              />
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }

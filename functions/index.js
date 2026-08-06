@@ -3,13 +3,8 @@
  *
  * SETUP:
  *   1. cd functions && npm install
- *   2. Zoho CRM secrets:
- *        firebase functions:secrets:set ZOHO_CLIENT_ID
- *        firebase functions:secrets:set ZOHO_CLIENT_SECRET
- *        firebase functions:secrets:set ZOHO_REFRESH_TOKEN
- *      Optional env (defaults shown):
- *        ZOHO_API_DOMAIN=https://www.zohoapis.com
- *        ZOHO_CRM_MODULE=Leads
+ *   2. Zoho CRM credentials — copy functions/.env.example → functions/.env
+ *      (deploy loads this automatically). Optional: firebase functions:secrets:set …
  *   3. SMTP secrets (optional — weekly MBW reminder):
  *        firebase functions:secrets:set SMTP_HOST
  *        firebase functions:secrets:set SMTP_USER
@@ -34,6 +29,56 @@ const db = admin.firestore();
 const SMTP_HOST = defineSecret('SMTP_HOST');
 const SMTP_USER = defineSecret('SMTP_USER');
 const SMTP_PASS = defineSecret('SMTP_PASS');
+
+/** Bulk push can run for many users — default 60s timeout surfaces as a browser CORS error. */
+const ZOHO_BULK_SYNC_OPTS = {
+  timeoutSeconds: 540,
+  memory: '512MiB',
+};
+
+/** Login callable — asia-south1 matches India users + Zoho .in API (no minInstances = no always-on cost). */
+const LOGIN_FN_OPTS = {
+  region: 'asia-south1',
+};
+
+async function syncAllUsersToZohoPool(db, docs, concurrency = 4) {
+  const outcomes = [];
+  let next = 0;
+
+  async function worker() {
+    while (next < docs.length) {
+      const doc = docs[next++];
+      const profile = doc.data();
+      if (!profile?.email) continue;
+      try {
+        const result = await zoho.syncUserToZoho(db, doc.id, profile, { syncCredentials: true });
+        outcomes.push({ email: profile.email, result });
+      } catch (err) {
+        outcomes.push({ email: profile.email, error: err.message });
+      }
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, docs.length || 1) }, () => worker())
+  );
+
+  let synced = 0;
+  let failed = 0;
+  const errors = [];
+  for (const entry of outcomes) {
+    if (entry.result?.synced) {
+      synced += 1;
+    } else {
+      failed += 1;
+      if (errors.length < 5) {
+        errors.push(`${entry.email}: ${entry.result?.reason || entry.error || 'Sync failed'}`);
+      }
+    }
+  }
+
+  return { synced, failed, errors };
+}
 
 // ── Helpers ───────────────────────────────────────────────────
 function currentWeekLabel() {
@@ -379,8 +424,158 @@ exports.zohoTestConnection = onCall(async (request) => {
   return { ok: true, configured: true };
 });
 
+// ── Zoho batch mapping — PREVIEW ONLY (writes nothing, anywhere) ──
+// Reports which LMS batches WOULD be created from IL_Users, plus every record
+// that needs a human decision. There is deliberately no "apply" counterpart yet.
+exports.zohoBatchSyncPreview = onCall(ZOHO_BULK_SYNC_OPTS, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', 'Sign in required');
+  }
+  await zoho.assertStaff(db, request.auth.uid);
+
+  if (!zoho.isConfigured()) {
+    return { ok: false, reason: 'Zoho secrets are not configured on Cloud Functions' };
+  }
+
+  const { maxPages = 10 } = request.data || {};
+
+  try {
+    const report = await zoho.previewBatchSync({
+      maxPages: Math.min(Math.max(Number(maxPages) || 10, 1), 50),
+    });
+    return { ok: true, ...report };
+  } catch (err) {
+    console.error('zohoBatchSyncPreview failed:', err);
+    return { ok: false, reason: err.message || String(err) };
+  }
+});
+
+// ── Zoho batch apply — creates Firestore batch + assigns learners ──
+exports.zohoBatchSyncApply = onCall(ZOHO_BULK_SYNC_OPTS, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', 'Sign in required');
+  }
+  await zoho.assertAdmin(db, request.auth.uid);
+
+  if (!zoho.isConfigured()) {
+    return { ok: false, reason: 'Zoho secrets are not configured on Cloud Functions' };
+  }
+
+  const {
+    program,
+    rawBatch,
+    startDate,
+    endDate,
+    dryRun = true,
+    maxPages = 50,
+  } = request.data || {};
+
+  if (!program) {
+    throw new HttpsError('invalid-argument', 'program is required');
+  }
+  if (!startDate && !endDate && !rawBatch) {
+    throw new HttpsError(
+      'invalid-argument',
+      'Provide startDate + endDate (Leads cohort) or rawBatch (IL_Users)'
+    );
+  }
+
+  try {
+    const report = await zoho.applyBatchSync(db, {
+      program: String(program).trim().toLowerCase(),
+      rawBatch: rawBatch ? String(rawBatch).trim() : undefined,
+      startDate: startDate ? String(startDate).trim() : undefined,
+      endDate: endDate ? String(endDate).trim() : undefined,
+      dryRun: dryRun !== false,
+      maxPages: Math.min(Math.max(Number(maxPages) || 50, 1), 50),
+      triggeredBy: request.auth.uid,
+    });
+    return report;
+  } catch (err) {
+    console.error('zohoBatchSyncApply failed:', err);
+    return { ok: false, reason: err.message || String(err) };
+  }
+});
+
+// ── Zoho → LMS: sync one learner's batch (admin callable) ─────
+exports.zohoSyncUserBatch = onCall(async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', 'Sign in required');
+  }
+  await zoho.assertAdmin(db, request.auth.uid);
+
+  if (!zoho.isConfigured()) {
+    return { ok: false, reason: 'Zoho secrets are not configured on Cloud Functions' };
+  }
+
+  const email = (request.data?.email || '').trim();
+  if (!email) {
+    throw new HttpsError('invalid-argument', 'email is required');
+  }
+
+  try {
+    return await zoho.syncUserBatchFromZoho(db, email, {
+      dryRun: request.data?.dryRun === true,
+      triggeredBy: request.auth.uid,
+      provisionIfMissing: request.data?.provisionIfMissing !== false,
+    });
+  } catch (err) {
+    console.error('zohoSyncUserBatch failed:', err);
+    return { ok: false, reason: err.message || String(err) };
+  }
+});
+
+async function handleZohoBatchWebhook(req, res) {
+  if (req.method !== 'POST') {
+    res.status(405).send('Method not allowed');
+    return;
+  }
+
+  const secret = process.env.ZOHO_WEBHOOK_SECRET;
+  if (secret) {
+    const headerSecret = req.headers['x-zoho-webhook-secret'] || req.headers['x-webhook-secret'];
+    if (headerSecret !== secret) {
+      res.status(401).json({ ok: false, reason: 'Unauthorized' });
+      return;
+    }
+  }
+
+  const body = parseWebhookBody(req);
+  const email = (body.email || body.Email || '').trim();
+
+  if (!email) {
+    res.status(400).json({
+      ok: false,
+      reason: 'email is required — trigger when Batch or cohort dates change in Zoho',
+    });
+    return;
+  }
+
+  if (!zoho.isConfigured()) {
+    res.status(503).json({
+      ok: false,
+      reason: 'Zoho OAuth not configured on Cloud Functions',
+    });
+    return;
+  }
+
+  try {
+    const result = await zoho.syncUserBatchFromZoho(db, email, {
+      triggeredBy: 'batch-webhook',
+      provisionIfMissing: body.provisionIfMissing !== false,
+    });
+    res.status(result.ok ? 200 : 400).json(result);
+  } catch (err) {
+    console.error('Zoho batch webhook failed:', err.message);
+    res.status(500).json({ ok: false, reason: err.message });
+  }
+}
+
+// ── Zoho webhook — batch/cohort change → update LMS batch membership ──
+exports.zohoBatchUpdateWebhook = onRequest({ cors: true }, handleZohoBatchWebhook);
+
 // ── Zoho CRM — admin: sync all users ──────────────────────────
-exports.zohoSyncAllUsers = onCall(async (request) => {
+exports.zohoSyncAllUsers = onCall(ZOHO_BULK_SYNC_OPTS, async (request) => {
   if (!request.auth?.uid) {
     throw new HttpsError('unauthenticated', 'Sign in required');
   }
@@ -390,28 +585,16 @@ exports.zohoSyncAllUsers = onCall(async (request) => {
     return { ok: false, reason: 'Zoho secrets are not configured' };
   }
 
-  const snap = await db.collection('users').get();
-  let synced = 0;
-  let failed = 0;
-  const errors = [];
-
-  for (const doc of snap.docs) {
-    const profile = doc.data();
-    if (!profile.email) continue;
-    try {
-      const result = await zoho.syncUserToZoho(db, doc.id, profile, { syncCredentials: true });
-      if (result.synced) synced += 1;
-      else {
-        failed += 1;
-        if (errors.length < 5) errors.push(`${profile.email}: ${result.reason}`);
-      }
-    } catch (err) {
-      failed += 1;
-      if (errors.length < 5) errors.push(`${profile.email}: ${err.message}`);
-    }
+  try {
+    const snap = await db.collection('users').get();
+    const docs = snap.docs;
+    const { synced, failed, errors } = await syncAllUsersToZohoPool(db, docs);
+    return { ok: true, total: snap.size, synced, failed, errors };
+  } catch (err) {
+    console.error('zohoSyncAllUsers failed:', err);
+    if (err instanceof HttpsError) throw err;
+    throw new HttpsError('internal', err.message || 'Bulk Zoho sync failed');
   }
-
-  return { ok: true, total: snap.size, synced, failed, errors };
 });
 
 // ── Zoho CRM — admin: sync one user ───────────────────────────
@@ -529,8 +712,22 @@ exports.zohoListIlUsers = onCall(async (request) => {
   return zoho.listIlUsersPage({ page, perPage });
 });
 
+exports.zohoListIlRegistration = onCall(async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', 'Sign in required');
+  }
+  await zoho.assertAdmin(db, request.auth.uid);
+
+  if (!zoho.isConfigured()) {
+    return { ok: false, reason: 'Zoho secrets are not configured' };
+  }
+
+  const { page = 1, perPage = 50 } = request.data || {};
+  return zoho.listIlRegistrationPage({ page, perPage });
+});
+
 // ── Zoho CRM — first login: create Firebase user from IL_Users credentials ─
-exports.ensureZohoUserOnLogin = onCall(async (request) => {
+exports.ensureZohoUserOnLogin = onCall(LOGIN_FN_OPTS, async (request) => {
   if (!zoho.isConfigured()) {
     return { ok: false, reason: 'Zoho not configured' };
   }

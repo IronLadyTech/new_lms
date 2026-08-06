@@ -28,7 +28,7 @@ export function useAttendanceAnalytics(learnerId, courseId) {
     }
     try {
       const result = await getAttendanceRecords(learnerId, courseId, range.start, range.end);
-      setDays(result.days);
+      setDays(Array.isArray(result.days) ? result.days : []);
       setError(null);
     } catch (err) {
       console.warn('Attendance load failed', err);
@@ -56,7 +56,7 @@ export function useAttendanceAnalytics(learnerId, courseId) {
       range.end,
       (records) => {
         if (cancelled) return;
-        setDays(records);
+        setDays(Array.isArray(records) ? records : []);
         setError(null);
         setLoading(false);
       },

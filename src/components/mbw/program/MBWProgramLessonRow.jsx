@@ -1,25 +1,5 @@
-import {
-  Check,
-  Lock,
-  Video,
-  FileText,
-  Link2,
-  Table2,
-  Upload,
-  Mic,
-  PlayCircle,
-} from 'lucide-react';
-import { getTaskDurationHint } from '../../../utils/mbwProgramUtils';
-
-const ICONS = {
-  video: Video,
-  text: FileText,
-  link: Link2,
-  template: Table2,
-  document: Upload,
-  recording: Mic,
-  lesson: PlayCircle,
-};
+import { Check, Lock } from 'lucide-react';
+import { taskTypeIcon } from './taskTypeIcons';
 
 function StatusControl({ visual }) {
   if (visual === 'done') {
@@ -46,21 +26,25 @@ function StatusControl({ visual }) {
 }
 
 export default function MBWProgramLessonRow({
+  weekCode,
   title,
   typeIcon,
+  kindLabel,
   durationHint,
   rowState,
   isActive,
   showLockReason = false,
+  spineStart = false,
+  spineEnd = false,
   onSelect,
 }) {
-  const Icon = ICONS[typeIcon] || PlayCircle;
+  const Icon = taskTypeIcon(typeIcon);
   const { visual, reason, clickable } = rowState;
   const locked = visual === 'locked';
 
   return (
     <div
-      className={`mbw-lesson-row${isActive ? ' is-active' : ''}${locked ? ' is-locked' : ''}${visual === 'current' ? ' is-current' : ''}`}
+      className={`mbw-lesson-row${isActive ? ' is-active' : ''}${locked ? ' is-locked' : ''}${visual === 'current' ? ' is-current' : ''}${spineStart ? ' is-spine-start' : ''}${spineEnd ? ' is-spine-end' : ''}`}
     >
       <button
         type="button"
@@ -70,14 +54,26 @@ export default function MBWProgramLessonRow({
         title={locked && reason && !showLockReason ? reason : undefined}
         onClick={() => clickable && onSelect?.()}
       >
-        <span className="mbw-lesson-row__type" aria-hidden>
-          <Icon size={18} />
+        <span className="mbw-lesson-row__node">
+          <StatusControl visual={visual} />
         </span>
         <span className="mbw-lesson-row__body">
-          <span className="mbw-lesson-row__title">{title}</span>
-          <span className="mbw-lesson-row__meta">{durationHint}</span>
+          <span className="mbw-lesson-row__heading">
+            {weekCode && <span className="mbw-lesson-row__code">{weekCode}</span>}
+            <span className="mbw-lesson-row__title">{title}</span>
+          </span>
+          <span className="mbw-lesson-row__meta">
+            {kindLabel && (
+              <span
+                className={`mbw-lesson-row__kind${kindLabel === 'Assignment' ? ' mbw-lesson-row__kind--assignment' : ''}`}
+              >
+                {kindLabel}
+              </span>
+            )}
+            <Icon size={13} className="mbw-lesson-row__type" aria-hidden />
+            {durationHint}
+          </span>
         </span>
-        <StatusControl visual={visual} />
       </button>
       {locked && reason && showLockReason && (
         <p className="mbw-lesson-row__lock-reason">

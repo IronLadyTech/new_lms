@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import TaskTemplateDownloads from './TaskTemplateDownloads';
+import TaskTemplateDownloads from '../../submissions/TaskTemplateDownloads';
 
 export default function TextSubmission({ task, submission, canSubmit, onSubmit, readOnly }) {
   const [text, setText] = useState('');

@@ -159,8 +159,8 @@ export default function CXDashboards() {
   }, [taskBatchFilter, batches]);
 
   const perModuleBreakdown = useMemo(
-    () => buildModuleTaskBreakdown(taskWiseStudents, tasks, submissions),
-    [tasks, taskWiseStudents, submissions]
+    () => buildModuleTaskBreakdown(taskWiseStudents, tasks, submissions, program),
+    [tasks, taskWiseStudents, submissions, program]
   );
 
   const overviewCharts = useMemo(

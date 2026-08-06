@@ -208,7 +208,7 @@ export default function CXHome() {
     return 'Remind';
   };
 
-  const firstName = profile?.displayName?.split(' ')[0];
+  const firstName = String(profile?.displayName ?? '').trim().split(/\s+/)[0] || '';
 
   const kpiItems = [
     {

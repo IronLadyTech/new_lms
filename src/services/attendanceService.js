@@ -125,12 +125,13 @@ export function subscribeAttendanceRecords(learnerId, courseId, startKey, endKey
  * @param {number} threshold
  */
 export function computeAttendanceAnalytics(days, threshold = DEFAULT_ATTENDANCE_THRESHOLD) {
-  const scheduled = days.filter(
+  const list = Array.isArray(days) ? days.filter(Boolean) : [];
+  const scheduled = list.filter(
     (d) => d.status && d.status !== ATTENDANCE_STATUS.WEEK_OFF
   );
   const present = scheduled.filter((d) => d.status === ATTENDANCE_STATUS.PRESENT);
   const absent = scheduled.filter((d) => d.status === ATTENDANCE_STATUS.ABSENT);
-  const weekOff = days.filter((d) => d.status === ATTENDANCE_STATUS.WEEK_OFF);
+  const weekOff = list.filter((d) => d.status === ATTENDANCE_STATUS.WEEK_OFF);
 
   const attendancePct =
     scheduled.length > 0 ? Math.round((present.length / scheduled.length) * 100) : null;
@@ -147,8 +148,8 @@ export function computeAttendanceAnalytics(days, threshold = DEFAULT_ATTENDANCE_
   });
 
   const byMonth = {};
-  days.forEach((d) => {
-    if (!d.status || d.status === ATTENDANCE_STATUS.WEEK_OFF) return;
+  list.forEach((d) => {
+    if (!d?.date || !d.status || d.status === ATTENDANCE_STATUS.WEEK_OFF) return;
     const month = d.date.slice(0, 7);
     if (!byMonth[month]) byMonth[month] = { present: 0, absent: 0, total: 0 };
     byMonth[month].total += 1;
@@ -194,8 +195,10 @@ export function computeAttendanceAnalytics(days, threshold = DEFAULT_ATTENDANCE_
 }
 
 export function buildAttendanceGridMonths(days) {
+  const list = Array.isArray(days) ? days.filter(Boolean) : [];
   const months = {};
-  days.forEach(({ date, status }) => {
+  list.forEach(({ date, status }) => {
+    if (!date || typeof date !== 'string') return;
     const [y, m, dayNum] = date.split('-');
     const key = `${y}-${m}`;
     if (!months[key]) {

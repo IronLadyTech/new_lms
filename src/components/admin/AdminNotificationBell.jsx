@@ -9,14 +9,19 @@ const DISMISSED_KEY = 'ilms_admin_dismissed_notifications';
 
 function getDismissed() {
   try {
-    return JSON.parse(localStorage.getItem(DISMISSED_KEY) || '[]');
+    const parsed = JSON.parse(localStorage.getItem(DISMISSED_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
 }
 
 function setDismissed(ids) {
-  localStorage.setItem(DISMISSED_KEY, JSON.stringify(ids));
+  try {
+    localStorage.setItem(DISMISSED_KEY, JSON.stringify(ids));
+  } catch {
+    /* quota / private mode */
+  }
 }
 
 function ts(item) {
@@ -51,65 +56,73 @@ function formatActivity(a, userMap, courseMap = {}) {
 }
 
 function buildAdminNotifications(tickets, activities, users) {
-  const userMap = Object.fromEntries(users.map((u) => [u.id, u]));
-  const items = [];
-  const recentCutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+  try {
+    const safeTickets = Array.isArray(tickets) ? tickets : [];
+    const safeActivities = Array.isArray(activities) ? activities : [];
+    const safeUsers = Array.isArray(users) ? users : [];
+    const userMap = Object.fromEntries(safeUsers.map((u) => [u.id, u]));
+    const items = [];
+    const recentCutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
 
-  tickets
-    .filter((t) => t.status === TICKET_STATUSES.OPEN)
-    .slice(0, 12)
-    .forEach((t) => {
+    safeTickets
+      .filter((t) => t.status === TICKET_STATUSES.OPEN)
+      .slice(0, 12)
+      .forEach((t) => {
+        items.push({
+          id: `admin-ticket-${t.id}`,
+          kind: 'ticket',
+          tab: 'tickets',
+          title: 'New support ticket',
+          body: `${t.userDisplayName || t.userEmail || 'User'}: ${t.subject || 'Support request'} (${categoryLabel(t.category)})`,
+          at: ts(t),
+        });
+      });
+
+    safeTickets
+      .filter((t) => t.status === TICKET_STATUSES.ASSIGNED)
+      .slice(0, 6)
+      .forEach((t) => {
+        items.push({
+          id: `admin-ticket-assigned-${t.id}`,
+          kind: 'ticket',
+          tab: 'tickets',
+          title: 'Ticket in progress',
+          body: `"${t.subject || 'Support request'}" assigned to ${t.assignedToName || 'staff'}`,
+          at: ts(t),
+        });
+      });
+
+    safeUsers
+      .filter((u) => (u.role || ROLES.STUDENT) === ROLES.STUDENT && ts(u) >= recentCutoff)
+      .slice(0, 8)
+      .forEach((u) => {
+        items.push({
+          id: `admin-user-${u.id}`,
+          kind: 'user',
+          tab: 'users',
+          title: 'New user joined',
+          body: `${u.displayName || u.email || 'User'} created an account`,
+          at: ts(u),
+        });
+      });
+
+    safeActivities.slice(0, 12).forEach((a) => {
+      const copy = formatActivity(a, userMap);
       items.push({
-        id: `admin-ticket-${t.id}`,
-        kind: 'ticket',
-        tab: 'tickets',
-        title: 'New support ticket',
-        body: `${t.userDisplayName || t.userEmail}: ${t.subject} (${categoryLabel(t.category)})`,
-        at: ts(t),
+        id: `admin-activity-${a.id}`,
+        kind: 'activity',
+        tab: 'activity',
+        title: copy.title,
+        body: copy.body,
+        at: ts(a),
       });
     });
 
-  tickets
-    .filter((t) => t.status === TICKET_STATUSES.ASSIGNED)
-    .slice(0, 6)
-    .forEach((t) => {
-      items.push({
-        id: `admin-ticket-assigned-${t.id}`,
-        kind: 'ticket',
-        tab: 'tickets',
-        title: 'Ticket in progress',
-        body: `"${t.subject}" assigned to ${t.assignedToName || 'staff'}`,
-        at: ts(t),
-      });
-    });
-
-  users
-    .filter((u) => (u.role || ROLES.STUDENT) === ROLES.STUDENT && ts(u) >= recentCutoff)
-    .slice(0, 8)
-    .forEach((u) => {
-      items.push({
-        id: `admin-user-${u.id}`,
-        kind: 'user',
-        tab: 'users',
-        title: 'New user joined',
-        body: `${u.displayName || u.email} created an account`,
-        at: ts(u),
-      });
-    });
-
-  activities.slice(0, 12).forEach((a) => {
-    const copy = formatActivity(a, userMap);
-    items.push({
-      id: `admin-activity-${a.id}`,
-      kind: 'activity',
-      tab: 'activity',
-      title: copy.title,
-      body: copy.body,
-      at: ts(a),
-    });
-  });
-
-  return items.sort((a, b) => b.at - a.at).slice(0, 24);
+    return items.sort((a, b) => b.at - a.at).slice(0, 24);
+  } catch (err) {
+    console.warn('AdminNotificationBell: failed to build notifications', err);
+    return [];
+  }
 }
 
 export default function AdminNotificationBell({ onTabChange }) {
@@ -126,12 +139,12 @@ export default function AdminNotificationBell({ onTabChange }) {
       try {
         const [tk, acts, usrs] = await Promise.all([getAllTickets(), getAllActivities(40), getAllUsers()]);
         if (!cancelled) {
-          setTickets(tk);
-          setActivities(acts);
-          setUsers(usrs);
+          setTickets(Array.isArray(tk) ? tk : []);
+          setActivities(Array.isArray(acts) ? acts : []);
+          setUsers(Array.isArray(usrs) ? usrs : []);
         }
       } catch (e) {
-        console.error(e);
+        console.error('AdminNotificationBell refresh failed:', e);
       }
     };
 

@@ -8,6 +8,7 @@ import {
   query,
   where,
   serverTimestamp,
+  arrayUnion,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { uploadFile } from './storageService';
@@ -19,7 +20,7 @@ import {
   currentWeekLabel,
 } from './mbwService';
 import { getBm100StaticTasks } from '../data/bm100StaticTasks';
-import { statusForReviewOutcome } from '../utils/submissionReview';
+import { statusForReviewOutcome, buildReviewEntry } from '../utils/submissionReview';
 import { mergeInQuery } from '../utils/firestoreChunks';
 
 export { loadLocalSubmissions, TASK_TYPES, SUBMISSION_STATUS, currentWeekLabel };
@@ -240,12 +241,19 @@ export async function reviewSubmission(subId, { outcome, feedback, reviewerId })
   if (!db) throw new Error('Review requires Firestore');
   const status = statusForReviewOutcome(outcome);
   const approved = outcome === 'approved';
+  const reviewEntry = buildReviewEntry({
+    outcome,
+    feedback,
+    reviewedBy: reviewerId,
+    reviewedAt: new Date(),
+  });
   await updateDoc(doc(db, BM100_SUBMISSIONS, subId), {
     status,
     reviewOutcome: outcome,
     feedback: feedback || '',
     reviewedBy: reviewerId,
     reviewedAt: serverTimestamp(),
+    reviewHistory: arrayUnion(reviewEntry),
     completedAt: approved ? serverTimestamp() : null,
     updatedAt: serverTimestamp(),
   });

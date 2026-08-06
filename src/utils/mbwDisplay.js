@@ -2,6 +2,7 @@
 
 import { SUBMISSION_STATUS } from '../services/mbwService';
 import { getSubmissionReviewDisplay, isLearnerActionRequired } from './submissionReview';
+import { hasCloudMedia } from './submissionMedia';
 
 export function getModuleLabel(task) {
   const n = (task.order ?? 0) + 1;
@@ -49,13 +50,28 @@ export function submissionPreview(sub, task) {
   }
   if (sub.linkValue?.trim()) return sub.linkValue.trim();
   if (sub.fileName?.trim() && !sub.storageSkipped) return sub.fileName.trim();
-  if (sub.storageSkipped) {
+  if (sub.storageSkipped && !hasCloudMedia(sub)) {
     return task?.type === 'video_record'
       ? 'Mirror practice saved (upload pending)'
       : 'Step marked complete (upload pending)';
   }
-  if (sub.videoUrl) return 'Video submitted';
-  if (sub.templateData?.rows?.length) return `ERRC grid (${sub.templateData.rows.length} rows)`;
+  if (hasCloudMedia(sub)) return sub.fileName?.trim() || 'Video submitted';
+  if (sub.templateData?.rows?.length || sub.templateData?.fields) {
+    const templateId = sub.templateData?.templateId || task?.templateId;
+    if (templateId === 'delta') {
+      return sub.templateData?.rows?.length
+        ? `Delta table (${sub.templateData.rows.length} milestones)`
+        : 'Delta table submitted';
+    }
+    if (templateId === 'errc') {
+      return `ERRC grid (${sub.templateData.rows.length} rows)`;
+    }
+    if (sub.templateData?.fields) {
+      const filled = Object.values(sub.templateData.fields).filter((v) => String(v || '').trim()).length;
+      return `Form submitted (${filled} fields)`;
+    }
+    return `Table submitted (${sub.templateData.rows.length} rows)`;
+  }
   if (sub.checkedItems?.length) {
     const total = task?.checklistItems?.length;
     return total ? `${sub.checkedItems.length}/${total} practices done` : `${sub.checkedItems.length} practice(s) done`;

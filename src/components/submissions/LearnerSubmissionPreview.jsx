@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import ErrcReadOnlyTable from '../mbw/ErrcReadOnlyTable';
+import TemplateReadOnly from '../mbw/TemplateReadOnly';
 import { submissionPreview } from '../../utils/mbwDisplay';
 import { getSubmissionBlob, submissionBlobKey } from '../../utils/submissionBlobStore';
+import { getSubmissionMediaUrls, hasCloudMedia } from '../../utils/submissionMedia';
 
 function formatSubmissionDate(value) {
   if (!value) return '';
@@ -9,9 +10,10 @@ function formatSubmissionDate(value) {
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleString();
 }
 
-function mediaKindFromType(fileType = '') {
-  if (fileType.startsWith('audio/')) return 'audio';
-  if (fileType.startsWith('video/')) return 'video';
+function mediaKindFromType(fileType) {
+  const type = typeof fileType === 'string' ? fileType : '';
+  if (type.startsWith('audio/')) return 'audio';
+  if (type.startsWith('video/')) return 'video';
   return 'file';
 }
 
@@ -29,13 +31,13 @@ export default function LearnerSubmissionPreview({ submission, task, userId, pro
     async function loadLocalBlob() {
       if (!userId || !task?.id || !submission) return;
 
-      const hasCloudMedia = Boolean(submission.videoUrl || submission.fileUrl);
+      const hasCloudMediaUrl = hasCloudMedia(submission);
       const needsLocal =
         submission.hasLocalRecording ||
         submission.storageSkipped ||
-        (submission.fileName && !hasCloudMedia);
+        (submission.fileName && !hasCloudMediaUrl);
 
-      if (!needsLocal || hasCloudMedia) return;
+      if (!needsLocal || hasCloudMediaUrl) return;
 
       try {
         const record = await getSubmissionBlob(submissionBlobKey(program, userId, task.id));
@@ -60,25 +62,14 @@ export default function LearnerSubmissionPreview({ submission, task, userId, pro
 
   const preview = submissionPreview(submission, task);
   const submittedLabel = formatSubmissionDate(submission.submittedAt || submission.updatedAt);
+  const { videoUrl: cloudVideoUrl, audioUrl: cloudAudioUrl, fileUrl: cloudFileUrl } =
+    getSubmissionMediaUrls(submission);
   const localKind = localMeta?.kind || mediaKindFromType(submission.fileType || localMeta?.fileType);
 
-  const cloudVideoUrl =
-    submission.videoUrl ||
-    submission.recordingUrl ||
-    (submission.fileType?.startsWith('video/') ? submission.fileUrl : null);
-
   const videoUrl = cloudVideoUrl || (localKind === 'video' ? localBlobUrl : null);
-  const audioUrl =
-    submission.audioUrl ||
-    (submission.fileType?.startsWith('audio/') ? submission.fileUrl : null) ||
-    (localKind === 'audio' ? localBlobUrl : null);
-
-  const fileUrl =
-    submission.fileUrl && submission.fileUrl !== cloudVideoUrl && !submission.fileType?.startsWith('audio/')
-      ? submission.fileUrl
-      : localKind === 'file'
-        ? localBlobUrl
-        : null;
+  const audioUrl = cloudAudioUrl || (localKind === 'audio' ? localBlobUrl : null);
+  const fileUrl = cloudFileUrl || (localKind === 'file' ? localBlobUrl : null);
+  const isVideoTask = task?.type === 'video_record';
 
   const fileName = submission.fileName || localMeta?.fileName || 'Download file';
   const hasWeekEntries = (submission.weekEntries?.length ?? 0) > 0;
@@ -148,19 +139,21 @@ export default function LearnerSubmissionPreview({ submission, task, userId, pro
 
       {!videoUrl && !audioUrl && !fileUrl && (submission.hasLocalRecording || submission.storageSkipped) && (
         <div className="alert alert-warning" role="status">
-          <strong>Recording saved on this device only.</strong>
+          <strong>
+            {isVideoTask ? 'Recording saved on this device only.' : 'File saved on this device only.'}
+          </strong>
           <span>
             {' '}
-            Cloud playback is unavailable. If you no longer see your file here, reopen this task on the
-            same device or record and upload again.
+            Cloud playback is unavailable. Re-open this task on the same device, or upload again so your
+            {isVideoTask ? ' video' : ' file'} is visible here and to your CX team.
           </span>
         </div>
       )}
 
-      {submission.templateData?.rows && (
+      {submission.templateData && (submission.templateData.rows || submission.templateData.fields) && (
         <div className="cx-review-block">
           <h3 className="cx-review-block__title">Template</h3>
-          <ErrcReadOnlyTable rows={submission.templateData.rows} />
+          <TemplateReadOnly templateData={submission.templateData} task={task} />
         </div>
       )}
 

@@ -6,7 +6,7 @@ import {
 } from '../../services/mbwService';
 import { getProgramLabel } from '../../data/programTypes';
 import { filterStudentsForBatches } from '../../utils/batchScope';
-import ErrcReadOnlyTable from '../mbw/ErrcReadOnlyTable';
+import TemplateReadOnly from '../mbw/TemplateReadOnly';
 
 function statusCellClass(status) {
   if (status === SUBMISSION_STATUS.COMPLETED) return 'mbw-admin-cell--done';
@@ -267,7 +267,9 @@ export default function MBWAdminDashboard({
                   {sub?.videoUrl && (
                     <video src={sub.videoUrl} controls className="mbw-admin-detail__video" />
                   )}
-                  {sub?.templateData?.rows && <ErrcReadOnlyTable rows={sub.templateData.rows} />}
+                  {sub?.templateData && (sub.templateData.rows || sub.templateData.fields) && (
+                    <TemplateReadOnly templateData={sub.templateData} task={t} />
+                  )}
                   {sub?.weekEntries?.length > 0 && (
                     <ul className="mbw-admin-weeks">
                       {sub.weekEntries.map((e, i) => (

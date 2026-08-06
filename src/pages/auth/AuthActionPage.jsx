@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import ThemeToggle from '../../components/ThemeToggle';
+import PasswordInput from '../../components/ui/PasswordInput';
 
 export default function AuthActionPage() {
   const [searchParams] = useSearchParams();
@@ -95,26 +96,24 @@ export default function AuthActionPage() {
         <form onSubmit={handleSubmit} className="auth-form">
           <label>
             New password
-            <input
-              type="password"
-              required
-              minLength={6}
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              minLength={6}
+              required
               autoComplete="new-password"
+              aria-label="New password"
             />
           </label>
           <label>
             Confirm password
-            <input
-              type="password"
-              required
-              minLength={6}
+            <PasswordInput
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="••••••••"
+              minLength={6}
+              required
               autoComplete="new-password"
+              aria-label="Confirm password"
             />
           </label>
           <button type="submit" className="btn btn-primary" disabled={submitting}>

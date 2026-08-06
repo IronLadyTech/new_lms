@@ -36,9 +36,32 @@ export function getSessionTitle(program, sessionId) {
 
 export function findRecordingForSession(recordings, phaseId, sessionId) {
   if (!sessionId) return null;
-  return (recordings || []).find(
-    (r) => r.phaseId === phaseId && r.sessionId === sessionId
-  );
+  const matches = (recordings || []).filter((r) => r.sessionId === sessionId);
+  if (!matches.length) return null;
+
+  const phaseMatches = phaseId
+    ? matches.filter((r) => !r.phaseId || r.phaseId === phaseId)
+    : matches;
+  const pool = phaseMatches.length ? phaseMatches : matches;
+
+  return [...pool].sort((a, b) =>
+    (b.updatedAt || b.addedAt || '').localeCompare(a.updatedAt || a.addedAt || '')
+  )[0];
+}
+
+/** CX batch recording URL overrides the static lesson video when present. */
+export function applyBatchRecordingsToTaskStates(taskStates, recordings) {
+  if (!recordings?.length || !taskStates?.length) return taskStates;
+
+  return taskStates.map((state) => {
+    const rec = findRecordingForSession(recordings, state.task.phase, state.task.id);
+    if (!rec?.url || rec.url === state.task.videoUrl) return state;
+
+    return {
+      ...state,
+      task: { ...state.task, videoUrl: rec.url },
+    };
+  });
 }
 
 /** Sort batch recordings to match program session order within a phase. */

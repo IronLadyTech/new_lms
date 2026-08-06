@@ -122,6 +122,15 @@ export default function CXTaskReview() {
         reviewOutcome: outcome,
         feedback: feedback.trim(),
         reviewedAt: new Date(),
+        reviewHistory: [
+          ...(Array.isArray(prev?.reviewHistory) ? prev.reviewHistory : []),
+          {
+            outcome,
+            feedback: feedback.trim(),
+            reviewedBy: user?.uid,
+            reviewedAt: new Date().toISOString(),
+          },
+        ],
       }));
       try {
         if (

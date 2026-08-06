@@ -1,10 +1,11 @@
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { isFullAdmin, isModeratorOnly } from '../../utils/roles';
 import ThemeToggle from '../ThemeToggle';
 import CXBottomNav from './CXBottomNav';
 import SkipLink from '../ui/SkipLink';
+import LayoutErrorBoundary from '../LayoutErrorBoundary';
 import { CxProgramProvider } from '../../context/CxProgramContext';
 import { useProgramAdapter } from '../../hooks/useProgramAdapter';
 import { PROGRAMS } from '../../data/programTypes';
@@ -70,6 +71,7 @@ function CxTopBar() {
 
 function CxShellInner() {
   const { refreshProfile } = useAuth();
+  const location = useLocation();
 
   useEffect(() => {
     refreshProfile();
@@ -80,7 +82,9 @@ function CxShellInner() {
       <SkipLink targetId="cx-main-content" />
       <CxTopBar />
       <main id="cx-main-content" className="student-main cx-main">
-        <Outlet />
+        <LayoutErrorBoundary name="cx-page" resetKey={location.pathname}>
+          <Outlet />
+        </LayoutErrorBoundary>
       </main>
       <CXBottomNav />
     </div>

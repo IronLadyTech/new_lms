@@ -11,12 +11,19 @@ import {
   currentWeekLabel,
 } from '../services/bm100Service';
 import { getUnlockedPhaseIds } from '../utils/bm100ProgramUtils';
-import { canLearnerResubmit, submissionUnlocksNext, clearReviewFieldsForResubmit } from '../utils/submissionReview';
+import {
+  canLearnerResubmit,
+  submissionUnlocksNext,
+  archiveReviewHistoryForResubmit,
+  clearReviewFieldsForResubmit,
+} from '../utils/submissionReview';
+import { needsCloudUploadRetry } from '../utils/submissionMedia';
 
 export const BM100_WATCH_THRESHOLD = 0.9;
 
-function learnerCanSubmit(status, watched, isWatchOnly) {
+function learnerCanSubmit(status, watched, isWatchOnly, task, submission) {
   if (status === SUBMISSION_STATUS.LOCKED || isWatchOnly || !watched) return false;
+  if (needsCloudUploadRetry(task, submission)) return true;
   if (status === SUBMISSION_STATUS.COMPLETED) return false;
   if (status === SUBMISSION_STATUS.SUBMITTED || status === SUBMISSION_STATUS.UNDER_REVIEW) return false;
   return canLearnerResubmit(status) || status === SUBMISSION_STATUS.UNLOCKED;
@@ -83,7 +90,7 @@ function computeSequentialTaskStates(tasks, submissions, watchProgress) {
       status,
       watched,
       watchPercent: watchProgress[task.id] ?? sub?.watchProgress ?? 0,
-      canSubmit: learnerCanSubmit(status, watched, isWatchOnly),
+      canSubmit: learnerCanSubmit(status, watched, isWatchOnly, task, sub),
       isComplete: complete,
       prevTaskId: prevTask?.id || null,
       phaseLocked: false,
@@ -288,6 +295,7 @@ export default function useBm100TaskEngine(userId) {
 
   const finalizeSubmitPayload = (payload, prevSubmission) => ({
     ...payload,
+    ...archiveReviewHistoryForResubmit(prevSubmission),
     ...clearReviewFieldsForResubmit(prevSubmission),
   });
 

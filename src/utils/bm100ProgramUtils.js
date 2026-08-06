@@ -153,6 +153,8 @@ export function getLessonRowState(taskState, activeTaskId, nextTaskId) {
   return { visual: 'available', reason: null, clickable: true };
 }
 
+export { getTaskKindLabel } from './taskKindLabel';
+
 export function getTaskTypeIcon(type) {
   switch (type) {
     case TASK_TYPES.WATCH_ONLY:

@@ -1,6 +1,6 @@
 import { Flame } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useStreakAnalytics } from '../hooks/useStreakAnalytics';
+import { useStreakAnalyticsContext } from '../context/StreakAnalyticsContext';
 
 /**
  * Compact streak ring for the app header (Behance "Non-stop studying" motif),
@@ -9,9 +9,9 @@ import { useStreakAnalytics } from '../hooks/useStreakAnalytics';
  */
 export default function HeaderStreak() {
   const { user, isGuest } = useAuth();
-  const { summary } = useStreakAnalytics(isGuest ? null : user?.uid);
+  const { summary, loading } = useStreakAnalyticsContext() || {};
 
-  if (isGuest || !user) return null;
+  if (isGuest || !user || loading) return null;
 
   const streak = summary?.currentStreak || 0;
   const best = summary?.longestStreak?.days || 0;

@@ -1,6 +1,7 @@
 import { SUBMISSION_STATUS } from '../services/mbwService';
 import { PROGRAMS } from '../data/programTypes';
 import { MBW_PROGRAM_SECTIONS } from '../data/mbwProgramStructure';
+import { BM100_PROGRAM_SECTIONS } from '../data/bm100ProgramStructure';
 
 /** Phases currently live for CX dashboards — avoids diluting metrics with locked future quarters.
  *  Reviews always use the full task list (not this filter). */
@@ -17,6 +18,11 @@ export const CX_ACTIVE_PHASES = {
   ],
 };
 
+function getProgramSections(program = PROGRAMS.MBW) {
+  if (program === PROGRAMS.BM100) return BM100_PROGRAM_SECTIONS;
+  return MBW_PROGRAM_SECTIONS;
+}
+
 export function filterCxTasks(tasks, program = PROGRAMS.MBW) {
   const phases = CX_ACTIVE_PHASES[program];
   if (!phases?.length) return tasks;
@@ -24,12 +30,17 @@ export function filterCxTasks(tasks, program = PROGRAMS.MBW) {
   return scoped.length ? scoped : tasks;
 }
 
-const MODULE_LABELS = Object.fromEntries(
+const MODULE_LABELS_MBW = Object.fromEntries(
   MBW_PROGRAM_SECTIONS.map((s) => [s.id, { title: s.title, subtitle: s.subtitle }])
+);
+const MODULE_LABELS_BM100 = Object.fromEntries(
+  BM100_PROGRAM_SECTIONS.map((s) => [s.id, { title: s.title, subtitle: s.subtitle }])
 );
 
 /** Group tasks under program modules (Pre-Preparation, Quarter 1, …) in journey order. */
-export function groupTasksByModule(tasks = []) {
+export function groupTasksByModule(tasks = [], program = PROGRAMS.MBW) {
+  const programSections = getProgramSections(program);
+  const moduleLabels = program === PROGRAMS.BM100 ? MODULE_LABELS_BM100 : MODULE_LABELS_MBW;
   const byPhase = {};
   tasks.forEach((t) => {
     const phase = t.phase || 'other';
@@ -38,7 +49,7 @@ export function groupTasksByModule(tasks = []) {
   });
 
   const groups = [];
-  MBW_PROGRAM_SECTIONS.forEach((section) => {
+  programSections.forEach((section) => {
     const list = byPhase[section.id];
     if (!list?.length) return;
     groups.push({
@@ -50,8 +61,8 @@ export function groupTasksByModule(tasks = []) {
   });
 
   Object.keys(byPhase).forEach((phase) => {
-    if (MBW_PROGRAM_SECTIONS.some((s) => s.id === phase)) return;
-    const meta = MODULE_LABELS[phase];
+    if (programSections.some((s) => s.id === phase)) return;
+    const meta = moduleLabels[phase];
     groups.push({
       id: phase,
       title: meta?.title || phase.replace(/-/g, ' '),
@@ -70,10 +81,10 @@ export function moduleCompletionPct(students, moduleTasks, submissions) {
   return possible ? Math.round((done / possible) * 100) : 0;
 }
 
-export function buildModuleTaskBreakdown(students, tasks, submissions) {
+export function buildModuleTaskBreakdown(students, tasks, submissions, program = PROGRAMS.MBW) {
   const index = buildSubmissionIndex(submissions);
 
-  return groupTasksByModule(tasks).map((mod) => ({
+  return groupTasksByModule(tasks, program).map((mod) => ({
     ...mod,
     completionPct: moduleCompletionPct(students, mod.tasks, submissions),
     taskRows: mod.tasks.map((t) => ({

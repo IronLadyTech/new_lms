@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
-import { Play, Video } from 'lucide-react';
+import { ExternalLink, Play, Video } from 'lucide-react';
 
 function isYouTube(url) {
   return /youtube\.com|youtu\.be/i.test(url || '');
@@ -10,9 +10,37 @@ function isHls(url) {
   return /\.m3u8(\?|$)/i.test(url || '');
 }
 
-function youtubeEmbed(url) {
-  const m = url.match(/(?:youtu\.be\/|v=)([\w-]+)/);
-  return m ? `https://www.youtube.com/embed/${m[1]}?enablejsapi=1` : url;
+function youtubeVideoId(url) {
+  const match = url.match(/(?:youtu\.be\/|v=|embed\/)([\w-]+)/);
+  return match ? match[1] : null;
+}
+
+function youtubeEmbed(url, { autoplay = false } = {}) {
+  const id = youtubeVideoId(url);
+  if (!id) return url;
+
+  const params = new URLSearchParams({
+    enablejsapi: '1',
+    playsinline: '1',
+    rel: '0',
+    modestbranding: '1',
+  });
+
+  if (autoplay) params.set('autoplay', '1');
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    params.set('origin', window.location.origin);
+  }
+
+  return `https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`;
+}
+
+function youtubeThumbnail(id) {
+  return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
+}
+
+function youtubeWatchUrl(url) {
+  const id = youtubeVideoId(url);
+  return id ? `https://www.youtube.com/watch?v=${id}` : url;
 }
 
 function NativeVideoPlayer({ videoUrl, videoRef, onTimeUpdate, onEnded }) {
@@ -96,10 +124,15 @@ export default function WatchGatedVideo({
 }) {
   const videoRef = useRef(null);
   const [started, setStarted] = useState(() => watchPercent >= threshold);
+  const [youtubeStarted, setYoutubeStarted] = useState(false);
 
   useEffect(() => {
     if (watchPercent >= threshold) setStarted(true);
   }, [watchPercent, threshold]);
+
+  useEffect(() => {
+    setYoutubeStarted(false);
+  }, [videoUrl, taskId]);
 
   if (!videoUrl) {
     return (
@@ -115,6 +148,9 @@ export default function WatchGatedVideo({
 
   if (isYouTube(videoUrl)) {
     const pct = Math.min(100, Math.round(watchPercent * 100));
+    const ytId = youtubeVideoId(videoUrl);
+    const thumb = youtubeThumbnail(ytId);
+
     return (
       <div className="mbw-video mbw-video--embed lesson-video">
         <header className="lesson-video__head">
@@ -123,27 +159,57 @@ export default function WatchGatedVideo({
           <span className="lesson-video__pct">{pct}% watched</span>
         </header>
         <div className="mbw-video__frame lesson-video__frame">
-          <iframe
-            title={title}
-            src={youtubeEmbed(videoUrl)}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
+          {!youtubeStarted ? (
+            <button
+              type="button"
+              className="mbw-video__poster mbw-video__poster--youtube"
+              onClick={() => setYoutubeStarted(true)}
+              aria-label={`Play ${title}`}
+            >
+              {thumb && (
+                <img src={thumb} alt="" className="mbw-video__poster-thumb" aria-hidden="true" />
+              )}
+              <span className="mbw-video__poster-icon" aria-hidden="true">
+                <Play size={28} fill="currentColor" strokeWidth={0} />
+              </span>
+              <span className="mbw-video__poster-label">Tap to play video</span>
+            </button>
+          ) : (
+            <iframe
+              title={title}
+              src={youtubeEmbed(videoUrl, { autoplay: true })}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              loading="eager"
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
+          )}
         </div>
         <p className="muted mbw-video__hint">
-          Watch the full video to unlock submission. If tracking doesn&apos;t update, use the button below.
+          Watch the full video to unlock submission. If the player does not start, open it in YouTube.
         </p>
-        <button
-          type="button"
-          className="btn btn-outline btn-sm"
-          disabled={watchPercent >= threshold}
-          onClick={() => {
-            onProgress?.(1);
-            onComplete?.();
-          }}
-        >
-          {watchPercent >= threshold ? 'Video watched' : 'I finished watching'}
-        </button>
+        <div className="mbw-video__embed-actions">
+          <a
+            href={youtubeWatchUrl(videoUrl)}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-outline btn-sm mbw-video__youtube-link"
+          >
+            <ExternalLink size={14} aria-hidden />
+            Open in YouTube
+          </a>
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            disabled={watchPercent >= threshold}
+            onClick={() => {
+              onProgress?.(1);
+              onComplete?.();
+            }}
+          >
+            {watchPercent >= threshold ? 'Video watched' : 'I finished watching'}
+          </button>
+        </div>
       </div>
     );
   }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { BM100_STORAGE_ENABLED, uploadBm100File } from '../../../services/bm100Service';
-import { saveSubmissionBlob, submissionBlobKey } from '../../../utils/submissionBlobStore';
-import BM100TaskTemplateDownloads from './BM100TaskTemplateDownloads';
+import { saveSubmissionBlob, getSubmissionBlob, submissionBlobKey } from '../../utils/submissionBlobStore';
+import { getSubmissionProgramConfig } from './submissionProgramConfig';
+import TaskTemplateDownloads from './TaskTemplateDownloads';
 
 const MAX_RECORDING_SECONDS = 300;
 const MAX_UPLOAD_BYTES = 200 * 1024 * 1024;
@@ -16,7 +16,15 @@ function pickRecorderMime() {
   return candidates.find((t) => MediaRecorder.isTypeSupported(t)) || '';
 }
 
-export default function VideoRecordOrUpload({ task, submission, canSubmit, userId, onSubmit }) {
+export default function VideoRecordOrUpload({
+  task,
+  submission,
+  canSubmit,
+  userId,
+  onSubmit,
+  program = 'mbw',
+}) {
+  const { storageEnabled, uploadFile } = getSubmissionProgramConfig(program);
   const [mode, setMode] = useState('record');
   const [recording, setRecording] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -62,6 +70,23 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
       previewUrlRef.current = submission.videoUrl;
     }
   }, [submission?.videoUrl, rerecord]);
+
+  useEffect(() => {
+    if (cloudUrl || rerecord || blob) return;
+    if (!skipped || !userId || !task?.id) return;
+
+    let cancelled = false;
+    getSubmissionBlob(submissionBlobKey(program, userId, task.id))
+      .then((record) => {
+        if (cancelled || !record?.blob) return;
+        setPreviewFromBlob(record.blob);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cloudUrl, skipped, userId, task?.id, rerecord, blob, program]);
 
   useEffect(
     () => () => {
@@ -215,13 +240,13 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
       }
 
       const blobKind = (sourceBlob.type || '').startsWith('audio/') ? 'audio' : 'video';
-      await saveSubmissionBlob(submissionBlobKey('100bm', userId, task.id), sourceBlob, {
+      await saveSubmissionBlob(submissionBlobKey(program, userId, task.id), sourceBlob, {
         kind: blobKind,
         fileName: file?.name || `recording-${Date.now()}.webm`,
         fileType: sourceBlob.type || 'video/webm',
       }).catch(() => {});
 
-      if (!BM100_STORAGE_ENABLED) {
+      if (!storageEnabled) {
         await onSubmit({
           storageSkipped: true,
           fileName: file?.name || `recording-${Date.now()}.webm`,
@@ -238,16 +263,16 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
         new File([blob], `mirror-${Date.now()}.webm`, {
           type: blob.type || 'video/webm',
         });
-      const uploaded = await uploadBm100File(userId, task.id, f, 'video', {
+      const uploaded = await uploadFile(userId, task.id, f, 'video', {
         onProgress: setUploadProgress,
         signal: uploadAbortRef.current.signal,
       });
       await onSubmit({
         videoUrl: uploaded.url,
         fileName: uploaded.fileName,
-        localFallback: uploaded.localFallback || false,
-        storageSkipped: !uploaded.url,
-        hasLocalRecording: !uploaded.url,
+        localFallback: false,
+        storageSkipped: false,
+        hasLocalRecording: false,
       });
 
       if (uploaded.url) {
@@ -273,7 +298,7 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
 
   return (
     <div className="mbw-submission mbw-video-record">
-      <BM100TaskTemplateDownloads taskId={task.id} task={task} />
+      <TaskTemplateDownloads taskId={task.id} task={task} program={program} />
 
       {showPreview && (
         <div className="mbw-submission__saved">
@@ -332,7 +357,7 @@ export default function VideoRecordOrUpload({ task, submission, canSubmit, userI
             </button>
           </div>
 
-          {!BM100_STORAGE_ENABLED && (
+          {!storageEnabled && (
             <p className="mbw-task__hint muted">
               Cloud storage is not enabled yet — you can still record, preview, and complete this step.
               The video stays on this device until storage is configured.

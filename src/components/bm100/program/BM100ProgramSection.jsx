@@ -1,16 +1,16 @@
 import { ChevronDown, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { BM100_SECTION_STATUS } from '../../../data/bm100ProgramStructure';
-import MBWProgramLessonRow from '../../mbw/program/MBWProgramLessonRow';
+import ProgramLessonList from '../../mbw/program/ProgramLessonList';
 import {
   getLessonRowState,
   getTaskTypeIcon,
   getTaskDurationHint,
+  getTaskKindLabel,
   getSectionLockDisplay,
   isRegistrationPaymentLocked,
   REGISTRATION_PAYMENT_LOCK_TOOLTIP,
 } from '../../../utils/bm100ProgramUtils';
-import { SUBMISSION_STATUS } from '../../../services/bm100Service';
 
 function SectionDot({ status }) {
   const cls =
@@ -24,6 +24,7 @@ function SectionDot({ status }) {
 
 export default function BM100ProgramSection({
   section,
+  sectionIndex,
   sectionProgress,
   profile,
   expanded,
@@ -39,6 +40,12 @@ export default function BM100ProgramSection({
   const paymentLocked = isRegistrationPaymentLocked(section, sectionProgress, profile);
   const panelId = `bm100-section-${section.id}`;
 
+  const moduleStats = !progress.unlocked
+    ? 'Locked'
+    : progress.total > 0
+      ? `${progress.total} lessons · ${progress.done}/${progress.total} done`
+      : section.subtitle;
+
   return (
     <article
       className={`mbw-section-card${expanded ? ' is-expanded' : ''}${isCurrent ? ' is-current' : ''}${!progress.unlocked ? ' is-section-locked' : ''}${paymentLocked ? ' is-payment-locked' : ''}`}
@@ -53,8 +60,11 @@ export default function BM100ProgramSection({
         >
           <SectionDot status={progress.status} />
           <span className="mbw-section-card__titles">
+            {sectionIndex != null && (
+              <span className="mbw-section-card__module">Module {sectionIndex}</span>
+            )}
             <span className="mbw-section-card__name">{section.title}</span>
-            <span className="mbw-section-card__sub">{section.subtitle}</span>
+            <span className="mbw-section-card__sub">{moduleStats}</span>
           </span>
           <span className="mbw-section-card__mini">
             {progress.done}/{progress.total}
@@ -84,29 +94,15 @@ export default function BM100ProgramSection({
             />
           </div>
         ) : section.usesTaskEngine && taskStates?.length ? (
-          <ul className="mbw-section-card__lessons">
-            {(() => {
-              const firstLockedId = taskStates.find(
-                (ts) => ts.status === SUBMISSION_STATUS.LOCKED
-              )?.task.id;
-              return taskStates.map((ts) => {
-                const rowState = getLessonRowState(ts, activeTaskId, nextTaskId);
-                return (
-                  <li key={ts.task.id}>
-                    <MBWProgramLessonRow
-                      title={ts.task.title}
-                      typeIcon={getTaskTypeIcon(ts.task.type)}
-                      durationHint={getTaskDurationHint(ts.task)}
-                      rowState={rowState}
-                      isActive={ts.task.id === activeTaskId}
-                      showLockReason={ts.task.id === firstLockedId}
-                      onSelect={() => onSelectLesson(ts.task.id)}
-                    />
-                  </li>
-                );
-              });
-            })()}
-          </ul>
+          <ProgramLessonList
+            taskStates={taskStates}
+            activeTaskId={activeTaskId}
+            getRowState={(ts) => getLessonRowState(ts, activeTaskId, nextTaskId)}
+            getTypeIcon={getTaskTypeIcon}
+            getDurationHint={getTaskDurationHint}
+            getKindLabel={getTaskKindLabel}
+            onSelectLesson={onSelectLesson}
+          />
         ) : (
           <div className="mbw-section-card__locked-panel">
             <p className="mbw-section-card__coming">Content for this section is being prepared for your batch.</p>

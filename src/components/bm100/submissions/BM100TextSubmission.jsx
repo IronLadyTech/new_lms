@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import BM100TaskTemplateDownloads from './BM100TaskTemplateDownloads';
+import TaskTemplateDownloads from '../../submissions/TaskTemplateDownloads';
 
 export default function BM100TextSubmission({ task, submission, canSubmit, onSubmit, readOnly }) {
   const [text, setText] = useState('');
@@ -21,7 +21,7 @@ export default function BM100TextSubmission({ task, submission, canSubmit, onSub
 
   return (
     <div className="mbw-submission">
-      <BM100TaskTemplateDownloads taskId={task.id} task={task} />
+      <TaskTemplateDownloads taskId={task.id} task={task} program="100bm" />
       <label htmlFor={`text-${task.id}`}>{task.description}</label>
       <textarea
         id={`text-${task.id}`}

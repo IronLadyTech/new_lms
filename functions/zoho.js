@@ -9,6 +9,10 @@ const { HttpsError } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
 const provisioning = require('./zohoProvisioning');
 const ilUsers = require('./zohoIlUsers');
+const batchSync = require('./zohoBatchSync');
+const batchApply = require('./zohoBatchApply');
+const ilRegistration = require('./zohoIlRegistration');
+const leadsCohort = require('./zohoLeadsCohort');
 const { entitlementsToLeadFields, readPasswordFromLead } = require('./zohoFieldMap');
 
 const DEFAULT_API_DOMAIN = 'https://www.zohoapis.in';
@@ -661,6 +665,97 @@ async function syncCredentialOnAuth(db, uid, profile, password) {
   });
 }
 
+async function provisionUserForBatchSync(fs, email) {
+  const trimmed = email?.trim();
+  if (!trimmed) return { ok: false, reason: 'Email is required' };
+
+  const deps = { getAccessToken, getApiDomain };
+  const [lead, ilUserFound, ilRegRecord] = await Promise.all([
+    getLeadByEmail(trimmed).catch(() => null),
+    ilUsers.findIlUserRecord(trimmed, trimmed, deps, {}).catch(() => null),
+    ilRegistration.searchIlRegistrationByEmail(trimmed, deps).catch(() => null),
+  ]);
+
+  let ilUser = ilUserFound;
+  if (!ilUsers.hasUsableIlPassword(ilUser)) {
+    const lookupId = ilRegistration.extractIlUserLookupId(ilRegRecord);
+    if (lookupId) {
+      ilUser = (await ilUsers.getIlUserById(lookupId, deps)) || ilUser;
+    }
+  }
+
+  const regCreds = ilRegistration.registrationToCredentialFields(ilRegRecord);
+  const ilForMerge =
+    ilUser || Object.keys(regCreds).length ? { ...(ilUser || {}), ...regCreds } : null;
+
+  if (!lead && !ilForMerge) {
+    return {
+      ok: false,
+      reason:
+        'No Zoho Lead, IL_Users, or IL_Registration record found for this email',
+    };
+  }
+
+  const record = provisioning.mergeProvisioningRecord(lead, ilForMerge, null);
+  const ent = provisioning.parseEntitlementsFromRecord(record);
+  if (!ent.password || ent.password.length < 6) {
+    const bits = [];
+    if (lead?.id) bits.push('Lead found');
+    if (ilUser?.id) bits.push(`IL_Users ${ilUser.id} (no LMS_Password/Password)`);
+    if (ilRegRecord?.id) {
+      const regKeys = Object.keys(ilRegRecord).filter((key) => /password|username|user/i.test(key));
+      bits.push(
+        ilRegistration.hasRegistrationCredentials(ilRegRecord)
+          ? `IL_Registration ${ilRegRecord.id} (password field not mapped)`
+          : `IL_Registration ${ilRegRecord.id} (no password on record${
+              regKeys.length ? `; credential-like fields: ${regKeys.join(', ')}` : ''
+            })`
+      );
+    }
+    const ilUserLink = ilRegistration.extractIlUserLookupId(ilRegRecord);
+    if (ilUserLink && !ilUser?.id) bits.push(`IL_Registration links IL_User ${ilUserLink} (lookup failed)`);
+
+    return {
+      ok: false,
+      reason:
+        'Password not found for batch provisioning — set LMS_Password on linked IL_Users ' +
+        'or Password/LMS_Password on IL_Registration. ' +
+        (bits.length ? `Checked: ${bits.join('; ')}.` : 'No credential fields returned from Zoho.'),
+    };
+  }
+
+  return provisioning.provisionFromRecord(fs, record, { skipUnpaidCheck: true });
+}
+
+function buildBatchSyncDeps(db) {
+  return {
+    db,
+    getAccessToken,
+    getApiDomain,
+    getModule,
+    getLeadByEmail,
+    searchIlUserByEmail,
+    searchIlRegistrationByEmail: (email) =>
+      ilRegistration.searchIlRegistrationByEmail(email, { getAccessToken, getApiDomain }),
+    fetchIlRegistrationWithBatch: ilRegistration.fetchIlRegistrationWithBatch,
+    previewLeadCohorts: leadsCohort.previewLeadCohorts,
+    provisionUserFromEmail: (fs, email) => provisionUserForBatchSync(fs, email),
+    applyEntitlements: provisioning.applyEntitlements,
+  };
+}
+
+async function runUserBatchSync(db, email, opts = {}) {
+  return batchApply.syncUserBatchFromZoho(
+    {
+      email,
+      dryRun: opts.dryRun === true,
+      triggeredBy: opts.triggeredBy || null,
+      provisionIfMissing: opts.provisionIfMissing !== false,
+    },
+    buildBatchSyncDeps(db)
+  );
+}
+
 module.exports = {
   isConfigured,
   getAccessToken,
@@ -701,6 +796,18 @@ module.exports = {
       }
     }
 
+    const syncEmail = (body?.email || body?.Email || result?.email || '').trim();
+    if (result.ok && syncEmail) {
+      try {
+        result.batchSync = await runUserBatchSync(db, syncEmail, {
+          triggeredBy: 'provision-webhook',
+        });
+      } catch (err) {
+        console.warn(`Batch sync after provision failed for ${syncEmail}:`, err.message);
+        result.batchSync = { ok: false, reason: err.message || String(err) };
+      }
+    }
+
     return result;
   },
   provisionFromLoginCredentials: (db, email, password) =>
@@ -720,5 +827,21 @@ module.exports = {
   listLeadsPage,
   listIlUsersPage: (opts) =>
     ilUsers.listIlUsersPage(opts, { getAccessToken, getApiDomain }),
+  listIlRegistrationPage: (opts) =>
+    ilRegistration.listIlRegistrationPage(opts, { getAccessToken, getApiDomain }),
+  /** Batch mapping preview — read-only, writes nothing. */
+  previewBatchSync: (opts) =>
+    batchSync.previewBatchSync(opts, {
+      getAccessToken,
+      getApiDomain,
+      getModule,
+      fetchIlRegistrationWithBatch: ilRegistration.fetchIlRegistrationWithBatch,
+      previewLeadCohorts: leadsCohort.previewLeadCohorts,
+    }),
+  /** Apply one Zoho cohort to Firestore (admin only). */
+  applyBatchSync: (firestore, opts) =>
+    batchApply.applyBatchSync(opts, buildBatchSyncDeps(firestore)),
+  /** Sync one learner's batch from Zoho into Firestore groups. */
+  syncUserBatchFromZoho: (firestore, email, opts = {}) => runUserBatchSync(firestore, email, opts),
   userProfileChanged,
 };

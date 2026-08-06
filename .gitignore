@@ -8,3 +8,9 @@ functions/.env.local
 .DS_Store
 test-results
 playwright-report
+.gstack/
+
+# Local-only test credentials used for capturing walkthrough screenshots.
+# Never commit these.
+*.local
+docs/screenshots/.test-creds*

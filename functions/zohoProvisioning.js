@@ -65,7 +65,7 @@ function mergeProvisioningRecord(lead, ilUser, webhookBody) {
   if (webhookBody?.phone) merged.Phone = webhookBody.phone;
   if (webhookBody?.batch) merged.batch = webhookBody.batch;
 
-  const fromWebhookPayment = paymentStatusFromRegistrationPayload(webhookBody);
+  const fromWebhookPayment = paymentStatusFromRegistrationPayload(webhookBody ?? {});
   if (fromWebhookPayment) {
     merged.LMS_Payment_Status = fromWebhookPayment;
   }

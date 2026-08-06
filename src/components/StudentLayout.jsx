@@ -6,9 +6,12 @@ import { Shield } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import ThemeToggle from './ThemeToggle';
 import HeaderStreak from './HeaderStreak';
+import WidgetErrorBoundary from './WidgetErrorBoundary';
+import { StreakAnalyticsProvider } from '../context/StreakAnalyticsContext';
 import BlockedPanel from './BlockedPanel';
 import SkipLink from './ui/SkipLink';
 import BottomNav from './BottomNav';
+import LayoutErrorBoundary from './LayoutErrorBoundary';
 
 export default function StudentLayout() {
   const { role, isGuest, isBlocked, refreshProfile } = useAuth();
@@ -51,6 +54,7 @@ export default function StudentLayout() {
   }
 
   return (
+    <StreakAnalyticsProvider>
     <div
       className={`student-layout student-layout--course${isLightShell ? ' student-layout--mbw' : ''}`}
     >
@@ -62,9 +66,15 @@ export default function StudentLayout() {
         </div>
         <div className="app-header__actions">
           {isGuest && <span className="guest-badge">Guest</span>}
-          <HeaderStreak />
-          <ThemeToggle compact />
-          <NotificationBell />
+          <WidgetErrorBoundary name="HeaderStreak" resetKey={location.pathname}>
+            <HeaderStreak />
+          </WidgetErrorBoundary>
+          <WidgetErrorBoundary name="ThemeToggle">
+            <ThemeToggle compact />
+          </WidgetErrorBoundary>
+          <WidgetErrorBoundary name="NotificationBell" resetKey={location.pathname}>
+            <NotificationBell />
+          </WidgetErrorBoundary>
           {showAdminLink && (
             <Link
               to={isModeratorOnly(role) ? '/cx/home' : '/portal'}
@@ -85,9 +95,14 @@ export default function StudentLayout() {
           isHomePage || isProgressPage ? ' student-main--home' : ''
         }${isCourseDetailRoute ? ' student-main--wide' : ''}`}
       >
-        <Outlet />
+        <LayoutErrorBoundary name="student-page" resetKey={location.pathname}>
+          <Outlet />
+        </LayoutErrorBoundary>
       </main>
-      <BottomNav />
+      <WidgetErrorBoundary name="BottomNav" resetKey={location.pathname}>
+        <BottomNav />
+      </WidgetErrorBoundary>
     </div>
+    </StreakAnalyticsProvider>
   );
 }

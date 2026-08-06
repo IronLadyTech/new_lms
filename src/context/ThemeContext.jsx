@@ -10,8 +10,12 @@ export function applyTheme(theme) {
 }
 
 export function getStoredTheme() {
-  const stored = localStorage.getItem(THEME_STORAGE_KEY);
-  return stored === 'light' || stored === 'dark' ? stored : 'dark';
+  try {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    return stored === 'light' || stored === 'dark' ? stored : 'dark';
+  } catch {
+    return 'dark';
+  }
 }
 
 export function ThemeProvider({ children }) {
@@ -19,7 +23,11 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     applyTheme(theme);
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch {
+      /* private mode / storage quota — theme still applied via data-theme */
+    }
   }, [theme]);
 
   const setTheme = useCallback((next) => {

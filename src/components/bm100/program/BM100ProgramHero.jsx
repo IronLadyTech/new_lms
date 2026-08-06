@@ -1,24 +1,8 @@
-import { ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { BM100_PROGRAM_META } from '../../../data/bm100ProgramStructure';
-import { getModuleLabel } from '../../../utils/mbwDisplay';
 import MBWProgramProgressBand from '../../mbw/program/MBWProgramProgressBand';
 
-export default function BM100ProgramHero({
-  cohortLabel,
-  completedMilestones,
-  totalMilestones,
-  nextTaskState,
-  onResume,
-  resumeLabel = 'Resume',
-  awaitingFullPayment = false,
-}) {
-  const showNext =
-    !awaitingFullPayment &&
-    nextTaskState &&
-    !nextTaskState.isComplete &&
-    nextTaskState.status !== 'locked';
-
+/** Identity + progress only — the next action and its CTA live in ProgramNextStep. */
+export default function BM100ProgramHero({ cohortLabel, completedMilestones, totalMilestones }) {
   return (
     <header className="mbw-program-hero">
       <div className="mbw-program-hero__inner">
@@ -32,28 +16,6 @@ export default function BM100ProgramHero({
           completedMilestones={completedMilestones}
           totalMilestones={totalMilestones}
         />
-
-        {awaitingFullPayment ? (
-          <p className="mbw-program-hero__next">
-            <span className="mbw-program-hero__next-label">Next up</span>
-            Full program payment unlocks Phase 2
-          </p>
-        ) : showNext ? (
-          <p className="mbw-program-hero__next">
-            <span className="mbw-program-hero__next-label">Next up</span>
-            {getModuleLabel(nextTaskState.task)}
-          </p>
-        ) : null}
-
-        {awaitingFullPayment ? (
-          <Link to="/app/support" className="mbw-program-hero__resume btn btn-primary">
-            Payment support <ChevronRight size={18} />
-          </Link>
-        ) : (
-          <button type="button" className="mbw-program-hero__resume btn btn-primary" onClick={onResume}>
-            {resumeLabel} <ChevronRight size={18} />
-          </button>
-        )}
       </div>
     </header>
   );

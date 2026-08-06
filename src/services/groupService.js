@@ -112,6 +112,62 @@ export async function addBatchRecording(groupId, recording) {
   return entry;
 }
 
+/**
+ * One recording per sessionId on a batch — replaces duplicates and legacy rows
+ * for the same session when CX adds or updates a link.
+ */
+export async function upsertBatchRecordingForSession(groupId, recording) {
+  const group = await getGroup(groupId);
+  if (!group) throw new Error('Batch not found');
+
+  const { phaseId = '', sessionId = '' } = recording;
+  if (!sessionId) {
+    return addBatchRecording(groupId, recording);
+  }
+
+  const recordings = Array.isArray(group.recordings) ? group.recordings : [];
+  const existing = recordings.find(
+    (r) =>
+      r.sessionId === sessionId &&
+      (!phaseId || !r.phaseId || r.phaseId === phaseId)
+  );
+
+  const now = new Date().toISOString();
+  const entry = existing
+    ? {
+        ...existing,
+        title: recording.title,
+        url: recording.url,
+        date: recording.date || '',
+        phaseId: phaseId || existing.phaseId || '',
+        sessionId,
+        addedBy: recording.addedBy ?? existing.addedBy ?? null,
+        updatedAt: now,
+      }
+    : {
+        id: recording.id || `rec_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        title: recording.title,
+        url: recording.url,
+        date: recording.date || '',
+        phaseId,
+        sessionId,
+        addedBy: recording.addedBy || null,
+        addedAt: now,
+      };
+
+  const next = recordings.filter(
+    (r) => r.sessionId !== sessionId || r.id === entry.id
+  );
+  if (!existing) next.push(entry);
+
+  await updateDoc(doc(db, GROUPS, groupId), {
+    recordings: existing ? next.map((r) => (r.id === entry.id ? entry : r)) : next,
+    updatedAt: serverTimestamp(),
+  });
+
+  return entry;
+}
+
 export async function updateBatchRecording(groupId, recordingId, patch) {
   const group = await getGroup(groupId);
   if (!group) throw new Error('Batch not found');

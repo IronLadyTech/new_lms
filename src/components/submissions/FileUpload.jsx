@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react';
-import { BM100_STORAGE_ENABLED, uploadBm100File } from '../../../services/bm100Service';
-import { saveSubmissionBlob, submissionBlobKey } from '../../../utils/submissionBlobStore';
-import BM100TaskTemplateDownloads from './BM100TaskTemplateDownloads';
+import { saveSubmissionBlob, submissionBlobKey } from '../../utils/submissionBlobStore';
+import { getSubmissionProgramConfig } from './submissionProgramConfig';
+import TaskTemplateDownloads from './TaskTemplateDownloads';
 
-export default function FileUpload({ task, submission, canSubmit, userId, onSubmit }) {
+export default function FileUpload({ task, submission, canSubmit, userId, onSubmit, program = 'mbw' }) {
+  const { storageEnabled, uploadFile } = getSubmissionProgramConfig(program);
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
@@ -23,8 +24,8 @@ export default function FileUpload({ task, submission, canSubmit, userId, onSubm
     setError('');
     uploadAbortRef.current = new AbortController();
     try {
-      if (!BM100_STORAGE_ENABLED) {
-        await saveSubmissionBlob(submissionBlobKey('100bm', userId, task.id), file, {
+      if (!storageEnabled) {
+        await saveSubmissionBlob(submissionBlobKey(program, userId, task.id), file, {
           kind: 'file',
           fileName: file.name,
           fileType: file.type,
@@ -41,12 +42,12 @@ export default function FileUpload({ task, submission, canSubmit, userId, onSubm
         return;
       }
 
-      const uploaded = await uploadBm100File(userId, task.id, file, uploadKind, {
+      const uploaded = await uploadFile(userId, task.id, file, uploadKind, {
         onProgress: setUploadProgress,
         signal: uploadAbortRef.current.signal,
       });
       if (!uploaded.url) {
-        await saveSubmissionBlob(submissionBlobKey('100bm', userId, task.id), file, {
+        await saveSubmissionBlob(submissionBlobKey(program, userId, task.id), file, {
           kind: 'file',
           fileName: file.name,
           fileType: file.type,
@@ -56,9 +57,9 @@ export default function FileUpload({ task, submission, canSubmit, userId, onSubm
         fileUrl: uploaded.url,
         fileName: uploaded.fileName,
         filePath: uploaded.path,
-        localFallback: uploaded.localFallback || false,
-        storageSkipped: !uploaded.url,
-        hasLocalRecording: !uploaded.url,
+        localFallback: false,
+        storageSkipped: false,
+        hasLocalRecording: false,
         fileType: file.type,
       });
       setFile(null);
@@ -92,7 +93,7 @@ export default function FileUpload({ task, submission, canSubmit, userId, onSubm
 
   return (
     <div className="mbw-submission">
-      <BM100TaskTemplateDownloads taskId={task.id} task={task} />
+      <TaskTemplateDownloads taskId={task.id} task={task} program={program} />
       {saved && (
         <div className="mbw-submission__saved">
           <strong>Submitted file:</strong>{' '}
@@ -116,7 +117,7 @@ export default function FileUpload({ task, submission, canSubmit, userId, onSubm
         onChange={(e) => setFile(e.target.files?.[0] || null)}
         disabled={!canSubmit && saved}
       />
-      {!BM100_STORAGE_ENABLED && (
+      {!storageEnabled && (
         <p className="mbw-task__hint muted">
           Cloud storage is not enabled — your file name is saved and the task completes; re-upload after
           storage is configured to attach the file in the cloud.

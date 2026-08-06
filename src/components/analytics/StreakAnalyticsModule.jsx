@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { useStreakAnalytics } from '../../hooks/useStreakAnalytics';
+import { useStreakAnalyticsContext } from '../../context/StreakAnalyticsContext';
 import { useAttendanceAnalytics } from '../../hooks/useAttendanceAnalytics';
 import CurrentStreakCard from './CurrentStreakCard';
 import StreakSummaryCards from './StreakSummaryCards';
@@ -18,8 +19,9 @@ export default function StreakAnalyticsModule({
   analytics = null,
 }) {
   const navigate = useNavigate();
-  const internal = useStreakAnalytics(analytics ? null : learnerId);
-  const { summary, loading, warning, isLive, retry } = analytics || internal;
+  const shared = useStreakAnalyticsContext();
+  const internal = useStreakAnalytics(analytics || shared ? null : learnerId);
+  const { summary, loading, warning, isLive, retry } = analytics || shared || internal;
 
   const enrolledCourses = useMemo(
     () => (courses.length ? courses : [{ id: 'general', code: 'ALL', title: 'All courses' }]),

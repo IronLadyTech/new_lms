@@ -23,6 +23,7 @@ import {
 } from '../../utils/mbwProgramUtils';
 import { getModuleLabel } from '../../utils/mbwDisplay';
 import { getProgramAccessState } from '../../utils/programAccess';
+import { applyBatchRecordingsToTaskStates } from '../../utils/batchRecordingSessions';
 import { PROGRAMS } from '../../data/programTypes';
 
 export default function MBWPage() {
@@ -31,7 +32,7 @@ export default function MBWPage() {
   const { enrolled, courses } = useMbwEnrollment();
   const { recordings } = useBatchRecordings();
 
-  const [expandedSectionId, setExpandedSectionId] = useState('pre-preparation');
+  const [expandedSectionId, setExpandedSectionId] = useState(null);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [outlineOpen, setOutlineOpen] = useState(false);
   const [toast, setToast] = useState('');
@@ -58,7 +59,15 @@ export default function MBWPage() {
     submissions,
   } = engine;
 
-  const sectionProgress = useMemo(() => computeSectionProgress(taskStates, profile), [taskStates, profile]);
+  const mergedTaskStates = useMemo(
+    () => applyBatchRecordingsToTaskStates(taskStates, recordings),
+    [taskStates, recordings]
+  );
+
+  const sectionProgress = useMemo(
+    () => computeSectionProgress(mergedTaskStates, profile),
+    [mergedTaskStates, profile]
+  );
   const currentSectionId = useMemo(() => getCurrentSectionId(sectionProgress), [sectionProgress]);
   const totalMilestones = useMemo(() => getTotalMilestones(sectionProgress), [sectionProgress]);
   const completedMilestones = useMemo(() => getCompletedMilestones(sectionProgress), [sectionProgress]);
@@ -70,8 +79,8 @@ export default function MBWPage() {
   );
 
   const activeState = useMemo(
-    () => (lessonIdFromUrl ? taskStates.find((t) => t.task.id === lessonIdFromUrl) : null),
-    [taskStates, lessonIdFromUrl]
+    () => (lessonIdFromUrl ? mergedTaskStates.find((t) => t.task.id === lessonIdFromUrl) : null),
+    [mergedTaskStates, lessonIdFromUrl]
   );
 
   const lessonMode = Boolean(activeState);
@@ -79,15 +88,15 @@ export default function MBWPage() {
   const nextFromCurrent = activeTaskId ? getNextTaskId(activeTaskId) : null;
   const prevFromCurrent = activeTaskId ? getPrevTaskId(activeTaskId) : null;
   const nextLessonState = useMemo(
-    () => (nextFromCurrent ? taskStates.find((t) => t.task.id === nextFromCurrent) : null),
-    [nextFromCurrent, taskStates]
+    () => (nextFromCurrent ? mergedTaskStates.find((t) => t.task.id === nextFromCurrent) : null),
+    [nextFromCurrent, mergedTaskStates]
   );
 
   useEffect(() => {
-    if (lessonIdFromUrl && taskStates.length && !activeState) {
+    if (lessonIdFromUrl && mergedTaskStates.length && !activeState) {
       setSearchParams({}, { replace: true });
     }
-  }, [lessonIdFromUrl, taskStates, activeState, setSearchParams]);
+  }, [lessonIdFromUrl, mergedTaskStates, activeState, setSearchParams]);
 
   useEffect(() => {
     if (currentSectionId && !expandedSectionId) {
@@ -140,10 +149,10 @@ export default function MBWPage() {
   const handleResume = useCallback(() => {
     const target =
       nextTaskState?.task?.id ||
-      taskStates.find((t) => t.status !== 'locked')?.task?.id ||
-      taskStates[0]?.task?.id;
+      mergedTaskStates.find((t) => t.status !== 'locked')?.task?.id ||
+      mergedTaskStates[0]?.task?.id;
     if (target) openTask(target);
-  }, [nextTaskState, taskStates, openTask]);
+  }, [nextTaskState, mergedTaskStates, openTask]);
 
   const handleActionComplete = useCallback(
     (result) => {
@@ -180,7 +189,7 @@ export default function MBWPage() {
     if (prevId) openTask(prevId);
   }, [activeTaskId, getPrevTaskId, openTask]);
 
-  const submissionCount = useMemo(() => countSavedSubmissions(taskStates), [taskStates]);
+  const submissionCount = useMemo(() => countSavedSubmissions(mergedTaskStates), [mergedTaskStates]);
 
   if (isGuest) {
     return (
@@ -219,7 +228,7 @@ export default function MBWPage() {
         </Link>
       )}
 
-      {loading && taskStates.length === 0 ? (
+      {loading && mergedTaskStates.length === 0 ? (
         <MBWProgramSkeleton />
       ) : (
         <>
@@ -239,9 +248,6 @@ export default function MBWPage() {
               cohortLabel={getCohortLabel(profile)}
               completedMilestones={completedMilestones}
               totalMilestones={totalMilestones}
-              nextTaskState={nextTaskState}
-              onResume={handleResume}
-              resumeLabel={resumeLabel}
             />
           )}
 
@@ -290,15 +296,20 @@ export default function MBWPage() {
               ) : (
                 <MBWOverviewView
                   showFirstTime={showFirstTime}
-                  onStartFirst={() => openTask(taskStates[0]?.task.id || 'mbw-orientation')}
+                  onStartFirst={() => openTask(mergedTaskStates[0]?.task.id || 'mbw-orientation')}
                   profile={profile}
                   sectionProgress={sectionProgress}
                   expandedSectionId={expandedSectionId ?? currentSectionId}
                   currentSectionId={currentSectionId}
                   onToggleSection={handleToggleSection}
-                  taskStates={taskStates}
+                  taskStates={mergedTaskStates}
+                  nextTaskState={nextTaskState}
                   nextTaskId={nextTaskId}
                   onSelectLesson={openTask}
+                  onResume={handleResume}
+                  resumeLabel={resumeLabel}
+                  completedMilestones={completedMilestones}
+                  totalMilestones={totalMilestones}
                   submissionCount={submissionCount}
                   archiveOpen={archiveOpen}
                   onToggleArchive={() => setArchiveOpen((o) => !o)}
@@ -317,7 +328,7 @@ export default function MBWPage() {
               expandedSectionId={expandedSectionId ?? activeState.task.phase}
               currentSectionId={currentSectionId}
               onToggleSection={handleToggleSection}
-              taskStates={taskStates}
+              taskStates={mergedTaskStates}
               activeTaskId={activeTaskId}
               nextTaskId={nextTaskId}
               onSelectLesson={openTask}

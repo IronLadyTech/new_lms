@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -25,6 +25,13 @@ import {
 } from '../utils/guestSession';
 
 const AuthContext = createContext(null);
+
+/** Non-blocking Zoho sync — must not delay login/signup UI. */
+function deferZohoCredentialSync(password, options = {}) {
+  syncPasswordResetToZoho(password, options).catch((err) => {
+    console.warn('Zoho credential sync (background):', err?.message || err);
+  });
+}
 
 function applyGuestSession(setUser, setProfile) {
   setUser(GUEST_USER);
@@ -69,8 +76,14 @@ export function AuthProvider({ children }) {
       return undefined;
     }
 
+    const authUidRef = { current: null };
+
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true);
+      const nextUid = firebaseUser?.uid ?? null;
+      const isTokenRefresh = authUidRef.current === nextUid && nextUid !== null;
+      authUidRef.current = nextUid;
+
+      if (!isTokenRefresh) setLoading(true);
       const safety = setTimeout(() => setLoading(false), 8000);
 
       try {
@@ -111,14 +124,7 @@ export function AuthProvider({ children }) {
     if (displayName) await updateProfile(cred.user, { displayName });
     await createUserProfile(cred.user.uid, { email, displayName, role: ROLES.STUDENT });
     await loadProfile(cred.user);
-    try {
-      const syncResult = await syncPasswordResetToZoho(password, { phase: 'login' });
-      if (!syncResult?.ok || !syncResult?.ilUsersUpdated) {
-        console.warn('Zoho credential sync on signup:', syncResult);
-      }
-    } catch (err) {
-      console.warn('Zoho credential sync failed on signup:', err.message);
-    }
+    deferZohoCredentialSync(password, { phase: 'login' });
     return cred.user;
   };
 
@@ -127,19 +133,42 @@ export function AuthProvider({ children }) {
     clearGuestSession();
     requireAuth();
     const trimmedEmail = email?.trim();
+
+    // Returning users: Firebase Auth only — no Cloud Function, no cold start, no extra cost.
+    try {
+      const cred = await signInWithEmailAndPassword(auth, trimmedEmail, password);
+      const existing = await getUserProfile(cred.user.uid);
+      if (!existing) {
+        await createUserProfile(cred.user.uid, {
+          email: cred.user.email,
+          displayName: cred.user.displayName || cred.user.email?.split('@')[0],
+          role: ROLES.STUDENT,
+        });
+      }
+      await loadProfile(cred.user);
+      deferZohoCredentialSync(password, { phase: 'login' });
+      return cred.user;
+    } catch (err) {
+      if (err?.code !== 'auth/invalid-credential' && err?.code !== 'auth/user-not-found') {
+        throw err;
+      }
+    }
+
+    // First login — LMS account may not exist yet; provision from Zoho IL_Users then retry.
     let zohoProvision = null;
     if (isZohoConfigured()) {
       try {
         zohoProvision = await ensureZohoUserOnLogin(trimmedEmail, password);
-      } catch (err) {
-        console.warn('Zoho first-login provision skipped:', err.message);
+      } catch (provisionErr) {
+        console.warn('Zoho first-login provision skipped:', provisionErr.message);
       }
     }
+
     let cred;
     try {
       cred = await signInWithEmailAndPassword(auth, trimmedEmail, password);
-    } catch (err) {
-      if (err?.code === 'auth/invalid-credential') {
+    } catch (retryErr) {
+      if (retryErr?.code === 'auth/invalid-credential' || retryErr?.code === 'auth/user-not-found') {
         const zohoReason = zohoProvision?.reason;
         if (zohoReason === 'Password does not match Zoho IL_Users record') {
           throw new Error(
@@ -163,8 +192,9 @@ export function AuthProvider({ children }) {
           'Invalid email or password. Sign in with your registration email (not username) and the password from your Iron Lady welcome email.'
         );
       }
-      throw err;
+      throw retryErr;
     }
+
     const existing = await getUserProfile(cred.user.uid);
     if (!existing) {
       await createUserProfile(cred.user.uid, {
@@ -174,14 +204,7 @@ export function AuthProvider({ children }) {
       });
     }
     await loadProfile(cred.user);
-    try {
-      const syncResult = await syncPasswordResetToZoho(password, { phase: 'login' });
-      if (!syncResult?.ok || !syncResult?.ilUsersUpdated || syncResult?.ilMetaSynced === false) {
-        console.warn('Zoho credential sync on login:', syncResult);
-      }
-    } catch (err) {
-      console.warn('Zoho credential sync failed on login:', err.message);
-    }
+    deferZohoCredentialSync(password, { phase: 'login' });
     return cred.user;
   };
 
