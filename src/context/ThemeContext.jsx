@@ -12,10 +12,14 @@ export function applyTheme(theme) {
 export function getStoredTheme() {
   try {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    return stored === 'light' || stored === 'dark' ? stored : 'dark';
+    if (stored === 'light' || stored === 'dark') return stored;
   } catch {
-    return 'dark';
+    /* private mode */
   }
+  if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: light)').matches) {
+    return 'light';
+  }
+  return 'dark';
 }
 
 export function ThemeProvider({ children }) {

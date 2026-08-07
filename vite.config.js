@@ -6,12 +6,10 @@ export default defineConfig({
   server: {
     port: 5173,
     open: true,
-    // Pre-warm the heaviest entry modules so first navigation is snappy.
     warmup: {
       clientFiles: ['./src/main.jsx', './src/App.jsx', './src/firebase/config.js'],
     },
   },
-  // Pre-bundle big deps once on startup for faster cold loads.
   optimizeDeps: {
     include: [
       'react',
@@ -26,8 +24,6 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        // Split vendor code so the browser caches React/Firebase separately
-        // and the app shell loads faster.
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'firebase-vendor': [
@@ -39,5 +35,10 @@ export default defineConfig({
         },
       },
     },
+  },
+  test: {
+    environment: 'node',
+    include: ['src/**/*.{test,spec}.{js,jsx}'],
+    globals: false,
   },
 });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { LifeBuoy, Inbox, MessageSquarePlus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -20,10 +20,25 @@ import PageHeader from '../../components/ui/PageHeader';
 import SectionCard from '../../components/ui/SectionCard';
 import EmptyState from '../../components/ui/EmptyState';
 
+const STATUS_FILTERS = [
+  { id: 'all', label: 'All' },
+  { id: TICKET_STATUSES.OPEN, label: 'Open' },
+  { id: TICKET_STATUSES.ASSIGNED, label: 'Assigned' },
+  { id: TICKET_STATUSES.RESOLVED, label: 'Resolved' },
+];
+
 function formatTime(ts) {
   if (!ts) return '';
   const d = ts.toDate ? ts.toDate() : new Date(ts);
   return d.toLocaleString();
+}
+
+function ticketNeedsAttention(ticket) {
+  return ticket.status === TICKET_STATUSES.ASSIGNED;
+}
+
+function ticketSortKey(ticket) {
+  return ticket.updatedAt?.toMillis?.() ?? ticket.createdAt?.toMillis?.() ?? 0;
 }
 
 export default function Support() {
@@ -33,10 +48,11 @@ export default function Support() {
   const [selectedId, setSelectedId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('all');
   const [form, setForm] = useState({ category: 'course', subject: '', message: '' });
   const [reply, setReply] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [notice, setNotice] = useState(null); // { text, ok }
+  const [notice, setNotice] = useState(null);
   const [editingTicketId, setEditingTicketId] = useState(null);
   const [editForm, setEditForm] = useState({ subject: '', category: 'course' });
 
@@ -61,6 +77,20 @@ export default function Support() {
     }
     getTicketMessages(selectedId).then(setMessages).catch(console.error);
   }, [selectedId]);
+
+  const filteredTickets = useMemo(() => {
+    const list =
+      statusFilter === 'all' ? tickets : tickets.filter((t) => t.status === statusFilter);
+    return [...list].sort((a, b) => ticketSortKey(b) - ticketSortKey(a));
+  }, [tickets, statusFilter]);
+
+  const filterCounts = useMemo(() => {
+    const counts = { all: tickets.length };
+    Object.values(TICKET_STATUSES).forEach((status) => {
+      counts[status] = tickets.filter((t) => t.status === status).length;
+    });
+    return counts;
+  }, [tickets]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -242,25 +272,57 @@ export default function Support() {
           />
         ) : (
           <div className="ticket-layout">
-            <ul className="ticket-list">
-              {tickets.map((t) => (
-                <li key={t.id}>
-                  <button
-                    type="button"
-                    className={`ticket-list__item${selectedId === t.id ? ' is-active' : ''}`}
-                    onClick={() => setSelectedId(t.id)}
-                  >
-                    <strong>{t.subject}</strong>
-                    <span className={`ticket-status ticket-status--${t.status}`}>
-                      {statusLabel(t.status)}
-                    </span>
-                    <span className="muted">
-                      {categoryLabel(t.category)} · {formatTime(t.createdAt)}
-                    </span>
-                  </button>
-                </li>
+            <div
+              className="ticket-filters mobile-scroll-row"
+              role="tablist"
+              aria-label="Filter tickets by status"
+            >
+              {STATUS_FILTERS.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={statusFilter === f.id}
+                  className={`ticket-filter-chip${statusFilter === f.id ? ' is-active' : ''}`}
+                  onClick={() => setStatusFilter(f.id)}
+                >
+                  {f.label}
+                  <span className="ticket-filter-chip__count">{filterCounts[f.id] || 0}</span>
+                </button>
               ))}
-            </ul>
+            </div>
+            {filteredTickets.length === 0 ? (
+              <p className="muted">No tickets in this status.</p>
+            ) : (
+              <ul className="ticket-list">
+                {filteredTickets.map((t) => (
+                  <li key={t.id}>
+                    <button
+                      type="button"
+                      className={`ticket-list__item${selectedId === t.id ? ' is-active' : ''}`}
+                      onClick={() => setSelectedId(t.id)}
+                    >
+                      <span className="ticket-list__title-row">
+                        {ticketNeedsAttention(t) && (
+                          <span
+                            className="ticket-unread-dot"
+                            title="Staff replied — needs your attention"
+                            aria-label="Needs attention"
+                          />
+                        )}
+                        <strong>{t.subject}</strong>
+                      </span>
+                      <span className={`ticket-status ticket-status--${t.status}`}>
+                        {statusLabel(t.status)}
+                      </span>
+                      <span className="muted">
+                        {categoryLabel(t.category)} · {formatTime(t.updatedAt || t.createdAt)}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
 
             {selected && (
               <div className="ticket-thread">

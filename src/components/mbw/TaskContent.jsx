@@ -118,6 +118,7 @@ export default function TaskContent({
           title={task.title}
           watchPercent={taskState.watchPercent}
           threshold={threshold}
+          captionsUrl={task.captionsUrl || task.captionUrl || ''}
           onProgress={(pct) => onWatchProgress(task.id, pct)}
           onComplete={handleWatchComplete}
         />

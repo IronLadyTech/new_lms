@@ -43,7 +43,7 @@ function youtubeWatchUrl(url) {
   return id ? `https://www.youtube.com/watch?v=${id}` : url;
 }
 
-function NativeVideoPlayer({ videoUrl, videoRef, onTimeUpdate, onEnded }) {
+function NativeVideoPlayer({ videoUrl, videoRef, onTimeUpdate, onEnded, captionsUrl, captionsLabel }) {
   useEffect(() => {
     const video = videoRef.current;
     if (!video || isHls(videoUrl)) return undefined;
@@ -61,13 +61,18 @@ function NativeVideoPlayer({ videoUrl, videoRef, onTimeUpdate, onEnded }) {
       controls
       autoPlay
       playsInline
+      crossOrigin={captionsUrl ? 'anonymous' : undefined}
       onTimeUpdate={onTimeUpdate}
       onEnded={onEnded}
-    />
+    >
+      {captionsUrl ? (
+        <track kind="captions" srcLang="en" label={captionsLabel || 'English'} src={captionsUrl} default />
+      ) : null}
+    </video>
   );
 }
 
-function HlsVideoPlayer({ videoUrl, videoRef, onTimeUpdate, onEnded }) {
+function HlsVideoPlayer({ videoUrl, videoRef, onTimeUpdate, onEnded, captionsUrl, captionsLabel }) {
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return undefined;
@@ -105,9 +110,14 @@ function HlsVideoPlayer({ videoUrl, videoRef, onTimeUpdate, onEnded }) {
       controls
       autoPlay
       playsInline
+      crossOrigin={captionsUrl ? 'anonymous' : undefined}
       onTimeUpdate={onTimeUpdate}
       onEnded={onEnded}
-    />
+    >
+      {captionsUrl ? (
+        <track kind="captions" srcLang="en" label={captionsLabel || 'English'} src={captionsUrl} default />
+      ) : null}
+    </video>
   );
 }
 
@@ -119,6 +129,8 @@ export default function WatchGatedVideo({
   onProgress,
   onComplete,
   threshold = 0.9,
+  captionsUrl = '',
+  captionsLabel = 'English',
 }) {
   const videoRef = useRef(null);
   const lastProgressEmit = useRef(0);
@@ -257,11 +269,16 @@ export default function WatchGatedVideo({
             videoRef={videoRef}
             onTimeUpdate={handleTimeUpdate}
             onEnded={() => emitProgress(1)}
+            captionsUrl={captionsUrl}
+            captionsLabel={captionsLabel}
           />
         )}
       </div>
       <p className="muted mbw-video__hint">
         Watch the full video to unlock submission. Progress is tracked automatically and saved as you watch.
+        {captionsUrl
+          ? ' Captions are available via the player controls.'
+          : ' Captions are not available for this video yet.'}
       </p>
       <div className="mbw-video__progress">
         <div className="mbw-video__bar" style={{ width: `${Math.min(100, watchPercent * 100)}%` }} />
