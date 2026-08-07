@@ -1,7 +1,13 @@
 import { Link } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
 
 /**
- * CRM-style KPI strip — icon, value, label, optional link target.
+ * KPI strip.
+ *
+ * A tile is either read-only (monitoring) or actionable (navigates to the queue that
+ * clears it) — never ambiguously both. Actionable tiles carry a visible action label
+ * and chevron so the affordance is legible without hovering; read-only tiles have no
+ * interactive styling at all. Callers group tiles by intent rather than mixing them.
  */
 export default function CxKpiStrip({ items, loading = false }) {
   if (loading) {
@@ -17,53 +23,54 @@ export default function CxKpiStrip({ items, loading = false }) {
   if (!items?.length) return null;
 
   return (
-    <div className="cx-kpi-strip" role="list" aria-label="Overview metrics">
-      {items.map(
-        ({ id, label, value, hint, icon: Icon, to, onClick, tone, badge }) => {
-          const className = `cx-kpi${tone ? ` cx-kpi--${tone}` : ''}${to || onClick ? ' cx-kpi--interactive' : ''}`;
-          const inner = (
-            <>
-              {Icon && (
-                <span className="cx-kpi__icon" aria-hidden>
-                  <Icon size={18} strokeWidth={2} />
-                </span>
-              )}
-              <span className="cx-kpi__body">
-                <span className="cx-kpi__value-row">
-                  <span className="cx-kpi__value">{value}</span>
-                  {badge != null && badge > 0 && (
-                    <span className="cx-kpi__badge">{badge}</span>
-                  )}
-                </span>
-                <span className="cx-kpi__label">{label}</span>
-                {hint && <span className="cx-kpi__hint muted">{hint}</span>}
-              </span>
-            </>
-          );
+    <ul className="cx-kpi-strip">
+      {items.map(({ id, label, value, hint, icon: Icon, to, onClick, tone, actionLabel }) => {
+        const interactive = Boolean(to || onClick);
+        const className = [
+          'cx-kpi',
+          tone ? `cx-kpi--${tone}` : '',
+          interactive ? 'cx-kpi--interactive' : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
 
-          if (to) {
-            return (
-              <Link key={id} to={to} className={className} role="listitem">
+        const inner = (
+          <>
+            {Icon && (
+              <span className="cx-kpi__icon" aria-hidden="true">
+                <Icon size={18} strokeWidth={2} />
+              </span>
+            )}
+            <span className="cx-kpi__body">
+              <span className="cx-kpi__value">{value}</span>
+              <span className="cx-kpi__label">{label}</span>
+              {hint && <span className="cx-kpi__hint muted">{hint}</span>}
+            </span>
+            {interactive && (
+              <span className="cx-kpi__action">
+                {actionLabel && <span className="cx-kpi__action-label">{actionLabel}</span>}
+                <ChevronRight size={16} aria-hidden="true" />
+              </span>
+            )}
+          </>
+        );
+
+        return (
+          <li key={id} className="cx-kpi-strip__item">
+            {to ? (
+              <Link to={to} className={className}>
                 {inner}
               </Link>
-            );
-          }
-
-          if (onClick) {
-            return (
-              <button key={id} type="button" className={className} onClick={onClick} role="listitem">
+            ) : onClick ? (
+              <button type="button" className={className} onClick={onClick}>
                 {inner}
               </button>
-            );
-          }
-
-          return (
-            <div key={id} className={className} role="listitem">
-              {inner}
-            </div>
-          );
-        }
-      )}
-    </div>
+            ) : (
+              <div className={className}>{inner}</div>
+            )}
+          </li>
+        );
+      })}
+    </ul>
   );
 }

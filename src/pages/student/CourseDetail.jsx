@@ -49,6 +49,8 @@ import {
 
 import { getCourseProgramMeta } from '../../utils/courseDisplay';
 import { getProgramAccessState } from '../../utils/programAccess';
+import EmptyState from '../../components/ui/EmptyState';
+import { RefreshCw } from 'lucide-react';
 
 
 
@@ -73,6 +75,9 @@ export default function CourseDetail() {
   const [events, setEvents] = useState([]);
 
   const [allCourses, setAllCourses] = useState([]);
+  const [courseLoading, setCourseLoading] = useState(true);
+  const [courseError, setCourseError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
 
 
 
@@ -148,26 +153,55 @@ export default function CourseDetail() {
 
   useEffect(() => {
 
-    if (isGuest) return undefined;
+    if (isGuest) {
+      setCourseLoading(false);
+      return undefined;
+    }
+
+    let cancelled = false;
 
     (async () => {
+      setCourseLoading(true);
+      setCourseError('');
+      setCourse(null);
 
-      const c = await getCourse(courseId);
+      try {
+        const c = await getCourse(courseId);
+        if (cancelled) return;
+        setCourse(c);
+        if (!c) {
+          setCourseError('This course could not be found. It may have been removed.');
+          return;
+        }
 
-      setCourse(c);
-        getCourses().then((list) => setAllCourses(list)).catch(() => setAllCourses([]));
+        getCourses().then((list) => {
+          if (!cancelled) setAllCourses(list);
+        }).catch(() => {
+          if (!cancelled) setAllCourses([]);
+        });
 
-      const r = await getResources(courseId);
+        const r = await getResources(courseId);
+        if (cancelled) return;
+        setResources(r);
 
-      setResources(r);
-
-      const ev = await getEvents().catch(() => []);
-
-      setEvents(ev);
-
+        const ev = await getEvents().catch(() => []);
+        if (cancelled) return;
+        setEvents(ev);
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) {
+          setCourseError('We could not load this course. Check your connection and try again.');
+        }
+      } finally {
+        if (!cancelled) setCourseLoading(false);
+      }
     })();
 
-  }, [courseId, isGuest]);
+    return () => {
+      cancelled = true;
+    };
+
+  }, [courseId, isGuest, reloadKey]);
 
 
 
@@ -295,7 +329,52 @@ export default function CourseDetail() {
 
 
 
-  if (!course) {
+  if (!courseLoading && (courseError || !course)) {
+
+    return (
+
+      <div className="page course-detail">
+
+        <Link to="/app/home" className="back-link">
+
+          ← Programs
+
+        </Link>
+
+        <EmptyState
+          icon={RefreshCw}
+          title={courseError ? 'Course unavailable' : 'Course not found'}
+          message={courseError || 'This program may no longer be available.'}
+          action={
+            courseError ? (
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => {
+                  setCourseError('');
+                  setCourseLoading(true);
+                  setReloadKey((k) => k + 1);
+                }}
+              >
+                Try again
+              </button>
+            ) : (
+              <Link to="/app/home" className="btn btn-outline btn-sm">
+                Back to programs
+              </Link>
+            )
+          }
+        />
+
+      </div>
+
+    );
+
+  }
+
+
+
+  if (courseLoading || !course) {
 
     return (
 

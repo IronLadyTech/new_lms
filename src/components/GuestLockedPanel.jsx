@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import {
   Lock,
-  Mail,
   BookOpen,
   LineChart,
   Paperclip,
@@ -11,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { IRON_LADY_CONTACT_EMAIL } from '../utils/constants';
+import GuestRequestAccess from './guest/GuestRequestAccess';
 
 const LOCKED_ITEMS = [
   { Icon: BookOpen, label: 'Courses' },
@@ -63,13 +63,15 @@ export default function GuestLockedPanel({ title = 'Access locked', subtitle }) 
       <div className="guest-lock__contact-card">
         <p className="guest-lock__contact-label">Need full access?</p>
         <p className="guest-lock__contact-text">
-          Contact <strong>Iron Lady</strong> to unlock courses, progress tracking, and resources.
+          Explore programs on Home, then request access — or email{' '}
+          <a className="guest-lock__email-inline" href={`mailto:${IRON_LADY_CONTACT_EMAIL}`}>
+            {IRON_LADY_CONTACT_EMAIL}
+          </a>
+          .
         </p>
-        <a className="guest-lock__email" href={`mailto:${IRON_LADY_CONTACT_EMAIL}`}>
-          <Mail size={17} strokeWidth={2} />
-          {IRON_LADY_CONTACT_EMAIL}
-        </a>
       </div>
+
+      <GuestRequestAccess compact />
 
       <div className="guest-lock__actions">
         <button type="button" className="btn btn-primary guest-lock__btn" onClick={handleSignIn}>

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { Search } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import useTaskEngine from '../../hooks/useTaskEngine';
 import useMbwEnrollment from '../../hooks/useMbwEnrollment';
@@ -25,6 +26,8 @@ import { getModuleLabel } from '../../utils/mbwDisplay';
 import { getProgramAccessState } from '../../utils/programAccess';
 import { applyBatchRecordingsToTaskStates } from '../../utils/batchRecordingSessions';
 import { PROGRAMS } from '../../data/programTypes';
+import LessonSearchDialog from '../../components/ui/LessonSearchDialog';
+import { useLessonSearchShortcut } from '../../hooks/useLessonSearchShortcut';
 
 export default function MBWPage() {
   const { user, profile, isGuest } = useAuth();
@@ -37,6 +40,10 @@ export default function MBWPage() {
   const [outlineOpen, setOutlineOpen] = useState(false);
   const [toast, setToast] = useState('');
   const [successBanner, setSuccessBanner] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const openSearch = useCallback(() => setSearchOpen(true), []);
+  useLessonSearchShortcut(openSearch);
 
   const lessonIdFromUrl = searchParams.get('lesson');
 
@@ -244,11 +251,24 @@ export default function MBWPage() {
               showOutlineButton
             />
           ) : (
-            <MBWProgramHero
-              cohortLabel={getCohortLabel(profile)}
-              completedMilestones={completedMilestones}
-              totalMilestones={totalMilestones}
-            />
+            <>
+              <MBWProgramHero
+                cohortLabel={getCohortLabel(profile)}
+                completedMilestones={completedMilestones}
+                totalMilestones={totalMilestones}
+              />
+              <div className="mbw-program-page__search-row">
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm mbw-program-page__search-btn"
+                  onClick={() => setSearchOpen(true)}
+                >
+                  <Search size={16} aria-hidden="true" />
+                  Search lessons
+                  <kbd className="mbw-program-page__kbd">Ctrl+K</kbd>
+                </button>
+              </div>
+            </>
           )}
 
           {(error || hasLocalOnly) && (
@@ -338,6 +358,14 @@ export default function MBWPage() {
       )}
 
       <MBWToast message={lessonMode ? '' : toast} onClose={() => setToast('')} />
+      <LessonSearchDialog
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        taskStates={mergedTaskStates}
+        programLabel="MBW"
+        getTaskLabel={getModuleLabel}
+        onSelect={openTask}
+      />
     </div>
   );
 }

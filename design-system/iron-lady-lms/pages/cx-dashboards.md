@@ -20,13 +20,25 @@
 
 ## Analytics (`/cx/dashboards`)
 
-KPI strip: participants, active (7d), batches, task completion, pending reviews, awaiting resubmit, session videos, attendance (when linked).
+### KPIs — grouped by decision, not by data source
 
-Overview — **four charts only** (no duplicates):
-- Cohort journey by batch (payment + progress stage)
+Two labelled groups. **Within a group every tile behaves the same way**, so "is this
+clickable?" is never discovered by hovering.
+
+| Group | Tiles | Behaviour |
+|---|---|---|
+| **Program health** | participants, active (7d), batches, task completion, session videos, attendance (when linked) | Read-only monitoring — no links |
+| **Needs action** | ready to review, awaiting resubmit, not in a batch | Always navigates to the queue that clears it; shows a visible action label + chevron |
+
+"Needs action" renders only when at least one tile is non-zero. A mixed strip where
+some tiles navigate and others don't is the anti-pattern this replaces.
+
+### Overview — four charts (no duplicates)
+
+- **Cohort journey by batch** — full-row width (most series, longest labels)
 - Payment status by join month
 - Participant activity (7d / 30d / inactive)
-- Task completion donut (MBW/100BM) or batch assignment (LEP)
+- Task completion (MBW/100BM) or batch assignment (LEP)
 
 Supporting panels (not repeated in charts):
 - Review queue alert (when pending)
@@ -34,14 +46,46 @@ Supporting panels (not repeated in charts):
 - Attendance aggregate (30d, when batches have `courseIds`)
 - Recent activity feed
 
-Tabs:
+### Tabs — each has exactly one job
+
 - **Overview** — charts + supporting panels
-- **By batch** — batch table with participants, task %, videos
+- **By batch** — batch table only (participants, task %, videos)
 - **By task** — completion-by-batch chart + task-by-task breakdown
+
+The batch table belongs to **By batch alone**. Rendering it under *By task* as well
+made two of the three tabs overlap.
 
 Program enrollment bar (admins only — LEP / 100BM / MBW)
 
-No chart click-through drill-down (unlike Zoho Analytics).
+Chart segments and legend rows drill through to a participant list
+(`ParticipantListModal`); the legend rows are the keyboard-accessible path.
+
+## Chart colour — derived, not picked
+
+Colours come from `--chart-*` tokens in `src/index.css`, per theme. **No raw hex in
+chart components.**
+
+**Cohort journey, payment and activity are ordinal** — their stages have an inherent
+order, so each uses a single-hue ramp (brand red, hue 27.5°) with monotone lightness.
+The reader sees the progression in the colour instead of decoding unrelated hues.
+This replaced a five-hue palette that included an off-brand blue.
+
+- "No stage yet" / "Not started" sits **outside** the ramp on `--chart-neutral` — it is
+  the absence of a stage, not a step within it.
+- **Task completion is status** (`good` / `warning` / `idle`) and therefore always ships
+  with a Lucide icon **and** a text label. Never colour alone.
+- Stacked segments carry a 2px surface-coloured stroke so fills separate without
+  relying on colour difference.
+- Sub-3:1 fills carry direct value labels as the contrast-relief channel.
+
+Ramps were generated at even OKLCH lightness steps and validated per mode
+(monotone L, adjacent ΔL ≥ 0.06, end contrast ≥ 2:1, single hue).
+**Regenerate rather than hand-editing** — the previous hand-picked palette failed the
+lightness band, the chroma floor, and sat at ΔE 8.4 for deuteranopia with no secondary
+encoding.
+
+One legend per chart. The drill legend (swatch + label + count) is the legend —
+recharts' own `<Legend>` is not also rendered.
 ## Reviews (`/cx/reviews`)
 
 Queue filters: All submissions · Needs review · Awaiting resubmit  

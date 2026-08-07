@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import ThemeToggle from '../../components/ThemeToggle';
 import PasswordInput from '../../components/ui/PasswordInput';
+import AuthBrandHeader from '../../components/auth/AuthBrandHeader';
 
 export default function AuthActionPage() {
   const [searchParams] = useSearchParams();
@@ -24,7 +25,7 @@ export default function AuthActionPage() {
             <ThemeToggle compact />
           </div>
           <div className="auth-card__header">
-            <img src="/logo.png" alt="Iron Lady" className="logo-mark lg" />
+            <AuthBrandHeader />
             <h1>Invalid link</h1>
             <p>This password reset link is missing or expired.</p>
           </div>
@@ -66,7 +67,7 @@ export default function AuthActionPage() {
       <div className="auth-page">
         <div className="auth-card">
           <div className="auth-card__header">
-            <img src="/logo.png" alt="Iron Lady" className="logo-mark lg" />
+            <AuthBrandHeader />
             <h1>Password updated</h1>
             <p>
               Your new password is active and has been synced to your Zoho record. Redirecting you
@@ -86,7 +87,7 @@ export default function AuthActionPage() {
           <ThemeToggle compact />
         </div>
         <div className="auth-card__header">
-          <img src="/logo.png" alt="Iron Lady" className="logo-mark lg" />
+          <AuthBrandHeader />
           <h1>Set a new password</h1>
           <p>Choose a strong password for your account.</p>
         </div>

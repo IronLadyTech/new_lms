@@ -52,7 +52,7 @@ export default function Support() {
 
   useEffect(() => {
     loadTickets();
-  }, [user]);
+  }, [user?.uid]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -186,34 +186,41 @@ export default function Support() {
       )}
 
       <SectionCard title="Create a ticket" icon={MessageSquarePlus} className="support-section">
-        <form className="admin-form admin-form--stacked" onSubmit={handleCreate}>
-          <select
-            value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
-            required
-            aria-label="Category"
-          >
-            {TICKET_CATEGORIES.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-          <input
-            placeholder="Subject"
-            value={form.subject}
-            onChange={(e) => setForm({ ...form, subject: e.target.value })}
-            required
-            aria-label="Subject"
-          />
-          <textarea
-            placeholder="Describe your issue…"
-            value={form.message}
-            onChange={(e) => setForm({ ...form, message: e.target.value })}
-            rows={4}
-            required
-            aria-label="Message"
-          />
+        <form className="support-form" onSubmit={handleCreate}>
+          <div className="field">
+            <label htmlFor="support-category">Category</label>
+            <select
+              id="support-category"
+              value={form.category}
+              onChange={(e) => setForm({ ...form, category: e.target.value })}
+              required
+            >
+              {TICKET_CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="support-subject">Subject</label>
+            <input
+              id="support-subject"
+              value={form.subject}
+              onChange={(e) => setForm({ ...form, subject: e.target.value })}
+              required
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="support-message">Describe your issue</label>
+            <textarea
+              id="support-message"
+              value={form.message}
+              onChange={(e) => setForm({ ...form, message: e.target.value })}
+              rows={4}
+              required
+            />
+          </div>
           <button type="submit" className="btn btn-primary" disabled={submitting}>
             {submitting ? 'Sending…' : 'Submit ticket'}
           </button>
@@ -285,28 +292,31 @@ export default function Support() {
                 </div>
 
                 {editingTicketId === selected.id && (
-                  <form
-                    className="admin-form admin-form--stacked ticket-edit-form"
-                    onSubmit={handleSaveEdit}
-                  >
-                    <select
-                      value={editForm.category}
-                      onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                      required
-                      aria-label="Category"
-                    >
-                      {TICKET_CATEGORIES.map((c) => (
-                        <option key={c.value} value={c.value}>
-                          {c.label}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      value={editForm.subject}
-                      onChange={(e) => setEditForm({ ...editForm, subject: e.target.value })}
-                      required
-                      aria-label="Subject"
-                    />
+                  <form className="support-form ticket-edit-form" onSubmit={handleSaveEdit}>
+                    <div className="field">
+                      <label htmlFor="edit-ticket-category">Category</label>
+                      <select
+                        id="edit-ticket-category"
+                        value={editForm.category}
+                        onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                        required
+                      >
+                        {TICKET_CATEGORIES.map((c) => (
+                          <option key={c.value} value={c.value}>
+                            {c.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="field">
+                      <label htmlFor="edit-ticket-subject">Subject</label>
+                      <input
+                        id="edit-ticket-subject"
+                        value={editForm.subject}
+                        onChange={(e) => setEditForm({ ...editForm, subject: e.target.value })}
+                        required
+                      />
+                    </div>
                     <div className="ticket-actions">
                       <button
                         type="submit"
@@ -343,14 +353,16 @@ export default function Support() {
                 </div>
                 {selected.status !== TICKET_STATUSES.RESOLVED && (
                   <form className="ticket-reply" onSubmit={handleReply}>
-                    <textarea
-                      placeholder="Add a reply…"
-                      value={reply}
-                      onChange={(e) => setReply(e.target.value)}
-                      rows={2}
-                      required
-                      aria-label="Reply"
-                    />
+                    <div className="field">
+                      <label htmlFor="support-reply">Your reply</label>
+                      <textarea
+                        id="support-reply"
+                        value={reply}
+                        onChange={(e) => setReply(e.target.value)}
+                        rows={2}
+                        required
+                      />
+                    </div>
                     <button type="submit" className="btn btn-outline btn-sm" disabled={submitting}>
                       Send reply
                     </button>

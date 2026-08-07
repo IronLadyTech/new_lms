@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { createEvent, updateEvent, deleteEvent, eventsForDate, eventsForMonth } from '../../services/eventService';
 import { uploadEventImage } from '../../services/storageService';
 import EventImage from '../EventImage';
@@ -218,15 +219,15 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
       <div className="event-calendar__layout">
         <div className="event-calendar__grid-wrap">
           <div className="event-calendar__nav">
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => setViewDate(new Date(year, month - 1, 1))}>
-              ←
+            <button type="button" className="btn btn-outline btn-sm" onClick={() => setViewDate(new Date(year, month - 1, 1))} aria-label="Previous month">
+              <ChevronLeft size={16} aria-hidden="true" />
             </button>
             <div className="learner-calendar__month-head">
               <strong>{monthLabel}</strong>
               <span className="muted">{monthEvents.length} event{monthEvents.length === 1 ? '' : 's'} this month</span>
             </div>
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => setViewDate(new Date(year, month + 1, 1))}>
-              →
+            <button type="button" className="btn btn-outline btn-sm" onClick={() => setViewDate(new Date(year, month + 1, 1))} aria-label="Next month">
+              <ChevronRight size={16} aria-hidden="true" />
             </button>
           </div>
 

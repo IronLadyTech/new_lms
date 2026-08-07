@@ -1,18 +1,34 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 export default function ParticipantListModal({ title, participants, onClose }) {
+  const panelRef = useRef(null);
+  const titleId = 'cx-plist-title';
+
+  useFocusTrap(true, panelRef, { onEscape: onClose });
+
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   return (
     <div className="cx-plist-backdrop" onClick={onClose}>
-      <div className="cx-plist-panel" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="cx-plist-panel"
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="cx-plist-header">
-          <h3 className="cx-plist-title">{title}</h3>
+          <h3 className="cx-plist-title" id={titleId}>
+            {title}
+          </h3>
           <button type="button" className="cx-plist-close" onClick={onClose} aria-label="Close">
             <X size={18} aria-hidden />
           </button>
@@ -30,7 +46,9 @@ export default function ParticipantListModal({ title, participants, onClose }) {
           </ul>
         )}
         <div className="cx-plist-footer">
-          <span className="muted">{participants.length} participant{participants.length !== 1 ? 's' : ''}</span>
+          <span className="muted">
+            {participants.length} participant{participants.length !== 1 ? 's' : ''}
+          </span>
         </div>
       </div>
     </div>

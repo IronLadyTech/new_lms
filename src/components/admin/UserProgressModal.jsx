@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { getUserActivities } from '../../services/userService';
 import { getRoleLabel } from '../../utils/roles';
 import { statusLabel } from '../../services/ticketService';
@@ -22,6 +23,9 @@ export default function UserProgressModal({
 }) {
   const [activities, setActivities] = useState([]);
   const [loadingActivities, setLoadingActivities] = useState(false);
+  const panelRef = useRef(null);
+
+  useFocusTrap(Boolean(user), panelRef, { onEscape: onClose });
 
   useEffect(() => {
     if (!user) return undefined;
@@ -90,7 +94,7 @@ export default function UserProgressModal({
   return createPortal(
     <div className="user-modal" role="dialog" aria-modal="true" aria-labelledby="user-modal-title">
       <button type="button" className="user-modal__backdrop" aria-label="Close" onClick={onClose} />
-      <div className="user-modal__panel">
+      <div className="user-modal__panel" ref={panelRef}>
         <div className="user-modal__header">
           <div className="user-modal__identity">
             <span className="user-modal__avatar">{initials || '?'}</span>

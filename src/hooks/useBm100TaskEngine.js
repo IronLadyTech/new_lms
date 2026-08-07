@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   getStaticTasks,
@@ -134,6 +134,60 @@ export default function useBm100TaskEngine(userId) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [watchProgress, setWatchProgress] = useState({});
+  const watchPendingRef = useRef({});
+  const watchPersistTimersRef = useRef({});
+
+  const flushWatchProgress = useCallback(
+    async (taskId) => {
+      const fraction = watchPendingRef.current[taskId];
+      if (fraction == null || !userId) return;
+      delete watchPendingRef.current[taskId];
+
+      const task = tasks.find((t) => t.id === taskId);
+      if (!task) return;
+
+      const payload = {
+        type: task.type,
+        watchProgress: fraction,
+        status: submissions[taskId]?.status || SUBMISSION_STATUS.UNLOCKED,
+      };
+
+      try {
+        const saved = await saveSubmission(userId, taskId, payload, { batchId });
+        setSubmissions((prev) => ({
+          ...prev,
+          [taskId]: { ...prev[taskId], ...saved, ...payload },
+        }));
+      } catch {
+        /* localStorage fallback inside saveSubmission */
+      }
+    },
+    [userId, tasks, submissions, batchId]
+  );
+
+  const flushAllWatchProgress = useCallback(() => {
+    Object.keys(watchPendingRef.current).forEach((taskId) => {
+      if (watchPersistTimersRef.current[taskId]) {
+        clearTimeout(watchPersistTimersRef.current[taskId]);
+        delete watchPersistTimersRef.current[taskId];
+      }
+      flushWatchProgress(taskId);
+    });
+  }, [flushWatchProgress]);
+
+  useEffect(() => {
+    const onHide = () => flushAllWatchProgress();
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') onHide();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', onHide);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', onHide);
+      flushAllWatchProgress();
+    };
+  }, [flushAllWatchProgress]);
 
   const reload = useCallback(async () => {
     if (!userId) {
@@ -159,6 +213,13 @@ export default function useBm100TaskEngine(userId) {
     try {
       const subs = await getUserSubmissions(userId);
       setSubmissions((prev) => ({ ...prev, ...subs }));
+      const restored = {};
+      Object.entries(subs).forEach(([taskId, sub]) => {
+        if (typeof sub?.watchProgress === 'number' && sub.watchProgress > 0) {
+          restored[taskId] = sub.watchProgress;
+        }
+      });
+      setWatchProgress(restored);
     } catch (e) {
       setError(e.message === 'timeout' ? '' : 'Could not sync submissions. Showing saved local data.');
     }
@@ -252,9 +313,23 @@ export default function useBm100TaskEngine(userId) {
     [taskStates]
   );
 
-  const setWatchProgressForTask = useCallback((taskId, fraction) => {
-    setWatchProgress((prev) => ({ ...prev, [taskId]: Math.max(prev[taskId] ?? 0, fraction) }));
-  }, []);
+  const setWatchProgressForTask = useCallback(
+    (taskId, fraction) => {
+      setWatchProgress((prev) => {
+        const next = Math.max(prev[taskId] ?? 0, fraction);
+        watchPendingRef.current[taskId] = next;
+        return { ...prev, [taskId]: next };
+      });
+
+      if (!watchPersistTimersRef.current[taskId]) {
+        watchPersistTimersRef.current[taskId] = setTimeout(() => {
+          delete watchPersistTimersRef.current[taskId];
+          flushWatchProgress(taskId);
+        }, 15000);
+      }
+    },
+    [flushWatchProgress]
+  );
 
   const markWatchComplete = useCallback(
     async (taskId) => {

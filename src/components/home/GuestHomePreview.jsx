@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import { Clock, Layers, Lock } from 'lucide-react';
+import { Clock, Layers, Lock, Target } from 'lucide-react';
 import CourseThumbnail from '../CourseThumbnail';
 import { getCourseProgramMeta } from '../../utils/courseDisplay';
+import GuestRequestAccess from '../guest/GuestRequestAccess';
 
 /**
  * Guest preview of Iron Lady programs — STATIC data from COMPANY_CONTEXT
@@ -12,16 +13,19 @@ const GUEST_PROGRAMS = [
     code: 'LEP',
     name: 'Leadership Essentials Program',
     desc: 'Entry leadership program — 2 live days plus 4 weeks of weekly challenges.',
+    outcomes: ['Business language foundations', 'Weekly challenge rhythm', 'Peer cohort accountability'],
   },
   {
     code: '100BM',
     name: '100 Board Members Program',
     desc: 'Mid–senior acceleration — online cohort with weekly Q&A.',
+    outcomes: ['Board-ready positioning', 'Shameless pitching practice', 'Biweekly section milestones'],
   },
   {
     code: 'MBW',
     name: 'Master of Business Warfare',
     desc: 'Advanced C-suite track — quarterly in-person weekends plus monthly online sessions.',
+    outcomes: ['Business War Tactics toolkit', 'C-Suite League network', 'Quarterly in-person intensives'],
   },
 ];
 
@@ -31,8 +35,8 @@ export default function GuestHomePreview() {
       <div className="guest-preview__note">
         <Lock size={16} aria-hidden="true" />
         <span>
-          You&apos;re browsing as a guest. Journey order: LEP → 100BM → MBW. Sign in to open your
-          enrolled track.
+          Browse program details below. Sign in when you have access, or request enrolment without an
+          account.
         </span>
         <Link to="/auth/login" className="btn btn-primary btn-sm">
           Sign in
@@ -67,6 +71,15 @@ export default function GuestHomePreview() {
                   </li>
                 </ul>
 
+                <ul className="guest-preview__outcomes" aria-label={`${p.code} outcomes`}>
+                  {p.outcomes.map((item) => (
+                    <li key={item}>
+                      <Target size={13} aria-hidden="true" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+
                 <div className="course-card__actions">
                   <Link to="/auth/login" className="btn btn-primary btn-sm">
                     Sign in to continue
@@ -77,6 +90,8 @@ export default function GuestHomePreview() {
           );
         })}
       </div>
+
+      <GuestRequestAccess />
     </div>
   );
 }

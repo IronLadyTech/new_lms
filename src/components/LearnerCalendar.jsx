@@ -4,7 +4,7 @@ import EventImage from './EventImage';
 import EventPreviewCard from './EventPreviewCard';
 import EventDetailActions from './EventDetailActions';
 import { normalizeEventLink } from '../utils/eventLinks';
-import { CalendarDays, List } from 'lucide-react';
+import { CalendarDays, List, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -157,14 +157,14 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
         <div className="event-calendar__grid-wrap">
           <div className="event-calendar__nav learner-calendar__nav">
             <button type="button" className="btn btn-outline btn-sm" onClick={() => setViewDate(new Date(year, month - 1, 1))} aria-label="Previous month">
-              ←
+              <ChevronLeft size={16} aria-hidden="true" />
             </button>
             <div className="learner-calendar__month-head">
               <strong>{monthLabel}</strong>
               <span className="muted">{monthEvents.length} event{monthEvents.length === 1 ? '' : 's'} this month</span>
             </div>
             <button type="button" className="btn btn-outline btn-sm" onClick={() => setViewDate(new Date(year, month + 1, 1))} aria-label="Next month">
-              →
+              <ChevronRight size={16} aria-hidden="true" />
             </button>
           </div>
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { RefreshCw, Link2, CheckCircle2, AlertCircle, Users, Database, Search } from 'lucide-react';
+import { RefreshCw, Link2, CheckCircle2, AlertCircle, Users, Database, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   isZohoConfigured,
   testZohoConnection,
@@ -14,6 +14,8 @@ import {
   syncUserBatchFromZoho,
 } from '../../services/zohoService';
 import { formatUserCreatedAt, inferUserOrigin } from '../../utils/userOrigin';
+import ConfirmDialog from '../ConfirmDialog';
+import { useConfirm } from '../../hooks/useConfirm';
 
 const DIRECTORY_TABS = [
   { id: 'lms', label: 'LMS users' },
@@ -42,6 +44,7 @@ function matchesDirectorySearch(query, ...fields) {
 }
 
 export default function ZohoIntegration({ users = [] }) {
+  const { confirm, dialogProps } = useConfirm();
   const [status, setStatus] = useState(null);
   const [syncResult, setSyncResult] = useState(null);
   const [testing, setTesting] = useState(false);
@@ -259,9 +262,12 @@ export default function ZohoIntegration({ users = [] }) {
       ? `${batchRow.program}:${batchRow.startDate}:${batchRow.endDate}`
       : `${batchRow.program}:${batchRow.rawBatch}`;
     if (!dryRun) {
-      const confirmed = window.confirm(
-        `Create or update LMS batch “${batchRow.displayName}” and assign active Zoho learners?\n\nSource: ${batchRow.source === 'leads' ? 'Leads (program dates)' : 'IL_Users / IL_Registration'}\n\nThis writes to Firestore. Excludes Leave/dropped statuses.`
-      );
+      const confirmed = await confirm({
+        title: 'Apply Zoho batch?',
+        message: `Create or update LMS batch “${batchRow.displayName}” and assign active Zoho learners?\n\nSource: ${batchRow.source === 'leads' ? 'Leads (program dates)' : 'IL_Users / IL_Registration'}\n\nThis writes to Firestore. Excludes Leave/dropped statuses.`,
+        confirmLabel: 'Apply batch',
+        variant: 'danger',
+      });
       if (!confirmed) return;
     }
 
@@ -296,9 +302,12 @@ export default function ZohoIntegration({ users = [] }) {
       return;
     }
     if (!dryRun) {
-      const confirmed = window.confirm(
-        `Update LMS batch for ${email} from Zoho?\n\nUses Leads program dates first, then IL_Registration batch. Removes from batch if Zoho status is Leave/dropped.`
-      );
+      const confirmed = await confirm({
+        title: 'Sync learner batch?',
+        message: `Update LMS batch for ${email} from Zoho?\n\nUses Leads program dates first, then IL_Registration batch. Removes from batch if Zoho status is Leave/dropped.`,
+        confirmLabel: 'Sync batch',
+        variant: 'danger',
+      });
       if (!confirmed) return;
     }
 
@@ -1142,7 +1151,8 @@ export default function ZohoIntegration({ users = [] }) {
                   disabled={directoryPage <= 1 || directoryLoading}
                   onClick={() => setDirectoryPage((p) => Math.max(1, p - 1))}
                 >
-                  ← Previous
+                  <ChevronLeft size={14} aria-hidden="true" />
+                  Previous
                 </button>
                 <span className="muted">Page {directoryPage}</span>
                 <button
@@ -1151,7 +1161,8 @@ export default function ZohoIntegration({ users = [] }) {
                   disabled={!directoryData?.moreRecords || directoryLoading}
                   onClick={() => setDirectoryPage((p) => p + 1)}
                 >
-                  Next →
+                  Next
+                  <ChevronRight size={14} aria-hidden="true" />
                 </button>
               </div>
             </>
@@ -1226,7 +1237,8 @@ export default function ZohoIntegration({ users = [] }) {
                   disabled={directoryPage <= 1 || directoryLoading}
                   onClick={() => setDirectoryPage((p) => Math.max(1, p - 1))}
                 >
-                  ← Previous
+                  <ChevronLeft size={14} aria-hidden="true" />
+                  Previous
                 </button>
                 <span className="muted">Page {directoryPage}</span>
                 <button
@@ -1235,7 +1247,8 @@ export default function ZohoIntegration({ users = [] }) {
                   disabled={!directoryData?.moreRecords || directoryLoading}
                   onClick={() => setDirectoryPage((p) => p + 1)}
                 >
-                  Next →
+                  Next
+                  <ChevronRight size={14} aria-hidden="true" />
                 </button>
               </div>
             </>
@@ -1310,7 +1323,8 @@ export default function ZohoIntegration({ users = [] }) {
                   disabled={directoryPage <= 1 || directoryLoading}
                   onClick={() => setDirectoryPage((p) => Math.max(1, p - 1))}
                 >
-                  ← Previous
+                  <ChevronLeft size={14} aria-hidden="true" />
+                  Previous
                 </button>
                 <span className="muted">Page {directoryPage}</span>
                 <button
@@ -1319,13 +1333,15 @@ export default function ZohoIntegration({ users = [] }) {
                   disabled={!directoryData?.moreRecords || directoryLoading}
                   onClick={() => setDirectoryPage((p) => p + 1)}
                 >
-                  Next →
+                  Next
+                  <ChevronRight size={14} aria-hidden="true" />
                 </button>
               </div>
             </>
           )}
         </div>
       )}
+      <ConfirmDialog {...dialogProps} />
     </section>
   );
 }

@@ -16,6 +16,8 @@ import HomeContinueCard from '../../components/home/HomeContinueCard';
 import HomeSchedulePanel from '../../components/home/HomeSchedulePanel';
 import GuestHomePreview from '../../components/home/GuestHomePreview';
 import DashboardSkeleton from '../../components/ui/DashboardSkeleton';
+import { RefreshCw } from 'lucide-react';
+import EmptyState from '../../components/ui/EmptyState';
 import useMbwEnrollment from '../../hooks/useMbwEnrollment';
 import useTaskEngine from '../../hooks/useTaskEngine';
 import {
@@ -47,6 +49,8 @@ export default function Home() {
   const [pendingAssignments, setPendingAssignments] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (isGuest) {
@@ -56,6 +60,7 @@ export default function Home() {
     let cancelled = false;
 
     (async () => {
+      setLoadError('');
       try {
         const [list, allAnnouncements, acts, events] = await Promise.all([
           getCourses(),
@@ -83,6 +88,9 @@ export default function Home() {
         setPendingAssignments(assignmentLists.flat().slice(0, 5));
       } catch (e) {
         console.error(e);
+        if (!cancelled) {
+          setLoadError('We could not load your dashboard. Check your connection and try again.');
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -91,7 +99,7 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [isGuest, user?.uid, profile?.enrolledCourses]);
+  }, [isGuest, user?.uid, profile?.enrolledCourses, reloadKey]);
 
   useEffect(() => {
     if (loading || window.location.hash !== '#courses') return;
@@ -171,13 +179,32 @@ export default function Home() {
     },
   ];
 
+  const retryLoad = () => {
+    setLoadError('');
+    setLoading(true);
+    setReloadKey((k) => k + 1);
+  };
+
   return (
     <div className="page home-page dashboard-page">
       <HomeBannerCarousel />
 
       {!isGuest && loading && <DashboardSkeleton />}
 
-      {!isGuest && !loading && (
+      {!isGuest && !loading && loadError && (
+        <EmptyState
+          icon={RefreshCw}
+          title="Dashboard unavailable"
+          message={loadError}
+          action={
+            <button type="button" className="btn btn-primary btn-sm" onClick={retryLoad}>
+              Try again
+            </button>
+          }
+        />
+      )}
+
+      {!isGuest && !loading && !loadError && (
         <div className="dashboard-shell">
           <HomeDashboardHero
             greeting={timeGreeting()}

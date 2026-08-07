@@ -12,6 +12,7 @@ import BlockedPanel from './BlockedPanel';
 import SkipLink from './ui/SkipLink';
 import BottomNav from './BottomNav';
 import LayoutErrorBoundary from './LayoutErrorBoundary';
+import OfflineBanner from './ui/OfflineBanner';
 
 export default function StudentLayout() {
   const { role, isGuest, isBlocked, refreshProfile } = useAuth();
@@ -89,6 +90,7 @@ export default function StudentLayout() {
           )}
         </div>
       </header>
+      <OfflineBanner />
       <main
         id="main-content"
         className={`student-main${isLightShell ? ' student-main--mbw' : ''}${

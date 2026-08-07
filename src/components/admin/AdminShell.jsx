@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { ROLES, isModeratorOnly } from '../../utils/roles';
@@ -8,19 +8,45 @@ import AdminNotificationBell from './AdminNotificationBell';
 import ThemeToggle from '../ThemeToggle';
 import WidgetErrorBoundary from '../WidgetErrorBoundary';
 import LayoutErrorBoundary from '../LayoutErrorBoundary';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
+
+function resolveTab(section, navTabs, fallback) {
+  const ids = navTabs.map((t) => t.id);
+  return ids.includes(section) ? section : fallback;
+}
 
 export default function AdminShell({ title, subtitle, isSuperAdmin = false }) {
   const { signOut, profile, role } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const moderatorView = isModeratorOnly(role);
   const navTabs = moderatorView ? MODERATOR_TABS : isSuperAdmin ? SUPER_ADMIN_TABS : ADMIN_TABS;
-  const [tab, setTab] = useState(moderatorView ? 'mbw' : 'overview');
+  const defaultTab = moderatorView ? 'mbw' : 'overview';
+  const sectionParam = searchParams.get('section');
+  const [tab, setTab] = useState(() => resolveTab(sectionParam, navTabs, defaultTab));
   const [menuOpen, setMenuOpen] = useState(false);
+  const sidebarRef = useRef(null);
+
+  useFocusTrap(menuOpen, sidebarRef, { onEscape: () => setMenuOpen(false), restoreFocus: true });
+
+  useEffect(() => {
+    const next = resolveTab(searchParams.get('section'), navTabs, defaultTab);
+    setTab(next);
+  }, [searchParams, navTabs, defaultTab]);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [menuOpen]);
 
   const activeTab = navTabs.find((t) => t.id === tab);
 
   const handleSelectTab = (id) => {
     setTab(id);
+    setSearchParams({ section: id }, { replace: true });
     setMenuOpen(false);
   };
 
@@ -33,7 +59,13 @@ export default function AdminShell({ title, subtitle, isSuperAdmin = false }) {
         onClick={() => setMenuOpen(false)}
       />
 
-      <aside className={`admin-sidebar${menuOpen ? ' is-open' : ''}`}>
+      <aside
+        ref={sidebarRef}
+        className={`admin-sidebar${menuOpen ? ' is-open' : ''}`}
+        role={menuOpen ? 'dialog' : undefined}
+        aria-modal={menuOpen ? 'true' : undefined}
+        aria-label={menuOpen ? 'Admin navigation menu' : undefined}
+      >
         <div className="admin-sidebar__brand">
           <img src="/logo.png" alt="Iron Lady" className="logo-mark" />
           <div>
@@ -59,12 +91,14 @@ export default function AdminShell({ title, subtitle, isSuperAdmin = false }) {
                 type="button"
                 className={`admin-sidebar__link${tab === t.id ? ' is-active' : ''}`}
                 onClick={() => handleSelectTab(t.id)}
-                title={t.desc}
               >
                 <span className="admin-sidebar__icon">
                   <Icon size={18} strokeWidth={2} />
                 </span>
-                <span>{t.label}</span>
+                <span className="admin-sidebar__link-text">
+                  <span>{t.label}</span>
+                  <span className="admin-sidebar__link-desc muted">{t.desc}</span>
+                </span>
               </button>
             );
           })}
@@ -118,7 +152,7 @@ export default function AdminShell({ title, subtitle, isSuperAdmin = false }) {
         </header>
 
         <LayoutErrorBoundary name="admin-panel">
-          <AdminPanel isSuperAdmin={isSuperAdmin} tab={tab} onTabChange={setTab} />
+          <AdminPanel isSuperAdmin={isSuperAdmin} tab={tab} onTabChange={handleSelectTab} />
         </LayoutErrorBoundary>
       </div>
     </div>

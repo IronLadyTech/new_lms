@@ -1,6 +1,7 @@
-import { ListTree } from 'lucide-react';
+import { ListTree, ChevronLeft } from 'lucide-react';
 import { MBW_PROGRAM_META, MBW_PROGRAM_SECTIONS } from '../../../data/mbwProgramStructure';
 import MBWProgramProgressBand from './MBWProgramProgressBand';
+import Breadcrumbs from '../../ui/Breadcrumbs';
 
 function getSectionTitle(phase) {
   return MBW_PROGRAM_SECTIONS.find((s) => s.id === phase)?.title ?? 'MBW';
@@ -20,9 +21,19 @@ export default function MBWLessonTopbar({
 
   return (
     <header className="mbw-program-hero mbw-program-hero--lesson">
+      <Breadcrumbs
+        className="mbw-lesson-topbar__crumbs"
+        items={[
+          { label: 'Programs', href: '/app/home' },
+          { label: MBW_PROGRAM_META.title, href: '/app/mbw' },
+          ...(sectionTitle ? [{ label: sectionTitle }] : []),
+          { label: lessonTitle || 'Lesson' },
+        ]}
+      />
       <div className="mbw-lesson-topbar__row">
         <button type="button" className="mbw-program-hero__back" onClick={onBack}>
-          ← Back to program
+          <ChevronLeft size={16} aria-hidden="true" />
+          Back to program
         </button>
         {showOutlineButton && (
           <button
@@ -38,29 +49,14 @@ export default function MBWLessonTopbar({
       </div>
 
       <p className="mbw-program-hero__label">
-        {MBW_PROGRAM_META.label} · {MBW_PROGRAM_META.duration} · {cohortLabel}
+        {cohortLabel ? `${cohortLabel} · ` : ''}
+        {sectionTitle || MBW_PROGRAM_META.title}
       </p>
-
-      {sectionTitle && (
-        <p className="mbw-lesson-topbar__section">
-          <strong>{sectionTitle}</strong>
-        </p>
-      )}
-
-      <h1 className="mbw-program-hero__title">{MBW_PROGRAM_META.title}</h1>
-      <p className="mbw-program-hero__tagline">{MBW_PROGRAM_META.tagline}</p>
-
+      <h1 className="mbw-program-hero__title mbw-program-hero__title--lesson">{lessonTitle}</h1>
       <MBWProgramProgressBand
         completedMilestones={completedMilestones}
         totalMilestones={totalMilestones}
       />
-
-      {lessonTitle && (
-        <p className="mbw-program-hero__next">
-          <span className="mbw-program-hero__next-label">Current lesson</span>
-          {lessonTitle}
-        </p>
-      )}
     </header>
   );
 }

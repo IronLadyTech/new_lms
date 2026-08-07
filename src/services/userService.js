@@ -241,15 +241,25 @@ export async function getUserActivities(uid, limitCount = 20) {
   }
 }
 
-export async function getAllUsers() {
-  const snap = await getDocs(collection(db, USERS));
-  const users = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  users.sort((a, b) => {
-    const ta = a.createdAt?.toMillis?.() ?? 0;
-    const tb = b.createdAt?.toMillis?.() ?? 0;
-    return tb - ta;
-  });
-  return users;
+export async function getAllUsers(limitCount = 500) {
+  try {
+    const snap = await getDocs(
+      query(collection(db, USERS), orderBy('createdAt', 'desc'), limit(limitCount))
+    );
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } catch (e) {
+    const message = String(e?.message || '');
+    if (!message.includes('index')) throw e;
+
+    const snap = await getDocs(collection(db, USERS));
+    const users = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    users.sort((a, b) => {
+      const ta = a.createdAt?.toMillis?.() ?? 0;
+      const tb = b.createdAt?.toMillis?.() ?? 0;
+      return tb - ta;
+    });
+    return users.slice(0, limitCount);
+  }
 }
 
 /** Fetch specific user docs by id (chunked `in` queries). */
@@ -322,14 +332,24 @@ export async function getUsersForCxProgram(program, batches = []) {
 }
 
 export async function getAllActivities(limitCount = 100) {
-  const snap = await getDocs(collection(db, ACTIVITIES));
-  const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  items.sort((a, b) => {
-    const ta = a.createdAt?.toMillis?.() ?? 0;
-    const tb = b.createdAt?.toMillis?.() ?? 0;
-    return tb - ta;
-  });
-  return items.slice(0, limitCount);
+  try {
+    const snap = await getDocs(
+      query(collection(db, ACTIVITIES), orderBy('createdAt', 'desc'), limit(limitCount))
+    );
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } catch (e) {
+    const message = String(e?.message || '');
+    if (!message.includes('index')) throw e;
+
+    const snap = await getDocs(collection(db, ACTIVITIES));
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    items.sort((a, b) => {
+      const ta = a.createdAt?.toMillis?.() ?? 0;
+      const tb = b.createdAt?.toMillis?.() ?? 0;
+      return tb - ta;
+    });
+    return items.slice(0, limitCount);
+  }
 }
 
 export async function assignAdminRole(uid, role) {

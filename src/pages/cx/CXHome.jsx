@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Bell,
@@ -23,6 +23,7 @@ import { countCompletedCells } from '../../utils/cxMetrics';
 import CxKpiStrip from '../../components/cx/CxKpiStrip';
 import DashboardSkeleton from '../../components/ui/DashboardSkeleton';
 import EmptyState from '../../components/ui/EmptyState';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 function timeAgo(ts) {
   const ms = ts?.seconds ? ts.seconds * 1000 : ts?.toMillis?.() || null;
@@ -42,6 +43,17 @@ function SessionReminderModal({ batch, onClose }) {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null);
+  const panelRef = useRef(null);
+  const titleId = 'cx-session-reminder-title';
+
+  useFocusTrap(true, panelRef, { onEscape: onClose });
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   const handleSend = async () => {
     setSending(true);
@@ -57,10 +69,19 @@ function SessionReminderModal({ batch, onClose }) {
 
   return (
     <div className="cx-modal-backdrop" onClick={onClose}>
-      <div className="cx-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="cx-modal"
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="cx-modal__header">
           <div>
-            <h3 className="cx-modal__title">Send session reminder</h3>
+            <h3 className="cx-modal__title" id={titleId}>
+              Send session reminder
+            </h3>
             <p className="cx-modal__sub muted">
               {batch.name} · {(batch.memberIds || []).length} learner
               {(batch.memberIds || []).length !== 1 ? 's' : ''}

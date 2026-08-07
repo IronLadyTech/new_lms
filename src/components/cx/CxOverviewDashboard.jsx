@@ -9,11 +9,11 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   Label,
   LabelList,
   ResponsiveContainer,
 } from 'recharts';
+import { CheckCircle2, AlertTriangle, Circle } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import {
   JOURNEY_LABELS,
@@ -23,43 +23,62 @@ import {
 } from '../../utils/cxCrmDashboard';
 import CxChartDrillLegend from './CxChartDrillLegend';
 
-const PAYMENT_KEYS = ['unpaid', 'register', 'paid'];
-const ACTIVE_KEYS = [
-  ACTIVE_CHART_LABELS.active7,
-  ACTIVE_CHART_LABELS.active30,
-  ACTIVE_CHART_LABELS.inactive,
+/**
+ * Colour rules for this dashboard (see design-system/iron-lady-lms/pages/cx-dashboards.md):
+ *
+ * - Cohort journey, payment and activity are ORDINAL — their stages have an inherent
+ *   order, so each takes a single-hue ramp (brand red) with monotone lightness. The
+ *   reader sees the progression in the colour instead of decoding five unrelated hues.
+ * - "No stage yet" / "Not started" sits OUTSIDE the ramp on a neutral, because it is
+ *   the absence of a stage rather than a step within it.
+ * - Task completion is STATUS (good / warning / idle) and therefore always ships with
+ *   an icon and a text label — never colour alone.
+ *
+ * Every value comes from a CSS custom property so both themes stay in sync and no
+ * raw hex lives in this component. The ramps were generated at even OKLCH lightness
+ * steps and validated per mode; regenerate rather than hand-editing them.
+ */
+const TOKEN_NAMES = [
+  '--chart-grid',
+  '--chart-tick',
+  '--chart-tooltip-bg',
+  '--chart-tooltip-border',
+  '--chart-tooltip-text',
+  '--chart-ord-4-1',
+  '--chart-ord-4-2',
+  '--chart-ord-4-3',
+  '--chart-ord-4-4',
+  '--chart-ord-3-1',
+  '--chart-ord-3-2',
+  '--chart-ord-3-3',
+  '--chart-neutral',
+  '--chart-status-good',
+  '--chart-status-warn',
+  '--chart-status-idle',
+  '--surface',
 ];
 
-const JOURNEY_COLORS = {
-  [JOURNEY_LABELS.NONE]: '#9ca3af',
-  [JOURNEY_LABELS.REGISTERED]: '#F5B301',
-  [JOURNEY_LABELS.AWAITING]: '#60a5fa',
-  [JOURNEY_LABELS.ONGOING]: '#C8102E',
-  [JOURNEY_LABELS.COMPLETED]: '#16A34A',
+const STATUS_META = {
+  Done: { icon: CheckCircle2, token: '--chart-status-good' },
+  'Action required': { icon: AlertTriangle, token: '--chart-status-warn' },
+  'Not started': { icon: Circle, token: '--chart-status-idle' },
 };
 
-const PAYMENT_COLORS = {
-  unpaid: '#ef4444',
-  register: '#F5B301',
-  paid: '#16A34A',
-};
+function useChartTokens() {
+  const { theme } = useTheme();
+  const [tokens, setTokens] = useState({});
 
-const ACTIVE_COLORS = {
-  [ACTIVE_CHART_LABELS.active7]: '#F52929',
-  [ACTIVE_CHART_LABELS.active30]: '#F5B301',
-  [ACTIVE_CHART_LABELS.inactive]: '#9ca3af',
-};
+  useEffect(() => {
+    const styles = getComputedStyle(document.documentElement);
+    const next = {};
+    TOKEN_NAMES.forEach((name) => {
+      next[name] = styles.getPropertyValue(name).trim();
+    });
+    setTokens(next);
+  }, [theme]);
 
-const TASK_STATUS_COLORS = {
-  Done: '#16A34A',
-  'Action required': '#F5B301',
-  'Not started': '#9ca3af',
-};
-
-const ASSIGN_COLORS = {
-  assigned: '#F52929',
-  unassigned: '#9ca3af',
-};
+  return tokens;
+}
 
 function useMobileChartHeight(defaultHeight = 260, mobileHeight = 220) {
   const [height, setHeight] = useState(defaultHeight);
@@ -75,34 +94,18 @@ function useMobileChartHeight(defaultHeight = 260, mobileHeight = 220) {
   return height;
 }
 
-function useChartTheme() {
-  const { theme } = useTheme();
-  return useMemo(() => {
-    const styles = getComputedStyle(document.documentElement);
-    return {
-      tooltipStyle: {
-        background: styles.getPropertyValue('--chart-tooltip-bg').trim() || 'var(--surface)',
-        border: `1px solid ${styles.getPropertyValue('--chart-tooltip-border').trim() || 'var(--border)'}`,
-        borderRadius: '8px',
-        color: styles.getPropertyValue('--chart-tooltip-text').trim() || 'var(--text)',
-      },
-      gridStroke: styles.getPropertyValue('--chart-grid').trim() || 'var(--border)',
-      tickFill: styles.getPropertyValue('--chart-tick').trim() || 'var(--muted)',
-    };
-  }, [theme]);
-}
-
-function DashboardChartCard({ title, subtitle, total, legend, children }) {
+function DashboardChartCard({ title, subtitle, total, totalLabel, legend, children, wide }) {
   return (
-    <article className="cx-crm-chart">
+    <article className={`cx-crm-chart${wide ? ' cx-crm-chart--wide' : ''}`}>
       <header className="cx-crm-chart__head">
         <div>
           <h3 className="cx-crm-chart__title">{title}</h3>
           {subtitle && <p className="cx-crm-chart__sub muted">{subtitle}</p>}
         </div>
         {total != null && (
-          <span className="cx-crm-chart__total" aria-label={`Total ${total}`}>
-            {total}
+          <span className="cx-crm-chart__total">
+            <span className="cx-crm-chart__total-value">{total}</span>
+            {totalLabel && <span className="cx-crm-chart__total-label">{totalLabel}</span>}
           </span>
         )}
       </header>
@@ -114,6 +117,45 @@ function DashboardChartCard({ title, subtitle, total, legend, children }) {
 
 function EmptyChart({ message }) {
   return <p className="cx-crm-chart__empty muted">{message}</p>;
+}
+
+/** Status identity is never colour-alone — swatch, icon and label travel together. */
+function StatusLegend({ items, tokens, onDrill }) {
+  if (!items.length) return null;
+  return (
+    <ul className="cx-status-legend" aria-label="Task status breakdown">
+      {items.map((item) => {
+        const meta = STATUS_META[item.name];
+        const Icon = meta?.icon || Circle;
+        const color = tokens[meta?.token] || tokens['--chart-neutral'];
+        const content = (
+          <>
+            <span className="cx-status-legend__icon" style={{ color }} aria-hidden="true">
+              <Icon size={15} strokeWidth={2.5} />
+            </span>
+            <span className="cx-status-legend__label">{item.name}</span>
+            <span className="cx-status-legend__count">{item.value}</span>
+          </>
+        );
+        return (
+          <li key={item.name}>
+            {onDrill && item.value > 0 ? (
+              <button
+                type="button"
+                className="cx-status-legend__row cx-status-legend__row--btn"
+                onClick={() => onDrill({ chartId: 'taskStatus', seriesKey: item.name })}
+              >
+                {content}
+                <span className="cx-status-legend__action muted">View list</span>
+              </button>
+            ) : (
+              <span className="cx-status-legend__row">{content}</span>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
 }
 
 function truncateLabel(value, max = 14) {
@@ -136,12 +178,66 @@ export default function CxOverviewDashboard({
   enrollmentAssignment = null,
   onDrill,
 }) {
-  const { tooltipStyle, gridStroke, tickFill } = useChartTheme();
+  const tokens = useChartTokens();
   const chartHeight = useMobileChartHeight();
   const compactChart = chartHeight <= 220;
   const journeyChartHeight = compactChart
     ? Math.min(420, Math.max(chartHeight, batchStatus.length * 36 + 24))
     : chartHeight;
+
+  const gridStroke = tokens['--chart-grid'];
+  const tickFill = tokens['--chart-tick'];
+  const surface = tokens['--surface'];
+  const tooltipStyle = useMemo(
+    () => ({
+      background: tokens['--chart-tooltip-bg'],
+      border: `1px solid ${tokens['--chart-tooltip-border']}`,
+      borderRadius: '10px',
+      color: tokens['--chart-tooltip-text'],
+      fontSize: '0.82rem',
+    }),
+    [tokens]
+  );
+
+  /* Ordinal: index 0 is the earliest stage, the last index the furthest along.
+     "No stage yet" is deliberately outside the ramp. */
+  const journeyColors = useMemo(
+    () => ({
+      [JOURNEY_LABELS.NONE]: tokens['--chart-neutral'],
+      [JOURNEY_LABELS.REGISTERED]: tokens['--chart-ord-4-1'],
+      [JOURNEY_LABELS.AWAITING]: tokens['--chart-ord-4-2'],
+      [JOURNEY_LABELS.ONGOING]: tokens['--chart-ord-4-3'],
+      [JOURNEY_LABELS.COMPLETED]: tokens['--chart-ord-4-4'],
+    }),
+    [tokens]
+  );
+
+  const paymentColors = useMemo(
+    () => ({
+      unpaid: tokens['--chart-ord-3-1'],
+      register: tokens['--chart-ord-3-2'],
+      paid: tokens['--chart-ord-3-3'],
+    }),
+    [tokens]
+  );
+
+  /* Recency is ordinal too — most recently active is furthest along the ramp. */
+  const activeColors = useMemo(
+    () => ({
+      [ACTIVE_CHART_LABELS.active7]: tokens['--chart-ord-3-3'],
+      [ACTIVE_CHART_LABELS.active30]: tokens['--chart-ord-3-2'],
+      [ACTIVE_CHART_LABELS.inactive]: tokens['--chart-neutral'],
+    }),
+    [tokens]
+  );
+
+  const assignColors = useMemo(
+    () => ({
+      assigned: tokens['--chart-ord-3-3'],
+      unassigned: tokens['--chart-neutral'],
+    }),
+    [tokens]
+  );
 
   const batchStatusTotal = batchStatus.reduce((n, b) => n + (b.total || 0), 0);
   const paymentTotal = paymentByMonth.reduce(
@@ -161,57 +257,49 @@ export default function CxOverviewDashboard({
           key: `${row.batchId}-${key}`,
           label: `${row.name} · ${key}`,
           count,
-          color: JOURNEY_COLORS[key],
+          color: journeyColors[key],
           descriptor: { chartId: 'batchStatus', seriesKey: key, category: row.batchId },
         });
       });
     });
     return items;
-  }, [batchStatus]);
+  }, [batchStatus, journeyColors]);
 
   const paymentLegend = useMemo(() => {
     const items = [];
     paymentByMonth.forEach((row) => {
-      PAYMENT_KEYS.forEach((key) => {
+      ['unpaid', 'register', 'paid'].forEach((key) => {
         const count = row[key] || 0;
         if (count <= 0) return;
         items.push({
           key: `${row.month}-${key}`,
           label: `${row.label} · ${PAYMENT_CHART_LABELS[key]}`,
           count,
-          color: PAYMENT_COLORS[key],
+          color: paymentColors[key],
           descriptor: { chartId: 'payment', seriesKey: key, category: row.month },
         });
       });
     });
     return items;
-  }, [paymentByMonth]);
+  }, [paymentByMonth, paymentColors]);
 
   const activeLegend = useMemo(() => {
     const row = activeStatus[0];
     if (!row) return [];
-    return ACTIVE_KEYS.map((key) => ({
-      key,
-      label: key,
-      count: row[key] || 0,
-      color: ACTIVE_COLORS[key],
-      descriptor: { chartId: 'activity', seriesKey: key, category: row.name },
-    })).filter((item) => item.count > 0);
-  }, [activeStatus]);
-
-  const taskStatusLegend = useMemo(
-    () =>
-      taskStatusData
-        .filter((d) => d.value > 0)
-        .map((d) => ({
-          key: d.name,
-          label: d.name,
-          count: d.value,
-          color: TASK_STATUS_COLORS[d.name],
-          descriptor: { chartId: 'taskStatus', seriesKey: d.name },
-        })),
-    [taskStatusData]
-  );
+    return [
+      ACTIVE_CHART_LABELS.active7,
+      ACTIVE_CHART_LABELS.active30,
+      ACTIVE_CHART_LABELS.inactive,
+    ]
+      .map((key) => ({
+        key,
+        label: key,
+        count: row[key] || 0,
+        color: activeColors[key],
+        descriptor: { chartId: 'activity', seriesKey: key, category: row.name },
+      }))
+      .filter((item) => item.count > 0);
+  }, [activeStatus, activeColors]);
 
   const assignmentLegend = useMemo(() => {
     if (!enrollmentAssignment) return [];
@@ -220,26 +308,30 @@ export default function CxOverviewDashboard({
         key: 'assigned',
         label: 'In a batch',
         count: enrollmentAssignment.assigned || 0,
-        color: ASSIGN_COLORS.assigned,
+        color: assignColors.assigned,
         descriptor: { chartId: 'assignment', seriesKey: 'assigned' },
       },
       {
         key: 'unassigned',
         label: 'Not assigned',
         count: enrollmentAssignment.unassigned || 0,
-        color: ASSIGN_COLORS.unassigned,
+        color: assignColors.unassigned,
         descriptor: { chartId: 'assignment', seriesKey: 'unassigned' },
       },
     ].filter((item) => item.count > 0);
-  }, [enrollmentAssignment]);
+  }, [enrollmentAssignment, assignColors]);
+
+  const drillCursor = onDrill ? 'pointer' : undefined;
 
   return (
     <div className="cx-crm-dashboard" aria-label="Program overview charts">
       <DashboardChartCard
         title="Cohort journey"
-        subtitle="Payment and progress stage per batch"
+        subtitle="Stage each participant has reached, by batch"
         total={batchStatusTotal}
+        totalLabel="participants"
         legend={<CxChartDrillLegend items={batchStatusLegend} onDrill={onDrill} />}
+        wide
       >
         {batchStatus.length === 0 ? (
           <EmptyChart message="Add learners to batches to see journey breakdown." />
@@ -262,11 +354,7 @@ export default function CxOverviewDashboard({
               />
               {compactChart ? (
                 <>
-                  <XAxis
-                    type="number"
-                    allowDecimals={false}
-                    tick={{ fill: tickFill, fontSize: 11 }}
-                  />
+                  <XAxis type="number" allowDecimals={false} tick={{ fill: tickFill, fontSize: 11 }} />
                   <YAxis
                     type="category"
                     dataKey="name"
@@ -289,16 +377,19 @@ export default function CxOverviewDashboard({
                   <YAxis allowDecimals={false} tick={{ fill: tickFill, fontSize: 11 }} width={32} />
                 </>
               )}
-              <Tooltip contentStyle={tooltipStyle} />
-              {!compactChart && <Legend wrapperStyle={{ fontSize: 11 }} />}
+              <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'transparent' }} />
               {JOURNEY_ORDER.map((key) => (
                 <Bar
                   key={key}
                   dataKey={key}
                   stackId="status"
-                  fill={JOURNEY_COLORS[key]}
+                  fill={journeyColors[key]}
                   isAnimationActive={false}
-                  style={{ cursor: onDrill ? 'pointer' : undefined }}
+                  /* 2px surface gap between stacked segments — separates fills
+                     without relying on colour difference alone. */
+                  stroke={surface}
+                  strokeWidth={2}
+                  style={{ cursor: drillCursor }}
                   onClick={(row) =>
                     segmentClick(
                       onDrill,
@@ -317,6 +408,7 @@ export default function CxOverviewDashboard({
         title="Payment status"
         subtitle="By month learners joined the LMS"
         total={paymentTotal}
+        totalLabel="participants"
         legend={<CxChartDrillLegend items={paymentLegend} onDrill={onDrill} />}
       >
         {paymentByMonth.length === 0 ? (
@@ -327,53 +419,27 @@ export default function CxOverviewDashboard({
               <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
               <XAxis dataKey="label" tick={{ fill: tickFill, fontSize: 11 }} />
               <YAxis allowDecimals={false} tick={{ fill: tickFill, fontSize: 11 }} width={32} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Bar
-                dataKey="unpaid"
-                name={PAYMENT_CHART_LABELS.unpaid}
-                stackId="pay"
-                fill={PAYMENT_COLORS.unpaid}
-                isAnimationActive={false}
-                style={{ cursor: onDrill ? 'pointer' : undefined }}
-                onClick={(row) =>
-                  segmentClick(
-                    onDrill,
-                    { chartId: 'payment', seriesKey: 'unpaid', category: row.month },
-                    row.unpaid
-                  )
-                }
-              />
-              <Bar
-                dataKey="register"
-                name={PAYMENT_CHART_LABELS.register}
-                stackId="pay"
-                fill={PAYMENT_COLORS.register}
-                isAnimationActive={false}
-                style={{ cursor: onDrill ? 'pointer' : undefined }}
-                onClick={(row) =>
-                  segmentClick(
-                    onDrill,
-                    { chartId: 'payment', seriesKey: 'register', category: row.month },
-                    row.register
-                  )
-                }
-              />
-              <Bar
-                dataKey="paid"
-                name={PAYMENT_CHART_LABELS.paid}
-                stackId="pay"
-                fill={PAYMENT_COLORS.paid}
-                isAnimationActive={false}
-                style={{ cursor: onDrill ? 'pointer' : undefined }}
-                onClick={(row) =>
-                  segmentClick(
-                    onDrill,
-                    { chartId: 'payment', seriesKey: 'paid', category: row.month },
-                    row.paid
-                  )
-                }
-              />
+              <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'transparent' }} />
+              {['unpaid', 'register', 'paid'].map((key) => (
+                <Bar
+                  key={key}
+                  dataKey={key}
+                  name={PAYMENT_CHART_LABELS[key]}
+                  stackId="pay"
+                  fill={paymentColors[key]}
+                  isAnimationActive={false}
+                  stroke={surface}
+                  strokeWidth={2}
+                  style={{ cursor: drillCursor }}
+                  onClick={(row) =>
+                    segmentClick(
+                      onDrill,
+                      { chartId: 'payment', seriesKey: key, category: row.month },
+                      row[key]
+                    )
+                  }
+                />
+              ))}
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -383,6 +449,7 @@ export default function CxOverviewDashboard({
         title="Participant activity"
         subtitle="Last sign-in or LMS use"
         total={activeTotal}
+        totalLabel="participants"
         legend={<CxChartDrillLegend items={activeLegend} onDrill={onDrill} />}
       >
         {activeTotal === 0 ? (
@@ -393,50 +460,38 @@ export default function CxOverviewDashboard({
               <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
               <XAxis dataKey="name" tick={{ fill: tickFill, fontSize: 11 }} />
               <YAxis allowDecimals={false} tick={{ fill: tickFill, fontSize: 11 }} width={32} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Bar
-                dataKey={ACTIVE_CHART_LABELS.active7}
-                stackId="active"
-                fill={ACTIVE_COLORS[ACTIVE_CHART_LABELS.active7]}
-                isAnimationActive={false}
-                style={{ cursor: onDrill ? 'pointer' : undefined }}
-                onClick={(row) =>
-                  segmentClick(
-                    onDrill,
-                    { chartId: 'activity', seriesKey: ACTIVE_CHART_LABELS.active7, category: row.name },
-                    row[ACTIVE_CHART_LABELS.active7]
-                  )
-                }
-              />
-              <Bar
-                dataKey={ACTIVE_CHART_LABELS.active30}
-                stackId="active"
-                fill={ACTIVE_COLORS[ACTIVE_CHART_LABELS.active30]}
-                isAnimationActive={false}
-                style={{ cursor: onDrill ? 'pointer' : undefined }}
-                onClick={(row) =>
-                  segmentClick(
-                    onDrill,
-                    { chartId: 'activity', seriesKey: ACTIVE_CHART_LABELS.active30, category: row.name },
-                    row[ACTIVE_CHART_LABELS.active30]
-                  )
-                }
-              />
-              <Bar
-                dataKey={ACTIVE_CHART_LABELS.inactive}
-                stackId="active"
-                fill={ACTIVE_COLORS[ACTIVE_CHART_LABELS.inactive]}
-                isAnimationActive={false}
-                style={{ cursor: onDrill ? 'pointer' : undefined }}
-                onClick={(row) =>
-                  segmentClick(
-                    onDrill,
-                    { chartId: 'activity', seriesKey: ACTIVE_CHART_LABELS.inactive, category: row.name },
-                    row[ACTIVE_CHART_LABELS.inactive]
-                  )
-                }
-              />
+              <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'transparent' }} />
+              {[
+                ACTIVE_CHART_LABELS.active7,
+                ACTIVE_CHART_LABELS.active30,
+                ACTIVE_CHART_LABELS.inactive,
+              ].map((key) => (
+                <Bar
+                  key={key}
+                  dataKey={key}
+                  stackId="active"
+                  fill={activeColors[key]}
+                  isAnimationActive={false}
+                  stroke={surface}
+                  strokeWidth={2}
+                  style={{ cursor: drillCursor }}
+                  onClick={(row) =>
+                    segmentClick(
+                      onDrill,
+                      { chartId: 'activity', seriesKey: key, category: row.name },
+                      row[key]
+                    )
+                  }
+                >
+                  {/* Direct labels are the relief channel for sub-3:1 fills. */}
+                  <LabelList
+                    dataKey={key}
+                    position="center"
+                    style={{ fill: tickFill, fontSize: 11, fontWeight: 600 }}
+                    formatter={(v) => (v > 0 ? v : '')}
+                  />
+                </Bar>
+              ))}
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -447,7 +502,10 @@ export default function CxOverviewDashboard({
           title="Task completion"
           subtitle="All participants in this program"
           total={taskStatusTotal > 0 ? `${taskCompletionPct}%` : null}
-          legend={<CxChartDrillLegend items={taskStatusLegend} onDrill={onDrill} />}
+          totalLabel="complete"
+          legend={
+            <StatusLegend items={taskStatusData} tokens={tokens} onDrill={onDrill} />
+          }
         >
           {taskStatusTotal === 0 ? (
             <EmptyChart message="No tasks started yet." />
@@ -465,13 +523,13 @@ export default function CxOverviewDashboard({
                   paddingAngle={2}
                   labelLine={false}
                   isAnimationActive={false}
-                  stroke="var(--surface)"
+                  stroke={surface}
                   strokeWidth={2}
                 >
                   {taskStatusData.map((d) => (
                     <Cell
                       key={d.name}
-                      fill={TASK_STATUS_COLORS[d.name] || '#F52929'}
+                      fill={tokens[STATUS_META[d.name]?.token] || tokens['--chart-neutral']}
                       style={{ cursor: onDrill && d.value > 0 ? 'pointer' : undefined }}
                       onClick={() =>
                         segmentClick(onDrill, { chartId: 'taskStatus', seriesKey: d.name }, d.value)
@@ -495,11 +553,7 @@ export default function CxOverviewDashboard({
                     }}
                   />
                 </Pie>
-                <Tooltip
-                  contentStyle={tooltipStyle}
-                  formatter={(v, n) => [`${v} participants`, n]}
-                />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(v, n) => [`${v} participants`, n]} />
               </PieChart>
             </ResponsiveContainer>
           )}
@@ -509,55 +563,44 @@ export default function CxOverviewDashboard({
           title="Batch assignment"
           subtitle="Enrolled vs assigned to a cohort"
           total={enrollmentAssignment?.total ?? 0}
+          totalLabel="participants"
           legend={<CxChartDrillLegend items={assignmentLegend} onDrill={onDrill} />}
         >
           {!enrollmentAssignment || enrollmentAssignment.total === 0 ? (
             <EmptyChart message="No participants enrolled yet." />
           ) : (
             <ResponsiveContainer width="100%" height={chartHeight}>
-              <BarChart
-                data={[enrollmentAssignment]}
-                margin={{ top: 12, right: 8, left: 0, bottom: 4 }}
-              >
+              <BarChart data={[enrollmentAssignment]} margin={{ top: 12, right: 8, left: 0, bottom: 4 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
                 <XAxis dataKey="name" tick={{ fill: tickFill, fontSize: 11 }} />
                 <YAxis allowDecimals={false} tick={{ fill: tickFill, fontSize: 11 }} width={32} />
-                <Tooltip contentStyle={tooltipStyle} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar
-                  dataKey="assigned"
-                  name="In a batch"
-                  stackId="enroll"
-                  fill={ASSIGN_COLORS.assigned}
-                  isAnimationActive={false}
-                  style={{ cursor: onDrill ? 'pointer' : undefined }}
-                  onClick={(row) =>
-                    segmentClick(onDrill, { chartId: 'assignment', seriesKey: 'assigned' }, row.assigned)
-                  }
-                >
-                  <LabelList dataKey="assigned" position="center" style={{ fill: '#fff', fontSize: 11 }} />
-                </Bar>
-                <Bar
-                  dataKey="unassigned"
-                  name="Not assigned"
-                  stackId="enroll"
-                  fill={ASSIGN_COLORS.unassigned}
-                  isAnimationActive={false}
-                  style={{ cursor: onDrill ? 'pointer' : undefined }}
-                  onClick={(row) =>
-                    segmentClick(
-                      onDrill,
-                      { chartId: 'assignment', seriesKey: 'unassigned' },
-                      row.unassigned
-                    )
-                  }
-                >
-                  <LabelList
-                    dataKey="unassigned"
-                    position="center"
-                    style={{ fill: tickFill, fontSize: 11 }}
-                  />
-                </Bar>
+                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'transparent' }} />
+                {[
+                  { key: 'assigned', name: 'In a batch' },
+                  { key: 'unassigned', name: 'Not assigned' },
+                ].map(({ key, name }) => (
+                  <Bar
+                    key={key}
+                    dataKey={key}
+                    name={name}
+                    stackId="enroll"
+                    fill={assignColors[key]}
+                    isAnimationActive={false}
+                    stroke={surface}
+                    strokeWidth={2}
+                    style={{ cursor: drillCursor }}
+                    onClick={(row) =>
+                      segmentClick(onDrill, { chartId: 'assignment', seriesKey: key }, row[key])
+                    }
+                  >
+                    <LabelList
+                      dataKey={key}
+                      position="center"
+                      style={{ fill: tickFill, fontSize: 11, fontWeight: 600 }}
+                      formatter={(v) => (v > 0 ? v : '')}
+                    />
+                  </Bar>
+                ))}
               </BarChart>
             </ResponsiveContainer>
           )}

@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import ConfirmDialog from '../ConfirmDialog';
+import { useConfirm } from '../../hooks/useConfirm';
 import {
   addMemberToGroup,
   moveMemberToGroup,
@@ -18,6 +20,7 @@ export default function BatchMembersPanel({
   onUpdated,
   onDeleted,
 }) {
+  const { confirm, dialogProps } = useConfirm();
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [editing, setEditing] = useState(false);
@@ -195,8 +198,14 @@ export default function BatchMembersPanel({
             type="button"
             className="btn btn-danger btn-sm"
             disabled={!!busy}
-            onClick={() => {
-              if (!window.confirm(`Delete batch "${batch.name}"? Learners will be unlinked.`)) return;
+            onClick={async () => {
+              const ok = await confirm({
+                title: 'Delete batch?',
+                message: `Delete batch "${batch.name}"? Learners will be unlinked. This cannot be undone.`,
+                confirmLabel: 'Delete batch',
+                variant: 'danger',
+              });
+              if (!ok) return;
               run('delete', async () => {
                 await deleteGroup(batch.id);
                 onDeleted?.();
@@ -207,6 +216,7 @@ export default function BatchMembersPanel({
           </button>
         </div>
       )}
+      <ConfirmDialog {...dialogProps} />
     </section>
   );
 }

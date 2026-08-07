@@ -5,6 +5,7 @@ import { isAdminRole, isGuestRole, isModeratorOnly } from '../../utils/roles';
 import { ROLES } from '../../utils/roles';
 import ThemeToggle from '../../components/ThemeToggle';
 import PasswordInput from '../../components/ui/PasswordInput';
+import AuthBrandHeader from '../../components/auth/AuthBrandHeader';
 
 /** Off by default — paid learners provision via Zoho email/password, not Google. */
 const showGoogleAuth = import.meta.env.VITE_ENABLE_GOOGLE_AUTH === 'true';
@@ -99,28 +100,8 @@ export default function AuthPage({ mode = 'login' }) {
           <ThemeToggle compact />
         </div>
         <div className="auth-card__header">
-          <img src="/logo.png" alt="Iron Lady" className="logo-mark lg" />
+          <AuthBrandHeader />
           <h1>{isLogin ? 'Welcome back' : 'Create account'}</h1>
-          <p>
-            {isLogin
-              ? 'Sign in with your registration email and welcome-email password'
-              : showGoogleAuth
-                ? 'Sign up with email or Google'
-                : 'Create an account with email'}
-          </p>
-          <p className="auth-card__tagline">Elevating a million women to the top</p>
-          {isLogin && (
-            <p className="auth-login-hint">
-              First time signing in? Use the exact email and password from your Iron Lady welcome
-              email — not Google. Your program access is linked to that account.
-            </p>
-          )}
-          {!isLogin && !showGoogleAuth && (
-            <p className="auth-login-hint">
-              Paid program participants are enrolled by Iron Lady — use Sign in with your welcome
-              email instead. Self-signup does not grant program access.
-            </p>
-          )}
         </div>
 
         {error && <div className="alert alert-error">{error}</div>}
@@ -254,7 +235,7 @@ export default function AuthPage({ mode = 'login' }) {
               Continue as guest
             </button>
             <p className="auth-guest-note muted">
-              Guest access is preview only. Courses and resources are locked — contact Iron Lady for full access.
+              Guest preview shows program details. You can request access from Home without an account.
             </p>
           </>
         )}

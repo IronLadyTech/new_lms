@@ -1,4 +1,5 @@
 import { Navigate, useNavigate } from 'react-router-dom';
+import { Settings, GraduationCap } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { ROLES, isModeratorOnly, isFullAdmin } from '../../utils/roles';
 import ThemeToggle from '../../components/ThemeToggle';
@@ -41,7 +42,9 @@ export default function PortalGate() {
 
         <div className="portal-gate__actions">
           <button type="button" className="portal-gate__btn portal-gate__btn--admin" onClick={() => navigate(adminPath)}>
-            <span className="portal-gate__icon">⚙️</span>
+            <span className="portal-gate__icon" aria-hidden="true">
+              <Settings size={22} strokeWidth={2} />
+            </span>
             <span className="portal-gate__btn-title">Open admin section</span>
             <span className="portal-gate__btn-desc">
               Manage users, courses, resources, batches & track progress
@@ -49,7 +52,9 @@ export default function PortalGate() {
           </button>
 
           <button type="button" className="portal-gate__btn portal-gate__btn--user" onClick={() => navigate('/app/home')}>
-            <span className="portal-gate__icon">🎓</span>
+            <span className="portal-gate__icon" aria-hidden="true">
+              <GraduationCap size={22} strokeWidth={2} />
+            </span>
             <span className="portal-gate__btn-title">See as user</span>
             <span className="portal-gate__btn-desc">Browse courses as a user</span>
           </button>

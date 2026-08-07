@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import Hls from 'hls.js';
 import { ExternalLink, Play, Video } from 'lucide-react';
 
@@ -61,7 +61,6 @@ function NativeVideoPlayer({ videoUrl, videoRef, onTimeUpdate, onEnded }) {
       controls
       autoPlay
       playsInline
-      muted
       onTimeUpdate={onTimeUpdate}
       onEnded={onEnded}
     />
@@ -106,7 +105,6 @@ function HlsVideoPlayer({ videoUrl, videoRef, onTimeUpdate, onEnded }) {
       controls
       autoPlay
       playsInline
-      muted
       onTimeUpdate={onTimeUpdate}
       onEnded={onEnded}
     />
@@ -123,6 +121,7 @@ export default function WatchGatedVideo({
   threshold = 0.9,
 }) {
   const videoRef = useRef(null);
+  const lastProgressEmit = useRef(0);
   const [started, setStarted] = useState(() => watchPercent >= threshold);
   const [youtubeStarted, setYoutubeStarted] = useState(false);
 
@@ -133,6 +132,17 @@ export default function WatchGatedVideo({
   useEffect(() => {
     setYoutubeStarted(false);
   }, [videoUrl, taskId]);
+
+  const emitProgress = useCallback(
+    (pct) => {
+      const now = Date.now();
+      if (now - lastProgressEmit.current < 1000 && pct < threshold) return;
+      lastProgressEmit.current = now;
+      onProgress?.(pct);
+      if (pct >= threshold) onComplete?.();
+    },
+    [onProgress, onComplete, threshold]
+  );
 
   if (!videoUrl) {
     return (
@@ -147,16 +157,18 @@ export default function WatchGatedVideo({
   }
 
   if (isYouTube(videoUrl)) {
-    const pct = Math.min(100, Math.round(watchPercent * 100));
     const ytId = youtubeVideoId(videoUrl);
     const thumb = youtubeThumbnail(ytId);
+    const youtubeComplete = watchPercent >= threshold;
 
     return (
       <div className="mbw-video mbw-video--embed lesson-video">
         <header className="lesson-video__head">
           <Video size={18} aria-hidden />
           <h3 className="lesson-video__title">{title}</h3>
-          <span className="lesson-video__pct">{pct}% watched</span>
+          <span className="lesson-video__pct">
+            {youtubeComplete ? 'Complete' : 'Confirm when finished'}
+          </span>
         </header>
         <div className="mbw-video__frame lesson-video__frame">
           {!youtubeStarted ? (
@@ -186,7 +198,8 @@ export default function WatchGatedVideo({
           )}
         </div>
         <p className="muted mbw-video__hint">
-          Watch the full video to unlock submission. If the player does not start, open it in YouTube.
+          YouTube cannot track watch time automatically. When you have finished watching, tap &ldquo;I finished
+          watching&rdquo; below to unlock submission.
         </p>
         <div className="mbw-video__embed-actions">
           <a
@@ -201,13 +214,13 @@ export default function WatchGatedVideo({
           <button
             type="button"
             className="btn btn-outline btn-sm"
-            disabled={watchPercent >= threshold}
+            disabled={youtubeComplete}
             onClick={() => {
               onProgress?.(1);
               onComplete?.();
             }}
           >
-            {watchPercent >= threshold ? 'Video watched' : 'I finished watching'}
+            {youtubeComplete ? 'Video watched' : 'I finished watching'}
           </button>
         </div>
       </div>
@@ -217,9 +230,7 @@ export default function WatchGatedVideo({
   const handleTimeUpdate = () => {
     const v = videoRef.current;
     if (!v?.duration) return;
-    const pct = v.currentTime / v.duration;
-    onProgress?.(pct);
-    if (pct >= threshold) onComplete?.();
+    emitProgress(v.currentTime / v.duration);
   };
 
   const VideoPlayer = isHls(videoUrl) ? HlsVideoPlayer : NativeVideoPlayer;
@@ -245,15 +256,12 @@ export default function WatchGatedVideo({
             videoUrl={videoUrl}
             videoRef={videoRef}
             onTimeUpdate={handleTimeUpdate}
-            onEnded={() => {
-              onProgress?.(1);
-              onComplete?.();
-            }}
+            onEnded={() => emitProgress(1)}
           />
         )}
       </div>
       <p className="muted mbw-video__hint">
-        Watch the full video to unlock submission. Progress is tracked automatically.
+        Watch the full video to unlock submission. Progress is tracked automatically and saved as you watch.
       </p>
       <div className="mbw-video__progress">
         <div className="mbw-video__bar" style={{ width: `${Math.min(100, watchPercent * 100)}%` }} />

@@ -72,6 +72,7 @@ import { getAnnouncements } from '../../services/announcementService';
 import { deleteUserAccount } from '../../services/userAdminService';
 
 const RESOURCE_TYPES = ['video', 'pdf', 'ppt', 'assignment', 'mock_test'];
+const USER_PAGE_SIZE = 25;
 export const ADMIN_TABS = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard, desc: 'Dashboard summary' },
   { id: 'users', label: 'Users', icon: UsersIcon, desc: 'Assign users as admin' },
@@ -201,6 +202,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
     moderatorIds: [],
   });
   const [userSearch, setUserSearch] = useState('');
+  const [userPage, setUserPage] = useState(1);
   const [deletingUserId, setDeletingUserId] = useState(null);
   const [progressModalUser, setProgressModalUser] = useState(null);
 
@@ -224,6 +226,21 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
       getRoleLabel(u.role).toLowerCase().includes(q)
     );
   });
+
+  const userPageCount = Math.max(1, Math.ceil(filteredUsers.length / USER_PAGE_SIZE));
+
+  useEffect(() => {
+    setUserPage(1);
+  }, [userSearch]);
+
+  useEffect(() => {
+    if (userPage > userPageCount) setUserPage(userPageCount);
+  }, [userPage, userPageCount]);
+
+  const paginatedUsers = filteredUsers.slice(
+    (userPage - 1) * USER_PAGE_SIZE,
+    userPage * USER_PAGE_SIZE
+  );
 
   const load = async () => {
     setLoading(true);
@@ -686,8 +703,8 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                   <>
                     <strong>No user profiles found in the database yet.</strong>
                     <p className="muted">
-                      The read succeeded but the <code>users</code> collection is empty. Have the user (e.g.
-                      jaytiwari092@gmail.com) sign in once — this creates their profile — then press Refresh.
+                      The read succeeded but the <code>users</code> collection is empty. Have the learner sign in
+                      once — that creates their profile — then press Refresh.
                     </p>
                   </>
                 )}
@@ -997,7 +1014,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
             </p>
             <div className="admin-form">
               <input
-                placeholder="Search by name, email, or role (e.g. jaytiwari)"
+                placeholder="Search by name, email, or role"
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
                 className="admin-form__search"
@@ -1008,7 +1025,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
               </button>
             </div>
             <ul className="admin-list">
-              {filteredUsers.map((u) => (
+              {paginatedUsers.map((u) => (
                 <li key={u.id}>
                   <div className="user-row">
                     <div>
@@ -1073,11 +1090,35 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
               {filteredUsers.length === 0 && (
                 <li className="muted">
                   {users.length === 0
-                    ? 'No users yet. When someone signs up (e.g. jaytiwari), they will appear here.'
+                    ? 'No users yet. When someone signs up, they will appear here.'
                     : 'No users match your search.'}
                 </li>
               )}
             </ul>
+            {filteredUsers.length > USER_PAGE_SIZE && (
+              <div className="admin-form admin-form--pagination">
+                <span className="muted">
+                  Showing {(userPage - 1) * USER_PAGE_SIZE + 1}–
+                  {Math.min(userPage * USER_PAGE_SIZE, filteredUsers.length)} of {filteredUsers.length}
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  disabled={userPage <= 1}
+                  onClick={() => setUserPage((p) => p - 1)}
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  disabled={userPage >= userPageCount}
+                  onClick={() => setUserPage((p) => p + 1)}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </section>
         )}
 
@@ -1087,7 +1128,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
             <p className="muted">Track which courses each user is enrolled in and their learning activity. Click a row or use View progress to open full details.</p>
             <div className="admin-form">
               <input
-                placeholder="Search by name, email, or role (e.g. jaytiwari)"
+                placeholder="Search by name, email, or role"
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
               />
@@ -1113,7 +1154,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                       </td>
                     </tr>
                   ) : (
-                    filteredUsers.map((u) => (
+                    paginatedUsers.map((u) => (
                     <tr
                       key={u.id}
                       className="progress-table__row"

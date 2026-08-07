@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   RefreshCw,
   Layers,
@@ -9,10 +9,11 @@ import {
   Activity,
   Video,
   CalendarCheck,
+  RotateCcw,
+  UserMinus,
 } from 'lucide-react';
 import { useProgramAdapter } from '../../hooks/useProgramAdapter';
 import { useCxData } from '../../hooks/useCxData';
-import { getProgramLabel } from '../../data/programTypes';
 import { resolveCxDrilldown, buildTaskStatusChartData } from '../../utils/cxDrilldown';
 import {
   filterStudentsForBatches,
@@ -52,13 +53,26 @@ const TABS = [
 
 export default function CXDashboards() {
   const { program, adapter, canSwitchProgram } = useProgramAdapter();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const validTabIds = TABS.map((t) => t.id);
+  const resolveTab = (value) => (validTabIds.includes(value) ? value : 'overview');
   const { batches, users, students, activeTasks: tasks, submissions, loading, error, refresh } =
     useCxData(program, adapter);
   const [modal, setModal] = useState(null);
   const [taskBatchFilter, setTaskBatchFilter] = useState('all');
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(() => resolveTab(tabParam));
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [attendanceStats, setAttendanceStats] = useState(null);
+
+  useEffect(() => {
+    setActiveTab(resolveTab(searchParams.get('tab')));
+  }, [searchParams]);
+
+  const selectTab = (id) => {
+    setActiveTab(id);
+    setSearchParams({ tab: id }, { replace: true });
+  };
 
   const assignedLearnerCount = useMemo(
     () => countBatchAssignedLearners(students, batches, users),
@@ -202,13 +216,16 @@ export default function CXDashboards() {
     [drillContext]
   );
 
-  const kpiItems = [
+  /* KPIs are grouped by the decision they support, not by where the data comes from.
+     Within a group the behaviour is uniform: "Program health" is read-only monitoring,
+     "Needs action" always navigates to the queue that clears it. Mixing the two in one
+     flat strip is what made it unclear which numbers were clickable. */
+  const healthKpis = [
     {
       id: 'participants',
       label: 'Participants',
       value: students.length,
       icon: Users,
-      to: '/cx/batches',
       hint: `${assignedLearnerCount} in batches`,
     },
     {
@@ -223,7 +240,6 @@ export default function CXDashboards() {
       label: 'Batches',
       value: batches.length,
       icon: Layers,
-      to: '/cx/batches',
     },
     ...(adapter.hasTasks
       ? [
@@ -233,36 +249,16 @@ export default function CXDashboards() {
             value: `${stats.completionRate}%`,
             icon: BarChart3,
           },
-          {
-            id: 'pending',
-            label: 'Pending reviews',
-            value: pendingReviews,
-            icon: ClipboardCheck,
-            to: '/cx/reviews',
-            tone: pendingReviews > 0 ? 'warning' : undefined,
-            badge: pendingReviews,
-          },
-          {
-            id: 'resubmit',
-            label: 'Awaiting resubmit',
-            value: awaitingResubmit,
-            icon: ClipboardCheck,
-            to: '/cx/reviews',
-            tone: awaitingResubmit > 0 ? 'warning' : undefined,
-          },
         ]
       : []),
     {
       id: 'recordings',
       label: 'Session videos',
-      value: recordingStats.expected
-        ? `${recordingStats.pct}%`
-        : recordingStats.uploaded,
+      value: recordingStats.expected ? `${recordingStats.pct}%` : recordingStats.uploaded,
       icon: Video,
       hint: recordingStats.expected
         ? `${recordingStats.uploaded}/${recordingStats.expected} uploaded`
         : `${recordingStats.uploaded} links`,
-      to: batches[0] ? `/cx/batches/${batches[0].id}` : '/cx/batches',
     },
     ...(attendanceStats
       ? [
@@ -275,6 +271,44 @@ export default function CXDashboards() {
               attendanceStats.atRisk > 0
                 ? `${attendanceStats.atRisk} at risk (<60%)`
                 : `${attendanceStats.tracked} tracked`,
+          },
+        ]
+      : []),
+  ];
+
+  const actionKpis = [
+    ...(adapter.hasTasks
+      ? [
+          {
+            id: 'pending',
+            label: 'Ready to review',
+            value: pendingReviews,
+            icon: ClipboardCheck,
+            to: '/cx/reviews',
+            tone: pendingReviews > 0 ? 'warning' : undefined,
+            actionLabel: 'Open reviews',
+          },
+          {
+            id: 'resubmit',
+            label: 'Awaiting resubmit',
+            value: awaitingResubmit,
+            icon: RotateCcw,
+            to: '/cx/reviews',
+            tone: awaitingResubmit > 0 ? 'warning' : undefined,
+            actionLabel: 'Open reviews',
+          },
+        ]
+      : []),
+    ...(unassignedLearnerCount > 0
+      ? [
+          {
+            id: 'unassigned',
+            label: 'Not in a batch',
+            value: unassignedLearnerCount,
+            icon: UserMinus,
+            to: '/cx/batches',
+            tone: 'warning',
+            actionLabel: 'Assign participants',
           },
         ]
       : []),
@@ -301,20 +335,25 @@ export default function CXDashboards() {
         </button>
       </header>
 
-      <CxKpiStrip items={kpiItems} loading={loading || attendanceLoading} />
+      <section className="cx-kpi-group" aria-labelledby="cx-kpi-health-heading">
+        <h2 id="cx-kpi-health-heading" className="cx-kpi-group__heading">
+          Program health
+        </h2>
+        <CxKpiStrip items={healthKpis} loading={loading || attendanceLoading} />
+      </section>
+
+      {!loading && actionKpis.length > 0 && (
+        <section className="cx-kpi-group cx-kpi-group--action" aria-labelledby="cx-kpi-action-heading">
+          <h2 id="cx-kpi-action-heading" className="cx-kpi-group__heading">
+            Needs action
+          </h2>
+          <CxKpiStrip items={actionKpis} />
+        </section>
+      )}
 
       {error && (
         <p className="cx-error" role="alert">
           {error}
-        </p>
-      )}
-
-      {!loading && students.length > 0 && unassignedLearnerCount > 0 && (
-        <p className="cx-hint muted" role="status">
-          {assignedLearnerCount} participant{assignedLearnerCount === 1 ? '' : 's'} in batches ·{' '}
-          {unassignedLearnerCount} enrolled on {getProgramLabel(program)} but not assigned to a batch
-          yet — assign from{' '}
-          <Link to="/cx/batches">Participants</Link>.
         </p>
       )}
 
@@ -337,7 +376,7 @@ export default function CXDashboards() {
               role="tab"
               aria-selected={activeTab === tab.id}
               className={`cx-tab-bar__tab${activeTab === tab.id ? ' is-active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => selectTab(tab.id)}
             >
               {tab.label}
             </button>
@@ -484,10 +523,13 @@ export default function CXDashboards() {
             </>
           )}
 
-          {(activeTab === 'batches' || activeTab === 'tasks') && (
+          {activeTab === 'batches' && (
             <section className="cx-panel">
               <div className="cx-panel__head">
                 <h2 className="cx-panel__title">Batches at a glance</h2>
+                <span className="cx-panel__meta muted">
+                  {perBatch.length} batch{perBatch.length === 1 ? '' : 'es'}
+                </span>
               </div>
               <div className="cx-panel__body">
                 {perBatch.length === 0 ? (
