@@ -42,9 +42,18 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.{test,spec}.{js,jsx}'],
     globals: false,
-    // Cold jsdom start-up has been observed taking >100s on a fresh machine,
-    // which can fail whole-file collection. CI always cold-starts, so give
-    // set-up real headroom rather than trading it for a flaky red build.
+    /*
+     * Worker threads rather than Vitest 4's default forked child processes.
+     *
+     * A run was seen failing collection on all 9 files at once — including
+     * pure-Node ones — then passing on every retry. That signature is a worker
+     * failing to spawn, not a test failing, and process spawning is the fragile
+     * part on Windows (antivirus scanning, handle exhaustion). Threads remove
+     * that failure mode instead of retrying around it, and start faster.
+     */
+    pool: 'threads',
+    // Cold jsdom start-up has been measured above 100s on a fresh machine, and
+    // CI always cold-starts. Headroom here costs nothing on a healthy run.
     testTimeout: 15_000,
     hookTimeout: 30_000,
     teardownTimeout: 15_000,
