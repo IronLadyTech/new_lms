@@ -39,7 +39,14 @@ export function statusLabel(status) {
   return 'Open';
 }
 
-export async function createTicket({ userId, userEmail, userDisplayName, category, subject, message }) {
+export async function createTicket({
+  userId,
+  userEmail,
+  userDisplayName,
+  category,
+  subject,
+  message,
+}) {
   const ref = doc(collection(db, TICKETS));
   const ticket = {
     userId,

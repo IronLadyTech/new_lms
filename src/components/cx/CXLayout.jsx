@@ -5,6 +5,7 @@ import { isFullAdmin, isModeratorOnly } from '../../utils/roles';
 import ThemeToggle from '../ThemeToggle';
 import CXBottomNav from './CXBottomNav';
 import SkipLink from '../ui/SkipLink';
+import OfflineBanner from '../ui/OfflineBanner';
 import LayoutErrorBoundary from '../LayoutErrorBoundary';
 import { CxProgramProvider } from '../../context/CxProgramContext';
 import { useProgramAdapter } from '../../hooks/useProgramAdapter';
@@ -81,6 +82,7 @@ function CxShellInner() {
     <div className="student-layout student-layout--course cx-layout">
       <SkipLink targetId="cx-main-content" />
       <CxTopBar />
+      <OfflineBanner />
       <main id="cx-main-content" className="student-main cx-main">
         <LayoutErrorBoundary name="cx-page" resetKey={location.pathname}>
           <Outlet />

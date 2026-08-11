@@ -110,7 +110,8 @@ export const PRE_SESSION_TASKS = [
     title: 'ERRC Framework',
     type: TASK_TYPES.EDITABLE_TEMPLATE,
     requiresWatch: true,
-    videoUrl: 'https://d3jv3ztk062m9h.cloudfront.net/videos/ERRC%20edited/output/ERRC%20edited.m3u8',
+    videoUrl:
+      'https://d3jv3ztk062m9h.cloudfront.net/videos/ERRC%20edited/output/ERRC%20edited.m3u8',
     unlockDate: null,
     reviewRequired: false,
     description: 'Watch the ERRC video, then fill your activity grid (editable anytime).',
@@ -259,7 +260,8 @@ export const Q1_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Update your LinkedIn About section with your 50-word introduction, key accomplishment stories, specialization, and future vision. Share your updated profile link.',
+    description:
+      'Update your LinkedIn About section with your 50-word introduction, key accomplishment stories, specialization, and future vision. Share your updated profile link.',
     linkLabel: 'Updated LinkedIn profile URL',
   },
   {
@@ -328,7 +330,8 @@ export const Q1_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Record a short video sharing one of your accomplishment stories and share it in the group.',
+    description:
+      'Record a short video sharing one of your accomplishment stories and share it in the group.',
   },
   {
     id: 'q1-bell-curve',
@@ -341,7 +344,8 @@ export const Q1_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Complete the Bell Curve Position worksheet below — fill every block before submitting.',
+    description:
+      'Complete the Bell Curve Position worksheet below — fill every block before submitting.',
     templateId: 'bell-curve',
     uploadSubmitLabel: 'Submit worksheet',
   },
@@ -369,7 +373,8 @@ export const Q1_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Record a video answering 3 leadership questions as a C-Suite Leader using business language.',
+    description:
+      'Record a video answering 3 leadership questions as a C-Suite Leader using business language.',
   },
   {
     id: 'q1-milestone-table',
@@ -382,7 +387,8 @@ export const Q1_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Complete your Delta / Milestone Table below — fill every block before submitting.',
+    description:
+      'Complete your Delta / Milestone Table below — fill every block before submitting.',
     templateId: 'delta',
     uploadSubmitLabel: 'Submit milestone table',
   },
@@ -465,8 +471,10 @@ export const Q1_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Share your progress report covering: C-Suite CV & LinkedIn, C-Suite Story, your position in your growth journey, Milestone Table, and Business Language.',
-    placeholder: '1. C-Suite CV & LinkedIn:\n2. C-Suite Story:\n3. Growth journey position:\n4. Milestone Table:\n5. Business Language:',
+    description:
+      'Share your progress report covering: C-Suite CV & LinkedIn, C-Suite Story, your position in your growth journey, Milestone Table, and Business Language.',
+    placeholder:
+      '1. C-Suite CV & LinkedIn:\n2. C-Suite Story:\n3. Growth journey position:\n4. Milestone Table:\n5. Business Language:',
   },
 ];
 
@@ -482,7 +490,8 @@ export const Q2_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Assess the situation, identify your enemy, and record a 30-second video of one statement that differentiates you against your enemy.',
+    description:
+      'Assess the situation, identify your enemy, and record a 30-second video of one statement that differentiates you against your enemy.',
   },
   {
     id: 'q2-apply-connects',
@@ -495,7 +504,8 @@ export const Q2_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Get your resume reviewed in your group, apply for C-Suite positions, and reach out to 3 business owners/C-Suite leaders. Share update on connects/job application status.',
+    description:
+      'Get your resume reviewed in your group, apply for C-Suite positions, and reach out to 3 business owners/C-Suite leaders. Share update on connects/job application status.',
     placeholder: 'Resume review feedback:\n\nJobs applied to:\n\n3 connects made:',
   },
   {
@@ -535,7 +545,8 @@ export const Q2_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Practice with your buddy — you pitch and your buddy rejects. Practice your response and try to convince them. Share your key learnings.',
+    description:
+      'Practice with your buddy — you pitch and your buddy rejects. Practice your response and try to convince them. Share your key learnings.',
     placeholder: 'Key learnings from the buddy rejection practice…',
   },
   {
@@ -562,7 +573,8 @@ export const Q2_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Complete your strategy document below — fill every required block before submitting.',
+    description:
+      'Complete your strategy document below — fill every required block before submitting.',
     templateId: 'strategy',
     uploadSubmitLabel: 'Submit strategy draft',
   },
@@ -577,7 +589,8 @@ export const Q2_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Revisit your super powers and use them this week. Record a short video on which super powers you used.',
+    description:
+      'Revisit your super powers and use them this week. Record a short video on which super powers you used.',
   },
   {
     id: 'q2-suvarna-session',
@@ -603,7 +616,8 @@ export const Q2_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Practice Drama live. Share the drama you did this week and the experience you had in 3 lines.',
+    description:
+      'Practice Drama live. Share the drama you did this week and the experience you had in 3 lines.',
     placeholder: 'The drama I practiced:\n\nMy experience (3 lines):',
   },
   {
@@ -617,7 +631,8 @@ export const Q2_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Revisit your ERRC using upward/sideways delegation. Share the amount of time saved and new activities started.',
+    description:
+      'Revisit your ERRC using upward/sideways delegation. Share the amount of time saved and new activities started.',
     placeholder: 'Time saved:\n\nNew activities started:',
   },
   {
@@ -658,7 +673,8 @@ export const Q2_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Update your Delta / Milestone Table below — fill every block including Kaizen before submitting.',
+    description:
+      'Update your Delta / Milestone Table below — fill every block including Kaizen before submitting.',
     templateId: 'delta',
     uploadSubmitLabel: 'Submit updated delta table',
   },
@@ -686,7 +702,8 @@ export const Q2_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Practice your C-Suite talk with your buddy. Record a short video of your topic and preparation steps.',
+    description:
+      'Practice your C-Suite talk with your buddy. Record a short video of your topic and preparation steps.',
   },
   {
     id: 'q2-progress-report',
@@ -716,7 +733,8 @@ export const Q3_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Record a video answering 3 C-Suite interview questions based on a JD specific to your profile.',
+    description:
+      'Record a video answering 3 C-Suite interview questions based on a JD specific to your profile.',
   },
   {
     id: 'q3-terrain',
@@ -729,7 +747,8 @@ export const Q3_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Assess your terrain — identify your enemy, energy center, and business goal relevant to you. Share 2 key actions you will take this week.',
+    description:
+      'Assess your terrain — identify your enemy, energy center, and business goal relevant to you. Share 2 key actions you will take this week.',
     placeholder: 'Enemy:\nEnergy center:\nBusiness goal:\n\n2 key actions:',
   },
   {
@@ -743,7 +762,8 @@ export const Q3_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Watch the Impact Champions session on Business Perspective — aligning situations, proposals, and stories to business parameters.',
+    description:
+      'Watch the Impact Champions session on Business Perspective — aligning situations, proposals, and stories to business parameters.',
   },
   {
     id: 'q3-business-language-video',
@@ -756,7 +776,8 @@ export const Q3_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Record a 2-minute video sharing a new idea, proposal, or introduction using business language.',
+    description:
+      'Record a 2-minute video sharing a new idea, proposal, or introduction using business language.',
   },
   {
     id: 'q3-linkedin-video',
@@ -769,7 +790,8 @@ export const Q3_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Make at least one video and share it on LinkedIn. Paste the LinkedIn post link here.',
+    description:
+      'Make at least one video and share it on LinkedIn. Paste the LinkedIn post link here.',
     linkLabel: 'LinkedIn video post URL',
   },
   {
@@ -796,7 +818,8 @@ export const Q3_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Identify key energy centers and create your action plan to collaborate with them.',
+    description:
+      'Identify key energy centers and create your action plan to collaborate with them.',
     placeholder: 'Key energy centers:\n\nAction plan to collaborate:',
   },
   {
@@ -810,7 +833,8 @@ export const Q3_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Record a short video explaining a learning from any book as if you are the author.',
+    description:
+      'Record a short video explaining a learning from any book as if you are the author.',
   },
   {
     id: 'q3-suvarna-session',
@@ -836,7 +860,8 @@ export const Q3_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Practice a role play with your buddy — suggest an idea and convince your boss/customer using influencing tactics. Share your experience.',
+    description:
+      'Practice a role play with your buddy — suggest an idea and convince your boss/customer using influencing tactics. Share your experience.',
     placeholder: 'My role play scenario:\n\nInfluencing tactics used:\n\nExperience:',
   },
   {
@@ -850,7 +875,8 @@ export const Q3_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Practice direct and indirect signalling. Record a video explaining one scenario and your way of indirect signalling in that scenario.',
+    description:
+      'Practice direct and indirect signalling. Record a video explaining one scenario and your way of indirect signalling in that scenario.',
   },
   {
     id: 'q3-session11',
@@ -950,7 +976,8 @@ export const Q4_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Update your LinkedIn profile and post topics as per your repositioning. Share 2 posts from a new angle this week.',
+    description:
+      'Update your LinkedIn profile and post topics as per your repositioning. Share 2 posts from a new angle this week.',
     postsPerWeek: 2,
   },
   {
@@ -1006,7 +1033,8 @@ export const Q4_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Take one success scenario and one failure scenario — practice projection in each. Share key takeaways.',
+    description:
+      'Take one success scenario and one failure scenario — practice projection in each. Share key takeaways.',
     placeholder: 'Success scenario projection:\n\nFailure scenario projection:\n\nKey takeaways:',
   },
   {
@@ -1033,7 +1061,8 @@ export const Q4_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Review your Delta 2 Table progress so far. Record a short video updating your progress using business language.',
+    description:
+      'Review your Delta 2 Table progress so far. Record a short video updating your progress using business language.',
   },
   {
     id: 'q4-multi-view-strategy',
@@ -1046,7 +1075,8 @@ export const Q4_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Complete your multi-view strategy document below — fill every required block before submitting.',
+    description:
+      'Complete your multi-view strategy document below — fill every required block before submitting.',
     templateId: 'strategy',
     uploadSubmitLabel: 'Submit strategy document',
   },
@@ -1115,7 +1145,8 @@ export const Q4_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Practice drama — take 3 situations and practice in mirror how to do drama. Record a video of at least one drama situation.',
+    description:
+      'Practice drama — take 3 situations and practice in mirror how to do drama. Record a video of at least one drama situation.',
   },
   {
     id: 'q4-rejection-practice',
@@ -1128,7 +1159,8 @@ export const Q4_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Practice the rejection scenario for your pitch with your buddy. Share your experience.',
+    description:
+      'Practice the rejection scenario for your pitch with your buddy. Share your experience.',
     placeholder: 'My experience from the rejection practice:',
   },
   {
@@ -1186,7 +1218,8 @@ export const GRADUATION_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Begin preparing for graduation. Document your key milestones and achievements from the program.',
+    description:
+      'Begin preparing for graduation. Document your key milestones and achievements from the program.',
     placeholder: 'Key milestones achieved:\n\nPreparation notes:',
   },
   {
@@ -1214,7 +1247,8 @@ export const GRADUATION_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Final preparation for graduation. Review all deliverables and get ready to present.',
+    description:
+      'Final preparation for graduation. Review all deliverables and get ready to present.',
     placeholder: 'Final preparation notes:',
   },
   {
@@ -1242,7 +1276,8 @@ export const GRADUATION_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Attend your MBW Graduation Ceremony — celebrate the completion of your C-Suite journey!',
+    description:
+      'Attend your MBW Graduation Ceremony — celebrate the completion of your C-Suite journey!',
   },
 ];
 
@@ -1396,7 +1431,11 @@ export async function saveSubmission(userId, taskId, payload, { batchId = 'defau
         : { ...data, createdAt: serverTimestamp() };
       // merge create/update in one call — updateDoc on a missing doc returns permission-denied.
       await setDoc(ref, writeData, { merge: true });
-      const qualifying = [SUBMISSION_STATUS.SUBMITTED, SUBMISSION_STATUS.UNDER_REVIEW, SUBMISSION_STATUS.COMPLETED];
+      const qualifying = [
+        SUBMISSION_STATUS.SUBMITTED,
+        SUBMISSION_STATUS.UNDER_REVIEW,
+        SUBMISSION_STATUS.COMPLETED,
+      ];
       if (qualifying.includes(payload.status)) {
         recordSubmissionEvent({
           learnerId: userId,

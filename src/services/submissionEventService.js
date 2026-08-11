@@ -178,7 +178,8 @@ export function mergeSubmissionEvents(...lists) {
   const byKey = new Map();
   lists.flat().forEach((e) => {
     if (!e?.learnerId) return;
-    const dateKey = e.dateKey || getDateKey(toValidDate(e.timestamp) || new Date()) || getTodayKey();
+    const dateKey =
+      e.dateKey || getDateKey(toValidDate(e.timestamp) || new Date()) || getTodayKey();
     const dedupeKey = `${e.learnerId}_${e.courseId || 'general'}_${e.problemId || 'general'}_${dateKey}_${e.isCorrect ? 'ok' : 'miss'}`;
     const existing = byKey.get(dedupeKey);
     if (!existing || (existing._legacy && !e._legacy)) {

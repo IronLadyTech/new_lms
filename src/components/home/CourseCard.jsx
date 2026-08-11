@@ -1,15 +1,15 @@
 import { Link } from 'react-router-dom';
 import { Clock, Layers } from 'lucide-react';
 import CourseThumbnail from '../CourseThumbnail';
-import { getCourseProgramMeta, getProgramCoverSrc, getProgramMarketingUrl } from '../../utils/courseDisplay';
+import {
+  getCourseProgramMeta,
+  getProgramCoverSrc,
+  getProgramMarketingUrl,
+} from '../../utils/courseDisplay';
 import { getProgramTasksPath } from '../../utils/programTaskRoutes';
 import { PROGRAM_ACCESS } from '../../utils/programAccess';
 
-export default function CourseCard({
-  course,
-  access = null,
-  progress = null,
-}) {
+export default function CourseCard({ course, access = null, progress = null }) {
   const meta = getCourseProgramMeta(course.code);
   const codeKey = (course.code || '').toLowerCase();
   const tasksPath = getProgramTasksPath(course.code);
@@ -48,12 +48,12 @@ export default function CourseCard({
         </ul>
 
         {canAccess && progress && (
-          <div className="course-card__progress" aria-label={`${progress.pct}% — ${progress.label}`}>
+          <div
+            className="course-card__progress"
+            aria-label={`${progress.pct}% — ${progress.label}`}
+          >
             <div className="course-card__progress-bar">
-              <div
-                className="course-card__progress-fill"
-                style={{ width: `${progress.pct}%` }}
-              />
+              <div className="course-card__progress-fill" style={{ width: `${progress.pct}%` }} />
             </div>
             <span className="course-card__progress-label">{progress.label}</span>
           </div>

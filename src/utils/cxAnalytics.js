@@ -1,9 +1,6 @@
 import { SUBMISSION_STATUS } from '../services/mbwService';
 import { isLearnerActionRequired } from './submissionReview';
-import {
-  getBatchRecordingSessions,
-  hasProgramRecordingSessions,
-} from './batchRecordingSessions';
+import { getBatchRecordingSessions, hasProgramRecordingSessions } from './batchRecordingSessions';
 import { getBatchRecordingPhases } from '../data/batchRecordingPhases';
 
 function activityMs(user) {
@@ -124,9 +121,7 @@ export function buildRecentActivity(students, submissions, limit = 10) {
     });
   });
 
-  return items
-    .sort((a, b) => b.ms - a.ms)
-    .slice(0, limit);
+  return items.sort((a, b) => b.ms - a.ms).slice(0, limit);
 }
 
 export function formatActivityAge(ms) {

@@ -16,7 +16,20 @@ const { readLeadStatusFromLead } = require('./zohoFieldMap');
 
 const KNOWN_PROGRAMS = new Set(['lep', '100bm', 'mbw']);
 const PROGRAM_SHORT = { lep: 'LEP', '100bm': '100BM', mbw: 'MBW' };
-const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS_SHORT = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
 
 function getCohortFieldMap() {
   const programField = process.env.ZOHO_LEAD_PROGRAM_FIELD?.trim() || 'Program';
@@ -148,7 +161,9 @@ function leadCoqlSelectFields(fieldMap = getCohortFieldMap(), programId = null) 
 function leadCoqlSelectFieldsMinimal(fieldMap = getCohortFieldMap(), programId = '100bm') {
   const pid = fieldMap[programId] ? programId : '100bm';
   const { start, end, programField } = fieldMap[pid];
-  return ['id', 'Email', 'Last_Name', 'Lead_Status', programField || 'Program', start, end].join(', ');
+  return ['id', 'Email', 'Last_Name', 'Lead_Status', programField || 'Program', start, end].join(
+    ', '
+  );
 }
 
 /**
@@ -305,10 +320,9 @@ async function fetchLeadsPageSearch(
 
   let lastError = null;
   for (const version of ['v7', 'v6', 'v2']) {
-    const res = await fetch(
-      `${deps.getApiDomain()}/crm/${version}/${module}/search?${params}`,
-      { headers: { Authorization: `Zoho-oauthtoken ${token}` } }
-    );
+    const res = await fetch(`${deps.getApiDomain()}/crm/${version}/${module}/search?${params}`, {
+      headers: { Authorization: `Zoho-oauthtoken ${token}` },
+    });
 
     if (res.status === 204) return { rows: [], more: false, query: queryLabel, method: 'search' };
 
@@ -414,7 +428,9 @@ function buildLeadCohortPlan(leads = []) {
   const cohorts = new Map();
 
   leads.forEach((lead) => {
-    const email = String(lead.Email || '').trim().toLowerCase();
+    const email = String(lead.Email || '')
+      .trim()
+      .toLowerCase();
     if (!email) return;
 
     const programId = resolveLeadProgramId(lead, fieldMap);
@@ -448,7 +464,11 @@ function buildLeadCohortPlan(leads = []) {
       email,
       lead,
       leadStatus: readLeadStatusFromLead(lead),
-      name: [lead.First_Name, lead.Last_Name].filter(Boolean).join(' ') || lead.Last_Name || lead.Full_Name || '',
+      name:
+        [lead.First_Name, lead.Last_Name].filter(Boolean).join(' ') ||
+        lead.Last_Name ||
+        lead.Full_Name ||
+        '',
     });
   });
 
@@ -479,7 +499,9 @@ async function fetchLeadsCohortMembers(
   { programId, startDate, endDate, maxPages = 50, perPage = 200 },
   deps
 ) {
-  const pid = String(programId || '').trim().toLowerCase();
+  const pid = String(programId || '')
+    .trim()
+    .toLowerCase();
   if (!KNOWN_PROGRAMS.has(pid)) {
     return { ok: false, reason: `Unknown program "${programId}"` };
   }
@@ -496,10 +518,13 @@ async function fetchLeadsCohortMembers(
     };
   }
 
-  const { rows, pagesFetched, truncated, query, method: fetchMethod } = await fetchAllLeads(
-    { maxPages, perPage, programId: pid, startDate, endDate },
-    deps
-  );
+  const {
+    rows,
+    pagesFetched,
+    truncated,
+    query,
+    method: fetchMethod,
+  } = await fetchAllLeads({ maxPages, perPage, programId: pid, startDate, endDate }, deps);
 
   const fieldMap = getCohortFieldMap();
   const members = new Map();
@@ -510,7 +535,9 @@ async function fetchLeadsCohortMembers(
   const duplicateSamples = [];
 
   rows.forEach((lead) => {
-    const email = String(lead.Email || '').trim().toLowerCase();
+    const email = String(lead.Email || '')
+      .trim()
+      .toLowerCase();
     const startVal = lead[fieldMap[pid].start];
     const endVal = lead[fieldMap[pid].end];
     const name =
@@ -560,14 +587,14 @@ async function fetchLeadsCohortMembers(
   let discoverySamples = sampleDates;
   if (members.size === 0 && rows.length === 0) {
     try {
-      const probe = await fetchAllLeads(
-        { maxPages: 1, perPage: 25, programId: pid },
-        deps
-      );
+      const probe = await fetchAllLeads({ maxPages: 1, perPage: 25, programId: pid }, deps);
       discoverySamples = (probe.rows || []).slice(0, 8).map((lead) => ({
         start: lead[fieldMap[pid].start] ?? '(missing)',
         end: lead[fieldMap[pid].end] ?? '(missing)',
-        email: String(lead.Email || '').trim().toLowerCase() || '(no email)',
+        email:
+          String(lead.Email || '')
+            .trim()
+            .toLowerCase() || '(no email)',
       }));
     } catch {
       // keep empty samples
@@ -622,7 +649,8 @@ async function fetchLeadsCohortMembers(
  * Runs one COQL per program so 100BM dates are not drowned out by unrelated leads.
  */
 async function previewLeadCohorts({ maxPages = 50, perPage = 200, programId = null } = {}, deps) {
-  const programs = programId && KNOWN_PROGRAMS.has(programId) ? [programId] : ['100bm', 'lep', 'mbw'];
+  const programs =
+    programId && KNOWN_PROGRAMS.has(programId) ? [programId] : ['100bm', 'lep', 'mbw'];
   const allRows = [];
   const queries = [];
   let truncated = false;

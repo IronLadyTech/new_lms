@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { RefreshCw, Link2, CheckCircle2, AlertCircle, Users, Database, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  RefreshCw,
+  Link2,
+  CheckCircle2,
+  AlertCircle,
+  Users,
+  Database,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import {
   isZohoConfigured,
   testZohoConnection,
@@ -40,7 +50,11 @@ function lmsUserByEmail(users) {
 function matchesDirectorySearch(query, ...fields) {
   const q = query.trim().toLowerCase();
   if (!q) return true;
-  return fields.some((field) => String(field ?? '').toLowerCase().includes(q));
+  return fields.some((field) =>
+    String(field ?? '')
+      .toLowerCase()
+      .includes(q)
+  );
 }
 
 export default function ZohoIntegration({ users = [] }) {
@@ -380,7 +394,11 @@ export default function ZohoIntegration({ users = [] }) {
           <span className="muted zoho-directory-search__count">
             {resultCount} of {totalCount} shown
           </span>
-          <button type="button" className="btn btn-sm btn-outline" onClick={() => setDirectorySearch('')}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline"
+            onClick={() => setDirectorySearch('')}
+          >
             Clear
           </button>
         </>
@@ -391,7 +409,11 @@ export default function ZohoIntegration({ users = [] }) {
   const renderInLmsBadge = (email) => {
     const lmsUser = lmsEmailMap.get(normalizeEmail(email));
     if (!lmsUser) {
-      return <span className="muted" style={{ fontSize: '0.78rem' }}>Not in LMS</span>;
+      return (
+        <span className="muted" style={{ fontSize: '0.78rem' }}>
+          Not in LMS
+        </span>
+      );
     }
     return (
       <span className="cx-count-badge" title={lmsUser.displayName || lmsUser.email}>
@@ -409,9 +431,9 @@ export default function ZohoIntegration({ users = [] }) {
         </h2>
         <p className="page-sub">
           <strong>Push to Zoho</strong> updates existing LMS profiles on Zoho Leads.{' '}
-          <strong>Provision</strong> creates or updates an LMS account from Zoho Lead + IL_Users data.{' '}
-          Browse <strong>Zoho Leads</strong> and <strong>IL Users</strong> tabs to see everyone in CRM —
-          not only users who already signed into the LMS.
+          <strong>Provision</strong> creates or updates an LMS account from Zoho Lead + IL_Users
+          data. Browse <strong>Zoho Leads</strong> and <strong>IL Users</strong> tabs to see
+          everyone in CRM — not only users who already signed into the LMS.
         </p>
       </div>
 
@@ -430,10 +452,10 @@ export default function ZohoIntegration({ users = [] }) {
               Zoho API Console (India)
             </a>{' '}
             with scopes (comma-separated, no spaces):{' '}
-            <code>ZohoCRM.modules.ALL,ZohoCRM.coql.READ</code>
-            . Do <strong>not</strong> use <code>ZohoCRM.modules.IL_Users.ALL</code> — Zoho rejects
-            custom module names in OAuth; <code>modules.ALL</code> covers IL Users, IL Registration, Leads,
-            and Notes. Optional: find exact API names under CRM → Setup → Developer Space → APIs →{' '}
+            <code>ZohoCRM.modules.ALL,ZohoCRM.coql.READ</code>. Do <strong>not</strong> use{' '}
+            <code>ZohoCRM.modules.IL_Users.ALL</code> — Zoho rejects custom module names in OAuth;{' '}
+            <code>modules.ALL</code> covers IL Users, IL Registration, Leads, and Notes. Optional:
+            find exact API names under CRM → Setup → Developer Space → APIs →{' '}
             <strong>API Names</strong>.
           </li>
           <li>
@@ -453,9 +475,11 @@ export default function ZohoIntegration({ users = [] }) {
           </li>
           <li>
             When batch or cohort dates change in Zoho, POST to{' '}
-            <code>https://&lt;region&gt;-&lt;project&gt;.cloudfunctions.net/zohoBatchUpdateWebhook</code>{' '}
-            with the same JSON and secret header. Trigger from a Zoho workflow on IL_Registration or Lead
-            date/status updates.
+            <code>
+              https://&lt;region&gt;-&lt;project&gt;.cloudfunctions.net/zohoBatchUpdateWebhook
+            </code>{' '}
+            with the same JSON and secret header. Trigger from a Zoho workflow on IL_Registration or
+            Lead date/status updates.
           </li>
           <li>
             <strong>registration</strong> tier: Pre-Preparation + Quarter 1 only.{' '}
@@ -472,10 +496,20 @@ export default function ZohoIntegration({ users = [] }) {
       </div>
 
       <div className="admin-actions-row" style={{ marginBottom: '1rem' }}>
-        <button type="button" className="btn btn-outline" onClick={handleTest} disabled={testing || !configured}>
+        <button
+          type="button"
+          className="btn btn-outline"
+          onClick={handleTest}
+          disabled={testing || !configured}
+        >
           {testing ? 'Testing…' : 'Test connection'}
         </button>
-        <button type="button" className="btn btn-primary" onClick={handleSyncAll} disabled={syncing || !configured}>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={handleSyncAll}
+          disabled={syncing || !configured}
+        >
           <RefreshCw size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} />
           {syncing ? 'Pushing to Zoho…' : 'Push all LMS users to Zoho'}
         </button>
@@ -484,8 +518,9 @@ export default function ZohoIntegration({ users = [] }) {
       <div className="card card-pad" style={{ marginBottom: '1rem' }}>
         <h3>Sync one learner&apos;s batch from Zoho</h3>
         <p className="muted">
-          Updates <code>batchId</code> / <code>batchName</code> for a single LMS user from Zoho. Uses Leads
-          program dates first, then IL_Registration batch. Removes from batch if Zoho status is Leave or dropped.
+          Updates <code>batchId</code> / <code>batchName</code> for a single LMS user from Zoho.
+          Uses Leads program dates first, then IL_Registration batch. Removes from batch if Zoho
+          status is Leave or dropped.
         </p>
         <div
           className="admin-actions-row"
@@ -542,15 +577,20 @@ export default function ZohoIntegration({ users = [] }) {
       <div className="card card-pad" style={{ marginBottom: '1rem' }}>
         <h3>Batch mapping preview (read-only)</h3>
         <p className="muted">
-          Scans <strong>Leads</strong> with COQL on program date fields (
-          <code>BM_Reg_Date1</code> / <code>BM_End_Date</code> for 100BM), plus IL_Users /
-          IL_Registration. Use <strong>Apply by Leads dates</strong> for a specific cohort
-          (e.g. 11/07/2026 – 16/01/2027).
+          Scans <strong>Leads</strong> with COQL on program date fields (<code>BM_Reg_Date1</code> /{' '}
+          <code>BM_End_Date</code> for 100BM), plus IL_Users / IL_Registration. Use{' '}
+          <strong>Apply by Leads dates</strong> for a specific cohort (e.g. 11/07/2026 –
+          16/01/2027).
         </p>
 
         <div
           className="admin-actions-row"
-          style={{ flexWrap: 'wrap', gap: '0.5rem', alignItems: 'flex-end', marginBottom: '0.75rem' }}
+          style={{
+            flexWrap: 'wrap',
+            gap: '0.5rem',
+            alignItems: 'flex-end',
+            marginBottom: '0.75rem',
+          }}
         >
           <label className="field" style={{ margin: 0, minWidth: '7rem' }}>
             <span className="field-label">Program</span>
@@ -614,7 +654,10 @@ export default function ZohoIntegration({ users = [] }) {
           </button>
         </div>
         <p className="muted" style={{ marginTop: '-0.25rem', fontSize: '0.85rem' }}>
-          COQL filter: <code>BM_Reg_Date1 = &apos;2026-07-11&apos; and BM_End_Date = &apos;2027-01-16&apos;</code>{' '}
+          COQL filter:{' '}
+          <code>
+            BM_Reg_Date1 = &apos;2026-07-11&apos; and BM_End_Date = &apos;2027-01-16&apos;
+          </code>{' '}
           (dates converted to ISO). Same as your Zoho Leads filter — not the IL_Users Batch string.
         </p>
 
@@ -629,8 +672,13 @@ export default function ZohoIntegration({ users = [] }) {
             {batchApplyResult.dryRun !== false ? 'Dry run' : 'Applied to LMS'} —{' '}
             <strong>{batchApplyResult.displayName || 'Leads cohort'}</strong>
             <ul style={{ margin: '0.5rem 0 0', paddingLeft: '1.2rem' }}>
-              <li>Source: {batchApplyResult.source || '—'} ({batchApplyResult.method || '—'})</li>
-              <li>Zoho rows returned: {batchApplyResult.scannedLeads ?? batchApplyResult.zohoMatched ?? '—'}</li>
+              <li>
+                Source: {batchApplyResult.source || '—'} ({batchApplyResult.method || '—'})
+              </li>
+              <li>
+                Zoho rows returned:{' '}
+                {batchApplyResult.scannedLeads ?? batchApplyResult.zohoMatched ?? '—'}
+              </li>
               <li>Unique emails: {batchApplyResult.zohoMatched ?? '—'}</li>
               <li>Duplicate email rows: {batchApplyResult.duplicateEmails ?? 0}</li>
               <li>Active (after status filter): {batchApplyResult.active ?? '—'}</li>
@@ -670,8 +718,7 @@ export default function ZohoIntegration({ users = [] }) {
                 </li>
               )}
             </ul>
-
-            {(batchApplyResult.learners?.length > 0) && (
+            {batchApplyResult.learners?.length > 0 && (
               <div style={{ marginTop: '0.75rem' }}>
                 <h4 style={{ margin: '0 0 0.5rem' }}>
                   Learners ({batchApplyResult.learners.length})
@@ -726,21 +773,29 @@ export default function ZohoIntegration({ users = [] }) {
         {batchPreview && (
           <div style={{ marginTop: '1rem' }}>
             <p className="alert alert-success" role="status">
-              Dry run complete — nothing was written.
-              {' '}IL_Users: <strong>{batchPreview.scannedRecords}</strong> scanned
-              {' '}(<strong>{batchPreview.sources?.ilUsersWithBatch ?? batchPreview.recordsWithBatch}</strong>{' '}
+              Dry run complete — nothing was written. IL_Users:{' '}
+              <strong>{batchPreview.scannedRecords}</strong> scanned (
+              <strong>
+                {batchPreview.sources?.ilUsersWithBatch ?? batchPreview.recordsWithBatch}
+              </strong>{' '}
               with batch)
               {batchPreview.registrationScannedRecords != null && (
                 <>
-                  {' '}· IL_Registration: <strong>{batchPreview.registrationScannedRecords}</strong> scanned
-                  {' '}(<strong>{batchPreview.sources?.ilRegistrationWithBatch ?? 0}</strong> with batch)
+                  {' '}
+                  · IL_Registration: <strong>{batchPreview.registrationScannedRecords}</strong>{' '}
+                  scanned (<strong>{batchPreview.sources?.ilRegistrationWithBatch ?? 0}</strong>{' '}
+                  with batch)
                 </>
-              )}
-              {' '}· Merged IL unique: <strong>{batchPreview.sources?.mergedUniqueEmails ?? batchPreview.recordsWithBatch}</strong>
+              )}{' '}
+              · Merged IL unique:{' '}
+              <strong>
+                {batchPreview.sources?.mergedUniqueEmails ?? batchPreview.recordsWithBatch}
+              </strong>
               {batchPreview.scannedLeads != null && (
                 <>
-                  {' '}· Leads scanned: <strong>{batchPreview.scannedLeads}</strong>
-                  {' '}(<strong>{batchPreview.leadCohortCount ?? 0}</strong> cohorts)
+                  {' '}
+                  · Leads scanned: <strong>{batchPreview.scannedLeads}</strong> (
+                  <strong>{batchPreview.leadCohortCount ?? 0}</strong> cohorts)
                 </>
               )}
               {batchPreview.truncated ? ' More records exist beyond this scan.' : ''}
@@ -748,8 +803,8 @@ export default function ZohoIntegration({ users = [] }) {
 
             {batchPreview.registrationCoqlError && (
               <p className="alert alert-warning" role="alert">
-                IL_Registration scan failed — batch counts may be IL_Users only.
-                {' '}{batchPreview.registrationCoqlError}
+                IL_Registration scan failed — batch counts may be IL_Users only.{' '}
+                {batchPreview.registrationCoqlError}
               </p>
             )}
 
@@ -769,19 +824,32 @@ export default function ZohoIntegration({ users = [] }) {
 
             {batchPreview.leadCohortFields && (
               <p className="muted" style={{ fontSize: '0.85rem' }}>
-                Leads fields used: 100BM start=<code>{batchPreview.leadCohortFields['100bm']?.start}</code>
+                Leads fields used: 100BM start=
+                <code>{batchPreview.leadCohortFields['100bm']?.start}</code>
                 {' · '}end=<code>{batchPreview.leadCohortFields['100bm']?.end}</code>
                 {' · '}Program=<code>{batchPreview.leadCohortFields['100bm']?.programField}</code>
               </p>
             )}
 
             <div className="zoho-batch-preview__stats">
-              <span><strong>{batchPreview.leadCohortCount ?? 0}</strong> Leads cohorts</span>
-              <span><strong>{batchPreview.batchCount}</strong> IL_Users batches</span>
-              <span><strong>{batchPreview.review?.length || 0}</strong> need review</span>
-              <span><strong>{batchPreview.conflicts?.length || 0}</strong> conflicts</span>
-              <span><strong>{batchPreview.invalidValues?.length || 0}</strong> invalid values</span>
-              <span><strong>{batchPreview.duplicateRecords?.length || 0}</strong> duplicate records</span>
+              <span>
+                <strong>{batchPreview.leadCohortCount ?? 0}</strong> Leads cohorts
+              </span>
+              <span>
+                <strong>{batchPreview.batchCount}</strong> IL_Users batches
+              </span>
+              <span>
+                <strong>{batchPreview.review?.length || 0}</strong> need review
+              </span>
+              <span>
+                <strong>{batchPreview.conflicts?.length || 0}</strong> conflicts
+              </span>
+              <span>
+                <strong>{batchPreview.invalidValues?.length || 0}</strong> invalid values
+              </span>
+              <span>
+                <strong>{batchPreview.duplicateRecords?.length || 0}</strong> duplicate records
+              </span>
             </div>
 
             <h4>Leads cohorts (program start + end dates) — use this</h4>
@@ -804,8 +872,8 @@ export default function ZohoIntegration({ users = [] }) {
                   {(batchPreview.plannedLeadCohorts || []).length === 0 ? (
                     <tr>
                       <td colSpan={6} className="muted">
-                        No Leads cohorts found. Deploy updated functions, then re-run preview —
-                        or use <strong>Dry run (Leads dates)</strong> above with BM_Reg_Date1 /
+                        No Leads cohorts found. Deploy updated functions, then re-run preview — or
+                        use <strong>Dry run (Leads dates)</strong> above with BM_Reg_Date1 /
                         BM_End_Date. Looking for “11/07/2026 - 16/01/2027” in IL_Users will miss
                         this cohort (that string is not on Leads).
                       </td>
@@ -818,11 +886,16 @@ export default function ZohoIntegration({ users = [] }) {
                         <tr key={b.docId}>
                           <td>{b.program?.toUpperCase()}</td>
                           <td>{b.displayName}</td>
-                          <td><strong>{b.memberCount}</strong></td>
+                          <td>
+                            <strong>{b.memberCount}</strong>
+                          </td>
                           <td className="muted">{String(b.startDate)}</td>
                           <td className="muted">{String(b.endDate)}</td>
                           <td>
-                            <div className="admin-actions-row" style={{ margin: 0, flexWrap: 'wrap', gap: '0.35rem' }}>
+                            <div
+                              className="admin-actions-row"
+                              style={{ margin: 0, flexWrap: 'wrap', gap: '0.35rem' }}
+                            >
                               <button
                                 type="button"
                                 className="btn btn-sm btn-outline"
@@ -874,7 +947,10 @@ export default function ZohoIntegration({ users = [] }) {
                         <td className="muted">{b.rawBatch}</td>
                         <td className="muted">{b.warnings?.join('; ') || '—'}</td>
                         <td>
-                          <div className="admin-actions-row" style={{ margin: 0, flexWrap: 'wrap', gap: '0.35rem' }}>
+                          <div
+                            className="admin-actions-row"
+                            style={{ margin: 0, flexWrap: 'wrap', gap: '0.35rem' }}
+                          >
                             <button
                               type="button"
                               className="btn btn-sm btn-outline"
@@ -900,7 +976,7 @@ export default function ZohoIntegration({ users = [] }) {
               </table>
             </div>
 
-            {(batchPreview.review?.length > 0) && (
+            {batchPreview.review?.length > 0 && (
               <>
                 <h4>Needs review — not auto-assigned</h4>
                 <ul className="zoho-batch-preview__list">
@@ -914,27 +990,28 @@ export default function ZohoIntegration({ users = [] }) {
               </>
             )}
 
-            {(batchPreview.conflicts?.length > 0) && (
+            {batchPreview.conflicts?.length > 0 && (
               <>
                 <h4>Conflicts — same learner in two batches of one program</h4>
                 <ul className="zoho-batch-preview__list">
                   {batchPreview.conflicts.map((c, i) => (
                     <li key={`${c.email}-${c.program}-${i}`}>
-                      <strong>{c.email}</strong> [{c.program?.toUpperCase()}] → {c.batches.join(' | ')}
+                      <strong>{c.email}</strong> [{c.program?.toUpperCase()}] →{' '}
+                      {c.batches.join(' | ')}
                     </li>
                   ))}
                 </ul>
               </>
             )}
 
-            {(batchPreview.invalidValues?.length > 0) && (
+            {batchPreview.invalidValues?.length > 0 && (
               <>
                 <h4>Invalid batch values — skipped</h4>
                 <ul className="zoho-batch-preview__list">
                   {batchPreview.invalidValues.map((v, i) => (
                     <li key={`${v.recordId || v.email}-${i}`}>
-                      <strong>{v.email}</strong> [{v.program?.toUpperCase()}] &quot;{v.rawBatch}&quot; —{' '}
-                      {v.reason}
+                      <strong>{v.email}</strong> [{v.program?.toUpperCase()}] &quot;{v.rawBatch}
+                      &quot; — {v.reason}
                     </li>
                   ))}
                 </ul>
@@ -964,8 +1041,8 @@ export default function ZohoIntegration({ users = [] }) {
         <div className="alert alert-success">
           {syncResult.message || (
             <>
-              Push complete: {syncResult.synced} synced, {syncResult.failed} failed (of {syncResult.total}{' '}
-              LMS profiles).
+              Push complete: {syncResult.synced} synced, {syncResult.failed} failed (of{' '}
+              {syncResult.total} LMS profiles).
             </>
           )}
           {syncResult.errors?.length > 0 && (
@@ -989,7 +1066,11 @@ export default function ZohoIntegration({ users = [] }) {
               className={directoryTab === t.id ? 'active' : ''}
               onClick={() => switchDirectoryTab(t.id)}
             >
-              {t.id === 'lms' ? <Users size={14} style={{ marginRight: 4 }} /> : <Database size={14} style={{ marginRight: 4 }} />}
+              {t.id === 'lms' ? (
+                <Users size={14} style={{ marginRight: 4 }} />
+              ) : (
+                <Database size={14} style={{ marginRight: 4 }} />
+              )}
               {t.label}
             </button>
           ))}
@@ -1011,8 +1092,8 @@ export default function ZohoIntegration({ users = [] }) {
         <div className="card card-pad">
           <h3>LMS users linked to Zoho</h3>
           <p className="muted">
-            {syncedCount} of {users.length} LMS accounts have a linked Zoho lead ID. Users appear here after
-            they sign up or you provision them from Zoho.
+            {syncedCount} of {users.length} LMS accounts have a linked Zoho lead ID. Users appear
+            here after they sign up or you provision them from Zoho.
           </p>
 
           {renderDirectorySearch(filteredLmsUsers.length, lmsUsersSorted.length)}
@@ -1042,40 +1123,40 @@ export default function ZohoIntegration({ users = [] }) {
                   </tr>
                 ) : (
                   filteredLmsUsers.map((u) => (
-                  <tr key={u.id}>
-                    <td>{u.displayName || '—'}</td>
-                    <td>{u.email || '—'}</td>
-                    <td className="muted">{formatUserCreatedAt(u.createdAt)}</td>
-                    <td className="muted">{inferUserOrigin(u)}</td>
-                    <td>{u.paymentStatus || u.accessTier || '—'}</td>
-                    <td>
-                      {(u.zohoLeadId || u.zohoContactId) ? (
-                        <code>{u.zohoLeadId || u.zohoContactId}</code>
-                      ) : (
-                        <span className="muted">Not linked</span>
-                      )}
-                    </td>
-                    <td>{u.zohoSyncedAt?.toDate?.()?.toLocaleString?.() || '—'}</td>
-                    <td>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline"
-                        disabled={syncingUserId === u.id || !u.email}
-                        onClick={() => handleSyncUser(u.id)}
-                      >
-                        {syncingUserId === u.id ? 'Pushing…' : 'Push'}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-primary"
-                        style={{ marginLeft: 6 }}
-                        disabled={provisioningEmail === u.email || !u.email}
-                        onClick={() => handleProvision(u.email)}
-                      >
-                        {provisioningEmail === u.email ? 'Provisioning…' : 'Provision'}
-                      </button>
-                    </td>
-                  </tr>
+                    <tr key={u.id}>
+                      <td>{u.displayName || '—'}</td>
+                      <td>{u.email || '—'}</td>
+                      <td className="muted">{formatUserCreatedAt(u.createdAt)}</td>
+                      <td className="muted">{inferUserOrigin(u)}</td>
+                      <td>{u.paymentStatus || u.accessTier || '—'}</td>
+                      <td>
+                        {u.zohoLeadId || u.zohoContactId ? (
+                          <code>{u.zohoLeadId || u.zohoContactId}</code>
+                        ) : (
+                          <span className="muted">Not linked</span>
+                        )}
+                      </td>
+                      <td>{u.zohoSyncedAt?.toDate?.()?.toLocaleString?.() || '—'}</td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline"
+                          disabled={syncingUserId === u.id || !u.email}
+                          onClick={() => handleSyncUser(u.id)}
+                        >
+                          {syncingUserId === u.id ? 'Pushing…' : 'Push'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-primary"
+                          style={{ marginLeft: 6 }}
+                          disabled={provisioningEmail === u.email || !u.email}
+                          onClick={() => handleProvision(u.email)}
+                        >
+                          {provisioningEmail === u.email ? 'Provisioning…' : 'Provision'}
+                        </button>
+                      </td>
+                    </tr>
                   ))
                 )}
               </tbody>
@@ -1088,8 +1169,8 @@ export default function ZohoIntegration({ users = [] }) {
         <div className="card card-pad">
           <h3>Zoho Leads</h3>
           <p className="muted">
-            All leads in your Zoho CRM Leads module (paginated). Use <strong>Provision</strong> to create or
-            update the matching LMS account from Lead + IL_Users data.
+            All leads in your Zoho CRM Leads module (paginated). Use <strong>Provision</strong> to
+            create or update the matching LMS account from Lead + IL_Users data.
           </p>
           {directoryLoading ? (
             <p className="muted">Loading leads from Zoho…</p>
@@ -1121,24 +1202,24 @@ export default function ZohoIntegration({ users = [] }) {
                       </tr>
                     ) : (
                       filteredLeadRows.map((row) => (
-                      <tr key={row.id}>
-                        <td>{row.name || '—'}</td>
-                        <td>{row.email || '—'}</td>
-                        <td>{row.program || '—'}</td>
-                        <td>{row.paymentStatus || row.accessTier || '—'}</td>
-                        <td>{row.leadStatus || '—'}</td>
-                        <td>{renderInLmsBadge(row.email)}</td>
-                        <td>
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-primary"
-                            disabled={!row.email || provisioningEmail === row.email}
-                            onClick={() => handleProvision(row.email)}
-                          >
-                            {provisioningEmail === row.email ? 'Provisioning…' : 'Provision'}
-                          </button>
-                        </td>
-                      </tr>
+                        <tr key={row.id}>
+                          <td>{row.name || '—'}</td>
+                          <td>{row.email || '—'}</td>
+                          <td>{row.program || '—'}</td>
+                          <td>{row.paymentStatus || row.accessTier || '—'}</td>
+                          <td>{row.leadStatus || '—'}</td>
+                          <td>{renderInLmsBadge(row.email)}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-primary"
+                              disabled={!row.email || provisioningEmail === row.email}
+                              onClick={() => handleProvision(row.email)}
+                            >
+                              {provisioningEmail === row.email ? 'Provisioning…' : 'Provision'}
+                            </button>
+                          </td>
+                        </tr>
                       ))
                     )}
                   </tbody>
@@ -1174,8 +1255,8 @@ export default function ZohoIntegration({ users = [] }) {
         <div className="card card-pad">
           <h3>Zoho IL Users</h3>
           <p className="muted">
-            Credential records from the IL_Users module (Pre-IL registration). These are the accounts students
-            use to log in once provisioned.
+            Credential records from the IL_Users module (Pre-IL registration). These are the
+            accounts students use to log in once provisioned.
           </p>
           {directoryLoading ? (
             <p className="muted">Loading IL Users from Zoho…</p>
@@ -1206,25 +1287,28 @@ export default function ZohoIntegration({ users = [] }) {
                       </tr>
                     ) : (
                       filteredIlUserRows.map((row) => (
-                      <tr key={row.id}>
-                        <td>{row.name || row.username || '—'}</td>
-                        <td>{row.email || row.username || '—'}</td>
-                        <td>{row.phone || '—'}</td>
-                        <td>{row.hasPassword ? 'Yes' : 'No'}</td>
-                        <td>{renderInLmsBadge(row.email || row.username)}</td>
-                        <td>
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-primary"
-                            disabled={!(row.email || row.username) || provisioningEmail === (row.email || row.username)}
-                            onClick={() => handleProvision(row.email || row.username)}
-                          >
-                            {provisioningEmail === (row.email || row.username)
-                              ? 'Provisioning…'
-                              : 'Provision'}
-                          </button>
-                        </td>
-                      </tr>
+                        <tr key={row.id}>
+                          <td>{row.name || row.username || '—'}</td>
+                          <td>{row.email || row.username || '—'}</td>
+                          <td>{row.phone || '—'}</td>
+                          <td>{row.hasPassword ? 'Yes' : 'No'}</td>
+                          <td>{renderInLmsBadge(row.email || row.username)}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-primary"
+                              disabled={
+                                !(row.email || row.username) ||
+                                provisioningEmail === (row.email || row.username)
+                              }
+                              onClick={() => handleProvision(row.email || row.username)}
+                            >
+                              {provisioningEmail === (row.email || row.username)
+                                ? 'Provisioning…'
+                                : 'Provision'}
+                            </button>
+                          </td>
+                        </tr>
                       ))
                     )}
                   </tbody>
@@ -1260,8 +1344,8 @@ export default function ZohoIntegration({ users = [] }) {
         <div className="card card-pad">
           <h3>Zoho IL Registration</h3>
           <p className="muted">
-            Cohort tracker — usually matches your master sheet (Batch, Current Status, program). Batch sync
-            prefers these records over IL_Users when the email exists in both.
+            Cohort tracker — usually matches your master sheet (Batch, Current Status, program).
+            Batch sync prefers these records over IL_Users when the email exists in both.
           </p>
           {directoryLoading ? (
             <p className="muted">Loading IL Registration from Zoho…</p>
@@ -1288,7 +1372,8 @@ export default function ZohoIntegration({ users = [] }) {
                     {filteredIlRegistrationRows.length === 0 ? (
                       <tr>
                         <td colSpan={7} className="muted">
-                          No IL Registration rows on this page match &ldquo;{directorySearch.trim()}&rdquo;.
+                          No IL Registration rows on this page match &ldquo;{directorySearch.trim()}
+                          &rdquo;.
                         </td>
                       </tr>
                     ) : (

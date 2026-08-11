@@ -14,11 +14,7 @@ import { db } from '../firebase/config';
 import { uploadFile } from './storageService';
 import { loadLocalSubmissions, saveLocalSubmission, getLocalSubmission } from './bm100LocalStore';
 import { recordSubmissionEvent } from './submissionEventService';
-import {
-  TASK_TYPES,
-  SUBMISSION_STATUS,
-  currentWeekLabel,
-} from './mbwService';
+import { TASK_TYPES, SUBMISSION_STATUS, currentWeekLabel } from './mbwService';
 import { getBm100StaticTasks } from '../data/bm100StaticTasks';
 import { statusForReviewOutcome, buildReviewEntry } from '../utils/submissionReview';
 import { mergeInQuery } from '../utils/firestoreChunks';
@@ -181,7 +177,11 @@ export async function saveSubmission(userId, taskId, payload, { batchId = 'defau
         ? data
         : { ...data, createdAt: serverTimestamp() };
       await setDoc(ref, writeData, { merge: true });
-      const qualifying = [SUBMISSION_STATUS.SUBMITTED, SUBMISSION_STATUS.UNDER_REVIEW, SUBMISSION_STATUS.COMPLETED];
+      const qualifying = [
+        SUBMISSION_STATUS.SUBMITTED,
+        SUBMISSION_STATUS.UNDER_REVIEW,
+        SUBMISSION_STATUS.COMPLETED,
+      ];
       if (qualifying.includes(payload.status)) {
         recordSubmissionEvent({
           learnerId: userId,

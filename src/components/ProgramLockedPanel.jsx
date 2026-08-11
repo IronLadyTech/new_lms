@@ -25,8 +25,8 @@ export default function ProgramLockedPanel({
       <h1 className="program-lock__title">{title}</h1>
       <p className="program-lock__message">{message}</p>
       <p className="program-lock__hint muted">
-        Iron Lady path: LEP → 100BM → MBW. Each program opens only with enrollment —{' '}
-        {programLabel} stays locked until Iron Lady unlocks it for you.
+        Iron Lady path: LEP → 100BM → MBW. Each program opens only with enrollment — {programLabel}{' '}
+        stays locked until Iron Lady unlocks it for you.
       </p>
       <div className="program-lock__actions">
         <Link to="/app/home" className="btn btn-primary">

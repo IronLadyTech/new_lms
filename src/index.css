@@ -9,9 +9,10 @@
   --il-charcoal: #231f20;
   --il-gold: #f5b301;
   --il-pink-cta: #ff5a77;
-  /* Accessible text-on-surface variants (WCAG AA); brand red unchanged for non-text */
+  /* Accessible text-on-surface variants (WCAG AA); brand red unchanged for non-text.
+     --primary-text is theme-scoped below: il-red-deep is 5.88:1 on white but only
+     2.97:1 on the dark surface, so dark mode uses the lighter --primary-on-dark. */
   --primary-cta-bg: var(--il-red-hover);
-  --primary-text: var(--il-red-deep);
   --font-heading: 'Gemunu Libre', system-ui, sans-serif;
   --font-body: 'Fira Sans', system-ui, sans-serif;
   --radius: 12px;
@@ -26,13 +27,13 @@
   --space-xl: 32px;
   --space-2xl: 48px;
   /* Type scale — 7 steps (UX audit H-1). Floor is 12px. */
-  --text-xs: 0.75rem;   /* 12px — badges, nav labels, meta */
-  --text-sm: 0.875rem;  /* 14px — secondary, captions */
-  --text-base: 1rem;    /* 16px — body */
-  --text-lg: 1.125rem;  /* 18px */
-  --text-xl: 1.375rem;  /* 22px */
-  --text-2xl: 1.75rem;  /* 28px */
-  --text-3xl: 2.25rem;  /* 36px */
+  --text-xs: 0.75rem; /* 12px — badges, nav labels, meta */
+  --text-sm: 0.875rem; /* 14px — secondary, captions */
+  --text-base: 1rem; /* 16px — body */
+  --text-lg: 1.125rem; /* 18px */
+  --text-xl: 1.375rem; /* 22px */
+  --text-2xl: 1.75rem; /* 28px */
+  --text-3xl: 2.25rem; /* 36px */
   /* Extra spacing steps so real UI gaps map to tokens (H-3) */
   --space-2xs: 6px;
   --space-2sm: 12px;
@@ -78,6 +79,7 @@
   --primary-soft-bg: color-mix(in srgb, var(--il-red) 8%, transparent);
   --primary-ring: color-mix(in srgb, var(--il-red) 45%, transparent);
   --primary-on-dark: #ff8a8a;
+  --primary-text: #ff8a8a; /* 7.71:1 on --surface */
   --danger: #ef4444;
   --success: #22c55e;
   --warning: #e8a020;
@@ -87,7 +89,11 @@
   --shadow-md: 0 16px 40px rgba(0, 0, 0, 0.35);
   --shadow-sm: 0 8px 20px rgba(0, 0, 0, 0.28);
   --overlay-bg: rgba(8, 6, 8, 0.72);
-  --auth-gradient: radial-gradient(ellipse at top, color-mix(in srgb, var(--il-red) 28%, #141012) 0%, var(--bg) 60%);
+  --auth-gradient: radial-gradient(
+    ellipse at top,
+    color-mix(in srgb, var(--il-red) 28%, #141012) 0%,
+    var(--bg) 60%
+  );
   --guest-lock-bg: linear-gradient(165deg, rgba(30, 24, 26, 0.98) 0%, rgba(20, 16, 18, 0.98) 100%);
   --guest-lock-shadow: 0 24px 48px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   --input-bg: var(--surface-2);
@@ -135,6 +141,7 @@
   --primary-soft-bg: color-mix(in srgb, var(--il-red) 6%, transparent);
   --primary-ring: color-mix(in srgb, var(--il-red) 35%, transparent);
   --primary-on-dark: var(--il-red-deep);
+  --primary-text: var(--il-red-deep); /* 5.88:1 on #fff, 5.40:1 on --bg */
   --danger: #dc2626;
   --success: #16a34a;
   --warning: #d97706;
@@ -209,12 +216,9 @@ html {
 }
 
 a {
+  /* --primary-text is theme-scoped, so this is correct in both themes. */
   color: var(--primary-text);
   text-decoration: none;
-}
-
-[data-theme='dark'] a {
-  color: var(--primary-on-dark);
 }
 
 a:hover {
@@ -413,7 +417,9 @@ img.logo-mark {
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
 }
 
 .password-input__toggle:hover {
@@ -456,7 +462,9 @@ img.logo-mark {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
+  transition:
+    background 0.15s,
+    opacity 0.15s;
 }
 
 .btn:disabled {
@@ -1095,7 +1103,9 @@ html:has(.student-layout--mbw) #root {
   flex-direction: column;
   border-radius: calc(var(--radius) + 2px);
   box-shadow: var(--shadow-md);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
   overflow: hidden;
   background: var(--surface);
 }
@@ -1244,12 +1254,12 @@ html:has(.student-layout--mbw) #root {
 }
 
 .course-card__tag--upcoming {
-  background: color-mix(in srgb, var(--accent, #F5B301) 22%, var(--surface));
+  background: color-mix(in srgb, var(--accent, #f5b301) 22%, var(--surface));
   color: var(--il-charcoal);
 }
 
 .course-card__tag--locked {
-  background: var(--surface-2, #EBEADC);
+  background: var(--surface-2, #ebeadc);
   color: var(--muted);
 }
 
@@ -1984,7 +1994,9 @@ html:has(.student-layout--mbw) #root {
   color: var(--text);
   font: inherit;
   min-width: 140px;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .admin-form input:focus-visible,
@@ -2193,7 +2205,9 @@ html:has(.student-layout--mbw) #root {
   text-align: left;
   position: relative;
   overflow: hidden;
-  transition: transform 0.15s, border-color 0.15s;
+  transition:
+    transform 0.15s,
+    border-color 0.15s;
 }
 
 .stat-card:hover {
@@ -2229,14 +2243,30 @@ html:has(.student-layout--mbw) #root {
 }
 
 /* Colored accents per stat */
-.stat-card--indigo .stat-card__icon { background: rgba(99, 102, 241, 0.18); }
-.stat-card--blue .stat-card__icon { background: rgba(245, 41, 41, 0.18); }
-.stat-card--violet .stat-card__icon { background: rgba(139, 92, 246, 0.18); }
-.stat-card--green .stat-card__icon { background: rgba(34, 197, 94, 0.18); }
-.stat-card--teal .stat-card__icon { background: rgba(20, 184, 166, 0.18); }
-.stat-card--cyan .stat-card__icon { background: rgba(6, 182, 212, 0.18); }
-.stat-card--amber .stat-card__icon { background: rgba(245, 158, 11, 0.18); }
-.stat-card--amber .stat-card__value { color: #f59e0b; }
+.stat-card--indigo .stat-card__icon {
+  background: rgba(99, 102, 241, 0.18);
+}
+.stat-card--blue .stat-card__icon {
+  background: rgba(245, 41, 41, 0.18);
+}
+.stat-card--violet .stat-card__icon {
+  background: rgba(139, 92, 246, 0.18);
+}
+.stat-card--green .stat-card__icon {
+  background: rgba(34, 197, 94, 0.18);
+}
+.stat-card--teal .stat-card__icon {
+  background: rgba(20, 184, 166, 0.18);
+}
+.stat-card--cyan .stat-card__icon {
+  background: rgba(6, 182, 212, 0.18);
+}
+.stat-card--amber .stat-card__icon {
+  background: rgba(245, 158, 11, 0.18);
+}
+.stat-card--amber .stat-card__value {
+  color: #f59e0b;
+}
 
 /* Premium admin cards & forms */
 .admin-section {
@@ -2423,7 +2453,9 @@ html:has(.student-layout--mbw) #root {
   background: var(--input-bg);
   color: var(--text);
   font: inherit;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
   width: 100%;
 }
 
@@ -2470,13 +2502,27 @@ html:has(.student-layout--mbw) #root {
   color: var(--primary);
 }
 
-.stat-card--amber .stat-card__icon { color: #f59e0b; }
-.stat-card--green .stat-card__icon { color: #22c55e; }
-.stat-card--teal .stat-card__icon { color: #14b8a6; }
-.stat-card--cyan .stat-card__icon { color: #06b6d4; }
-.stat-card--blue .stat-card__icon { color: var(--primary); }
-.stat-card--violet .stat-card__icon { color: #8b5cf6; }
-.stat-card--indigo .stat-card__icon { color: #6366f1; }
+.stat-card--amber .stat-card__icon {
+  color: #f59e0b;
+}
+.stat-card--green .stat-card__icon {
+  color: #22c55e;
+}
+.stat-card--teal .stat-card__icon {
+  color: #14b8a6;
+}
+.stat-card--cyan .stat-card__icon {
+  color: #06b6d4;
+}
+.stat-card--blue .stat-card__icon {
+  color: var(--primary);
+}
+.stat-card--violet .stat-card__icon {
+  color: #8b5cf6;
+}
+.stat-card--indigo .stat-card__icon {
+  color: #6366f1;
+}
 
 .admin-sidebar__link.is-active .admin-sidebar__icon {
   color: #fff;
@@ -2525,7 +2571,10 @@ html:has(.student-layout--mbw) #root {
   font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    background 0.15s;
 }
 
 .role-select__trigger:hover {
@@ -2583,8 +2632,14 @@ html:has(.student-layout--mbw) #root {
 }
 
 @keyframes roleMenuIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .role-select__option {
@@ -2632,13 +2687,21 @@ html:has(.student-layout--mbw) #root {
 
 /* Tone accents (icon colors) */
 .role-select__trigger--blue .role-select__current svg,
-.role-select__option--blue .role-select__option-icon { color: var(--primary); }
+.role-select__option--blue .role-select__option-icon {
+  color: var(--primary);
+}
 .role-select__trigger--teal .role-select__current svg,
-.role-select__option--teal .role-select__option-icon { color: #14b8a6; }
+.role-select__option--teal .role-select__option-icon {
+  color: #14b8a6;
+}
 .role-select__trigger--violet .role-select__current svg,
-.role-select__option--violet .role-select__option-icon { color: #8b5cf6; }
+.role-select__option--violet .role-select__option-icon {
+  color: #8b5cf6;
+}
 .role-select__trigger--amber .role-select__current svg,
-.role-select__option--amber .role-select__option-icon { color: #f59e0b; }
+.role-select__option--amber .role-select__option-icon {
+  color: #f59e0b;
+}
 
 .overview-alert:hover {
   background: rgba(245, 158, 11, 0.2);
@@ -2758,7 +2821,9 @@ html:has(.student-layout--mbw) #root {
   color: var(--text);
   cursor: pointer;
   font: inherit;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 
 .portal-gate__btn:hover {
@@ -3315,7 +3380,10 @@ html:has(.student-layout--mbw) #root {
   font-weight: 600;
   text-decoration: none;
   word-break: break-all;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background 0.15s;
 }
 
 .guest-lock__email:hover {
@@ -3383,7 +3451,9 @@ html:has(.student-layout--mbw) #root {
     width: 280px;
     max-width: 85vw;
     transform: translateX(-105%);
-    transition: transform 0.25s ease, visibility 0.25s ease;
+    transition:
+      transform 0.25s ease,
+      visibility 0.25s ease;
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
     overflow-y: auto;
     visibility: hidden;
@@ -3618,10 +3688,18 @@ html:has(.student-layout--mbw) #root {
   background: var(--surface-2);
 }
 
-.event-calendar__event-card--general { border-left: 3px solid var(--primary); }
-.event-calendar__event-card--class { border-left: 3px solid #22c55e; }
-.event-calendar__event-card--deadline { border-left: 3px solid #ef4444; }
-.event-calendar__event-card--meeting { border-left: 3px solid #a855f7; }
+.event-calendar__event-card--general {
+  border-left: 3px solid var(--primary);
+}
+.event-calendar__event-card--class {
+  border-left: 3px solid #22c55e;
+}
+.event-calendar__event-card--deadline {
+  border-left: 3px solid #ef4444;
+}
+.event-calendar__event-card--meeting {
+  border-left: 3px solid #a855f7;
+}
 
 .event-calendar__event-image {
   width: 100%;
@@ -3664,10 +3742,22 @@ html:has(.student-layout--mbw) #root {
   color: var(--primary);
 }
 
-.badge-event--general { background: var(--primary-muted); color: var(--primary-on-dark); }
-.badge-event--class { background: rgba(34, 197, 94, 0.18); color: #86efac; }
-.badge-event--deadline { background: rgba(239, 68, 68, 0.18); color: #fca5a5; }
-.badge-event--meeting { background: rgba(168, 85, 247, 0.18); color: #d8b4fe; }
+.badge-event--general {
+  background: var(--primary-muted);
+  color: var(--primary-on-dark);
+}
+.badge-event--class {
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+}
+.badge-event--deadline {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+}
+.badge-event--meeting {
+  background: rgba(168, 85, 247, 0.18);
+  color: #d8b4fe;
+}
 
 .learner-calendar__legend {
   display: flex;
@@ -3691,10 +3781,18 @@ html:has(.student-layout--mbw) #root {
   border-radius: 999px;
 }
 
-.learner-calendar__legend-item--general::before { background: var(--primary); }
-.learner-calendar__legend-item--class::before { background: #22c55e; }
-.learner-calendar__legend-item--deadline::before { background: #ef4444; }
-.learner-calendar__legend-item--meeting::before { background: #a855f7; }
+.learner-calendar__legend-item--general::before {
+  background: var(--primary);
+}
+.learner-calendar__legend-item--class::before {
+  background: #22c55e;
+}
+.learner-calendar__legend-item--deadline::before {
+  background: #ef4444;
+}
+.learner-calendar__legend-item--meeting::before {
+  background: #a855f7;
+}
 
 .learner-calendar__month-head {
   display: flex;
@@ -3714,10 +3812,18 @@ html:has(.student-layout--mbw) #root {
   flex-shrink: 0;
 }
 
-.learner-calendar__type-dot--general { background: var(--primary); }
-.learner-calendar__type-dot--class { background: #22c55e; }
-.learner-calendar__type-dot--deadline { background: #ef4444; }
-.learner-calendar__type-dot--meeting { background: #a855f7; }
+.learner-calendar__type-dot--general {
+  background: var(--primary);
+}
+.learner-calendar__type-dot--class {
+  background: #22c55e;
+}
+.learner-calendar__type-dot--deadline {
+  background: #ef4444;
+}
+.learner-calendar__type-dot--meeting {
+  background: #a855f7;
+}
 
 .learner-calendar__sidebar h3 {
   margin-top: 0;
@@ -4448,7 +4554,9 @@ body.notification-sheet-open .mbw-lesson-nav--sticky {
   color: inherit;
   width: 100%;
   text-align: left;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 
 .event-preview-card--button {
@@ -4646,7 +4754,10 @@ body.notification-sheet-open .mbw-lesson-nav--sticky {
   font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
-  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease;
 }
 
 .learner-calendar__view-btn.is-active {
@@ -5090,7 +5201,10 @@ body.notification-sheet-open .mbw-lesson-nav--sticky {
   color: var(--text);
   cursor: pointer;
   flex-shrink: 0;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    color 0.15s;
 }
 
 .theme-toggle--compact:hover {
@@ -5136,7 +5250,10 @@ body.notification-sheet-open .mbw-lesson-nav--sticky {
   font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    color 0.15s;
 }
 
 .theme-toggle-group__btn:hover {
@@ -5194,7 +5311,11 @@ body.notification-sheet-open .mbw-lesson-nav--sticky {
   padding: 1.15rem var(--space-md);
   border-radius: calc(var(--radius) + 2px);
   border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--border));
-  background: linear-gradient(135deg, var(--surface) 0%, color-mix(in srgb, var(--il-cream) 35%, var(--surface-2)) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--surface) 0%,
+    color-mix(in srgb, var(--il-cream) 35%, var(--surface-2)) 100%
+  );
   box-shadow: var(--shadow-md);
 }
 
@@ -5702,7 +5823,9 @@ body.notification-sheet-open .mbw-lesson-nav--sticky {
   color: #fff;
   cursor: pointer;
   filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.55));
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
   opacity: 0.92;
 }
 
@@ -5758,7 +5881,9 @@ body.notification-sheet-open .mbw-lesson-nav--sticky {
   border-radius: 999px;
   background: var(--border);
   transform: translate(-50%, -50%);
-  transition: width 0.25s ease, background 0.2s ease;
+  transition:
+    width 0.25s ease,
+    background 0.2s ease;
 }
 
 .home-banner-carousel__dot.is-active::after {
@@ -5945,7 +6070,9 @@ body.notification-sheet-open .mbw-lesson-nav--sticky {
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
 }
 
 .streak-heatmap-card__share:hover,
@@ -6047,7 +6174,9 @@ body.notification-sheet-open .mbw-lesson-nav--sticky {
   border: none;
   border-radius: 3px;
   cursor: default;
-  transition: background 0.35s ease, transform 0.2s ease;
+  transition:
+    background 0.35s ease,
+    transform 0.2s ease;
 }
 
 button.streak-heatmap__cell {
@@ -6068,12 +6197,24 @@ button.streak-heatmap__cell:focus-visible {
   }
 }
 
-.streak-heatmap__cell--l0 { background: var(--surface-2, #ebedf0); }
-.streak-heatmap__cell--l1 { background: #ef4444; }
-.streak-heatmap__cell--l2 { background: #f97316; }
-.streak-heatmap__cell--l3 { background: #eab308; }
-.streak-heatmap__cell--l4 { background: #86efac; }
-.streak-heatmap__cell--l5 { background: #16a34a; }
+.streak-heatmap__cell--l0 {
+  background: var(--surface-2, #ebedf0);
+}
+.streak-heatmap__cell--l1 {
+  background: #ef4444;
+}
+.streak-heatmap__cell--l2 {
+  background: #f97316;
+}
+.streak-heatmap__cell--l3 {
+  background: #eab308;
+}
+.streak-heatmap__cell--l4 {
+  background: #86efac;
+}
+.streak-heatmap__cell--l5 {
+  background: #16a34a;
+}
 
 .streak-heatmap__cell--today {
   outline: 2px solid #1e293b;
@@ -6430,14 +6571,20 @@ button.streak-heatmap__cell:focus-visible {
 }
 
 @keyframes streak-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .stat-card--streak-live {
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.15s ease, transform 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease;
 }
 
 .stat-card--streak-live:hover {
@@ -6687,8 +6834,7 @@ button.streak-heatmap__cell:focus-visible {
   border: none;
   background:
     linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.72) 100%),
-    radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.08), transparent 55%),
-    #1a1a1a;
+    radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.08), transparent 55%), #1a1a1a;
   color: #fff;
   cursor: pointer;
   text-align: center;
@@ -6697,8 +6843,7 @@ button.streak-heatmap__cell:focus-visible {
 .mbw-video__poster:hover {
   background:
     linear-gradient(180deg, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0.65) 100%),
-    radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.12), transparent 55%),
-    #222;
+    radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.12), transparent 55%), #222;
 }
 
 .mbw-video__poster-icon {
@@ -7100,7 +7245,9 @@ button.streak-heatmap__cell:focus-visible {
   border: 1px solid var(--border, #e8e4de);
   border-radius: 8px;
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .mbw-checklist__item:hover {
@@ -7355,7 +7502,9 @@ button.streak-heatmap__cell:focus-visible {
   color: var(--primary);
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 150ms ease, color 150ms ease;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
 }
 
 .bm100-task-materials__link:hover {
@@ -7837,7 +7986,9 @@ button.streak-heatmap__cell:focus-visible {
   border: 1px solid var(--border);
   border-radius: var(--radius-md, 10px);
   cursor: pointer;
-  transition: border-color 150ms ease, background-color 150ms ease;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
 }
 
 .cx-review-outcome:hover {
@@ -9409,7 +9560,9 @@ button.streak-heatmap__cell:focus-visible {
   padding: var(--space-xs);
   border-radius: 6px;
   background: color-mix(in srgb, var(--warning, #e8a020) 14%, transparent);
-  transition: color 0.15s ease, background 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
 }
 
 .mbw-section-card__pay-lock--inline {
@@ -9983,7 +10136,8 @@ button.streak-heatmap__cell:focus-visible {
 
   .student-layout--course .mbw-program-page.mbw-program-page--lesson {
     padding-bottom: calc(
-      var(--nav-h, 72px) + env(safe-area-inset-bottom, 0px) + var(--mbw-lesson-sticky-h, 4.75rem) + 1.5rem
+      var(--nav-h, 72px) + env(safe-area-inset-bottom, 0px) + var(--mbw-lesson-sticky-h, 4.75rem) +
+        1.5rem
     );
   }
 
@@ -10344,12 +10498,19 @@ button.streak-heatmap__cell:focus-visible {
   font-size: var(--text-xs);
   cursor: pointer;
   appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
     linear-gradient(135deg, var(--muted) 50%, transparent 50%);
-  background-position: calc(100% - 14px) 55%, calc(100% - 9px) 55%;
-  background-size: 5px 5px, 5px 5px;
+  background-position:
+    calc(100% - 14px) 55%,
+    calc(100% - 9px) 55%;
+  background-size:
+    5px 5px,
+    5px 5px;
   background-repeat: no-repeat;
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .cx-topbar__program-select:hover {
@@ -10473,7 +10634,9 @@ button.streak-heatmap__cell:focus-visible {
 
 .cx-status-legend__row--btn {
   cursor: pointer;
-  transition: background-color 0.18s ease, border-color 0.18s ease;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease;
 }
 
 .cx-status-legend__row--btn:hover {
@@ -10553,7 +10716,9 @@ button.streak-heatmap__cell:focus-visible {
   font-size: var(--text-sm);
   text-align: left;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .cx-chart-drill-legend__row:hover {
@@ -10868,7 +11033,10 @@ button.streak-heatmap__cell:focus-visible {
   padding: var(--space-2xs) var(--space-2sm);
   border-radius: var(--radius-pill);
   color: var(--muted);
-  transition: background 0.18s ease, color 0.18s ease, opacity 0.18s ease;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    opacity 0.18s ease;
   min-height: 44px;
 }
 
@@ -11026,7 +11194,9 @@ button.streak-heatmap__cell:focus-visible {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .cx-attention-card:hover {
@@ -11138,7 +11308,9 @@ button.streak-heatmap__cell:focus-visible {
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--il-beige) 15%, var(--surface));
   overflow: hidden;
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .cx-batch-card-home:hover {
@@ -11264,7 +11436,9 @@ button.streak-heatmap__cell:focus-visible {
   color: inherit;
   font: inherit;
   text-align: left;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .cx-kpi--interactive {
@@ -11438,6 +11612,113 @@ button.streak-heatmap__cell:focus-visible {
 
 .cx-panel__body--scroll {
   overflow-x: auto;
+}
+
+/* Guest access requests (admin inbox) */
+.access-request__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+  margin: var(--space-md) 0;
+}
+
+.access-request {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.access-request__body {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.access-request__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2xs);
+  margin-bottom: var(--space-2xs);
+}
+
+.access-request__email {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  font-size: var(--text-sm);
+  word-break: break-word;
+}
+
+.access-request__message {
+  margin: var(--space-2xs) 0 0;
+  font-size: var(--text-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.access-request__time {
+  margin: var(--space-2xs) 0 0;
+  font-size: var(--text-xs);
+}
+
+.access-request__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+}
+
+.access-request__status--new {
+  background: var(--primary-subtle);
+  color: var(--primary-text);
+}
+
+.access-request__status--contacted {
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+  color: var(--success);
+}
+
+.access-request__status--closed {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+/* Superadmin-only remediation detail, collapsed by default. */
+.admin-diagnostics {
+  margin-top: var(--space-sm);
+  font-size: var(--text-sm);
+}
+
+.admin-diagnostics summary {
+  cursor: pointer;
+  color: var(--muted);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.admin-search-note {
+  margin: calc(-1 * var(--space-2xs)) 0 var(--space-sm);
+  font-size: var(--text-xs);
+}
+
+/* Fetch-cap disclosure — the admin list is paged server-side; say so. */
+.admin-fetch-cap {
+  margin: var(--space-sm) 0;
+  padding: var(--space-sm) var(--space-2sm);
+  border-left: 3px solid var(--border-strong);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+/* Truncation disclosure — the queue previews N of M, never silently. */
+.cx-panel__more {
+  margin: var(--space-2sm) 0 0;
+  padding-top: var(--space-2sm);
+  border-top: 1px solid var(--border);
+  font-size: var(--text-sm);
 }
 
 .cx-panel__foot {
@@ -11788,7 +12069,9 @@ button.streak-heatmap__cell:focus-visible {
   font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
-  transition: border-color 0.18s ease, background 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
 }
 
 .cx-quick-action:hover {
@@ -11822,7 +12105,9 @@ button.streak-heatmap__cell:focus-visible {
   color: var(--muted);
   padding: var(--space-sm) var(--space-2sm);
   border-radius: var(--radius-pill);
-  transition: background 0.18s ease, color 0.18s ease;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
   min-height: 44px;
 }
 
@@ -11971,10 +12256,15 @@ button.streak-heatmap__cell:focus-visible {
   padding: var(--space-2xs) 1.35rem var(--space-2xs) var(--space-sm);
   min-height: 44px;
   cursor: pointer;
-  background-image: linear-gradient(45deg, transparent 50%, #fff 50%),
+  background-image:
+    linear-gradient(45deg, transparent 50%, #fff 50%),
     linear-gradient(135deg, #fff 50%, transparent 50%);
-  background-position: calc(100% - 10px) 52%, calc(100% - 6px) 52%;
-  background-size: 4px 4px, 4px 4px;
+  background-position:
+    calc(100% - 10px) 52%,
+    calc(100% - 6px) 52%;
+  background-size:
+    4px 4px,
+    4px 4px;
   background-repeat: no-repeat;
 }
 
@@ -12061,7 +12351,9 @@ button.streak-heatmap__cell:focus-visible {
   background: var(--surface-2, var(--surface));
   text-decoration: none;
   color: var(--text);
-  transition: border-color 0.15s ease, transform 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease;
 }
 
 .cx-batch-card:hover {
@@ -12604,7 +12896,9 @@ a.cx-batch-row:hover {
   color: var(--muted);
   padding: var(--space-2xs) 0.8rem;
   border-radius: var(--radius-pill);
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .cx-board__view.is-active {
@@ -13418,7 +13712,9 @@ a.cx-bar--link:hover .cx-bar__label {
 /* Clickable stat card variant */
 .cx-stat--clickable {
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 
 .cx-stat--clickable:hover {
@@ -14383,8 +14679,12 @@ textarea:focus-visible,
 }
 
 @keyframes dashboard-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .cx-batch-remind-btn {
@@ -14650,7 +14950,9 @@ textarea:focus-visible,
   cursor: pointer;
   font: inherit;
   color: inherit;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .progress-stat--link:hover {
@@ -14690,7 +14992,10 @@ textarea:focus-visible,
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 .progress-filter__btn:hover {
@@ -14887,7 +15192,9 @@ textarea:focus-visible,
   background: var(--surface);
   box-shadow: var(--shadow-md);
   overflow: hidden;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .progress-program-card:hover {
@@ -14997,7 +15304,9 @@ textarea:focus-visible,
 }
 
 .progress-page .resource-card {
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .progress-page .resource-card:not(.resource-card--locked):hover {
@@ -15007,7 +15316,9 @@ textarea:focus-visible,
 
 .progress-page .activity-list li {
   border-radius: var(--radius);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .progress-page .activity-list li:hover {
@@ -15193,7 +15504,10 @@ textarea:focus-visible,
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--muted);
-  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 .course-contact__msg:hover,
@@ -15812,6 +16126,13 @@ body.notification-sheet-open .bottom-nav {
 
 .lesson-search__empty {
   padding: var(--space-md);
+}
+
+/* Result count — always states the true match total, never a silent truncation. */
+.lesson-search__count {
+  margin: 0;
+  padding: 0 var(--space-md) var(--space-2xs);
+  font-size: var(--text-xs);
 }
 
 .lesson-search__hint {

@@ -3,7 +3,14 @@ import { saveSubmissionBlob, submissionBlobKey } from '../../utils/submissionBlo
 import { getSubmissionProgramConfig } from './submissionProgramConfig';
 import TaskTemplateDownloads from './TaskTemplateDownloads';
 
-export default function FileUpload({ task, submission, canSubmit, userId, onSubmit, program = 'mbw' }) {
+export default function FileUpload({
+  task,
+  submission,
+  canSubmit,
+  userId,
+  onSubmit,
+  program = 'mbw',
+}) {
   const { storageEnabled, uploadFile } = getSubmissionProgramConfig(program);
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -108,7 +115,9 @@ export default function FileUpload({ task, submission, canSubmit, userId, onSubm
       )}
       {skipped && (
         <div className="mbw-submission__saved">
-          <p className="muted">You chose to continue without uploading. You can upload your file later.</p>
+          <p className="muted">
+            You chose to continue without uploading. You can upload your file later.
+          </p>
         </div>
       )}
       <input
@@ -119,8 +128,8 @@ export default function FileUpload({ task, submission, canSubmit, userId, onSubm
       />
       {!storageEnabled && (
         <p className="mbw-task__hint muted">
-          Cloud storage is not enabled — your file name is saved and the task completes; re-upload after
-          storage is configured to attach the file in the cloud.
+          Cloud storage is not enabled — your file name is saved and the task completes; re-upload
+          after storage is configured to attach the file in the cloud.
         </p>
       )}
       {error && <p className="alert alert-error">{error}</p>}

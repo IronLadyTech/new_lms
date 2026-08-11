@@ -37,9 +37,7 @@ export default function CourseRecordingsPanel({ recordings = [], program }) {
         sessions: getBatchRecordingSessions(program, p.id),
       }))
       .filter((p) => p.items.length > 0),
-    ...(other.length
-      ? [{ ...RECORDING_PHASE_OTHER, items: other, sessions: [] }]
-      : []),
+    ...(other.length ? [{ ...RECORDING_PHASE_OTHER, items: other, sessions: [] }] : []),
   ];
 
   const displayTitle = (rec, sessions) => {

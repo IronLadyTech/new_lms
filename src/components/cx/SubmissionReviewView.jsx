@@ -4,10 +4,7 @@ import { getSubmissionMediaUrls } from '../../utils/submissionMedia';
 
 function formatSubmissionDate(value) {
   if (!value) return '';
-  const date =
-    typeof value?.toDate === 'function'
-      ? value.toDate()
-      : new Date(value);
+  const date = typeof value?.toDate === 'function' ? value.toDate() : new Date(value);
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleString();
 }
 
@@ -87,12 +84,13 @@ export default function SubmissionReviewView({ submission, task }) {
         </div>
       )}
 
-      {submission.templateData && (submission.templateData.rows || submission.templateData.fields) && (
-        <div className="cx-review-block">
-          <h3 className="cx-review-block__title">Template</h3>
-          <TemplateReadOnly templateData={submission.templateData} task={task} />
-        </div>
-      )}
+      {submission.templateData &&
+        (submission.templateData.rows || submission.templateData.fields) && (
+          <div className="cx-review-block">
+            <h3 className="cx-review-block__title">Template</h3>
+            <TemplateReadOnly templateData={submission.templateData} task={task} />
+          </div>
+        )}
 
       {submission.weekEntries?.length > 0 && (
         <div className="cx-review-block">
@@ -122,9 +120,7 @@ export default function SubmissionReviewView({ submission, task }) {
       )}
 
       {submittedLabel && (
-        <p className="muted cx-review-submission__meta">
-          Submitted {submittedLabel}
-        </p>
+        <p className="muted cx-review-submission__meta">Submitted {submittedLabel}</p>
       )}
     </div>
   );

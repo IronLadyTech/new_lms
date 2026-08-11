@@ -43,9 +43,7 @@ export default function AnnouncementManager({ announcements, users, onRefresh, c
     const q = userQuery.trim().toLowerCase();
     if (!q) return studentUsers;
     return studentUsers.filter(
-      (u) =>
-        u.displayName?.toLowerCase().includes(q) ||
-        u.email?.toLowerCase().includes(q)
+      (u) => u.displayName?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)
     );
   }, [studentUsers, userQuery]);
 
@@ -116,7 +114,9 @@ export default function AnnouncementManager({ announcements, users, onRefresh, c
       taggedUserIds: item.taggedUserIds || [],
     });
     setMsg('');
-    document.getElementById('announcement-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document
+      .getElementById('announcement-form')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleDelete = async (id) => {
@@ -142,7 +142,11 @@ export default function AnnouncementManager({ announcements, users, onRefresh, c
 
   return (
     <div className="announcement-manager">
-      <form id="announcement-form" className="admin-form admin-form--stacked" onSubmit={handleSubmit}>
+      <form
+        id="announcement-form"
+        className="admin-form admin-form--stacked"
+        onSubmit={handleSubmit}
+      >
         <h3>{editingId ? 'Edit announcement' : 'New announcement'}</h3>
         <input
           placeholder="Title"
@@ -160,7 +164,10 @@ export default function AnnouncementManager({ announcements, users, onRefresh, c
         <div className="announcement-manager__row">
           <label>
             Visible for
-            <select value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })}>
+            <select
+              value={form.duration}
+              onChange={(e) => setForm({ ...form, duration: e.target.value })}
+            >
               {ANNOUNCEMENT_DURATIONS.map((d) => (
                 <option key={d.value} value={d.value}>
                   {d.label}
@@ -170,7 +177,10 @@ export default function AnnouncementManager({ announcements, users, onRefresh, c
           </label>
           <label>
             Audience
-            <select value={form.audience} onChange={(e) => setForm({ ...form, audience: e.target.value })}>
+            <select
+              value={form.audience}
+              onChange={(e) => setForm({ ...form, audience: e.target.value })}
+            >
               {ANNOUNCEMENT_AUDIENCES.map((a) => (
                 <option key={a.value} value={a.value}>
                   {a.label}
@@ -255,10 +265,18 @@ export default function AnnouncementManager({ announcements, users, onRefresh, c
                 </p>
               </div>
               <div className="admin-list__actions">
-                <button type="button" className="btn btn-sm btn-outline" onClick={() => startEdit(item)}>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline"
+                  onClick={() => startEdit(item)}
+                >
                   Edit
                 </button>
-                <button type="button" className="btn btn-sm btn-danger" onClick={() => handleDelete(item.id)}>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-danger"
+                  onClick={() => handleDelete(item.id)}
+                >
                   Delete
                 </button>
               </div>

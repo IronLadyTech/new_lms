@@ -13,13 +13,19 @@ import {
 } from '../../services/courseService';
 import {
   getAllUsers,
+  searchUsers,
+  USER_FETCH_LIMIT,
   getAllActivities,
   assignAdminRole,
   setUserProgram,
   setUserBlocked,
   getUserActivities,
 } from '../../services/userService';
-import { uploadResourceFile, uploadCourseAsset, resourceTypeFromFile } from '../../services/storageService';
+import {
+  uploadResourceFile,
+  uploadCourseAsset,
+  resourceTypeFromFile,
+} from '../../services/storageService';
 import {
   getGroups,
   createGroup,
@@ -62,16 +68,25 @@ import {
   ListChecks,
   Megaphone,
   HardDrive,
+  Inbox,
 } from 'lucide-react';
 import ConfirmDialog from '../ConfirmDialog';
 import UserProgressModal from './UserProgressModal';
 import { formatUserCreatedAt, inferUserOrigin } from '../../utils/userOrigin';
 import AnnouncementManager from './AnnouncementManager';
+import AccessRequestManager from './AccessRequestManager';
+import { getAccessRequests } from '../../services/accessRequestService';
 import { useConfirm } from '../../hooks/useConfirm';
 import { getAnnouncements } from '../../services/announcementService';
 import { deleteUserAccount } from '../../services/userAdminService';
 
 const RESOURCE_TYPES = ['video', 'pdf', 'ppt', 'assignment', 'mock_test'];
+
+/** Derived from config, never hardcoded — the project id is deployment-specific. */
+const FIREBASE_PROJECT_ID = import.meta.env.VITE_FIREBASE_PROJECT_ID || '';
+const FIREBASE_RULES_URL = FIREBASE_PROJECT_ID
+  ? `https://console.firebase.google.com/project/${FIREBASE_PROJECT_ID}/firestore/rules`
+  : '';
 const USER_PAGE_SIZE = 25;
 export const ADMIN_TABS = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard, desc: 'Dashboard summary' },
@@ -81,6 +96,7 @@ export const ADMIN_TABS = [
   { id: 'activity', label: 'Activity', icon: Clock, desc: 'Activity log' },
   { id: 'calendar', label: 'Calendar', icon: CalendarDays, desc: 'Events' },
   { id: 'announcements', label: 'Announcements', icon: Megaphone, desc: 'Broadcast to learners' },
+  { id: 'access', label: 'Access requests', icon: Inbox, desc: 'Guest programme enquiries' },
   { id: 'courses', label: 'Courses', icon: BookOpen, desc: 'Create & upload courses' },
   { id: 'resources', label: 'Resources', icon: Paperclip, desc: 'PDF / PPT / links' },
   { id: 'groups', label: 'Batches', icon: Boxes, desc: 'Learner batches' },
@@ -132,7 +148,9 @@ function formatTime(ts) {
 
 function ActivityListItem({ activity, userMap, courseMap }) {
   const userName =
-    userMap[activity.userId]?.displayName || userMap[activity.userId]?.email?.split('@')[0] || 'User';
+    userMap[activity.userId]?.displayName ||
+    userMap[activity.userId]?.email?.split('@')[0] ||
+    'User';
 
   return (
     <li>
@@ -160,6 +178,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
   const [events, setEvents] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
+  const [accessRequests, setAccessRequests] = useState([]);
   const [activities, setActivities] = useState([]);
   const [internalTab, setInternalTab] = useState('overview');
   // Controlled when AdminShell drives the tab via the sidebar; otherwise local.
@@ -202,6 +221,8 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
     moderatorIds: [],
   });
   const [userSearch, setUserSearch] = useState('');
+  const [remoteUsers, setRemoteUsers] = useState([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
   const [userPage, setUserPage] = useState(1);
   const [deletingUserId, setDeletingUserId] = useState(null);
   const [progressModalUser, setProgressModalUser] = useState(null);
@@ -217,7 +238,49 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
     [users]
   );
 
-  const filteredUsers = users.filter((u) => {
+  /**
+   * Search hits the server as well as the loaded page: the paged list orders by
+   * createdAt, which omits accounts missing that field, and caps at USER_FETCH_LIMIT.
+   * Without this, older or externally-provisioned accounts were unfindable.
+   */
+  useEffect(() => {
+    const q = userSearch.trim();
+    if (q.length < 2) {
+      setRemoteUsers([]);
+      setSearchingUsers(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setSearchingUsers(true);
+    const timer = setTimeout(() => {
+      searchUsers(q)
+        .then((found) => {
+          if (!cancelled) setRemoteUsers(found);
+        })
+        .catch((e) => {
+          console.error('User search:', e);
+          if (!cancelled) setRemoteUsers([]);
+        })
+        .finally(() => {
+          if (!cancelled) setSearchingUsers(false);
+        });
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [userSearch]);
+
+  const searchPool = useMemo(() => {
+    if (!remoteUsers.length) return users;
+    const byId = new Map(users.map((u) => [u.id, u]));
+    remoteUsers.forEach((u) => byId.set(u.id, u));
+    return [...byId.values()];
+  }, [users, remoteUsers]);
+
+  const filteredUsers = searchPool.filter((u) => {
     const q = userSearch.trim().toLowerCase();
     if (!q) return true;
     return (
@@ -269,6 +332,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
       tryLoad('Groups', getGroups, setGroups),
       tryLoad('Events', getEvents, setEvents),
       tryLoad('Announcements', getAnnouncements, setAnnouncements),
+      tryLoad('Access requests', getAccessRequests, setAccessRequests),
       tryLoad('Tickets', getAllTickets, setTickets),
     ]);
 
@@ -312,7 +376,8 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
   const stats = {
     total: users.length,
     userAccounts: users.filter((u) => (u.role || ROLES.STUDENT) === ROLES.STUDENT).length,
-    admins: users.filter((u) => [ROLES.ADMIN, ROLES.MODERATOR, ROLES.SUPERADMIN].includes(u.role)).length,
+    admins: users.filter((u) => [ROLES.ADMIN, ROLES.MODERATOR, ROLES.SUPERADMIN].includes(u.role))
+      .length,
     enrolled: users.reduce((n, u) => n + (u.enrolledCourses?.length || 0), 0),
     openTickets: tickets.filter((t) => t.status !== TICKET_STATUSES.RESOLVED).length,
   };
@@ -546,7 +611,8 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
       const result = await deleteUserAccount(targetUser.id);
       const parts = [];
       if (result.mbwSubmissions) parts.push(`${result.mbwSubmissions} submission(s)`);
-      if (result.activities) parts.push(`${result.activities} activit${result.activities === 1 ? 'y' : 'ies'}`);
+      if (result.activities)
+        parts.push(`${result.activities} activit${result.activities === 1 ? 'y' : 'ies'}`);
       if (result.storageFiles) parts.push(`${result.storageFiles} file(s)`);
       const detail = parts.length ? ` Removed ${parts.join(', ')}.` : '';
       setMessage(`${label} has been deleted.${detail}`);
@@ -624,7 +690,12 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
       {!isControlled && (
         <nav className="admin-tabs">
           {TABS.map((t) => (
-            <button key={t.id} type="button" className={tab === t.id ? 'active' : ''} onClick={() => setTab(t.id)}>
+            <button
+              key={t.id}
+              type="button"
+              className={tab === t.id ? 'active' : ''}
+              onClick={() => setTab(t.id)}
+            >
               {t.label}
             </button>
           ))}
@@ -642,31 +713,35 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 <li key={w}>{w}</li>
               ))}
             </ul>
-            {users.length > 0 ? (
-              <p className="muted">
-                Users loaded but other collections did not. This usually means{' '}
-                <strong>Firestore rules are outdated</strong> (missing <code>announcements</code> and{' '}
-                <code>canUseApp</code>). Open{' '}
-                <a
-                  href="https://console.firebase.google.com/project/lmsironlady/firestore/rules"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Firestore → Rules
-                </a>
-                , paste the full <code>firestore.rules</code> file from this project, click <strong>Publish</strong>,
-                then refresh.
-                {profile?.blocked && (
-                  <>
-                    {' '}
-                    Your account also has <code>blocked: true</code> — fixing that now…
-                  </>
-                )}
-              </p>
-            ) : (
-              <p className="muted">
-                Publish <code>firestore.rules</code> in Firebase Console → Firestore → Rules, then refresh.
-              </p>
+            <p className="muted">
+              This is a configuration problem on our side, not something you did. Try refreshing —
+              if it keeps happening, contact your technical administrator.
+            </p>
+            {/* Developer remediation detail — superadmin only; business admins cannot act on it. */}
+            {isSuperAdmin && (
+              <details className="admin-diagnostics">
+                <summary>Technical details</summary>
+                <p className="muted">
+                  {users.length > 0
+                    ? 'Users loaded but other collections did not — Firestore security rules are likely outdated.'
+                    : 'No collections could be read — Firestore security rules are likely unpublished.'}{' '}
+                  Publish <code>firestore.rules</code> from this repository, then refresh.
+                  {FIREBASE_RULES_URL && (
+                    <>
+                      {' '}
+                      <a href={FIREBASE_RULES_URL} target="_blank" rel="noreferrer">
+                        Open Firestore → Rules
+                      </a>
+                    </>
+                  )}
+                  {profile?.blocked && (
+                    <>
+                      {' '}
+                      This account also has <code>blocked: true</code> — clearing it now…
+                    </>
+                  )}
+                </p>
+              </details>
             )}
             <button type="button" className="btn btn-primary btn-sm" onClick={load}>
               Refresh now
@@ -680,31 +755,38 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
               <div className="muted-box admin-message">
                 {usersError ? (
                   <>
-                    <strong>Can't read users — Firestore blocked the request.</strong>
-                    <p className="diag-error">{usersError}</p>
-                    {usersError.includes('permission') ? (
-                      <p className="muted">
-                        Your security rules are not published (or are outdated). Go to{' '}
-                        <a
-                          href="https://console.firebase.google.com/project/lmsironlady/firestore/rules"
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Firestore → Rules
-                        </a>
-                        , paste the contents of <code>firestore.rules</code> from the project, click{' '}
-                        <strong>Publish</strong>, then press Refresh below.
-                      </p>
-                    ) : (
-                      <p className="muted">Press Refresh below after checking your Firebase setup.</p>
+                    <strong>The user list could not be loaded.</strong>
+                    <p className="muted">
+                      Press Refresh below. If it keeps failing, contact your technical administrator
+                      — this is a configuration issue, not something you did.
+                    </p>
+                    {isSuperAdmin && (
+                      <details className="admin-diagnostics">
+                        <summary>Technical details</summary>
+                        <p className="diag-error">{usersError}</p>
+                        {usersError.includes('permission') && (
+                          <p className="muted">
+                            Security rules are unpublished or outdated. Publish{' '}
+                            <code>firestore.rules</code> from this repository, then refresh.
+                            {FIREBASE_RULES_URL && (
+                              <>
+                                {' '}
+                                <a href={FIREBASE_RULES_URL} target="_blank" rel="noreferrer">
+                                  Open Firestore → Rules
+                                </a>
+                              </>
+                            )}
+                          </p>
+                        )}
+                      </details>
                     )}
                   </>
                 ) : (
                   <>
                     <strong>No user profiles found in the database yet.</strong>
                     <p className="muted">
-                      The read succeeded but the <code>users</code> collection is empty. Have the learner sign in
-                      once — that creates their profile — then press Refresh.
+                      The read succeeded but the <code>users</code> collection is empty. Have the
+                      learner sign in once — that creates their profile — then press Refresh.
                     </p>
                   </>
                 )}
@@ -736,7 +818,8 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
             </div>
             {stats.openTickets > 0 && (
               <button type="button" className="overview-alert" onClick={() => setTab('tickets')}>
-                <LifeBuoy size={16} /> {stats.openTickets} support ticket(s) need attention — open Tickets →
+                <LifeBuoy size={16} /> {stats.openTickets} support ticket(s) need attention — open
+                Tickets →
               </button>
             )}
 
@@ -764,7 +847,9 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
           <section className="admin-section">
             <div className="admin-card" id="course-form">
               <div className="admin-card__head">
-                <span className="admin-card__icon"><BookOpen size={22} /></span>
+                <span className="admin-card__icon">
+                  <BookOpen size={22} />
+                </span>
                 <div>
                   <h3>{editingCourseId ? 'Edit course' : 'Create a course'}</h3>
                   <p className="muted">
@@ -811,7 +896,11 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 </label>
                 <label className="field">
                   <span>Or upload thumbnail</span>
-                  <input type="file" accept="image/*" onChange={(e) => setCourseThumbnailFile(e.target.files?.[0] || null)} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setCourseThumbnailFile(e.target.files?.[0] || null)}
+                  />
                 </label>
                 <label className="field field--full">
                   <span>Intro video URL</span>
@@ -846,17 +935,30 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                     </div>
                     {c.introUrl && (
                       <div className="admin-list__meta muted">
-                        <a href={c.introUrl} target="_blank" rel="noreferrer" className="link-inline">
+                        <a
+                          href={c.introUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="link-inline"
+                        >
                           Intro link
                         </a>
                       </div>
                     )}
                   </div>
                   <div className="admin-list__actions">
-                    <button type="button" className="btn btn-sm btn-outline" onClick={() => startEditCourse(c)}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline"
+                      onClick={() => startEditCourse(c)}
+                    >
                       Edit
                     </button>
-                    <button type="button" className="btn btn-sm btn-danger" onClick={() => handleDeleteCourse(c.id)}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-danger"
+                      onClick={() => handleDeleteCourse(c.id)}
+                    >
                       Delete
                     </button>
                   </div>
@@ -870,7 +972,9 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
           <section className="admin-section">
             <div className="admin-card">
               <div className="admin-card__head">
-                <span className="admin-card__icon"><Paperclip size={22} /></span>
+                <span className="admin-card__icon">
+                  <Paperclip size={22} />
+                </span>
                 <div>
                   <h3>{editingResourceId ? 'Edit resource' : 'Add a resource'}</h3>
                   <p className="muted">
@@ -880,7 +984,10 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                   </p>
                 </div>
               </div>
-              <form className="admin-card__form admin-card__form--grid" onSubmit={handleCreateResource}>
+              <form
+                className="admin-card__form admin-card__form--grid"
+                onSubmit={handleCreateResource}
+              >
                 <label className="field">
                   <span>Course</span>
                   <select
@@ -909,7 +1016,9 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                   <span>Source</span>
                   <select
                     value={resourceForm.uploadMode}
-                    onChange={(e) => setResourceForm({ ...resourceForm, uploadMode: e.target.value })}
+                    onChange={(e) =>
+                      setResourceForm({ ...resourceForm, uploadMode: e.target.value })
+                    }
                     disabled={Boolean(editingResourceId)}
                   >
                     <option value="link">Add via link (URL)</option>
@@ -991,10 +1100,18 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                     >
                       {r.locked ? 'Unlock' : 'Lock'}
                     </button>
-                    <button type="button" className="btn btn-sm btn-outline" onClick={() => startEditResource(r)}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline"
+                      onClick={() => startEditResource(r)}
+                    >
                       Edit
                     </button>
-                    <button type="button" className="btn btn-sm btn-danger" onClick={() => handleDeleteResource(r.id)}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-danger"
+                      onClick={() => handleDeleteResource(r.id)}
+                    >
                       Delete
                     </button>
                   </div>
@@ -1010,10 +1127,16 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
             <h2>All users ({users.length})</h2>
             <p className="muted">
               Assign roles, block users who should not access the app, or promote staff to admin.
-              {isSuperAdmin && ' Super admins can permanently delete learner accounts from this list.'}
+              {isSuperAdmin &&
+                ' Super admins can permanently delete learner accounts from this list.'}
             </p>
             <div className="admin-form">
+              <label htmlFor="admin-user-search" className="sr-only">
+                Search users by name, email, or role
+              </label>
               <input
+                id="admin-user-search"
+                type="search"
                 placeholder="Search by name, email, or role"
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
@@ -1024,6 +1147,13 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 Refresh
               </button>
             </div>
+            <p className="muted admin-search-note" role="status" aria-live="polite">
+              {searchingUsers
+                ? 'Searching all accounts…'
+                : userSearch.trim().length >= 2
+                  ? `${filteredUsers.length} match${filteredUsers.length === 1 ? '' : 'es'} — searched every account, not just the loaded page.`
+                  : 'Type at least 2 characters to search every account by name or email.'}
+            </p>
             <ul className="admin-list">
               {paginatedUsers.map((u) => (
                 <li key={u.id}>
@@ -1033,7 +1163,9 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                       <span className="muted"> {u.email}</span>
                       <span className="badge">{getRoleLabel(u.role)}</span>
                       {u.role === ROLES.MODERATOR && (
-                        <span className="badge badge-program">{getProgramShortLabel(u.program || PROGRAMS.MBW)}</span>
+                        <span className="badge badge-program">
+                          {getProgramShortLabel(u.program || PROGRAMS.MBW)}
+                        </span>
                       )}
                       {u.blocked && <span className="badge badge-blocked">Blocked</span>}
                     </div>
@@ -1095,11 +1227,19 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 </li>
               )}
             </ul>
+            {users.length >= USER_FETCH_LIMIT && (
+              <p className="muted admin-fetch-cap" role="status">
+                Browsing the {USER_FETCH_LIMIT} most recently created accounts. Search reaches every
+                account, including older ones that are not listed here.
+              </p>
+            )}
             {filteredUsers.length > USER_PAGE_SIZE && (
               <div className="admin-form admin-form--pagination">
                 <span className="muted">
                   Showing {(userPage - 1) * USER_PAGE_SIZE + 1}–
-                  {Math.min(userPage * USER_PAGE_SIZE, filteredUsers.length)} of {filteredUsers.length}
+                  {Math.min(userPage * USER_PAGE_SIZE, filteredUsers.length)} of{' '}
+                  {filteredUsers.length}
+                  {users.length >= USER_FETCH_LIMIT ? ' loaded' : ''}
                 </span>
                 <button
                   type="button"
@@ -1125,9 +1265,17 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
         {tab === 'progress' && fullAdmin && (
           <section>
             <h2>User progress &amp; enrollments ({filteredUsers.length})</h2>
-            <p className="muted">Track which courses each user is enrolled in and their learning activity. Click a row or use View progress to open full details.</p>
+            <p className="muted">
+              Track which courses each user is enrolled in and their learning activity. Click a row
+              or use View progress to open full details.
+            </p>
             <div className="admin-form">
+              <label htmlFor="admin-progress-search" className="sr-only">
+                Search users by name, email, or role
+              </label>
               <input
+                id="admin-progress-search"
+                type="search"
                 placeholder="Search by name, email, or role"
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
@@ -1155,53 +1303,53 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                     </tr>
                   ) : (
                     paginatedUsers.map((u) => (
-                    <tr
-                      key={u.id}
-                      className="progress-table__row"
-                      tabIndex={0}
-                      onClick={() => setProgressModalUser(u)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          setProgressModalUser(u);
-                        }
-                      }}
-                    >
-                      <td>
-                        <strong>{u.displayName}</strong>
-                        <br />
-                        <span className="muted">{u.email}</span>
-                      </td>
-                      <td>
-                        <span className="badge">{getRoleLabel(u.role)}</span>
-                      </td>
-                      <td>
-                        {(u.enrolledCourses || []).length === 0 ? (
-                          <span className="muted">None</span>
-                        ) : (
-                          (u.enrolledCourses || []).map((cid) => (
-                            <span key={cid} className="course-pill">
-                              {courseMap[cid]?.code || courseMap[cid]?.title || cid.slice(0, 6)}
-                            </span>
-                          ))
-                        )}
-                      </td>
-                      <td>{u.streak ?? 0}</td>
-                      <td>{activityCountByUser[u.id] || 0}</td>
-                      <td className="muted">{formatTime(u.lastActivityAt)}</td>
-                      <td className="progress-table__actions">
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline"
-                          onClick={(e) => {
-                            e.stopPropagation();
+                      <tr
+                        key={u.id}
+                        className="progress-table__row"
+                        tabIndex={0}
+                        onClick={() => setProgressModalUser(u)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
                             setProgressModalUser(u);
-                          }}
-                        >
-                          View progress
-                        </button>
-                      </td>
-                    </tr>
+                          }
+                        }}
+                      >
+                        <td>
+                          <strong>{u.displayName}</strong>
+                          <br />
+                          <span className="muted">{u.email}</span>
+                        </td>
+                        <td>
+                          <span className="badge">{getRoleLabel(u.role)}</span>
+                        </td>
+                        <td>
+                          {(u.enrolledCourses || []).length === 0 ? (
+                            <span className="muted">None</span>
+                          ) : (
+                            (u.enrolledCourses || []).map((cid) => (
+                              <span key={cid} className="course-pill">
+                                {courseMap[cid]?.code || courseMap[cid]?.title || cid.slice(0, 6)}
+                              </span>
+                            ))
+                          )}
+                        </td>
+                        <td>{u.streak ?? 0}</td>
+                        <td>{activityCountByUser[u.id] || 0}</td>
+                        <td className="muted">{formatTime(u.lastActivityAt)}</td>
+                        <td className="progress-table__actions">
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setProgressModalUser(u);
+                            }}
+                          >
+                            View progress
+                          </button>
+                        </td>
+                      </tr>
                     ))
                   )}
                 </tbody>
@@ -1237,7 +1385,9 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
         {tab === 'calendar' && (
           <section>
             <h2>Events calendar</h2>
-            <p className="muted">Schedule classes, deadlines, and meetings. Visible to all signed-in users.</p>
+            <p className="muted">
+              Schedule classes, deadlines, and meetings. Visible to all signed-in users.
+            </p>
             <EventCalendar events={events} onRefresh={load} createdBy={user?.uid} />
           </section>
         )}
@@ -1246,8 +1396,8 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
           <section>
             <h2>Announcements</h2>
             <p className="muted">
-              Broadcast messages to learners. Choose visibility for 24 hours, 7 days, or 30 days. Tag specific users
-              to highlight them.
+              Broadcast messages to learners. Choose visibility for 24 hours, 7 days, or 30 days.
+              Tag specific users to highlight them.
             </p>
             <AnnouncementManager
               announcements={announcements}
@@ -1256,6 +1406,10 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
               createdBy={user?.uid}
             />
           </section>
+        )}
+
+        {tab === 'access' && fullAdmin && (
+          <AccessRequestManager requests={accessRequests} onReload={load} />
         )}
 
         {tab === 'tickets' && (
@@ -1427,7 +1581,11 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                       </ul>
                     )}
                   </div>
-                  <button type="button" className="btn btn-sm btn-danger" onClick={() => deleteGroup(g.id).then(load)}>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-danger"
+                    onClick={() => deleteGroup(g.id).then(load)}
+                  >
                     Delete
                   </button>
                 </li>

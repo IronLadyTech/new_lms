@@ -110,65 +110,78 @@ export default function CxCharts({
   return (
     <div className={`admin-charts-grid${batchOnly ? ' admin-charts-grid--single' : ''}`}>
       {!batchOnly && (
-      <ChartCard
-        title="Task completion"
-        subtitle="Everyone in your program"
-        legend={<CxChartDrillLegend items={statusLegend} onDrill={onDrill} />}
-      >
-        {!hasStatus ? (
-          <EmptyChart message="No tasks started yet." />
-        ) : (
-          <ChartFrame>
-            {(w, h) => (
-              <PieChart width={w} height={h}>
-                <Pie
-                  data={statusData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={56}
-                  outerRadius={82}
-                  paddingAngle={2}
-                  labelLine={false}
-                  isAnimationActive={false}
-                  stroke="var(--surface)"
-                  strokeWidth={2}
-                >
-                  {statusData.map((d) => (
-                    <Cell
-                      key={d.name}
-                      fill={STATUS_COLORS[d.name] || '#F52929'}
-                      style={{ cursor: onDrill && d.value > 0 ? 'pointer' : undefined }}
-                      onClick={() =>
-                        segmentClick(onDrill, { chartId: 'taskStatus', seriesKey: d.name }, d.value)
-                      }
+        <ChartCard
+          title="Task completion"
+          subtitle="Everyone in your program"
+          legend={<CxChartDrillLegend items={statusLegend} onDrill={onDrill} />}
+        >
+          {!hasStatus ? (
+            <EmptyChart message="No tasks started yet." />
+          ) : (
+            <ChartFrame>
+              {(w, h) => (
+                <PieChart width={w} height={h}>
+                  <Pie
+                    data={statusData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={56}
+                    outerRadius={82}
+                    paddingAngle={2}
+                    labelLine={false}
+                    isAnimationActive={false}
+                    stroke="var(--surface)"
+                    strokeWidth={2}
+                  >
+                    {statusData.map((d) => (
+                      <Cell
+                        key={d.name}
+                        fill={STATUS_COLORS[d.name] || '#F52929'}
+                        style={{ cursor: onDrill && d.value > 0 ? 'pointer' : undefined }}
+                        onClick={() =>
+                          segmentClick(
+                            onDrill,
+                            { chartId: 'taskStatus', seriesKey: d.name },
+                            d.value
+                          )
+                        }
+                      />
+                    ))}
+                    <Label
+                      position="center"
+                      content={({ viewBox }) => {
+                        const { cx, cy } = viewBox;
+                        return (
+                          <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
+                            <tspan
+                              x={cx}
+                              dy="-0.15em"
+                              fontSize="24"
+                              fontWeight="700"
+                              fill={tickFill}
+                            >
+                              {donutPct}%
+                            </tspan>
+                            <tspan x={cx} dy="1.5em" fontSize="11" fill={tickFill}>
+                              done
+                            </tspan>
+                          </text>
+                        );
+                      }}
                     />
-                  ))}
-                  <Label
-                    position="center"
-                    content={({ viewBox }) => {
-                      const { cx, cy } = viewBox;
-                      return (
-                        <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
-                          <tspan x={cx} dy="-0.15em" fontSize="24" fontWeight="700" fill={tickFill}>
-                            {donutPct}%
-                          </tspan>
-                          <tspan x={cx} dy="1.5em" fontSize="11" fill={tickFill}>
-                            done
-                          </tspan>
-                        </text>
-                      );
-                    }}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={tooltipStyle}
+                    formatter={(v, n) => [`${v} participants`, n]}
                   />
-                </Pie>
-                <Tooltip contentStyle={tooltipStyle} formatter={(v, n) => [`${v} participants`, n]} />
-                <Legend />
-              </PieChart>
-            )}
-          </ChartFrame>
-        )}
-      </ChartCard>
+                  <Legend />
+                </PieChart>
+              )}
+            </ChartFrame>
+          )}
+        </ChartCard>
       )}
 
       <ChartCard
@@ -189,8 +202,18 @@ export default function CxCharts({
                 margin={{ top: 8, right: 32, left: 8, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-                <XAxis type="number" domain={[0, 100]} unit="%" tick={{ fill: tickFill, fontSize: 12 }} />
-                <YAxis type="category" dataKey="name" width={90} tick={{ fill: tickFill, fontSize: 11 }} />
+                <XAxis
+                  type="number"
+                  domain={[0, 100]}
+                  unit="%"
+                  tick={{ fill: tickFill, fontSize: 12 }}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  width={90}
+                  tick={{ fill: tickFill, fontSize: 11 }}
+                />
                 <Tooltip contentStyle={tooltipStyle} formatter={(v) => [`${v}%`, 'Completion']} />
                 <Bar
                   dataKey="pct"

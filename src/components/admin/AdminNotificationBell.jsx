@@ -137,7 +137,11 @@ export default function AdminNotificationBell({ onTabChange }) {
 
     const load = async () => {
       try {
-        const [tk, acts, usrs] = await Promise.all([getAllTickets(), getAllActivities(40), getAllUsers()]);
+        const [tk, acts, usrs] = await Promise.all([
+          getAllTickets(),
+          getAllActivities(40),
+          getAllUsers(),
+        ]);
         if (!cancelled) {
           setTickets(Array.isArray(tk) ? tk : []);
           setActivities(Array.isArray(acts) ? acts : []);
@@ -213,7 +217,11 @@ export default function AdminNotificationBell({ onTabChange }) {
                     Clear all
                   </button>
                 )}
-                <button type="button" className="notification-bell__close" onClick={() => setOpen(false)}>
+                <button
+                  type="button"
+                  className="notification-bell__close"
+                  onClick={() => setOpen(false)}
+                >
                   <X size={16} />
                 </button>
               </div>
@@ -224,8 +232,15 @@ export default function AdminNotificationBell({ onTabChange }) {
                 <li className="notification-bell__empty muted">No new admin alerts.</li>
               ) : (
                 visible.map((n) => (
-                  <li key={n.id} className={`notification-bell__item notification-bell__item--${n.kind}`}>
-                    <button type="button" className="notification-bell__link" onClick={() => handleOpen(n)}>
+                  <li
+                    key={n.id}
+                    className={`notification-bell__item notification-bell__item--${n.kind}`}
+                  >
+                    <button
+                      type="button"
+                      className="notification-bell__link"
+                      onClick={() => handleOpen(n)}
+                    >
                       <span className="notification-bell__item-icon">
                         {n.kind === 'ticket' && <MessageCircle size={16} />}
                         {n.kind === 'user' && <UserPlus size={16} />}
@@ -234,7 +249,9 @@ export default function AdminNotificationBell({ onTabChange }) {
                       <span>
                         <strong>{n.title}</strong>
                         <span className="muted">{n.body}</span>
-                        {n.at > 0 && <span className="notification-bell__when muted">{formatWhen(n.at)}</span>}
+                        {n.at > 0 && (
+                          <span className="notification-bell__when muted">{formatWhen(n.at)}</span>
+                        )}
                       </span>
                     </button>
                     <button

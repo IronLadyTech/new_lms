@@ -37,10 +37,13 @@ export default function BM100TaskContent({
   focusMode = false,
   showInlineSuccess = true,
 }) {
-  const { task, submission, status, watched, canSubmit, isComplete, prevTaskId, phaseLocked } = taskState;
+  const { task, submission, status, watched, canSubmit, isComplete, prevTaskId, phaseLocked } =
+    taskState;
   const locked = status === SUBMISSION_STATUS.LOCKED;
   const showVideo = Boolean(task.videoUrl);
-  const resourceLinks = Array.isArray(task.resourceLinks) ? task.resourceLinks.filter((r) => r?.url) : [];
+  const resourceLinks = Array.isArray(task.resourceLinks)
+    ? task.resourceLinks.filter((r) => r?.url)
+    : [];
   const showExtraTemplates =
     task.type !== TASK_TYPES.FILE_UPLOAD && getBm100TaskTemplates(task.id, task).length > 0;
   const primary = getPrimaryStatus(status, isComplete);
@@ -76,7 +79,9 @@ export default function BM100TaskContent({
       <header className="mbw-task__header">
         {focusMode ? (
           <div className="mbw-task__meta mbw-task__meta--focus">
-            <span className={`mbw-status-pill mbw-status-pill--${primary.tone}`}>{primary.label}</span>
+            <span className={`mbw-status-pill mbw-status-pill--${primary.tone}`}>
+              {primary.label}
+            </span>
           </div>
         ) : (
           <>
@@ -88,7 +93,9 @@ export default function BM100TaskContent({
                 <span className="mbw-task__week-code">{getWeekCode(task)}</span>
               )}
               <span className="mbw-task__duration">{getTaskDurationHint(task)}</span>
-              <span className={`mbw-status-pill mbw-status-pill--${primary.tone}`}>{primary.label}</span>
+              <span className={`mbw-status-pill mbw-status-pill--${primary.tone}`}>
+                {primary.label}
+              </span>
             </div>
           </>
         )}
@@ -104,8 +111,8 @@ export default function BM100TaskContent({
           {phaseLocked ? (
             <>
               <p>
-                This section needs full program payment. Registration access covers Onboarding and Phase 1
-                only.
+                This section needs full program payment. Registration access covers Onboarding and
+                Phase 1 only.
               </p>
               <Link to="/app/support" className="btn btn-outline btn-sm">
                 Payment support
@@ -171,7 +178,9 @@ export default function BM100TaskContent({
         <section className="mbw-task__submission">
           <h2>Your submission</h2>
           {!watched && task.requiresWatch && task.videoUrl && (
-            <p className="mbw-task__hint">Watch at least 90% of the video to unlock the form below.</p>
+            <p className="mbw-task__hint">
+              Watch at least 90% of the video to unlock the form below.
+            </p>
           )}
 
           {showSubmittedPreview ? (
@@ -183,73 +192,73 @@ export default function BM100TaskContent({
             />
           ) : (
             <>
-          {task.type === TASK_TYPES.WATCH_ONLY && (
-            <WatchOnly task={task} submission={submission} />
-          )}
-          {task.type === TASK_TYPES.TEXT && (
-            <BM100TextSubmission
-              key={task.id}
-              task={task}
-              submission={submission}
-              canSubmit={canSubmit}
-              readOnly={!canSubmit && Boolean(submission?.textValue)}
-              onSubmit={handleSubmit}
-            />
-          )}
-          {task.type === TASK_TYPES.LINK && (
-            <LinkSubmission
-              key={task.id}
-              task={task}
-              submission={submission}
-              canSubmit={canSubmit}
-              onSubmit={handleSubmit}
-            />
-          )}
-          {task.type === TASK_TYPES.EDITABLE_TEMPLATE && (
-            <EditableTemplate
-              key={task.id}
-              task={task}
-              submission={submission}
-              canSubmit={canSubmit || !!submission?.templateData}
-              onSave={handleSaveTemplate}
-            />
-          )}
-          {task.type === TASK_TYPES.FILE_UPLOAD && (
-            <FileUpload
-              task={task}
-              submission={submission}
-              canSubmit={canSubmit}
-              userId={userId}
-              onSubmit={handleSubmit}
-              program="100bm"
-            />
-          )}
-          {task.type === TASK_TYPES.VIDEO_RECORD && (
-            <VideoRecordOrUpload
-              task={task}
-              submission={submission}
-              canSubmit={canSubmit}
-              userId={userId}
-              onSubmit={handleSubmit}
-              program="100bm"
-            />
-          )}
-          {task.type === TASK_TYPES.RECURRING_POST && (
-            <RecurringPost
-              task={task}
-              submission={submission}
-              canSubmit={canSubmit}
-              onAddPost={handleRecurring}
-            />
-          )}
-          {task.type === TASK_TYPES.CHECKLIST && (
-            <ChecklistSubmission
-              task={task}
-              submission={submission}
-              canSubmit={canSubmit}
-              onSubmit={handleSubmit}
-            />
-          )}
+              {task.type === TASK_TYPES.WATCH_ONLY && (
+                <WatchOnly task={task} submission={submission} />
+              )}
+              {task.type === TASK_TYPES.TEXT && (
+                <BM100TextSubmission
+                  key={task.id}
+                  task={task}
+                  submission={submission}
+                  canSubmit={canSubmit}
+                  readOnly={!canSubmit && Boolean(submission?.textValue)}
+                  onSubmit={handleSubmit}
+                />
+              )}
+              {task.type === TASK_TYPES.LINK && (
+                <LinkSubmission
+                  key={task.id}
+                  task={task}
+                  submission={submission}
+                  canSubmit={canSubmit}
+                  onSubmit={handleSubmit}
+                />
+              )}
+              {task.type === TASK_TYPES.EDITABLE_TEMPLATE && (
+                <EditableTemplate
+                  key={task.id}
+                  task={task}
+                  submission={submission}
+                  canSubmit={canSubmit || !!submission?.templateData}
+                  onSave={handleSaveTemplate}
+                />
+              )}
+              {task.type === TASK_TYPES.FILE_UPLOAD && (
+                <FileUpload
+                  task={task}
+                  submission={submission}
+                  canSubmit={canSubmit}
+                  userId={userId}
+                  onSubmit={handleSubmit}
+                  program="100bm"
+                />
+              )}
+              {task.type === TASK_TYPES.VIDEO_RECORD && (
+                <VideoRecordOrUpload
+                  task={task}
+                  submission={submission}
+                  canSubmit={canSubmit}
+                  userId={userId}
+                  onSubmit={handleSubmit}
+                  program="100bm"
+                />
+              )}
+              {task.type === TASK_TYPES.RECURRING_POST && (
+                <RecurringPost
+                  task={task}
+                  submission={submission}
+                  canSubmit={canSubmit}
+                  onAddPost={handleRecurring}
+                />
+              )}
+              {task.type === TASK_TYPES.CHECKLIST && (
+                <ChecklistSubmission
+                  task={task}
+                  submission={submission}
+                  canSubmit={canSubmit}
+                  onSubmit={handleSubmit}
+                />
+              )}
             </>
           )}
 

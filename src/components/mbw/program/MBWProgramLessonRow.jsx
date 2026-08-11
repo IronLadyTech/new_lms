@@ -10,10 +10,20 @@ function StatusControl({ visual }) {
     );
   }
   if (visual === 'pending') {
-    return <span className="mbw-lesson-row__status mbw-lesson-row__status--pending" aria-label="In progress" />;
+    return (
+      <span
+        className="mbw-lesson-row__status mbw-lesson-row__status--pending"
+        aria-label="In progress"
+      />
+    );
   }
   if (visual === 'current') {
-    return <span className="mbw-lesson-row__status mbw-lesson-row__status--current" aria-label="Current lesson" />;
+    return (
+      <span
+        className="mbw-lesson-row__status mbw-lesson-row__status--current"
+        aria-label="Current lesson"
+      />
+    );
   }
   if (visual === 'locked') {
     return (
@@ -22,7 +32,12 @@ function StatusControl({ visual }) {
       </span>
     );
   }
-  return <span className="mbw-lesson-row__status mbw-lesson-row__status--available" aria-label="Available" />;
+  return (
+    <span
+      className="mbw-lesson-row__status mbw-lesson-row__status--available"
+      aria-label="Available"
+    />
+  );
 }
 
 export default function MBWProgramLessonRow({

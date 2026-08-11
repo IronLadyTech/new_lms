@@ -109,7 +109,12 @@ export default function UserProgressModal({
               </div>
             </div>
           </div>
-          <button type="button" className="user-modal__close btn btn-outline btn-sm" onClick={onClose} aria-label="Close">
+          <button
+            type="button"
+            className="user-modal__close btn btn-outline btn-sm"
+            onClick={onClose}
+            aria-label="Close"
+          >
             <X size={16} strokeWidth={2} />
           </button>
         </div>
@@ -128,11 +133,15 @@ export default function UserProgressModal({
             <span className="user-modal__stat-label">Courses</span>
           </div>
           <div className="user-modal__stat">
-            <span className="user-modal__stat-value user-modal__stat-value--sm">{formatTime(user.lastActivityAt)}</span>
+            <span className="user-modal__stat-value user-modal__stat-value--sm">
+              {formatTime(user.lastActivityAt)}
+            </span>
             <span className="user-modal__stat-label">Last active</span>
           </div>
           <div className="user-modal__stat">
-            <span className="user-modal__stat-value user-modal__stat-value--sm">{formatTime(user.createdAt)}</span>
+            <span className="user-modal__stat-value user-modal__stat-value--sm">
+              {formatTime(user.createdAt)}
+            </span>
             <span className="user-modal__stat-label">Joined</span>
           </div>
         </div>
@@ -149,7 +158,9 @@ export default function UserProgressModal({
                     <span className="course-pill">{course.code || '—'}</span>
                     <div>
                       <strong>{course.title}</strong>
-                      {course.description && <p className="muted user-modal__course-desc">{course.description}</p>}
+                      {course.description && (
+                        <p className="muted user-modal__course-desc">{course.description}</p>
+                      )}
                     </div>
                   </li>
                 ))}
@@ -182,11 +193,15 @@ export default function UserProgressModal({
                   <li key={t.id}>
                     <strong>{t.subject}</strong>
                     <span className="badge badge--soft">{statusLabel(t.status)}</span>
-                    <span className="muted user-modal__ticket-time">{formatTime(t.updatedAt || t.createdAt)}</span>
+                    <span className="muted user-modal__ticket-time">
+                      {formatTime(t.updatedAt || t.createdAt)}
+                    </span>
                   </li>
                 ))}
                 {userTickets.length > 5 && (
-                  <li className="muted">+ {userTickets.length - 5} more ticket{userTickets.length - 5 === 1 ? '' : 's'}</li>
+                  <li className="muted">
+                    + {userTickets.length - 5} more ticket{userTickets.length - 5 === 1 ? '' : 's'}
+                  </li>
                 )}
               </ul>
             )}

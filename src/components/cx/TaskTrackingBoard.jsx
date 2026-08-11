@@ -70,7 +70,9 @@ export default function TaskTrackingBoard({
           <button
             type="button"
             className="cx-count-btn cx-count-btn--done"
-            onClick={() => setModal({ title: 'Completed all tasks', participants: completedStudents })}
+            onClick={() =>
+              setModal({ title: 'Completed all tasks', participants: completedStudents })
+            }
           >
             {completedStudents.length} completed
           </button>
@@ -78,7 +80,9 @@ export default function TaskTrackingBoard({
           <button
             type="button"
             className="cx-count-btn cx-count-btn--pending"
-            onClick={() => setModal({ title: 'Not yet completed', participants: notCompletedStudents })}
+            onClick={() =>
+              setModal({ title: 'Not yet completed', participants: notCompletedStudents })
+            }
           >
             {notCompletedStudents.length} not completed
           </button>

@@ -21,7 +21,10 @@ function statusShort(sub, done) {
   if (display.tone === 'review') return 'Review';
   if (display.tone === 'improvement') return 'Revise';
   if (display.tone === 'rejected') return 'Reject';
-  if (sub?.status === SUBMISSION_STATUS.SUBMITTED || sub?.status === SUBMISSION_STATUS.UNDER_REVIEW) {
+  if (
+    sub?.status === SUBMISSION_STATUS.SUBMITTED ||
+    sub?.status === SUBMISSION_STATUS.UNDER_REVIEW
+  ) {
     return 'Submitted';
   }
   if (sub?.status === SUBMISSION_STATUS.UNLOCKED) return 'Open';
@@ -66,7 +69,9 @@ export default function ModuleTaskGrid({
                 {tasks.map((t, i) => (
                   <th key={t.id} title={t.title} className="mbw-admin-th">
                     <span className="mbw-admin-th__num">{i + 1}</span>
-                    <span className="mbw-admin-th__name">{t.title.split(' ').slice(0, 2).join(' ')}</span>
+                    <span className="mbw-admin-th__name">
+                      {t.title.split(' ').slice(0, 2).join(' ')}
+                    </span>
                   </th>
                 ))}
               </tr>

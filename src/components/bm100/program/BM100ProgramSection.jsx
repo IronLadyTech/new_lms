@@ -35,7 +35,12 @@ export default function BM100ProgramSection({
   onToggle,
   onSelectLesson,
 }) {
-  const progress = sectionProgress[section.id] || { done: 0, total: 0, status: 'locked', unlocked: false };
+  const progress = sectionProgress[section.id] || {
+    done: 0,
+    total: 0,
+    status: 'locked',
+    unlocked: false,
+  };
   const lockDisplay = getSectionLockDisplay(section, sectionProgress, profile);
   const paymentLocked = isRegistrationPaymentLocked(section, sectionProgress, profile);
   const panelId = `bm100-section-${section.id}`;
@@ -105,7 +110,9 @@ export default function BM100ProgramSection({
           />
         ) : (
           <div className="mbw-section-card__locked-panel">
-            <p className="mbw-section-card__coming">Content for this section is being prepared for your batch.</p>
+            <p className="mbw-section-card__coming">
+              Content for this section is being prepared for your batch.
+            </p>
             {section.unlockCta && (
               <Link to={section.unlockCta.href} className="btn btn-outline btn-sm">
                 {section.unlockCta.label}
@@ -121,7 +128,13 @@ export default function BM100ProgramSection({
 function LockMessage({ message, cta, showLockIcon = false, tooltip }) {
   return (
     <>
-      <p className={showLockIcon ? 'mbw-section-card__locked-msg mbw-section-card__locked-msg--pay' : 'mbw-section-card__locked-msg'}>
+      <p
+        className={
+          showLockIcon
+            ? 'mbw-section-card__locked-msg mbw-section-card__locked-msg--pay'
+            : 'mbw-section-card__locked-msg'
+        }
+      >
         {showLockIcon && (
           <span
             className="mbw-section-card__pay-lock mbw-section-card__pay-lock--inline"

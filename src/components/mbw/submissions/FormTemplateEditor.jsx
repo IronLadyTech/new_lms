@@ -12,7 +12,10 @@ function groupFields(fields = []) {
     const section = field.section || 'Details';
     if (!seen.has(section)) {
       seen.add(section);
-      groups.push({ section, fields: fields.filter((item) => (item.section || 'Details') === section) });
+      groups.push({
+        section,
+        fields: fields.filter((item) => (item.section || 'Details') === section),
+      });
     }
   });
   return groups;
@@ -30,15 +33,14 @@ export default function FormTemplateEditor({ templateId, task, submission, canSu
   useEffect(() => {
     setFields({
       ...createTemplateFields(templateId),
-      ...(submission?.templateData?.templateId === templateId ? submission.templateData.fields : {}),
+      ...(submission?.templateData?.templateId === templateId
+        ? submission.templateData.fields
+        : {}),
     });
     setValidationError('');
   }, [templateId, task.id, submission?.templateData]);
 
-  const complete = useMemo(
-    () => isTemplateComplete(templateId, { fields }),
-    [templateId, fields]
-  );
+  const complete = useMemo(() => isTemplateComplete(templateId, { fields }), [templateId, fields]);
   const groups = useMemo(() => groupFields(definition?.fields || []), [definition]);
 
   const updateField = (key, value) => {
@@ -144,7 +146,9 @@ export default function FormTemplateEditor({ templateId, task, submission, canSu
           disabled={!canSubmit || saving || !complete}
           onClick={handleSave}
         >
-          {saving ? 'Saving…' : task.uploadSubmitLabel || definition.submitLabel || 'Save submission'}
+          {saving
+            ? 'Saving…'
+            : task.uploadSubmitLabel || definition.submitLabel || 'Save submission'}
         </button>
       </div>
     </div>

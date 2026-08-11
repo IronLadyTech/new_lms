@@ -1,6 +1,12 @@
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { createEvent, updateEvent, deleteEvent, eventsForDate, eventsForMonth } from '../../services/eventService';
+import {
+  createEvent,
+  updateEvent,
+  deleteEvent,
+  eventsForDate,
+  eventsForMonth,
+} from '../../services/eventService';
 import { uploadEventImage } from '../../services/storageService';
 import EventImage from '../EventImage';
 import EventDetailActions from '../EventDetailActions';
@@ -98,7 +104,10 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
   const monthEvents = useMemo(() => eventsForMonth(events, year, month), [events, year, month]);
   const eventsByDate = useMemo(() => groupByDate(monthEvents), [monthEvents]);
   const selectedEvents = useMemo(() => eventsForDate(events, selectedDate), [events, selectedDate]);
-  const upcoming = useMemo(() => events.filter((e) => e.date >= todayStr).slice(0, 10), [events, todayStr]);
+  const upcoming = useMemo(
+    () => events.filter((e) => e.date >= todayStr).slice(0, 10),
+    [events, todayStr]
+  );
 
   const calendarDays = useMemo(() => {
     const firstDay = new Date(year, month, 1).getDay();
@@ -210,7 +219,10 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
     <div className="event-calendar admin-calendar">
       <div className="learner-calendar__legend">
         {EVENT_LEGEND.map(({ type, label }) => (
-          <span key={type} className={`learner-calendar__legend-item learner-calendar__legend-item--${type}`}>
+          <span
+            key={type}
+            className={`learner-calendar__legend-item learner-calendar__legend-item--${type}`}
+          >
             {label}
           </span>
         ))}
@@ -219,14 +231,26 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
       <div className="event-calendar__layout">
         <div className="event-calendar__grid-wrap">
           <div className="event-calendar__nav">
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => setViewDate(new Date(year, month - 1, 1))} aria-label="Previous month">
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={() => setViewDate(new Date(year, month - 1, 1))}
+              aria-label="Previous month"
+            >
               <ChevronLeft size={16} aria-hidden="true" />
             </button>
             <div className="learner-calendar__month-head">
               <strong>{monthLabel}</strong>
-              <span className="muted">{monthEvents.length} event{monthEvents.length === 1 ? '' : 's'} this month</span>
+              <span className="muted">
+                {monthEvents.length} event{monthEvents.length === 1 ? '' : 's'} this month
+              </span>
             </div>
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => setViewDate(new Date(year, month + 1, 1))} aria-label="Next month">
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={() => setViewDate(new Date(year, month + 1, 1))}
+              aria-label="Next month"
+            >
               <ChevronRight size={16} aria-hidden="true" />
             </button>
           </div>
@@ -270,12 +294,16 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
                           className={`event-calendar__chip event-calendar__chip--${ev.type || 'general'}${editingEventId === ev.id ? ' is-editing' : ''}`}
                           title={`${ev.time ? `${ev.time} · ` : ''}${ev.title}`}
                         >
-                          {ev.time && <span className="event-calendar__chip-time">{ev.time.slice(0, 5)}</span>}
+                          {ev.time && (
+                            <span className="event-calendar__chip-time">{ev.time.slice(0, 5)}</span>
+                          )}
                           <span className="event-calendar__chip-title">{ev.title}</span>
                         </span>
                       ))}
                       {dayEvents.length > 2 && (
-                        <span className="event-calendar__chip event-calendar__chip--more">+{dayEvents.length - 2} more</span>
+                        <span className="event-calendar__chip event-calendar__chip--more">
+                          +{dayEvents.length - 2} more
+                        </span>
                       )}
                     </div>
                   )}
@@ -293,25 +321,43 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
           ) : (
             <ul className="event-calendar__event-list admin-calendar__event-list">
               {selectedEvents.map((ev) => (
-                <li key={ev.id} className={`event-calendar__event-card event-calendar__event-card--${ev.type || 'general'}${editingEventId === ev.id ? ' is-editing' : ''}`}>
+                <li
+                  key={ev.id}
+                  className={`event-calendar__event-card event-calendar__event-card--${ev.type || 'general'}${editingEventId === ev.id ? ' is-editing' : ''}`}
+                >
                   <EventImage src={ev.imageUrl} alt={ev.title} />
                   <div className="event-calendar__event-card-head">
                     <strong>{ev.title}</strong>
-                    <span className={`badge badge-event badge-event--${ev.type || 'general'}`}>{formatEventType(ev.type)}</span>
+                    <span className={`badge badge-event badge-event--${ev.type || 'general'}`}>
+                      {formatEventType(ev.type)}
+                    </span>
                   </div>
                   {ev.time && <span className="event-calendar__event-time">{ev.time}</span>}
                   {ev.description && <p className="muted">{ev.description}</p>}
                   {ev.linkUrl && (
-                    <a href={normalizeEventLink(ev.linkUrl)} target="_blank" rel="noreferrer" className="link-inline">
+                    <a
+                      href={normalizeEventLink(ev.linkUrl)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="link-inline"
+                    >
                       Event link
                     </a>
                   )}
                   <EventDetailActions event={ev} compact />
                   <div className="admin-list__actions">
-                    <button type="button" className="btn btn-sm btn-outline" onClick={() => startEditEvent(ev)}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline"
+                      onClick={() => startEditEvent(ev)}
+                    >
                       Edit
                     </button>
-                    <button type="button" className="btn btn-sm btn-danger" onClick={() => handleDelete(ev.id)}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-danger"
+                      onClick={() => handleDelete(ev.id)}
+                    >
                       Delete
                     </button>
                   </div>
@@ -330,9 +376,21 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 required
               />
-              <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required />
-              <input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} />
-              <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+              <input
+                type="date"
+                value={form.date}
+                onChange={(e) => setForm({ ...form, date: e.target.value })}
+                required
+              />
+              <input
+                type="time"
+                value={form.time}
+                onChange={(e) => setForm({ ...form, time: e.target.value })}
+              />
+              <select
+                value={form.type}
+                onChange={(e) => setForm({ ...form, type: e.target.value })}
+              >
                 {EVENT_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>
                     {t.label}
@@ -386,7 +444,11 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
 
               {form.imageUrl && form.imageMode === 'link' && (
                 <div className="event-form__image-preview-wrap">
-                  <EventImage src={form.imageUrl} alt="Preview" className="event-form__image-preview" />
+                  <EventImage
+                    src={form.imageUrl}
+                    alt="Preview"
+                    className="event-form__image-preview"
+                  />
                 </div>
               )}
 
@@ -408,7 +470,11 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
                   {saving ? 'Saving…' : editingEventId ? 'Save changes' : '+ Add event'}
                 </button>
                 {editingEventId && (
-                  <button type="button" className="btn btn-outline btn-sm" onClick={() => resetForm()}>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={() => resetForm()}
+                  >
                     Cancel edit
                   </button>
                 )}
@@ -427,8 +493,14 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
             {upcoming.map((ev) => (
               <li key={ev.id}>
                 <div className="admin-calendar__upcoming-row">
-                  <button type="button" className="learner-calendar__upcoming-item admin-calendar__upcoming-main" onClick={() => jumpToDate(ev.date)}>
-                    <span className={`learner-calendar__type-dot learner-calendar__type-dot--${ev.type || 'general'}`} />
+                  <button
+                    type="button"
+                    className="learner-calendar__upcoming-item admin-calendar__upcoming-main"
+                    onClick={() => jumpToDate(ev.date)}
+                  >
+                    <span
+                      className={`learner-calendar__type-dot learner-calendar__type-dot--${ev.type || 'general'}`}
+                    />
                     <span className="learner-calendar__date">{ev.date}</span>
                     <span>
                       <strong>{ev.title}</strong>
@@ -439,10 +511,18 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
                     </span>
                   </button>
                   <div className="admin-list__actions">
-                    <button type="button" className="btn btn-sm btn-outline" onClick={() => startEditEvent(ev)}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline"
+                      onClick={() => startEditEvent(ev)}
+                    >
                       Edit
                     </button>
-                    <button type="button" className="btn btn-sm btn-danger" onClick={() => handleDelete(ev.id)}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-danger"
+                      onClick={() => handleDelete(ev.id)}
+                    >
                       Delete
                     </button>
                   </div>

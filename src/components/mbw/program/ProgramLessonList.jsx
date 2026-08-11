@@ -35,9 +35,7 @@ export default function ProgramLessonList({
         return (
           <li key={group.id} className="mbw-lesson-group">
             {group.label && (
-              <div
-                className={`mbw-lesson-group__head${groupIndex === 0 ? ' is-spine-start' : ''}`}
-              >
+              <div className={`mbw-lesson-group__head${groupIndex === 0 ? ' is-spine-start' : ''}`}>
                 <span className="mbw-lesson-group__node" aria-hidden>
                   <span className="mbw-lesson-group__ring" />
                 </span>

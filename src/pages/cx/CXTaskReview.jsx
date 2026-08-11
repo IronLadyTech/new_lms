@@ -88,9 +88,9 @@ export default function CXTaskReview() {
   const task = useMemo(() => tasks.find((t) => t.id === taskId), [tasks, taskId]);
   const reviewDisplay = getSubmissionReviewDisplay(submission);
   const hasSubmission = Boolean(
-    submission
-      && submission.status !== SUBMISSION_STATUS.LOCKED
-      && submission.status !== SUBMISSION_STATUS.UNLOCKED
+    submission &&
+    submission.status !== SUBMISSION_STATUS.LOCKED &&
+    submission.status !== SUBMISSION_STATUS.UNLOCKED
   );
 
   const handleSaveReview = async (e) => {
@@ -98,8 +98,8 @@ export default function CXTaskReview() {
     if (!submission) return;
 
     if (
-      (outcome === REVIEW_OUTCOME.NEEDS_IMPROVEMENT || outcome === REVIEW_OUTCOME.REJECTED)
-      && !feedback.trim()
+      (outcome === REVIEW_OUTCOME.NEEDS_IMPROVEMENT || outcome === REVIEW_OUTCOME.REJECTED) &&
+      !feedback.trim()
     ) {
       setError('Add feedback so the learner knows what to improve.');
       return;
@@ -133,10 +133,7 @@ export default function CXTaskReview() {
         ],
       }));
       try {
-        if (
-          outcome === REVIEW_OUTCOME.NEEDS_IMPROVEMENT
-          || outcome === REVIEW_OUTCOME.REJECTED
-        ) {
+        if (outcome === REVIEW_OUTCOME.NEEDS_IMPROVEMENT || outcome === REVIEW_OUTCOME.REJECTED) {
           await sendReviewNotification({
             userId,
             taskId,
@@ -260,8 +257,8 @@ export default function CXTaskReview() {
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
                   aria-required={
-                    outcome === REVIEW_OUTCOME.NEEDS_IMPROVEMENT
-                    || outcome === REVIEW_OUTCOME.REJECTED
+                    outcome === REVIEW_OUTCOME.NEEDS_IMPROVEMENT ||
+                    outcome === REVIEW_OUTCOME.REJECTED
                   }
                 />
               </label>

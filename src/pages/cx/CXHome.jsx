@@ -34,6 +34,9 @@ function timeAgo(ts) {
   return `${days} days ago`;
 }
 
+/** How many queue items the home panel previews. The KPI never uses this. */
+const ATTENTION_PREVIEW_COUNT = 8;
+
 function learnerInitial(name, email) {
   const source = (name || email || '?').trim();
   return source.charAt(0).toUpperCase();
@@ -121,14 +124,21 @@ function SessionReminderModal({ batch, onClose }) {
                 onChange={(e) => setMessage(e.target.value)}
                 autoFocus
               />
-              <p className="muted cx-modal__hint">Optional — leave blank for the default message.</p>
+              <p className="muted cx-modal__hint">
+                Optional — leave blank for the default message.
+              </p>
             </>
           )}
         </div>
 
         <div className="cx-modal__footer">
           {!result && (
-            <button type="button" className="btn btn-primary" disabled={sending} onClick={handleSend}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={sending}
+              onClick={handleSend}
+            >
               {sending ? 'Sending…' : 'Send reminder'}
             </button>
           )}
@@ -154,6 +164,10 @@ export default function CXHome() {
   const [remindResult, setRemindResult] = useState({});
   const [sessionBatch, setSessionBatch] = useState(null);
 
+  /**
+   * Full queue — never truncated. The KPI tile and panel badge must report the real
+   * backlog; only the rendered list is capped (see ATTENTION_PREVIEW_COUNT).
+   */
   const attentionItems = useMemo(() => {
     if (!adapter.hasTasks) return [];
 
@@ -195,9 +209,14 @@ export default function CXHome() {
           Date.parse(b.submittedAt || '') ||
           0;
         return aMs - bMs;
-      })
-      .slice(0, 8);
+      });
   }, [submissions, students, activeTasks, adapter.hasTasks]);
+
+  const visibleAttentionItems = useMemo(
+    () => attentionItems.slice(0, ATTENTION_PREVIEW_COUNT),
+    [attentionItems]
+  );
+  const hiddenAttentionCount = attentionItems.length - visibleAttentionItems.length;
 
   const completionRate = useMemo(() => {
     const completed = countCompletedCells(students, activeTasks, submissions);
@@ -229,7 +248,10 @@ export default function CXHome() {
     return 'Remind';
   };
 
-  const firstName = String(profile?.displayName ?? '').trim().split(/\s+/)[0] || '';
+  const firstName =
+    String(profile?.displayName ?? '')
+      .trim()
+      .split(/\s+/)[0] || '';
 
   const kpiItems = [
     {
@@ -293,11 +315,16 @@ export default function CXHome() {
         </p>
       )}
 
-      {sessionBatch && <SessionReminderModal batch={sessionBatch} onClose={() => setSessionBatch(null)} />}
+      {sessionBatch && (
+        <SessionReminderModal batch={sessionBatch} onClose={() => setSessionBatch(null)} />
+      )}
 
       <div className="cx-home-grid">
         {adapter.hasTasks && (
-          <section className="cx-panel cx-home-panel cx-home-panel--primary" aria-labelledby="cx-attention-heading">
+          <section
+            className="cx-panel cx-home-panel cx-home-panel--primary"
+            aria-labelledby="cx-attention-heading"
+          >
             <div className="cx-panel__head">
               <h2 id="cx-attention-heading" className="cx-panel__title">
                 Needs your attention
@@ -318,7 +345,7 @@ export default function CXHome() {
                 />
               ) : (
                 <ul className="cx-attention-cards">
-                  {attentionItems.map((s) => {
+                  {visibleAttentionItems.map((s) => {
                     const key = `${s.userId}_${s.taskId}`;
                     const alreadySent = remindResult[key] === 'sent';
                     const displayName = s.learner.displayName || s.learner.email;
@@ -365,6 +392,15 @@ export default function CXHome() {
                   })}
                 </ul>
               )}
+              {!loading && hiddenAttentionCount > 0 && (
+                <p className="cx-panel__more muted">
+                  Showing {visibleAttentionItems.length} of {attentionItems.length}.{' '}
+                  <Link to="/cx/reviews">
+                    View all {attentionItems.length} pending review
+                    {attentionItems.length === 1 ? '' : 's'}
+                  </Link>
+                </p>
+              )}
             </div>
           </section>
         )}
@@ -404,7 +440,11 @@ export default function CXHome() {
                                 {count} learner{count === 1 ? '' : 's'}
                               </span>
                             </span>
-                            <ChevronRight size={18} className="cx-batch-card-home__chevron" aria-hidden />
+                            <ChevronRight
+                              size={18}
+                              className="cx-batch-card-home__chevron"
+                              aria-hidden
+                            />
                           </Link>
                           <button
                             type="button"

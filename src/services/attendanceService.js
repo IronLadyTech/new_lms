@@ -9,12 +9,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import {
-  getDateKey,
-  getTodayKey,
-  isWeekendKey,
-  formatDisplayDate,
-} from '../utils/streakTimezone';
+import { getDateKey, getTodayKey, isWeekendKey, formatDisplayDate } from '../utils/streakTimezone';
 
 const ATTENDANCE = 'attendance';
 
@@ -126,9 +121,7 @@ export function subscribeAttendanceRecords(learnerId, courseId, startKey, endKey
  */
 export function computeAttendanceAnalytics(days, threshold = DEFAULT_ATTENDANCE_THRESHOLD) {
   const list = Array.isArray(days) ? days.filter(Boolean) : [];
-  const scheduled = list.filter(
-    (d) => d.status && d.status !== ATTENDANCE_STATUS.WEEK_OFF
-  );
+  const scheduled = list.filter((d) => d.status && d.status !== ATTENDANCE_STATUS.WEEK_OFF);
   const present = scheduled.filter((d) => d.status === ATTENDANCE_STATUS.PRESENT);
   const absent = scheduled.filter((d) => d.status === ATTENDANCE_STATUS.ABSENT);
   const weekOff = list.filter((d) => d.status === ATTENDANCE_STATUS.WEEK_OFF);
@@ -237,9 +230,7 @@ export async function getBatchAttendanceSummary(memberIds, courseIds, startKey, 
   const memberSet = new Set(memberIds);
   const limited = courseIds.slice(0, 10); // Firestore 'in' supports max 10
   try {
-    const snap = await getDocs(
-      query(collection(db, ATTENDANCE), where('courseId', 'in', limited))
-    );
+    const snap = await getDocs(query(collection(db, ATTENDANCE), where('courseId', 'in', limited)));
     const summary = {};
     snap.docs.forEach((d) => {
       const data = d.data();

@@ -1,13 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import {
-  Lock,
-  BookOpen,
-  LineChart,
-  Paperclip,
-  LifeBuoy,
-  LogIn,
-  Sparkles,
-} from 'lucide-react';
+import { Lock, BookOpen, LineChart, Paperclip, LifeBuoy, LogIn, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { IRON_LADY_CONTACT_EMAIL } from '../utils/constants';
 import GuestRequestAccess from './guest/GuestRequestAccess';

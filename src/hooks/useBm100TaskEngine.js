@@ -25,16 +25,17 @@ function learnerCanSubmit(status, watched, isWatchOnly, task, submission) {
   if (status === SUBMISSION_STATUS.LOCKED || isWatchOnly || !watched) return false;
   if (needsCloudUploadRetry(task, submission)) return true;
   if (status === SUBMISSION_STATUS.COMPLETED) return false;
-  if (status === SUBMISSION_STATUS.SUBMITTED || status === SUBMISSION_STATUS.UNDER_REVIEW) return false;
+  if (status === SUBMISSION_STATUS.SUBMITTED || status === SUBMISSION_STATUS.UNDER_REVIEW)
+    return false;
   return canLearnerResubmit(status) || status === SUBMISSION_STATUS.UNLOCKED;
 }
 
 /** Fully done for learner UI — submitted counts as complete unless CX requests revision. */
 function isTaskComplete(status) {
   return (
-    status === SUBMISSION_STATUS.COMPLETED
-    || status === SUBMISSION_STATUS.SUBMITTED
-    || status === SUBMISSION_STATUS.UNDER_REVIEW
+    status === SUBMISSION_STATUS.COMPLETED ||
+    status === SUBMISSION_STATUS.SUBMITTED ||
+    status === SUBMISSION_STATUS.UNDER_REVIEW
   );
 }
 
@@ -63,9 +64,7 @@ function computeSequentialTaskStates(tasks, submissions, watchProgress) {
     let status = sub?.status || SUBMISSION_STATUS.LOCKED;
 
     const prevComplete =
-      index === 0 ||
-      (prevTask &&
-        (prevTask.optional || submissionUnlocksNext(prevSub?.status)));
+      index === 0 || (prevTask && (prevTask.optional || submissionUnlocksNext(prevSub?.status)));
 
     const dateOk = isDateUnlocked(task.unlockDate);
 
@@ -221,7 +220,9 @@ export default function useBm100TaskEngine(userId) {
       });
       setWatchProgress(restored);
     } catch (e) {
-      setError(e.message === 'timeout' ? '' : 'Could not sync submissions. Showing saved local data.');
+      setError(
+        e.message === 'timeout' ? '' : 'Could not sync submissions. Showing saved local data.'
+      );
     }
   }, [userId]);
 
@@ -405,10 +406,7 @@ export default function useBm100TaskEngine(userId) {
       const saved = await saveSubmission(userId, taskId, payload, { batchId });
       setSubmissions((prev) => ({ ...prev, [taskId]: { ...prev[taskId], ...saved, ...payload } }));
 
-      if (
-        task.type === TASK_TYPES.CHECKLIST
-        && payload.status !== SUBMISSION_STATUS.SUBMITTED
-      ) {
+      if (task.type === TASK_TYPES.CHECKLIST && payload.status !== SUBMISSION_STATUS.SUBMITTED) {
         return null;
       }
       return {
@@ -456,7 +454,8 @@ export default function useBm100TaskEngine(userId) {
       const weekLabel = currentWeekLabel();
       const existing = submissions[taskId]?.weekEntries || [];
       const thisWeekEntry = existing.find((e) => e.weekLabel === weekLabel);
-      const prevLinks = thisWeekEntry?.links || (thisWeekEntry?.linkValue ? [thisWeekEntry.linkValue] : []);
+      const prevLinks =
+        thisWeekEntry?.links || (thisWeekEntry?.linkValue ? [thisWeekEntry.linkValue] : []);
       const links = linkValue ? [...prevLinks, linkValue] : prevLinks;
       const mergedEntry = {
         weekLabel,

@@ -180,9 +180,7 @@ export default function BatchMembersPanel({
                   type="button"
                   className="btn btn-outline btn-sm"
                   disabled={!!busy}
-                  onClick={() =>
-                    run(`remove-${m.id}`, () => removeMemberFromGroup(batch.id, m.id))
-                  }
+                  onClick={() => run(`remove-${m.id}`, () => removeMemberFromGroup(batch.id, m.id))}
                 >
                   Remove
                 </button>

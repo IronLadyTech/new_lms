@@ -15,7 +15,8 @@ export default function RecurringPost({ task, submission, canSubmit, onAddPost }
     <div className="mbw-submission mbw-recurring">
       <p className="muted">{task.description}</p>
       <p className="mbw-recurring__week">
-        This week: <strong>{weekLabel}</strong> — {links.length} / {needed} post{needed !== 1 ? 's' : ''}
+        This week: <strong>{weekLabel}</strong> — {links.length} / {needed} post
+        {needed !== 1 ? 's' : ''}
       </p>
 
       {entries.length > 0 && (

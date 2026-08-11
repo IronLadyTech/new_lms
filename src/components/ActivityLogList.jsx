@@ -27,8 +27,12 @@ export default function ActivityLogList({
         <li key={a.id} className="activity-list__item">
           <span className="activity-type">{formatActivityTypeLabel(a.type)}</span>
           <div className="activity-list__body">
-            <span className="activity-list__summary">{formatActivitySummary(a, { courseMap })}</span>
-            {a.createdAt && <span className="activity-list__when muted">{formatWhen(a.createdAt)}</span>}
+            <span className="activity-list__summary">
+              {formatActivitySummary(a, { courseMap })}
+            </span>
+            {a.createdAt && (
+              <span className="activity-list__when muted">{formatWhen(a.createdAt)}</span>
+            )}
           </div>
         </li>
       ))}

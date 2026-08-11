@@ -27,10 +27,7 @@ export default function MBWProgramJourney({
       {!embedded && <h2 className="mbw-program-journey__title">Your journey</h2>}
       <div className="mbw-program-journey__sections">
         {MBW_PROGRAM_SECTIONS.map((section, index) => (
-          <div
-            key={section.id}
-            ref={section.id === currentSectionId ? currentRef : undefined}
-          >
+          <div key={section.id} ref={section.id === currentSectionId ? currentRef : undefined}>
             <MBWProgramSection
               section={section}
               sectionIndex={index + 1}
@@ -38,7 +35,9 @@ export default function MBWProgramJourney({
               profile={profile}
               expanded={expandedSectionId === section.id}
               isCurrent={section.id === currentSectionId}
-              taskStates={section.usesTaskEngine ? taskStates.filter((t) => t.task.phase === section.id) : []}
+              taskStates={
+                section.usesTaskEngine ? taskStates.filter((t) => t.task.phase === section.id) : []
+              }
               activeTaskId={activeTaskId}
               nextTaskId={nextTaskId}
               onToggle={() => onToggleSection(section.id)}

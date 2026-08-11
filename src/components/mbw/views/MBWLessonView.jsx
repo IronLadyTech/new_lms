@@ -46,7 +46,10 @@ export default function MBWLessonView({
               <CheckCircle2 size={20} className="mbw-lesson-complete__icon" aria-hidden />
               <div className="mbw-lesson-complete__text">
                 <strong>Lesson saved</strong>
-                <span>{successBanner.replace(/^Saved\.?\s*/i, '').trim() || 'Your work was saved successfully.'}</span>
+                <span>
+                  {successBanner.replace(/^Saved\.?\s*/i, '').trim() ||
+                    'Your work was saved successfully.'}
+                </span>
               </div>
             </div>
           )}
@@ -80,7 +83,11 @@ export default function MBWLessonView({
                 <ChevronRight size={18} className="mbw-lesson-nav__next-chev" aria-hidden />
               </button>
             ) : taskComplete && !showNextCta ? (
-              <button type="button" className="btn btn-primary mbw-lesson-nav__next" onClick={onBack}>
+              <button
+                type="button"
+                className="btn btn-primary mbw-lesson-nav__next"
+                onClick={onBack}
+              >
                 Back to program
               </button>
             ) : null}

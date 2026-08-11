@@ -162,7 +162,13 @@ function parseLeadEntitlements(lead) {
     accessTierFromPaymentStatus(paymentStatus) ||
     fromStatus?.accessTier ||
     normalizeAccessTier(
-      pickLeadValue(lead, getFieldMap().accessTier, 'LMS_Access_Tier', 'Access_Tier', 'IL_Access_Tier')
+      pickLeadValue(
+        lead,
+        getFieldMap().accessTier,
+        'LMS_Access_Tier',
+        'Access_Tier',
+        'IL_Access_Tier'
+      )
     );
 
   return {

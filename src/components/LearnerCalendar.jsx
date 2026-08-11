@@ -82,7 +82,10 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
   const monthEvents = useMemo(() => eventsForMonth(events, year, month), [events, year, month]);
   const eventsByDate = useMemo(() => groupByDate(monthEvents), [monthEvents]);
   const selectedEvents = useMemo(() => eventsForDate(events, selectedDate), [events, selectedDate]);
-  const upcoming = useMemo(() => events.filter((e) => e.date >= todayStr).slice(0, 6), [events, todayStr]);
+  const upcoming = useMemo(
+    () => events.filter((e) => e.date >= todayStr).slice(0, 6),
+    [events, todayStr]
+  );
 
   const agendaGroups = useMemo(() => {
     const sorted = [...monthEvents].sort((a, b) => {
@@ -119,7 +122,9 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
   useEffect(() => {
     if (!focusEventId) return undefined;
     const timer = setTimeout(() => {
-      document.getElementById(`learner-event-${focusEventId}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      document
+        .getElementById(`learner-event-${focusEventId}`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 150);
     return () => clearTimeout(timer);
   }, [focusEventId, selectedDate, selectedEvents]);
@@ -133,7 +138,10 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
     <div className="event-calendar learner-calendar">
       <div className="learner-calendar__legend">
         {EVENT_LEGEND.map(({ type, label }) => (
-          <span key={type} className={`learner-calendar__legend-item learner-calendar__legend-item--${type}`}>
+          <span
+            key={type}
+            className={`learner-calendar__legend-item learner-calendar__legend-item--${type}`}
+          >
             {label}
           </span>
         ))}
@@ -156,19 +164,35 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
       <div className="event-calendar__layout">
         <div className="event-calendar__grid-wrap">
           <div className="event-calendar__nav learner-calendar__nav">
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => setViewDate(new Date(year, month - 1, 1))} aria-label="Previous month">
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={() => setViewDate(new Date(year, month - 1, 1))}
+              aria-label="Previous month"
+            >
               <ChevronLeft size={16} aria-hidden="true" />
             </button>
             <div className="learner-calendar__month-head">
               <strong>{monthLabel}</strong>
-              <span className="muted">{monthEvents.length} event{monthEvents.length === 1 ? '' : 's'} this month</span>
+              <span className="muted">
+                {monthEvents.length} event{monthEvents.length === 1 ? '' : 's'} this month
+              </span>
             </div>
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => setViewDate(new Date(year, month + 1, 1))} aria-label="Next month">
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={() => setViewDate(new Date(year, month + 1, 1))}
+              aria-label="Next month"
+            >
               <ChevronRight size={16} aria-hidden="true" />
             </button>
           </div>
 
-          <div className="learner-calendar__view-toggle mobile-scroll-row" role="tablist" aria-label="Calendar view">
+          <div
+            className="learner-calendar__view-toggle mobile-scroll-row"
+            role="tablist"
+            aria-label="Calendar view"
+          >
             <button
               type="button"
               role="tab"
@@ -194,14 +218,20 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
           {viewMode === 'agenda' ? (
             <div className="learner-calendar__agenda">
               {agendaGroups.length === 0 ? (
-                <p className="muted learner-calendar__agenda-empty">No events scheduled this month.</p>
+                <p className="muted learner-calendar__agenda-empty">
+                  No events scheduled this month.
+                </p>
               ) : (
                 agendaGroups.map(([dateStr, dayEvents]) => (
                   <section key={dateStr} className="learner-calendar__agenda-day">
                     <h3 className="learner-calendar__agenda-date">{formatDisplayDate(dateStr)}</h3>
                     <ul className="learner-calendar__agenda-list">
                       {dayEvents.map((ev) => (
-                        <li key={ev.id} id={`learner-event-${ev.id}`} className="learner-calendar__agenda-item">
+                        <li
+                          key={ev.id}
+                          id={`learner-event-${ev.id}`}
+                          className="learner-calendar__agenda-item"
+                        >
                           <EventPreviewCard event={ev} onClick={() => jumpToDate(ev.date)} />
                           <EventDetailActions event={ev} compact />
                         </li>
@@ -252,12 +282,18 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
                               className={`event-calendar__chip event-calendar__chip--${ev.type || 'general'}`}
                               title={`${ev.time ? `${ev.time} · ` : ''}${ev.title}`}
                             >
-                              {ev.time && <span className="event-calendar__chip-time">{ev.time.slice(0, 5)}</span>}
+                              {ev.time && (
+                                <span className="event-calendar__chip-time">
+                                  {ev.time.slice(0, 5)}
+                                </span>
+                              )}
                               <span className="event-calendar__chip-title">{ev.title}</span>
                             </span>
                           ))}
                           {dayEvents.length > 2 && (
-                            <span className="event-calendar__chip event-calendar__chip--more">+{dayEvents.length - 2} more</span>
+                            <span className="event-calendar__chip event-calendar__chip--more">
+                              +{dayEvents.length - 2} more
+                            </span>
                           )}
                         </div>
                       )}
@@ -273,7 +309,9 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
           <aside className="event-calendar__sidebar learner-calendar__sidebar">
             <h3>{formatDisplayDate(selectedDate)}</h3>
             {selectedEvents.length === 0 ? (
-              <p className="muted">No events on this day. Tap a highlighted date to see scheduled items.</p>
+              <p className="muted">
+                No events on this day. Tap a highlighted date to see scheduled items.
+              </p>
             ) : (
               <ul className="event-calendar__event-list">
                 {selectedEvents.map((ev) => (
@@ -285,12 +323,19 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
                     <EventImage src={ev.imageUrl} alt={ev.title} />
                     <div className="event-calendar__event-card-head">
                       <strong>{ev.title}</strong>
-                      <span className={`badge badge-event badge-event--${ev.type || 'general'}`}>{formatEventType(ev.type)}</span>
+                      <span className={`badge badge-event badge-event--${ev.type || 'general'}`}>
+                        {formatEventType(ev.type)}
+                      </span>
                     </div>
                     {ev.time && <span className="event-calendar__event-time">{ev.time}</span>}
                     {ev.description && <p className="muted">{ev.description}</p>}
                     {ev.linkUrl && (
-                      <a href={normalizeEventLink(ev.linkUrl)} target="_blank" rel="noreferrer" className="link-inline">
+                      <a
+                        href={normalizeEventLink(ev.linkUrl)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="link-inline"
+                      >
                         Open event link
                       </a>
                     )}

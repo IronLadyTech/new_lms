@@ -63,14 +63,27 @@ function resolveAccessTier(profile) {
 
 function normalizeProgram(value) {
   const v = (value || '').toString().toLowerCase().trim();
-  if (['mbw', 'master of business warfare', 'business warfare'].includes(v) || v.includes('business warfare')) {
+  if (
+    ['mbw', 'master of business warfare', 'business warfare'].includes(v) ||
+    v.includes('business warfare')
+  ) {
     return 'mbw';
   }
-  if (['lep', 'leadership essentials program', 'leadership essentials'].includes(v) || v.includes('leadership essentials')) {
+  if (
+    ['lep', 'leadership essentials program', 'leadership essentials'].includes(v) ||
+    v.includes('leadership essentials')
+  ) {
     return 'lep';
   }
   if (
-    ['100bm', '100 bm', '100bm program', '100 board members program', '100 board members', '100 business minds'].includes(v) ||
+    [
+      '100bm',
+      '100 bm',
+      '100bm program',
+      '100 board members program',
+      '100 board members',
+      '100 business minds',
+    ].includes(v) ||
     /100\s*bm/.test(v) ||
     v.includes('100 board')
   ) {
@@ -83,7 +96,10 @@ function normalizeProgram(value) {
 function paymentStatusFromRegistrationPayload(body = {}) {
   // Default params do not apply when callers pass `null` (batch apply / email provision).
   const payload = body && typeof body === 'object' ? body : {};
-  const reg = (payload.paymentstatus || payload.paymentStatus || '').toString().toLowerCase().trim();
+  const reg = (payload.paymentstatus || payload.paymentStatus || '')
+    .toString()
+    .toLowerCase()
+    .trim();
   if (reg === 'completed') return PAYMENT_STATUS.REGISTER;
 
   const prog = (

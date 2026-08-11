@@ -16,9 +16,7 @@ export function getSubmissionMediaUrls(submission) {
     null;
 
   const audioUrl =
-    submission.audioUrl ||
-    (fileType.startsWith('audio/') ? submission.fileUrl : null) ||
-    null;
+    submission.audioUrl || (fileType.startsWith('audio/') ? submission.fileUrl : null) || null;
 
   const fileUrl =
     submission.fileUrl &&

@@ -78,10 +78,7 @@ export function getSubmissionReviewDisplay(submission) {
       feedback: feedback?.trim() || '',
     };
   }
-  if (
-    status === SUBMISSION_STATUS.SUBMITTED
-    || status === SUBMISSION_STATUS.UNDER_REVIEW
-  ) {
+  if (status === SUBMISSION_STATUS.SUBMITTED || status === SUBMISSION_STATUS.UNDER_REVIEW) {
     return submittedDisplay();
   }
   if (status === SUBMISSION_STATUS.NEEDS_IMPROVEMENT) {
@@ -117,17 +114,14 @@ export function isAwaitingCxReview() {
 
 /** Learner must revise and resubmit after CX feedback. */
 export function isLearnerActionRequired(status) {
-  return (
-    status === SUBMISSION_STATUS.NEEDS_IMPROVEMENT
-    || status === SUBMISSION_STATUS.REJECTED
-  );
+  return status === SUBMISSION_STATUS.NEEDS_IMPROVEMENT || status === SUBMISSION_STATUS.REJECTED;
 }
 
 export function canLearnerResubmit(status) {
   return (
-    status === SUBMISSION_STATUS.UNLOCKED
-    || status === SUBMISSION_STATUS.NEEDS_IMPROVEMENT
-    || status === SUBMISSION_STATUS.REJECTED
+    status === SUBMISSION_STATUS.UNLOCKED ||
+    status === SUBMISSION_STATUS.NEEDS_IMPROVEMENT ||
+    status === SUBMISSION_STATUS.REJECTED
   );
 }
 
@@ -140,9 +134,9 @@ export function submissionUnlocksNext(status) {
   // sent back for rework is NOT done, must not count toward progress, must not
   // unlock the next lesson, and must remain the learner's resume target.
   return (
-    status === SUBMISSION_STATUS.COMPLETED
-    || status === SUBMISSION_STATUS.SUBMITTED
-    || status === SUBMISSION_STATUS.UNDER_REVIEW
+    status === SUBMISSION_STATUS.COMPLETED ||
+    status === SUBMISSION_STATUS.SUBMITTED ||
+    status === SUBMISSION_STATUS.UNDER_REVIEW
   );
 }
 
@@ -228,9 +222,9 @@ export function archiveReviewHistoryForResubmit(prevSubmission) {
     : [];
 
   if (
-    prevSubmission.reviewOutcome
-    || prevSubmission.feedback?.trim()
-    || prevSubmission.reviewedAt
+    prevSubmission.reviewOutcome ||
+    prevSubmission.feedback?.trim() ||
+    prevSubmission.reviewedAt
   ) {
     const current = buildReviewEntry({
       outcome: prevSubmission.reviewOutcome,
@@ -251,10 +245,10 @@ export function archiveReviewHistoryForResubmit(prevSubmission) {
 /** Clear prior CX review metadata when a learner resubmits. */
 export function clearReviewFieldsForResubmit(prevSubmission) {
   if (
-    !prevSubmission?.reviewOutcome
-    && !prevSubmission?.feedback
-    && !prevSubmission?.reviewedAt
-    && !prevSubmission?.reviewedBy
+    !prevSubmission?.reviewOutcome &&
+    !prevSubmission?.feedback &&
+    !prevSubmission?.reviewedAt &&
+    !prevSubmission?.reviewedBy
   ) {
     return {};
   }

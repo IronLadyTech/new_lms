@@ -40,7 +40,11 @@ export const BM100_PROGRAM_SECTIONS = [
     title: 'Phase 2 — Pitch & Strategy',
     subtitle: '6 lessons · Wk9–Wk14',
     usesTaskEngine: true,
-    gate: { type: BM100_GATE_TYPES.SEQUENCE, requiresSectionId: 'phase-1-foundation', requiresPaid: true },
+    gate: {
+      type: BM100_GATE_TYPES.SEQUENCE,
+      requiresSectionId: 'phase-1-foundation',
+      requiresPaid: true,
+    },
     lockedMessage: 'Complete Phase 1 and full program payment to unlock Phase 2.',
   },
   {
@@ -48,7 +52,11 @@ export const BM100_PROGRAM_SECTIONS = [
     title: 'Phase 3 — Board Ready',
     subtitle: '3 lessons · Wk15–Wk17',
     usesTaskEngine: true,
-    gate: { type: BM100_GATE_TYPES.SEQUENCE, requiresSectionId: 'phase-2-pitch-strategy', requiresPaid: true },
+    gate: {
+      type: BM100_GATE_TYPES.SEQUENCE,
+      requiresSectionId: 'phase-2-pitch-strategy',
+      requiresPaid: true,
+    },
     lockedMessage: 'Complete Phase 2 and full program payment to unlock Phase 3.',
   },
   {
@@ -56,7 +64,11 @@ export const BM100_PROGRAM_SECTIONS = [
     title: 'Phase 4 — Challenges',
     subtitle: '6 lessons · Wk18–Wk23',
     usesTaskEngine: true,
-    gate: { type: BM100_GATE_TYPES.SEQUENCE, requiresSectionId: 'phase-3-board-ready', requiresPaid: true },
+    gate: {
+      type: BM100_GATE_TYPES.SEQUENCE,
+      requiresSectionId: 'phase-3-board-ready',
+      requiresPaid: true,
+    },
     lockedMessage: 'Complete Phase 3 and full program payment to unlock Phase 4.',
   },
   {
@@ -64,7 +76,11 @@ export const BM100_PROGRAM_SECTIONS = [
     title: 'Graduation',
     subtitle: '1 lesson · Wk24',
     usesTaskEngine: true,
-    gate: { type: BM100_GATE_TYPES.SEQUENCE, requiresSectionId: 'phase-4-challenges', requiresPaid: true },
+    gate: {
+      type: BM100_GATE_TYPES.SEQUENCE,
+      requiresSectionId: 'phase-4-challenges',
+      requiresPaid: true,
+    },
     lockedMessage: 'Complete Phase 4 and full program payment to unlock Graduation.',
   },
 ];

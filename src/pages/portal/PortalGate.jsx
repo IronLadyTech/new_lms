@@ -36,12 +36,16 @@ export default function PortalGate() {
         <img src="/logo.png" alt="Iron Lady" className="logo-mark lg portal-gate__logo" />
         <h1>Welcome back{profile?.displayName ? `, ${profile.displayName}` : ''}</h1>
         <p className="portal-gate__sub">
-          You are signed in as <strong>{isSuperAdmin ? 'Super Admin' : 'Admin'}</strong>. How would you like to
-          continue?
+          You are signed in as <strong>{isSuperAdmin ? 'Super Admin' : 'Admin'}</strong>. How would
+          you like to continue?
         </p>
 
         <div className="portal-gate__actions">
-          <button type="button" className="portal-gate__btn portal-gate__btn--admin" onClick={() => navigate(adminPath)}>
+          <button
+            type="button"
+            className="portal-gate__btn portal-gate__btn--admin"
+            onClick={() => navigate(adminPath)}
+          >
             <span className="portal-gate__icon" aria-hidden="true">
               <Settings size={22} strokeWidth={2} />
             </span>
@@ -51,7 +55,11 @@ export default function PortalGate() {
             </span>
           </button>
 
-          <button type="button" className="portal-gate__btn portal-gate__btn--user" onClick={() => navigate('/app/home')}>
+          <button
+            type="button"
+            className="portal-gate__btn portal-gate__btn--user"
+            onClick={() => navigate('/app/home')}
+          >
             <span className="portal-gate__icon" aria-hidden="true">
               <GraduationCap size={22} strokeWidth={2} />
             </span>
@@ -60,7 +68,9 @@ export default function PortalGate() {
           </button>
         </div>
 
-        <p className="portal-gate__hint muted">You can switch anytime from the app header or admin sidebar.</p>
+        <p className="portal-gate__hint muted">
+          You can switch anytime from the app header or admin sidebar.
+        </p>
       </div>
     </div>
   );

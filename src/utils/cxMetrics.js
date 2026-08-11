@@ -100,9 +100,9 @@ export function isCxSubmissionComplete(submission) {
   if (!submission) return false;
   const status = submission.status;
   return (
-    status === SUBMISSION_STATUS.COMPLETED
-    || status === SUBMISSION_STATUS.SUBMITTED
-    || status === SUBMISSION_STATUS.UNDER_REVIEW
+    status === SUBMISSION_STATUS.COMPLETED ||
+    status === SUBMISSION_STATUS.SUBMITTED ||
+    status === SUBMISSION_STATUS.UNDER_REVIEW
   );
 }
 

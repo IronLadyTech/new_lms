@@ -1,9 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  PRE_SESSION_TASKS,
-  SUBMISSION_STATUS,
-  getAllSubmissions,
-} from '../../services/mbwService';
+import { PRE_SESSION_TASKS, SUBMISSION_STATUS, getAllSubmissions } from '../../services/mbwService';
 import { getProgramLabel } from '../../data/programTypes';
 import { filterStudentsForBatches } from '../../utils/batchScope';
 import TemplateReadOnly from '../mbw/TemplateReadOnly';
@@ -67,7 +63,10 @@ export default function MBWAdminDashboard({
 
   const batchFilterOptions = useMemo(() => {
     if (isScoped && batches.length) {
-      return [{ id: 'all', name: 'All my batches' }, ...batches.map((b) => ({ id: b.id, name: b.name }))];
+      return [
+        { id: 'all', name: 'All my batches' },
+        ...batches.map((b) => ({ id: b.id, name: b.name })),
+      ];
     }
     const fromSubs = new Set(submissions.map((s) => s.batchId || 'default'));
     const fromUsers = new Set(users.map((u) => u.batchId).filter(Boolean));
@@ -76,7 +75,10 @@ export default function MBWAdminDashboard({
       { id: 'all', name: 'All batches' },
       ...[...ids].map((id) => ({
         id,
-        name: batches.find((b) => b.id === id)?.name || users.find((u) => u.batchId === id)?.batchName || id,
+        name:
+          batches.find((b) => b.id === id)?.name ||
+          users.find((u) => u.batchId === id)?.batchName ||
+          id,
       })),
     ];
   }, [isScoped, batches, submissions, users]);
@@ -89,7 +91,8 @@ export default function MBWAdminDashboard({
       if (u.role && !['student', 'moderator'].includes(u.role) && u.role !== '') return false;
       if (batchFilter !== 'all') {
         const subs = subByUser[u.id];
-        const matchSub = subs && Object.values(subs).some((s) => (s.batchId || 'default') === batchFilter);
+        const matchSub =
+          subs && Object.values(subs).some((s) => (s.batchId || 'default') === batchFilter);
         const matchProfile = u.batchId === batchFilter;
         if (!matchSub && !matchProfile) return false;
       }
@@ -118,8 +121,8 @@ export default function MBWAdminDashboard({
       <section className="admin-section mbw-admin">
         <h2>My batches</h2>
         <p className="muted">
-          No batches are assigned to you yet. Ask an admin to add you as the Customer Expression lead on a
-          batch.
+          No batches are assigned to you yet. Ask an admin to add you as the Customer Expression
+          lead on a batch.
         </p>
       </section>
     );
@@ -184,7 +187,9 @@ export default function MBWAdminDashboard({
                 {tasks.map((t) => (
                   <th key={t.id} title={t.title} className="mbw-admin-th">
                     <span className="mbw-admin-th__num">{t.order + 1}</span>
-                    <span className="mbw-admin-th__name">{t.title.split(' ').slice(0, 2).join(' ')}</span>
+                    <span className="mbw-admin-th__name">
+                      {t.title.split(' ').slice(0, 2).join(' ')}
+                    </span>
                   </th>
                 ))}
               </tr>
@@ -193,7 +198,11 @@ export default function MBWAdminDashboard({
               {filteredUsers.map((u) => (
                 <tr key={u.id}>
                   <td>
-                    <button type="button" className="mbw-admin-name" onClick={() => setSelectedUserId(u.id)}>
+                    <button
+                      type="button"
+                      className="mbw-admin-name"
+                      onClick={() => setSelectedUserId(u.id)}
+                    >
                       {u.displayName || u.email}
                     </button>
                     {u.phone && <span className="mbw-admin-phone">{u.phone}</span>}
@@ -203,7 +212,11 @@ export default function MBWAdminDashboard({
                     const sub = subByUser[u.id]?.[t.id];
                     const st = sub?.status || SUBMISSION_STATUS.LOCKED;
                     return (
-                      <td key={t.id} className={`mbw-admin-cell ${statusCellClass(st)}`} title={t.title}>
+                      <td
+                        key={t.id}
+                        className={`mbw-admin-cell ${statusCellClass(st)}`}
+                        title={t.title}
+                      >
                         {statusShort(st)}
                       </td>
                     );
@@ -219,7 +232,11 @@ export default function MBWAdminDashboard({
         <div className="admin-card mbw-admin-detail">
           <div className="admin-card__head">
             <h3>{selectedUser.displayName || selectedUser.email}</h3>
-            <button type="button" className="btn btn-sm btn-outline" onClick={() => setSelectedUserId('')}>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline"
+              onClick={() => setSelectedUserId('')}
+            >
               Close
             </button>
           </div>
@@ -238,7 +255,9 @@ export default function MBWAdminDashboard({
                     {t.order + 1}. {t.title}
                   </strong>{' '}
                   {sub ? (
-                    <span className={`mbw-status-pill mbw-status-pill--${sub.status === 'completed' ? 'done' : 'open'}`}>
+                    <span
+                      className={`mbw-status-pill mbw-status-pill--${sub.status === 'completed' ? 'done' : 'open'}`}
+                    >
                       {sub.status}
                     </span>
                   ) : (

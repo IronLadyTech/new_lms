@@ -10,8 +10,8 @@ export default function OfflineBanner() {
     <div className="offline-banner" role="status" aria-live="polite">
       <WifiOff size={16} aria-hidden="true" />
       <span>
-        You&apos;re offline. You can keep reading, but submissions may not sync until your connection
-        returns.
+        You&apos;re offline. You can keep reading, but submissions may not sync until your
+        connection returns.
       </span>
     </div>
   );

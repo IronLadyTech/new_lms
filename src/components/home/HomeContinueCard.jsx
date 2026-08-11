@@ -17,7 +17,12 @@ export default function HomeContinueCard({ course, nextLabel, enrolledCount, pro
 
   const tasksPath = getProgramTasksPath(course.code);
   const href = tasksPath || `/app/course/${course.id}`;
-  const tasksLabel = course.code === 'MBW' ? 'Open MBW tasks' : course.code === '100BM' ? 'Open 100BM tasks' : 'Continue course';
+  const tasksLabel =
+    course.code === 'MBW'
+      ? 'Open MBW tasks'
+      : course.code === '100BM'
+        ? 'Open 100BM tasks'
+        : 'Continue course';
 
   return (
     <article className="dashboard-continue">

@@ -53,13 +53,9 @@ export default function BM100OverviewView({
         completedMilestones={completedMilestones}
         totalMilestones={totalMilestones}
         blockedMessage={
-          paymentBlocked
-            ? 'Full program payment unlocks Phase 2 through Graduation.'
-            : null
+          paymentBlocked ? 'Full program payment unlocks Phase 2 through Graduation.' : null
         }
-        blockedCta={
-          paymentBlocked ? { label: 'Payment support', href: '/app/support' } : null
-        }
+        blockedCta={paymentBlocked ? { label: 'Payment support', href: '/app/support' } : null}
         getTypeIcon={getTaskTypeIcon}
         getDurationHint={getTaskDurationHint}
         continueLabel={resumeLabel}

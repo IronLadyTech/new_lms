@@ -26,7 +26,11 @@ export default function CxBatchStageFunnel({ funnel = [], onSelectParticipants }
             </div>
             <span className="cx-stage-funnel__total muted">{section.total} learners</span>
           </header>
-          <div className="cx-stage-funnel__segments" role="group" aria-label={`${section.title} stage breakdown`}>
+          <div
+            className="cx-stage-funnel__segments"
+            role="group"
+            aria-label={`${section.title} stage breakdown`}
+          >
             <FunnelSegment
               label="Complete"
               count={section.complete.length}
@@ -73,4 +77,3 @@ export default function CxBatchStageFunnel({ funnel = [], onSelectParticipants }
     </div>
   );
 }
-

@@ -19,10 +19,7 @@ export function getPrimaryStatus(status, isComplete) {
     return { label: display.learnerLabel || display.label, tone: display.tone };
   }
 
-  if (
-    status === SUBMISSION_STATUS.SUBMITTED
-    || status === SUBMISSION_STATUS.UNDER_REVIEW
-  ) {
+  if (status === SUBMISSION_STATUS.SUBMITTED || status === SUBMISSION_STATUS.UNDER_REVIEW) {
     return { label: 'Submitted', tone: 'done' };
   }
 
@@ -67,14 +64,18 @@ export function submissionPreview(sub, task) {
       return `ERRC grid (${sub.templateData.rows.length} rows)`;
     }
     if (sub.templateData?.fields) {
-      const filled = Object.values(sub.templateData.fields).filter((v) => String(v || '').trim()).length;
+      const filled = Object.values(sub.templateData.fields).filter((v) =>
+        String(v || '').trim()
+      ).length;
       return `Form submitted (${filled} fields)`;
     }
     return `Table submitted (${sub.templateData.rows.length} rows)`;
   }
   if (sub.checkedItems?.length) {
     const total = task?.checklistItems?.length;
-    return total ? `${sub.checkedItems.length}/${total} practices done` : `${sub.checkedItems.length} practice(s) done`;
+    return total
+      ? `${sub.checkedItems.length}/${total} practices done`
+      : `${sub.checkedItems.length} practice(s) done`;
   }
   if (sub.watchCompleted) return 'Video watched';
   return null;

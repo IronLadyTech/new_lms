@@ -7,7 +7,10 @@ function groupFields(fields = []) {
     const section = field.section || 'Details';
     if (!seen.has(section)) {
       seen.add(section);
-      groups.push({ section, fields: fields.filter((item) => (item.section || 'Details') === section) });
+      groups.push({
+        section,
+        fields: fields.filter((item) => (item.section || 'Details') === section),
+      });
     }
   });
   return groups;

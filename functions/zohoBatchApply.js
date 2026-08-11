@@ -34,7 +34,9 @@ const MAX_BATCH_SIZE = 250;
 const DEFAULT_CONCURRENCY = 4;
 
 function normalizeEmail(value) {
-  return String(value || '').trim().toLowerCase();
+  return String(value || '')
+    .trim()
+    .toLowerCase();
 }
 
 function isActiveLeadStatus(statusRaw) {
@@ -117,16 +119,22 @@ async function assignMemberToBatch(db, { groupId, groupName, program, uid }) {
   const oldBatchId = userSnap.exists ? userSnap.data()?.batchId : null;
 
   if (oldBatchId && oldBatchId !== groupId) {
-    await db.collection(GROUPS).doc(oldBatchId).update({
-      memberIds: admin.firestore.FieldValue.arrayRemove(uid),
-      updatedAt: new Date(),
-    });
+    await db
+      .collection(GROUPS)
+      .doc(oldBatchId)
+      .update({
+        memberIds: admin.firestore.FieldValue.arrayRemove(uid),
+        updatedAt: new Date(),
+      });
   }
 
-  await db.collection(GROUPS).doc(groupId).update({
-    memberIds: admin.firestore.FieldValue.arrayUnion(uid),
-    updatedAt: new Date(),
-  });
+  await db
+    .collection(GROUPS)
+    .doc(groupId)
+    .update({
+      memberIds: admin.firestore.FieldValue.arrayUnion(uid),
+      updatedAt: new Date(),
+    });
 
   await userRef.set(
     {
@@ -175,7 +183,9 @@ async function applyBatchSync(
   },
   deps
 ) {
-  const programId = String(program || '').trim().toLowerCase();
+  const programId = String(program || '')
+    .trim()
+    .toLowerCase();
 
   if (!programId || !['lep', '100bm', 'mbw'].includes(programId)) {
     return { ok: false, reason: 'program must be lep, 100bm, or mbw' };
@@ -197,10 +207,7 @@ async function applyBatchSync(
   let fetchMeta = {};
 
   if (useLeadsCohort) {
-    const cohort = await fetchLeadsCohortMembers(
-      { programId, startDate, endDate, maxPages },
-      deps
-    );
+    const cohort = await fetchLeadsCohortMembers({ programId, startDate, endDate, maxPages }, deps);
     if (!cohort.ok) return cohort;
 
     docId = cohort.docId;
@@ -314,11 +321,14 @@ async function applyBatchSync(
       displayName,
       ...fetchMeta,
       ...stats,
-      learners: (fetchMeta.learners || members.map((m) => ({
-        email: m.email,
-        name: m.name || m.record?.Last_Name || '',
-        leadStatus: m.leadStatus || m.record?._status || '',
-      }))).map((learner) => {
+      learners: (
+        fetchMeta.learners ||
+        members.map((m) => ({
+          email: m.email,
+          name: m.name || m.record?.Last_Name || '',
+          leadStatus: m.leadStatus || m.record?._status || '',
+        }))
+      ).map((learner) => {
         const active = activeMembers.find((a) => a.email === learner.email);
         return {
           ...learner,
@@ -460,10 +470,13 @@ async function removeMemberFromBatch(db, uid) {
   const oldBatchId = userSnap.data()?.batchId || null;
 
   if (oldBatchId) {
-    await db.collection(GROUPS).doc(oldBatchId).update({
-      memberIds: admin.firestore.FieldValue.arrayRemove(uid),
-      updatedAt: new Date(),
-    });
+    await db
+      .collection(GROUPS)
+      .doc(oldBatchId)
+      .update({
+        memberIds: admin.firestore.FieldValue.arrayRemove(uid),
+        updatedAt: new Date(),
+      });
   }
 
   await userRef.set(
@@ -583,7 +596,10 @@ async function resolveUserBatchTarget(email, deps, existingProfile = null) {
  * Sync one learner's LMS batch from Zoho (Leads dates or IL_Users / IL_Registration).
  * Moves them between Firestore groups when Zoho batch changes.
  */
-async function syncUserBatchFromZoho({ email, dryRun = false, triggeredBy = null, provisionIfMissing = true }, deps) {
+async function syncUserBatchFromZoho(
+  { email, dryRun = false, triggeredBy = null, provisionIfMissing = true },
+  deps
+) {
   const normalized = normalizeEmail(email);
   if (!normalized) return { ok: false, reason: 'email is required' };
 

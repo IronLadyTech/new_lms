@@ -56,55 +56,55 @@ export default function StudentLayout() {
 
   return (
     <StreakAnalyticsProvider>
-    <div
-      className={`student-layout student-layout--course${isLightShell ? ' student-layout--mbw' : ''}`}
-    >
-      <SkipLink />
-      <header className="app-header">
-        <div className="app-header__brand">
-          <img src="/logo.png" alt="Iron Lady" className="logo-mark" />
-          <span>LMS</span>
-        </div>
-        <div className="app-header__actions">
-          {isGuest && <span className="guest-badge">Guest</span>}
-          <WidgetErrorBoundary name="HeaderStreak" resetKey={location.pathname}>
-            <HeaderStreak />
-          </WidgetErrorBoundary>
-          <WidgetErrorBoundary name="ThemeToggle">
-            <ThemeToggle compact />
-          </WidgetErrorBoundary>
-          <WidgetErrorBoundary name="NotificationBell" resetKey={location.pathname}>
-            <NotificationBell />
-          </WidgetErrorBoundary>
-          {showAdminLink && (
-            <Link
-              to={isModeratorOnly(role) ? '/cx/home' : '/portal'}
-              className="app-header__link app-header__link--admin"
-              aria-label={isModeratorOnly(role) ? 'CX portal' : 'Admin portal'}
-            >
-              <Shield size={18} strokeWidth={2} className="app-header__admin-icon" aria-hidden />
-              <span className="app-header__admin-label">
-                {isModeratorOnly(role) ? 'CX' : 'Admin'}
-              </span>
-            </Link>
-          )}
-        </div>
-      </header>
-      <OfflineBanner />
-      <main
-        id="main-content"
-        className={`student-main${isLightShell ? ' student-main--mbw' : ''}${
-          isHomePage || isProgressPage ? ' student-main--home' : ''
-        }${isCourseDetailRoute ? ' student-main--wide' : ''}`}
+      <div
+        className={`student-layout student-layout--course${isLightShell ? ' student-layout--mbw' : ''}`}
       >
-        <LayoutErrorBoundary name="student-page" resetKey={location.pathname}>
-          <Outlet />
-        </LayoutErrorBoundary>
-      </main>
-      <WidgetErrorBoundary name="BottomNav" resetKey={location.pathname}>
-        <BottomNav />
-      </WidgetErrorBoundary>
-    </div>
+        <SkipLink />
+        <header className="app-header">
+          <div className="app-header__brand">
+            <img src="/logo.png" alt="Iron Lady" className="logo-mark" />
+            <span>LMS</span>
+          </div>
+          <div className="app-header__actions">
+            {isGuest && <span className="guest-badge">Guest</span>}
+            <WidgetErrorBoundary name="HeaderStreak" resetKey={location.pathname}>
+              <HeaderStreak />
+            </WidgetErrorBoundary>
+            <WidgetErrorBoundary name="ThemeToggle">
+              <ThemeToggle compact />
+            </WidgetErrorBoundary>
+            <WidgetErrorBoundary name="NotificationBell" resetKey={location.pathname}>
+              <NotificationBell />
+            </WidgetErrorBoundary>
+            {showAdminLink && (
+              <Link
+                to={isModeratorOnly(role) ? '/cx/home' : '/portal'}
+                className="app-header__link app-header__link--admin"
+                aria-label={isModeratorOnly(role) ? 'CX portal' : 'Admin portal'}
+              >
+                <Shield size={18} strokeWidth={2} className="app-header__admin-icon" aria-hidden />
+                <span className="app-header__admin-label">
+                  {isModeratorOnly(role) ? 'CX' : 'Admin'}
+                </span>
+              </Link>
+            )}
+          </div>
+        </header>
+        <OfflineBanner />
+        <main
+          id="main-content"
+          className={`student-main${isLightShell ? ' student-main--mbw' : ''}${
+            isHomePage || isProgressPage ? ' student-main--home' : ''
+          }${isCourseDetailRoute ? ' student-main--wide' : ''}`}
+        >
+          <LayoutErrorBoundary name="student-page" resetKey={location.pathname}>
+            <Outlet />
+          </LayoutErrorBoundary>
+        </main>
+        <WidgetErrorBoundary name="BottomNav" resetKey={location.pathname}>
+          <BottomNav />
+        </WidgetErrorBoundary>
+      </div>
     </StreakAnalyticsProvider>
   );
 }

@@ -2,9 +2,7 @@ import { useEffect, useState } from 'react';
 import { ERRC_COLUMNS, createErrcRows } from '../../../data/errcTemplate';
 
 export default function ErrcTableEditor({ task, submission, canSubmit, onSave }) {
-  const [rows, setRows] = useState(
-    () => submission?.templateData?.rows || createErrcRows()
-  );
+  const [rows, setRows] = useState(() => submission?.templateData?.rows || createErrcRows());
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {

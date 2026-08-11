@@ -2,7 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { HOME_BANNERS, HOME_BANNER_AUTO_MS } from '../data/homeBanners';
 
-export default function HomeBannerCarousel({ banners = HOME_BANNERS, autoMs = HOME_BANNER_AUTO_MS }) {
+export default function HomeBannerCarousel({
+  banners = HOME_BANNERS,
+  autoMs = HOME_BANNER_AUTO_MS,
+}) {
   const count = banners.length;
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);

@@ -59,7 +59,9 @@ function isVisibleCxSubmission(status) {
 
 function matchesQueueFilter(submission, filterId) {
   if (filterId === 'pending') {
-    return [SUBMISSION_STATUS.SUBMITTED, SUBMISSION_STATUS.UNDER_REVIEW].includes(submission.status);
+    return [SUBMISSION_STATUS.SUBMITTED, SUBMISSION_STATUS.UNDER_REVIEW].includes(
+      submission.status
+    );
   }
   if (filterId === 'action') {
     return isLearnerActionRequired(submission.status);
@@ -107,14 +109,17 @@ export default function CXReviews() {
           Number([SUBMISSION_STATUS.SUBMITTED, SUBMISSION_STATUS.UNDER_REVIEW].includes(b.status)) -
           Number([SUBMISSION_STATUS.SUBMITTED, SUBMISSION_STATUS.UNDER_REVIEW].includes(a.status));
         if (pendingDelta) return pendingDelta;
-        return submittedMs(b.submittedAt || b.updatedAt) - submittedMs(a.submittedAt || a.updatedAt);
+        return (
+          submittedMs(b.submittedAt || b.updatedAt) - submittedMs(a.submittedAt || a.updatedAt)
+        );
       });
   }, [submissions, students, tasks, batchFilter, batchMemberIds, queueFilter]);
 
   const actionRequiredCount = useMemo(
     () =>
-      submissions.filter((s) => isLearnerActionRequired(s.status) && isVisibleCxSubmission(s.status))
-        .length,
+      submissions.filter(
+        (s) => isLearnerActionRequired(s.status) && isVisibleCxSubmission(s.status)
+      ).length,
     [submissions]
   );
 
@@ -186,7 +191,12 @@ export default function CXReviews() {
         subtitle="Filter by batch or status, open a submission, and send feedback when improvement is needed."
         icon={ClipboardCheck}
         actions={
-          <button type="button" className="btn btn-outline btn-sm" onClick={refresh} disabled={loading}>
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={refresh}
+            disabled={loading}
+          >
             <RefreshCw size={14} aria-hidden="true" />
             Refresh
           </button>
@@ -208,7 +218,11 @@ export default function CXReviews() {
         </div>
         <div className="cx-panel__body">
           <div className="cx-reviews-toolbar">
-            <div className="cx-tab-bar cx-tab-bar--inline mobile-scroll-row" role="tablist" aria-label="Queue filter">
+            <div
+              className="cx-tab-bar cx-tab-bar--inline mobile-scroll-row"
+              role="tablist"
+              aria-label="Queue filter"
+            >
               {QUEUE_FILTERS.map((f) => (
                 <button
                   key={f.id}
@@ -247,7 +261,11 @@ export default function CXReviews() {
           {loading ? (
             <DashboardSkeleton rows={4} />
           ) : reviewSubmissions.length === 0 ? (
-            <EmptyState icon={ClipboardCheck} title="Nothing in this queue" message={emptyMessage} />
+            <EmptyState
+              icon={ClipboardCheck}
+              title="Nothing in this queue"
+              message={emptyMessage}
+            />
           ) : (
             <ul className="cx-review-list">
               {reviewSubmissions.map((s) => {

@@ -25,10 +25,7 @@ const TOKEN_BLOCK = `  /* Type scale — 7 steps (UX audit H-1). Floor is 12px. 
 `;
 
 if (!css.includes('--text-xs:')) {
-  css = css.replace(
-    `  --space-2xl: 48px;\n`,
-    `  --space-2xl: 48px;\n${TOKEN_BLOCK}`
-  );
+  css = css.replace(`  --space-2xl: 48px;\n`, `  --space-2xl: 48px;\n${TOKEN_BLOCK}`);
 }
 
 /** Map a rem/px font-size to nearest type token (raise sub-12px to xs). */
@@ -98,17 +95,14 @@ const MIN_BP_MAP = {
 
 let bpReplacements = 0;
 css = css.replace(/@media\s*\(([^)]+)\)/g, (full, query) => {
-  const next = query.replace(
-    /(max-width|min-width):\s*([0-9.]+px)/g,
-    (m, dir, px) => {
-      const map = dir === 'max-width' ? MAX_BP_MAP : MIN_BP_MAP;
-      if (!(px in map)) return m;
-      const mapped = map[px];
-      if (mapped === px) return m;
-      bpReplacements += 1;
-      return `${dir}: ${mapped}`;
-    }
-  );
+  const next = query.replace(/(max-width|min-width):\s*([0-9.]+px)/g, (m, dir, px) => {
+    const map = dir === 'max-width' ? MAX_BP_MAP : MIN_BP_MAP;
+    if (!(px in map)) return m;
+    const mapped = map[px];
+    if (mapped === px) return m;
+    bpReplacements += 1;
+    return `${dir}: ${mapped}`;
+  });
   return `@media (${next})`;
 });
 
@@ -137,7 +131,14 @@ const REM_TO_SPACE = {
 
 function mapSpacingValue(token) {
   const t = token.trim();
-  if (!t || t === '0' || t === 'auto' || t.startsWith('var(') || t.includes('calc') || t.includes('env(')) {
+  if (
+    !t ||
+    t === '0' ||
+    t === 'auto' ||
+    t.startsWith('var(') ||
+    t.includes('calc') ||
+    t.includes('env(')
+  ) {
     return t;
   }
   if (REM_TO_SPACE[t]) return REM_TO_SPACE[t];
@@ -145,19 +146,16 @@ function mapSpacingValue(token) {
 }
 
 let spaceReplacements = 0;
-css = css.replace(
-  /(padding|margin|gap|row-gap|column-gap):\s*([^;{]+);/g,
-  (full, prop, value) => {
-    if (value.includes('var(--space')) return full;
-    const parts = value.trim().split(/\s+/);
-    const mapped = parts.map(mapSpacingValue);
-    if (mapped.join(' ') === parts.join(' ')) return full;
-    // only count if at least one part changed to a token
-    if (!mapped.some((p) => p.startsWith('var(--space'))) return full;
-    spaceReplacements += 1;
-    return `${prop}: ${mapped.join(' ')};`;
-  }
-);
+css = css.replace(/(padding|margin|gap|row-gap|column-gap):\s*([^;{]+);/g, (full, prop, value) => {
+  if (value.includes('var(--space')) return full;
+  const parts = value.trim().split(/\s+/);
+  const mapped = parts.map(mapSpacingValue);
+  if (mapped.join(' ') === parts.join(' ')) return full;
+  // only count if at least one part changed to a token
+  if (!mapped.some((p) => p.startsWith('var(--space'))) return full;
+  spaceReplacements += 1;
+  return `${prop}: ${mapped.join(' ')};`;
+});
 
 fs.writeFileSync(PATH, css);
 console.log(

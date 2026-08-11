@@ -18,7 +18,16 @@ import { TICKET_STATUSES, statusLabel, categoryLabel } from '../../services/tick
 import { downloadCsv, tsToIso } from '../../utils/csvExport';
 import { useTheme } from '../../context/ThemeContext';
 
-const CHART_COLORS = ['#F52929', '#F5B301', '#22c55e', '#FF5A77', '#231F20', '#C8102E', '#16a34a', '#EBEADC'];
+const CHART_COLORS = [
+  '#F52929',
+  '#F5B301',
+  '#22c55e',
+  '#FF5A77',
+  '#231F20',
+  '#C8102E',
+  '#16a34a',
+  '#EBEADC',
+];
 
 function useChartTheme() {
   const { theme } = useTheme();
@@ -172,7 +181,10 @@ export default function AdminOverviewCharts({
   const roleData = useMemo(() => buildRolePieData(users), [users]);
   const ticketData = useMemo(() => buildTicketPieData(tickets), [tickets]);
   const activityData = useMemo(() => buildActivityByDay(activities), [activities]);
-  const enrollmentData = useMemo(() => buildEnrollmentsByCourse(users, courseMap), [users, courseMap]);
+  const enrollmentData = useMemo(
+    () => buildEnrollmentsByCourse(users, courseMap),
+    [users, courseMap]
+  );
   const resourceTypeData = useMemo(() => buildResourcesByType(resources), [resources]);
   const signupData = useMemo(() => buildSignupsByDay(users), [users]);
 
@@ -270,17 +282,28 @@ export default function AdminOverviewCharts({
           {roleData.length === 0 ? (
             <EmptyChart message="No users yet." />
           ) : (
-            <ChartFrame>{(w, h) => (
-              <PieChart width={w} height={h}>
-                <Pie data={roleData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={78} label isAnimationActive={false}>
-                  {roleData.map((_, i) => (
-                    <Cell key={roleData[i].name} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={tooltipStyle} />
-                <Legend />
-              </PieChart>
-            )}</ChartFrame>
+            <ChartFrame>
+              {(w, h) => (
+                <PieChart width={w} height={h}>
+                  <Pie
+                    data={roleData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={78}
+                    label
+                    isAnimationActive={false}
+                  >
+                    {roleData.map((_, i) => (
+                      <Cell key={roleData[i].name} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Legend />
+                </PieChart>
+              )}
+            </ChartFrame>
           )}
         </ChartCard>
 
@@ -288,45 +311,95 @@ export default function AdminOverviewCharts({
           {ticketData.length === 0 ? (
             <EmptyChart message="No tickets yet." />
           ) : (
-            <ChartFrame>{(w, h) => (
-              <PieChart width={w} height={h}>
-                <Pie data={ticketData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={78} label isAnimationActive={false}>
-                  {ticketData.map((_, i) => (
-                    <Cell key={ticketData[i].name} fill={CHART_COLORS[(i + 2) % CHART_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={tooltipStyle} />
-                <Legend />
-              </PieChart>
-            )}</ChartFrame>
+            <ChartFrame>
+              {(w, h) => (
+                <PieChart width={w} height={h}>
+                  <Pie
+                    data={ticketData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={78}
+                    label
+                    isAnimationActive={false}
+                  >
+                    {ticketData.map((_, i) => (
+                      <Cell
+                        key={ticketData[i].name}
+                        fill={CHART_COLORS[(i + 2) % CHART_COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Legend />
+                </PieChart>
+              )}
+            </ChartFrame>
           )}
         </ChartCard>
 
         <ChartCard title="Activity (7 days)" subtitle="Daily user actions">
-          <ChartFrame>{(w, h) => (
-            <BarChart width={w} height={h} data={activityData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-              <XAxis dataKey="day" tick={{ fill: tickFill, fontSize: 12 }} />
-              <YAxis allowDecimals={false} tick={{ fill: tickFill, fontSize: 12 }} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="count" name="Actions" fill={CHART_COLORS[0]} radius={[6, 6, 0, 0]} isAnimationActive={false} />
-            </BarChart>
-          )}</ChartFrame>
+          <ChartFrame>
+            {(w, h) => (
+              <BarChart
+                width={w}
+                height={h}
+                data={activityData}
+                margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                <XAxis dataKey="day" tick={{ fill: tickFill, fontSize: 12 }} />
+                <YAxis allowDecimals={false} tick={{ fill: tickFill, fontSize: 12 }} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Bar
+                  dataKey="count"
+                  name="Actions"
+                  fill={CHART_COLORS[0]}
+                  radius={[6, 6, 0, 0]}
+                  isAnimationActive={false}
+                />
+              </BarChart>
+            )}
+          </ChartFrame>
         </ChartCard>
 
         <ChartCard title="Enrollments by course" subtitle="Top courses">
           {enrollmentData.length === 0 ? (
             <EmptyChart message="No enrollments yet." />
           ) : (
-            <ChartFrame>{(w, h) => (
-              <BarChart width={w} height={h} data={enrollmentData} layout="vertical" margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-                <XAxis type="number" allowDecimals={false} tick={{ fill: tickFill, fontSize: 12 }} />
-                <YAxis type="category" dataKey="name" width={90} tick={{ fill: tickFill, fontSize: 11 }} />
-                <Tooltip contentStyle={tooltipStyle} />
-                <Bar dataKey="count" name="Learners" fill="#22c55e" radius={[0, 6, 6, 0]} isAnimationActive={false} />
-              </BarChart>
-            )}</ChartFrame>
+            <ChartFrame>
+              {(w, h) => (
+                <BarChart
+                  width={w}
+                  height={h}
+                  data={enrollmentData}
+                  layout="vertical"
+                  margin={{ top: 8, right: 8, left: 8, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                  <XAxis
+                    type="number"
+                    allowDecimals={false}
+                    tick={{ fill: tickFill, fontSize: 12 }}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={90}
+                    tick={{ fill: tickFill, fontSize: 11 }}
+                  />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Bar
+                    dataKey="count"
+                    name="Learners"
+                    fill="#22c55e"
+                    radius={[0, 6, 6, 0]}
+                    isAnimationActive={false}
+                  />
+                </BarChart>
+              )}
+            </ChartFrame>
           )}
         </ChartCard>
 
@@ -334,30 +407,57 @@ export default function AdminOverviewCharts({
           {resourceTypeData.length === 0 ? (
             <EmptyChart message="No resources yet." />
           ) : (
-            <ChartFrame>{(w, h) => (
-              <PieChart width={w} height={h}>
-                <Pie data={resourceTypeData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={78} label isAnimationActive={false}>
-                  {resourceTypeData.map((_, i) => (
-                    <Cell key={resourceTypeData[i].name} fill={CHART_COLORS[(i + 4) % CHART_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={tooltipStyle} />
-                <Legend />
-              </PieChart>
-            )}</ChartFrame>
+            <ChartFrame>
+              {(w, h) => (
+                <PieChart width={w} height={h}>
+                  <Pie
+                    data={resourceTypeData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={78}
+                    label
+                    isAnimationActive={false}
+                  >
+                    {resourceTypeData.map((_, i) => (
+                      <Cell
+                        key={resourceTypeData[i].name}
+                        fill={CHART_COLORS[(i + 4) % CHART_COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Legend />
+                </PieChart>
+              )}
+            </ChartFrame>
           )}
         </ChartCard>
 
         <ChartCard title="New signups (7 days)" subtitle="Daily registrations">
-          <ChartFrame>{(w, h) => (
-            <BarChart width={w} height={h} data={signupData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-              <XAxis dataKey="day" tick={{ fill: tickFill, fontSize: 12 }} />
-              <YAxis allowDecimals={false} tick={{ fill: tickFill, fontSize: 12 }} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="count" name="Signups" fill="#f59e0b" radius={[6, 6, 0, 0]} isAnimationActive={false} />
-            </BarChart>
-          )}</ChartFrame>
+          <ChartFrame>
+            {(w, h) => (
+              <BarChart
+                width={w}
+                height={h}
+                data={signupData}
+                margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                <XAxis dataKey="day" tick={{ fill: tickFill, fontSize: 12 }} />
+                <YAxis allowDecimals={false} tick={{ fill: tickFill, fontSize: 12 }} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Bar
+                  dataKey="count"
+                  name="Signups"
+                  fill="#f59e0b"
+                  radius={[6, 6, 0, 0]}
+                  isAnimationActive={false}
+                />
+              </BarChart>
+            )}
+          </ChartFrame>
         </ChartCard>
       </div>
     </div>

@@ -122,9 +122,7 @@ function computeTrends(dailyCounts) {
   }
 
   const activeSpan =
-    first && last
-      ? `${formatDisplayDate(first)} – ${formatDisplayDate(last)}`
-      : null;
+    first && last ? `${formatDisplayDate(first)} – ${formatDisplayDate(last)}` : null;
 
   return { mostActiveMonths, dropOffAfter, activeSpan };
 }
@@ -174,8 +172,7 @@ function generateInsights(summary) {
 export function computeStreakSummary(events = [], options = {}) {
   const list = Array.isArray(events) ? events : [];
   const rangeEnd = options.rangeEnd || getTodayKey();
-  const rangeStart =
-    options.rangeStart || addDaysToKey(rangeEnd, -364);
+  const rangeStart = options.rangeStart || addDaysToKey(rangeEnd, -364);
 
   const dailyCounts = buildDailyCounts(list);
   const activeDates = new Set(dailyCounts.map((d) => d.date));
