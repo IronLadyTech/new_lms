@@ -62,7 +62,7 @@ export default function CurrentStreakCard({ currentStreak = 0 }) {
       </div>
 
       {dayPills.length > 0 && (
-        <div className="streak-current-panel__days" aria-label="Recent streak days">
+        <div className="streak-current-panel__days" role="img" aria-label="Recent streak days">
           {dayPills.map((day) => (
             <div key={day} className="streak-day-pill streak-day-pill--active">
               <Zap size={16} aria-hidden />

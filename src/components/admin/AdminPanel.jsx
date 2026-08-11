@@ -1486,6 +1486,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                     </p>
                     <div className="admin-form batch-moderators-field__edit">
                       <select
+                        aria-label={`Assign a CX lead to ${g.name}`}
                         defaultValue=""
                         onChange={async (e) => {
                           const uid = e.target.value;
@@ -1508,6 +1509,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                     </div>
                     <div className="admin-form" style={{ marginTop: '0.5rem' }}>
                       <select
+                        aria-label={`Add a learner to ${g.name}`}
                         defaultValue=""
                         onChange={(e) => {
                           if (e.target.value) addMemberToGroup(g.id, e.target.value).then(load);
@@ -1525,6 +1527,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                           ))}
                       </select>
                       <select
+                        aria-label={`Add a course to ${g.name}`}
                         defaultValue=""
                         onChange={(e) => {
                           if (e.target.value) addCourseToGroup(g.id, e.target.value).then(load);
@@ -1549,7 +1552,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                               {groups.filter((b) => b.id !== g.id).length > 0 && (
                                 <select
                                   defaultValue=""
-                                  title="Move to batch"
+                                  aria-label="Move this learner to another batch"
                                   onChange={(e) => {
                                     if (e.target.value) {
                                       moveMemberToGroup(uid, e.target.value).then(load);

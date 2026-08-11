@@ -320,7 +320,7 @@ export default function CxOverviewDashboard({
   const drillCursor = onDrill ? 'pointer' : undefined;
 
   return (
-    <div className="cx-crm-dashboard" aria-label="Program overview charts">
+    <div className="cx-crm-dashboard" role="region" aria-label="Program overview charts">
       <DashboardChartCard
         title="Cohort journey"
         subtitle="Stage each participant has reached, by batch"

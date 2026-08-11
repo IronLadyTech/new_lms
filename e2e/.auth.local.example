@@ -1,0 +1,18 @@
+# Credentials for the authenticated accessibility scans (e2e/a11y-staff.spec.js).
+#
+# 1. Copy this file to:  e2e/.auth.local
+# 2. Fill in the values
+# 3. Run:  npm run test:e2e
+#
+# This file is gitignored (`*.local`) and must never be committed.
+#
+# The scans are READ-ONLY — they load pages and analyse the rendered DOM. They
+# never submit forms, delete records, or change data. Even so, prefer a
+# throwaway staff account on a staging project over a real one.
+#
+# When these values are absent the staff scans skip rather than fail, so CI
+# stays green without secrets configured.
+
+# Needs enough access to reach /cx/* and /admin — moderator+admin, or superadmin.
+STAFF_EMAIL=
+STAFF_PASSWORD=

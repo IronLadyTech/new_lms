@@ -370,46 +370,61 @@ export default function EventCalendar({ events, onRefresh, createdBy }) {
             <h4>{editingEventId ? 'Edit event' : `Add event on ${selectedDate}`}</h4>
             {msg && <p className={isSuccessMsg ? 'success-text' : 'alert alert-error'}>{msg}</p>}
             <form className="admin-form admin-form--stacked" onSubmit={handleSubmit}>
-              <input
-                placeholder="Event title"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                required
-              />
-              <input
-                type="date"
-                value={form.date}
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
-                required
-              />
-              <input
-                type="time"
-                value={form.time}
-                onChange={(e) => setForm({ ...form, time: e.target.value })}
-              />
-              <select
-                value={form.type}
-                onChange={(e) => setForm({ ...form, type: e.target.value })}
-              >
-                {EVENT_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-              <textarea
-                placeholder="Description (optional)"
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                rows={3}
-              />
+              <label className="field">
+                <span>Event title</span>
+                <input
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  required
+                />
+              </label>
+              <label className="field">
+                <span>Date</span>
+                <input
+                  type="date"
+                  value={form.date}
+                  onChange={(e) => setForm({ ...form, date: e.target.value })}
+                  required
+                />
+              </label>
+              <label className="field">
+                <span>Start time</span>
+                <input
+                  type="time"
+                  value={form.time}
+                  onChange={(e) => setForm({ ...form, time: e.target.value })}
+                />
+              </label>
+              <label className="field">
+                <span>Event type</span>
+                <select
+                  value={form.type}
+                  onChange={(e) => setForm({ ...form, type: e.target.value })}
+                >
+                  {EVENT_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>Description (optional)</span>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  rows={3}
+                />
+              </label>
 
-              <input
-                type="url"
-                placeholder="Event link — Zoom, meet, website (optional)"
-                value={form.linkUrl}
-                onChange={(e) => setForm({ ...form, linkUrl: e.target.value })}
-              />
+              <label className="field">
+                <span>Event link — Zoom, Meet, website (optional)</span>
+                <input
+                  type="url"
+                  value={form.linkUrl}
+                  onChange={(e) => setForm({ ...form, linkUrl: e.target.value })}
+                />
+              </label>
 
               <label className="field field--full event-form__image-field">
                 <span>Event image (optional)</span>

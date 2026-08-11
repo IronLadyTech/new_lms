@@ -1,6 +1,11 @@
 export default function DashboardSkeleton({ rows = 2 }) {
   return (
-    <div className="dashboard-skeleton" aria-busy="true" aria-label="Loading dashboard">
+    <div
+      className="dashboard-skeleton"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading dashboard"
+    >
       <div className="dashboard-skeleton__hero dashboard-skeleton__block" />
       <div className="dashboard-skeleton__stats">
         {[0, 1, 2, 3].map((i) => (

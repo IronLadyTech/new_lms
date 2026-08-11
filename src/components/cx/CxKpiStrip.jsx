@@ -11,8 +11,9 @@ import { ChevronRight } from 'lucide-react';
  */
 export default function CxKpiStrip({ items, loading = false }) {
   if (loading) {
+    // role is required for aria-label to be valid on a generic element.
     return (
-      <div className="cx-kpi-strip" aria-busy="true" aria-label="Loading metrics">
+      <div className="cx-kpi-strip" role="status" aria-busy="true" aria-label="Loading metrics">
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className="cx-kpi cx-kpi--skeleton" />
         ))}
