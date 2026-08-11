@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Iron Lady LMS — Leadership Overview</title>
+    <style>
+      @page {
+        size: 297mm 210mm;
+        margin: 0;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        width: 297mm;
+        background: #000;
+      }
+      body {
+        font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+        color: #fff;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .slide {
+        position: relative;
+        width: 297mm;
+        height: 210mm;
+        padding: 14mm 18mm 20mm;
+        overflow: hidden;
+        page-break-after: always;
+        break-after: page;
+        page-break-inside: avoid;
+        display: flex;
+        flex-direction: column;
+        background: #000;
+      }
+      .slide:last-child {
+        page-break-after: auto;
+      }
+      .eyebrow {
+        color: #f52929;
+        font-size: 9.5pt;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        margin-bottom: 3mm;
+      }
+      h1.title {
+        font-size: 26pt;
+        font-weight: 700;
+        margin-bottom: 4mm;
+      }
+      .lede {
+        font-size: 14pt;
+        color: #ccc;
+        margin-bottom: 6mm;
+        max-width: 210mm;
+        line-height: 1.5;
+      }
+
+      .shots {
+        display: flex;
+        gap: 7mm;
+        justify-content: center;
+        align-items: center;
+      }
+      .shots.mobile img {
+        height: 78mm;
+        width: auto;
+        border-radius: 2.5mm;
+        border: 1px solid #333;
+      }
+      .shots.wide img {
+        max-width: 175mm;
+        max-height: 80mm;
+        object-fit: contain;
+        border-radius: 2mm;
+        border: 1px solid #333;
+      }
+
+      .stats {
+        display: flex;
+        gap: 6mm;
+        margin: 4mm 0 6mm;
+      }
+      .stat {
+        flex: 1;
+        border: 1px solid #2a2a2a;
+        border-radius: 3mm;
+        padding: 6mm 5mm;
+        background: #0d0d0d;
+      }
+      .stat b {
+        display: block;
+        font-size: 30pt;
+        color: #f52929;
+        line-height: 1;
+      }
+      .stat span {
+        display: block;
+        font-size: 11pt;
+        color: #aaa;
+        margin-top: 2mm;
+      }
+
+      ul.points {
+        margin: 5mm 0 0 6mm;
+        font-size: 13pt;
+        line-height: 1.7;
+      }
+      ul.points li {
+        margin-bottom: 1.5mm;
+      }
+      .flow {
+        display: flex;
+        gap: 4mm;
+        align-items: center;
+        margin: 6mm 0;
+        font-size: 12.5pt;
+      }
+      .flow div {
+        flex: 1;
+        border: 1px solid #2a2a2a;
+        border-radius: 3mm;
+        padding: 5mm 4mm;
+        text-align: center;
+        background: #0d0d0d;
+      }
+      .flow b {
+        color: #f5b301;
+        display: block;
+        margin-bottom: 1.5mm;
+        font-size: 11pt;
+      }
+
+      .two {
+        display: flex;
+        gap: 8mm;
+      }
+      .two > div {
+        flex: 1;
+      }
+      h3 {
+        font-size: 13pt;
+        color: #f5b301;
+        margin-bottom: 3mm;
+      }
+
+      .openlink {
+        position: absolute;
+        left: 18mm;
+        bottom: 9mm;
+        font-size: 11pt;
+        color: #f52929;
+        font-weight: 600;
+      }
+      .openlink span {
+        color: #888;
+        font-weight: 400;
+        margin-right: 2mm;
+      }
+      .openlink a {
+        color: #f52929;
+        text-decoration: none;
+      }
+
+      .cover {
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding-bottom: 14mm;
+      }
+      .cover h1 {
+        font-size: 42pt;
+        margin-bottom: 4mm;
+      }
+      .cover p {
+        font-size: 15pt;
+        color: #bbb;
+      }
+      .rule {
+        width: 44mm;
+        height: 3px;
+        background: #f52929;
+        margin: 7mm auto;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="slide cover">
+      <h1>Iron Lady LMS</h1>
+      <div class="rule"></div>
+      <p>Leadership Overview &middot; What it does, where it stands</p>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">The platform</div>
+      <h1 class="title">One platform, three programmes</h1>
+      <p class="lede">
+        Every Iron Lady participant learns, submits work, and gets coached in one place &mdash; with
+        the CX team reviewing progress and leadership seeing it live.
+      </p>
+      <div class="flow">
+        <div><b>LEP</b>Leadership Essentials<br />4 weeks</div>
+        <div><b>100BM</b>100 Board Members<br />6 months</div>
+        <div><b>MBW</b>Master of Business Warfare<br />1 year</div>
+      </div>
+      <ul class="points">
+        <li>Participants progress in order: LEP &rarr; 100BM &rarr; MBW.</li>
+        <li>Each programme unlocks only on enrolment &mdash; access is controlled centrally.</li>
+        <li>Enrolment, payment status and logins flow in from Zoho CRM.</li>
+      </ul>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Status</div>
+      <h1 class="title">It is live and in use</h1>
+      <div class="stats">
+        <div class="stat"><b>406</b><span>Accounts</span></div>
+        <div class="stat"><b>401</b><span>Learners</span></div>
+        <div class="stat"><b>517</b><span>Enrolments</span></div>
+        <div class="stat"><b>47</b><span>Submissions awaiting review</span></div>
+      </div>
+      <div class="shots wide"><img src="docs/screenshots/C01-a.png" /></div>
+      <div class="openlink">
+        <span>See it live:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/admin"
+          >https://new-lms-three-topaz.vercel.app/admin</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">The participant</div>
+      <h1 class="title">How a learner progresses</h1>
+      <div class="shots mobile">
+        <img src="docs/screenshots/A02-a.png" />
+        <img src="docs/screenshots/A03-a.png" />
+        <img src="docs/screenshots/A04-a.png" />
+      </div>
+      <ul class="points">
+        <li>She sees only the programme she is enrolled in, and resumes where she left off.</li>
+        <li>Each phase unlocks in sequence &mdash; no skipping ahead.</li>
+        <li>She must watch <strong>90%</strong> of a lesson before the assignment opens.</li>
+      </ul>
+      <div class="openlink">
+        <span>See it live:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/app/home"
+          >https://new-lms-three-topaz.vercel.app/app/home</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">The differentiator</div>
+      <h1 class="title">Every submission is coached, not just marked</h1>
+      <p class="lede">
+        This is what separates the LMS from a video library &mdash; a human reviews the work and the
+        participant must act on the feedback.
+      </p>
+      <div class="shots wide"><img src="docs/screenshots/B03-a.png" /></div>
+      <ul class="points">
+        <li>
+          <strong>Approved</strong> &rarr; she moves on. <strong>Needs improvement</strong> or
+          <strong>Rejected</strong> &rarr; she revises and resubmits.
+        </li>
+        <li>
+          Feedback is mandatory when work is sent back &mdash; the system will not allow an empty
+          rejection.
+        </li>
+        <li>Work sent back does not count as complete and holds the next lesson closed.</li>
+      </ul>
+      <div class="openlink">
+        <span>See it live:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/cx/home"
+          >https://new-lms-three-topaz.vercel.app/cx/home</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Operations</div>
+      <h1 class="title">How CX runs a cohort</h1>
+      <div class="shots wide"><img src="docs/screenshots/B01-a.png" /></div>
+      <ul class="points">
+        <li>Each CX member sees only their own programme and their own batches.</li>
+        <li>They review submissions, send reminders, and upload session recordings per batch.</li>
+        <li>Attendance and completion are tracked per participant.</li>
+      </ul>
+      <div class="openlink">
+        <span>See it live:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/cx/home"
+          >https://new-lms-three-topaz.vercel.app/cx/home</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Visibility</div>
+      <h1 class="title">What leadership can see</h1>
+      <div class="shots wide"><img src="docs/screenshots/B07-a.png" /></div>
+      <ul class="points">
+        <li>
+          Cohort health, payment status, participant activity and task completion &mdash; per
+          programme.
+        </li>
+        <li>Click any chart segment to see exactly which participants it represents.</li>
+        <li>Admin exports users, activity and tickets to CSV for reporting.</li>
+      </ul>
+      <div class="openlink">
+        <span>See it live:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/cx/home"
+          >https://new-lms-three-topaz.vercel.app/cx/home</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Where we stand</div>
+      <h1 class="title">Shipped &middot; In progress</h1>
+      <div class="two">
+        <div>
+          <h3>Working today</h3>
+          <ul class="points">
+            <li>Three programmes with full lesson journeys</li>
+            <li>Eight submission types, incl. video and file upload</li>
+            <li>CX review loop with mandatory feedback</li>
+            <li>Batches, attendance, session recordings</li>
+            <li>Analytics with participant drill-down</li>
+            <li>Zoho enrolment and credential sync</li>
+            <li>Mobile-first across every screen</li>
+          </ul>
+        </div>
+        <div>
+          <h3>In progress</h3>
+          <ul class="points">
+            <li>Automatic batch creation from Zoho</li>
+            <li>CSV export for the CX team</li>
+            <li>Mobile polish on data-heavy screens</li>
+            <li>Automated testing before release</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Your call</div>
+      <h1 class="title">Three decisions we need</h1>
+      <ul class="points">
+        <li>
+          <strong>1. Zoho batch data.</strong> Cohort numbers are being written into the programme
+          field (&ldquo;101 Board Members Program&rdquo;, &ldquo;102&hellip;&rdquo;). Until Zoho
+          holds a separate batch field per programme, batches cannot be created automatically and
+          will need manual entry.
+        </li>
+        <li>
+          <strong>2. Review capacity.</strong> 47 submissions are waiting in the MBW queue, some
+          several days old. Participants are blocked until someone reviews them &mdash; this needs
+          an owner and a turnaround target.
+        </li>
+        <li>
+          <strong>3. Who sees participant contact details.</strong> Drill-down lists show names and
+          phone numbers. We need a decision on whether all CX staff should be able to pull a
+          contactable list.
+        </li>
+      </ul>
+    </section>
+
+    <section class="slide cover">
+      <h1>Thank you</h1>
+      <div class="rule"></div>
+      <p>Iron Lady &middot; Elevating a million women to the top</p>
+    </section>
+  </body>
+</html>

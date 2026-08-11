@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Iron Lady LMS — Walkthrough</title>
+    <style>
+      @page {
+        size: 297mm 210mm;
+        margin: 0;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        width: 297mm;
+        background: #000;
+      }
+      body {
+        font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+        color: #fff;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .slide {
+        position: relative;
+        width: 297mm;
+        height: 210mm;
+        padding: 12mm 16mm 22mm;
+        overflow: hidden;
+        page-break-after: always;
+        break-after: page;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        display: flex;
+        flex-direction: column;
+        background: #000;
+      }
+      .slide:last-child {
+        page-break-after: auto;
+        break-after: auto;
+      }
+
+      .eyebrow {
+        color: #f52929;
+        font-size: 9.5pt;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        margin-bottom: 2.5mm;
+      }
+      h1.title {
+        font-size: 21pt;
+        font-weight: 700;
+        margin-bottom: 5mm;
+      }
+
+      .shots {
+        display: flex;
+        gap: 7mm;
+        justify-content: center;
+        align-items: center;
+      }
+      .shots.mobile img {
+        height: 82mm;
+        width: auto;
+        border-radius: 2.5mm;
+        border: 1px solid #333;
+      }
+      .shots.wide img {
+        max-width: 120mm;
+        max-height: 82mm;
+        object-fit: contain;
+        border-radius: 2mm;
+        border: 1px solid #333;
+      }
+      .shots.wide.single img {
+        max-width: 178mm;
+        max-height: 86mm;
+      }
+
+      ol.steps {
+        margin: 6mm 0 0 6mm;
+        font-size: 12pt;
+        line-height: 1.55;
+      }
+      ol.steps li {
+        margin-bottom: 1mm;
+      }
+      .note {
+        margin-top: 3mm;
+        color: #f5b301;
+        font-size: 10.5pt;
+      }
+
+      .openlink {
+        position: absolute;
+        left: 16mm;
+        bottom: 9mm;
+        font-size: 11pt;
+        color: #f52929;
+        font-weight: 600;
+      }
+      .openlink span {
+        color: #888;
+        font-weight: 400;
+        margin-right: 2mm;
+      }
+      .openlink a {
+        color: #f52929;
+        text-decoration: none;
+      }
+
+      .cover,
+      .divider {
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding-bottom: 12mm;
+      }
+      .cover h1 {
+        font-size: 40pt;
+        margin-bottom: 4mm;
+      }
+      .cover p {
+        font-size: 15pt;
+        color: #bbb;
+      }
+      .rule {
+        width: 40mm;
+        height: 3px;
+        background: #f52929;
+        margin: 6mm auto;
+      }
+      .divider h1 {
+        font-size: 32pt;
+      }
+      .divider p {
+        font-size: 13pt;
+        color: #bbb;
+        margin-top: 3mm;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- COVER -->
+    <section class="slide cover">
+      <h1>Iron Lady LMS</h1>
+      <div class="rule"></div>
+      <p>Product Walkthrough &middot; Learner, CX &amp; Admin</p>
+    </section>
+
+    <!-- ================= PART A ================= -->
+    <section class="slide divider">
+      <div class="eyebrow">Part A</div>
+      <h1>The Learner Experience</h1>
+      <p>What your participants see and do</p>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Learner &middot; Slide 1</div>
+      <h1 class="title">Signing in</h1>
+      <div class="shots mobile">
+        <img src="docs/screenshots/A01-a.png" />
+        <img src="docs/screenshots/A01-b.png" />
+      </div>
+      <ol class="steps">
+        <li>Open the LMS and sign in with your registered email and password.</li>
+        <li>You can also continue as a guest to preview the programs.</li>
+        <li>Guests see all three programs but cannot open any content.</li>
+      </ol>
+      <div class="openlink">
+        <span>Open it here:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/app/home"
+          >https://new-lms-three-topaz.vercel.app/app/home</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Learner &middot; Slide 2</div>
+      <h1 class="title">Your dashboard</h1>
+      <div class="shots mobile">
+        <img src="docs/screenshots/A02-a.png" />
+        <img src="docs/screenshots/A02-b.png" />
+        <img src="docs/screenshots/A02-c.png" />
+      </div>
+      <ol class="steps">
+        <li>After signing in you land on Home, with a greeting and your program badge.</li>
+        <li>
+          Quick stats show open programs, pending assignments, upcoming events and recent actions.
+        </li>
+        <li>"Continue learning" takes you straight back to where you left off.</li>
+        <li>Scroll down for your programs, announcements and progress.</li>
+      </ol>
+      <div class="openlink">
+        <span>Open it here:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/app/home"
+          >https://new-lms-three-topaz.vercel.app/app/home</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Learner &middot; Slide 3</div>
+      <h1 class="title">Opening your program</h1>
+      <div class="shots mobile">
+        <img src="docs/screenshots/A03-a.png" />
+        <img src="docs/screenshots/A03-b.png" />
+        <img src="docs/screenshots/A03-c.png" />
+      </div>
+      <ol class="steps">
+        <li>Tap your program on Home to open its journey.</li>
+        <li>The header shows your cohort, overall progress and the next lesson.</li>
+        <li>
+          "Your journey" lists every phase &mdash; each opens only after the previous one is
+          complete.
+        </li>
+        <li>Locked phases show a padlock with the reason.</li>
+      </ol>
+      <div class="openlink">
+        <span>Open it here:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/app/home"
+          >https://new-lms-three-topaz.vercel.app/app/home</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Learner &middot; Slide 4</div>
+      <h1 class="title">Watching a lesson</h1>
+      <div class="shots mobile">
+        <img src="docs/screenshots/A04-a.png" />
+        <img src="docs/screenshots/A04-b.png" />
+      </div>
+      <ol class="steps">
+        <li>Open a lesson to see its video, description and any templates to download.</li>
+        <li>Watch the video &mdash; the counter shows how much you have completed.</li>
+        <li>The submission form stays locked until you reach 90%.</li>
+        <li>For YouTube videos, tap "I finished watching" to unlock it.</li>
+      </ol>
+      <p class="note">The 90% rule makes sure the lesson is watched before work is submitted.</p>
+      <div class="openlink">
+        <span>Open it here:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/app/home"
+          >https://new-lms-three-topaz.vercel.app/app/home</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Learner &middot; Slide 5</div>
+      <h1 class="title">Submitting your work</h1>
+      <div class="shots mobile">
+        <img src="docs/screenshots/A05-a.png" />
+        <img src="docs/screenshots/A06-b.png" />
+        <img src="docs/screenshots/A05-b.png" />
+      </div>
+      <ol class="steps">
+        <li>Once the video is watched, the submission form unlocks.</li>
+        <li>Download any template provided, complete it, then choose your file.</li>
+        <li>
+          Tap Submit &mdash; a progress bar appears while the file uploads, and you can cancel it.
+        </li>
+        <li>You'll see "Submitted" with your uploaded file, and Next lesson opens up.</li>
+      </ol>
+      <div class="openlink">
+        <span>Open it here:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/app/home"
+          >https://new-lms-three-topaz.vercel.app/app/home</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Learner &middot; Slide 6</div>
+      <h1 class="title">Tracking your progress</h1>
+      <div class="shots mobile">
+        <img src="docs/screenshots/A08-a.png" />
+        <img src="docs/screenshots/A08-b.png" />
+      </div>
+      <ol class="steps">
+        <li>Progress shows your programs, resources, streak and overall completion.</li>
+        <li>Tap any stat at the top to jump to that section.</li>
+        <li>"Continue to study" resumes at your exact next task.</li>
+        <li>Resources can be filtered by program and opened in a new tab.</li>
+      </ol>
+      <div class="openlink">
+        <span>Open it here:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/app/home"
+          >https://new-lms-three-topaz.vercel.app/app/home</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Learner &middot; Slide 7</div>
+      <h1 class="title">Calendar, support &amp; profile</h1>
+      <div class="shots mobile">
+        <img src="docs/screenshots/A09-a.png" />
+        <img src="docs/screenshots/A10-a.png" />
+        <img src="docs/screenshots/A12-a.png" />
+      </div>
+      <ol class="steps">
+        <li>
+          <strong>Calendar</strong> &mdash; classes, deadlines and meetings; add any event to Google
+          Calendar.
+        </li>
+        <li>
+          <strong>Support</strong> &mdash; raise a ticket, reply to staff, and track it until
+          resolved.
+        </li>
+        <li>
+          <strong>Profile</strong> &mdash; change your display name, switch light/dark mode, and
+          sign out.
+        </li>
+      </ol>
+      <div class="openlink">
+        <span>Open it here:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/app/home"
+          >https://new-lms-three-topaz.vercel.app/app/home</a
+        >
+      </div>
+    </section>
+
+    <!-- ================= PART B ================= -->
+    <section class="slide divider">
+      <div class="eyebrow">Part B</div>
+      <h1>The CX Workspace</h1>
+      <p>How the Customer Expression team runs a cohort</p>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">CX &middot; Slide 1</div>
+      <h1 class="title">CX home</h1>
+      <div class="shots wide single">
+        <img src="docs/screenshots/B01-a.png" />
+      </div>
+      <ol class="steps">
+        <li>Sign in as a CX member to land on your program's workspace.</li>
+        <li>The top row shows participants, items needing attention, and task completion.</li>
+        <li>"Needs your attention" lists submissions ready to review or waiting on a resubmit.</li>
+        <li>Your batches sit on the right, each with a Remind button.</li>
+      </ol>
+      <div class="openlink">
+        <span>Open it here:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/cx/home"
+          >https://new-lms-three-topaz.vercel.app/cx/home</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">CX &middot; Slide 2</div>
+      <h1 class="title">The review queue</h1>
+      <div class="shots wide single">
+        <img src="docs/screenshots/B02-a.png" />
+      </div>
+      <ol class="steps">
+        <li>Open Reviews to see every submission for your program.</li>
+        <li>
+          Filter by <strong>All</strong>, <strong>Needs review</strong>, or
+          <strong>Awaiting resubmit</strong>.
+        </li>
+        <li>Narrow further by batch.</li>
+        <li>Open a row to review the learner's work and choose an outcome.</li>
+      </ol>
+      <p class="note">
+        Approved &rarr; learner moves on. Needs improvement or Rejected &rarr; feedback is required,
+        and the learner is notified to resubmit.
+      </p>
+      <div class="openlink">
+        <span>Open it here:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/cx/home"
+          >https://new-lms-three-topaz.vercel.app/cx/home</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">CX &middot; Slide 3</div>
+      <h1 class="title">Reviewing a submission</h1>
+      <div class="shots wide single">
+        <img src="docs/screenshots/B03-a.png" />
+      </div>
+      <ol class="steps">
+        <li>
+          Open a submission to see exactly what the learner sent &mdash; text, links, files, video
+          or a template.
+        </li>
+        <li>
+          Choose an outcome: <strong>Approved</strong>, <strong>Needs improvement</strong>, or
+          <strong>Rejected</strong>.
+        </li>
+        <li>
+          Feedback is required for Needs improvement and Rejected &mdash; the form will not save
+          without it.
+        </li>
+        <li>Save the review. The learner is notified and can revise and resubmit.</li>
+      </ol>
+      <div class="openlink">
+        <span>Open it here:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/cx/home"
+          >https://new-lms-three-topaz.vercel.app/cx/home</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">CX &middot; Slide 4</div>
+      <h1 class="title">Managing batches</h1>
+      <div class="shots wide single">
+        <img src="docs/screenshots/B04-a.png" />
+      </div>
+      <ol class="steps">
+        <li>Create a batch and give it a name and description.</li>
+        <li>Add learners, move them between batches, or remove them.</li>
+        <li>Upload session recordings for each phase &mdash; only that batch can see them.</li>
+        <li>Track attendance and completion per learner.</li>
+      </ol>
+      <div class="openlink">
+        <span>Open it here:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/cx/home"
+          >https://new-lms-three-topaz.vercel.app/cx/home</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">CX &middot; Slide 5</div>
+      <h1 class="title">Analytics</h1>
+      <div class="shots wide single">
+        <img src="docs/screenshots/B07-a.png" />
+      </div>
+      <ol class="steps">
+        <li>Analytics shows cohort health across your whole program.</li>
+        <li>Charts cover the learner journey, payment status, activity and task completion.</li>
+        <li>Click any bar or segment to see exactly which participants it represents.</li>
+        <li>Switch tabs for a per-batch or per-task breakdown.</li>
+      </ol>
+    </section>
+
+    <!-- ================= PART C ================= -->
+    <section class="slide divider">
+      <div class="eyebrow">Part C</div>
+      <h1>Administration</h1>
+      <p>Managing users, content and integrations</p>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Admin &middot; Slide 1</div>
+      <h1 class="title">Admin overview</h1>
+      <div class="shots wide single">
+        <img src="docs/screenshots/C01-a.png" />
+      </div>
+      <ol class="steps">
+        <li>The overview summarises accounts, learners, courses, resources and enrolments.</li>
+        <li>Open tickets are flagged at the top.</li>
+        <li>Charts break down users by role, ticket status, activity and signups.</li>
+        <li>Export any of it to CSV for reporting.</li>
+      </ol>
+      <div class="openlink">
+        <span>Open it here:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/admin"
+          >https://new-lms-three-topaz.vercel.app/admin</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Admin &middot; Slide 2</div>
+      <h1 class="title">Users &amp; roles</h1>
+      <div class="shots wide single">
+        <img src="docs/screenshots/C02-a.png" />
+      </div>
+      <ol class="steps">
+        <li>Search any account by name, email or role.</li>
+        <li>Change a role: User, Customer Expression, Admin, or Super Admin.</li>
+        <li>Assign a CX member to their program.</li>
+        <li>Block or unblock a learner &mdash; staff accounts are protected.</li>
+      </ol>
+      <div class="openlink">
+        <span>Open it here:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/admin"
+          >https://new-lms-three-topaz.vercel.app/admin</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Admin &middot; Slide 3</div>
+      <h1 class="title">Courses &amp; resources</h1>
+      <div class="shots wide">
+        <img src="docs/screenshots/C03-a.png" />
+        <img src="docs/screenshots/C03-b.png" />
+      </div>
+      <ol class="steps">
+        <li>Create a course with a code, description, thumbnail and intro video.</li>
+        <li>Add resources by link or by uploading a PDF or PPT.</li>
+        <li>Lock a resource to hide it from learners until you are ready.</li>
+      </ol>
+      <div class="openlink">
+        <span>Open it here:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/admin"
+          >https://new-lms-three-topaz.vercel.app/admin</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Admin &middot; Slide 4</div>
+      <h1 class="title">Batches &amp; enrolment</h1>
+      <div class="shots wide single">
+        <img src="docs/screenshots/C04-a.png" />
+      </div>
+      <ol class="steps">
+        <li>Create a batch, choose its program, and assign CX leads.</li>
+        <li>Add learners to the batch.</li>
+        <li>Add a course to the batch &mdash; this is how learners get enrolled.</li>
+        <li>Move members between batches or remove them.</li>
+      </ol>
+      <div class="openlink">
+        <span>Open it here:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/admin"
+          >https://new-lms-three-topaz.vercel.app/admin</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Admin &middot; Slide 5</div>
+      <h1 class="title">Announcements &amp; events</h1>
+      <div class="shots wide">
+        <img src="docs/screenshots/C05-b.png" />
+        <img src="docs/screenshots/C05-a.png" />
+      </div>
+      <ol class="steps">
+        <li>Publish an announcement to everyone, or tag specific learners.</li>
+        <li>Choose how long it stays visible: 24 hours, 7 days or 30 days.</li>
+        <li>Add calendar events with a type, joining link and image.</li>
+        <li>Both appear immediately on the learner's Home and Calendar.</li>
+      </ol>
+      <div class="openlink">
+        <span>Open it here:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/admin"
+          >https://new-lms-three-topaz.vercel.app/admin</a
+        >
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Admin &middot; Slide 6</div>
+      <h1 class="title">Zoho CRM integration</h1>
+      <div class="shots wide single">
+        <img src="docs/screenshots/C06-a.png" />
+      </div>
+      <ol class="steps">
+        <li>Programme, payment status and login credentials flow from Zoho into the LMS.</li>
+        <li><strong>Test connection</strong> checks the CRM link is healthy.</li>
+        <li><strong>Provision</strong> creates or updates an LMS account from a Zoho record.</li>
+        <li>Browse Zoho Leads and IL Users to find anyone in the CRM.</li>
+      </ol>
+      <div class="openlink">
+        <span>Open it here:</span
+        ><a href="https://new-lms-three-topaz.vercel.app/admin"
+          >https://new-lms-three-topaz.vercel.app/admin</a
+        >
+      </div>
+    </section>
+
+    <section class="slide divider">
+      <div class="eyebrow">End</div>
+      <h1>Thank you</h1>
+      <p>Iron Lady &middot; Elevating a million women to the top</p>
+    </section>
+  </body>
+</html>
