@@ -21,19 +21,28 @@ export function isProgramLearner(user, program = PROGRAMS.MBW) {
 export function memberIdsForBatches(batches, users = []) {
   const ids = new Set();
   (batches || []).forEach((b) => {
+    if (!b?.id) return;
     (b.memberIds || []).forEach((id) => ids.add(id));
     (users || []).forEach((u) => {
-      if (u.batchId === b.id) ids.add(u.id);
+      if (u.batchId && u.batchId === b.id) ids.add(u.id);
     });
   });
   return [...ids];
 }
 
-/** Learner ids explicitly assigned to one batch. */
+/**
+ * Learner ids explicitly assigned to one batch.
+ *
+ * Returns nothing without a batch id. Comparing `u.batchId === batch?.id` when
+ * both are undefined matches every unassigned learner, so an absent or
+ * still-loading batch would otherwise report the whole unassigned pool as its
+ * membership. Scoping helpers must fail closed.
+ */
 export function learnerIdsInBatch(batch, users = []) {
-  const ids = new Set(batch?.memberIds || []);
+  if (!batch?.id) return new Set();
+  const ids = new Set(batch.memberIds || []);
   (users || []).forEach((u) => {
-    if (u.batchId === batch?.id) ids.add(u.id);
+    if (u.batchId && u.batchId === batch.id) ids.add(u.id);
   });
   return ids;
 }
