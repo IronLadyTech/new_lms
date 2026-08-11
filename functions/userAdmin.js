@@ -23,9 +23,7 @@ async function deleteCollectionWhere(db, collectionName, field, value) {
   let total = 0;
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    const count = await deleteQueryBatch(
-      db.collection(collectionName).where(field, '==', value)
-    );
+    const count = await deleteQueryBatch(db.collection(collectionName).where(field, '==', value));
     total += count;
     if (count < 400) break;
   }
@@ -93,7 +91,10 @@ function canDeleteTarget(callerUid, callerEmail, targetUid, targetProfile) {
 
   const role = targetProfile?.role || 'student';
   if (STAFF_ROLES.has(role)) {
-    return { ok: false, reason: 'Staff accounts cannot be deleted here — demote to student first or contact support' };
+    return {
+      ok: false,
+      reason: 'Staff accounts cannot be deleted here — demote to student first or contact support',
+    };
   }
 
   return { ok: true };
@@ -142,7 +143,12 @@ async function deleteUserAccount(db, { callerUid, userId }) {
 
   summary.mbwSubmissions = await deleteCollectionWhere(db, 'mbw_submissions', 'userId', userId);
   summary.activities = await deleteCollectionWhere(db, 'activities', 'userId', userId);
-  summary.learnerSubmissions = await deleteCollectionWhere(db, 'learner_submissions', 'learnerId', userId);
+  summary.learnerSubmissions = await deleteCollectionWhere(
+    db,
+    'learner_submissions',
+    'learnerId',
+    userId
+  );
   summary.attendance = await deleteCollectionWhere(db, 'attendance', 'learnerId', userId);
   const ticketResult = await deleteUserTickets(db, userId);
   summary.tickets = ticketResult.tickets;

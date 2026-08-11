@@ -17,8 +17,7 @@ function getFieldNames() {
     username: process.env.ZOHO_IL_USERS_USERNAME_FIELD?.trim() || 'Username',
     phone: process.env.ZOHO_IL_USERS_PHONE_FIELD?.trim() || 'Phone',
     regEmail: process.env.ZOHO_IL_REG_EMAIL_FIELD?.trim() || 'Email',
-    regUserLookup:
-      process.env.ZOHO_IL_REG_ILUSER_LOOKUP_FIELD?.trim() || 'IL_User',
+    regUserLookup: process.env.ZOHO_IL_REG_ILUSER_LOOKUP_FIELD?.trim() || 'IL_User',
     credentialStatus:
       process.env.ZOHO_IL_CREDENTIAL_STATUS_FIELD?.trim() || 'LMS_Credential_Status',
     passwordUpdatedAt:
@@ -33,7 +32,9 @@ function shouldSyncLegacyIlPassword() {
 }
 
 function escapeCoql(value) {
-  return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  return String(value || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'");
 }
 
 async function zohoCoql(selectQuery, deps) {
@@ -237,7 +238,9 @@ async function findIlUserIdViaRegistration(email, deps) {
   if (!trimmed) return null;
 
   const configured = getIlRegistrationModule();
-  const regModules = [...new Set([configured, 'IL_Registration', 'IL_Registrations'].filter(Boolean))];
+  const regModules = [
+    ...new Set([configured, 'IL_Registration', 'IL_Registrations'].filter(Boolean)),
+  ];
   const { regEmail, regUserLookup } = getFieldNames();
 
   for (const regModule of regModules) {
@@ -337,9 +340,7 @@ function ilUserToCredentialFields(ilUser) {
   return {
     Email: ilUser[emailField] ?? ilUser.Email,
     Username: ilUser[usernameField] ?? ilUser.Username,
-    ...(password
-      ? { Password: password, LMS_Password: password }
-      : {}),
+    ...(password ? { Password: password, LMS_Password: password } : {}),
     LMS_User_Id: ilUser.LMS_User_Id,
     Phone: ilUser.Phone,
     id: ilUser.id,
@@ -370,8 +371,12 @@ async function updateIlUserCredentials(email, fields, { getAccessToken, getApiDo
     };
   }
 
-  const { email: emailField, username: usernameField, credentialStatus, passwordUpdatedAt } =
-    getFieldNames();
+  const {
+    email: emailField,
+    username: usernameField,
+    credentialStatus,
+    passwordUpdatedAt,
+  } = getFieldNames();
   const existingUsername = ilUser[usernameField] ?? ilUser.Username;
 
   const corePayload = {};
@@ -526,7 +531,10 @@ async function diagnoseIlUserLookup(email, username, deps, options = {}) {
   };
 
   if (trimmedEmail) {
-    result.strategies.emailOrUsernameSearch = await searchIlUserByEmailOrUsername(trimmedEmail, deps);
+    result.strategies.emailOrUsernameSearch = await searchIlUserByEmailOrUsername(
+      trimmedEmail,
+      deps
+    );
     result.strategies.emailSearch = await searchIlUserByEmail(trimmedEmail, deps);
   }
   if (trimmedUsername || trimmedEmail) {
@@ -569,7 +577,9 @@ async function diagnoseIlUserLookup(email, username, deps, options = {}) {
 
 const IL_USER_LIST_FIELDS = (() => {
   const f = getFieldNames();
-  return [f.email, f.username, f.phone, 'LMS_User_Id', 'LMS_Password', 'Password', 'Name'].join(',');
+  return [f.email, f.username, f.phone, 'LMS_User_Id', 'LMS_Password', 'Password', 'Name'].join(
+    ','
+  );
 })();
 
 function ilUserToSummaryRow(record) {
@@ -584,7 +594,7 @@ function ilUserToSummaryRow(record) {
     lmsUserId: record.LMS_User_Id || '',
     hasPassword: Boolean(
       (record.LMS_Password && String(record.LMS_Password).trim()) ||
-        (record.Password && String(record.Password).trim())
+      (record.Password && String(record.Password).trim())
     ),
   };
 }

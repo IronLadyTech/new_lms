@@ -68,9 +68,7 @@ export async function getResources(courseId) {
 export async function getResourcesForCourses(courseIds = []) {
   if (!courseIds.length) return [];
   const byId = await mergeInQuery(courseIds, async (chunk) => {
-    const snap = await getDocs(
-      query(collection(db, RESOURCES), where('courseId', 'in', chunk))
-    );
+    const snap = await getDocs(query(collection(db, RESOURCES), where('courseId', 'in', chunk)));
     return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
   });
   return [...byId.values()];

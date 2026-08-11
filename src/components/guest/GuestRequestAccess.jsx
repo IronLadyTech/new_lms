@@ -7,8 +7,7 @@ import { createAccessRequest } from '../../services/accessRequestService';
 const SITE_URL = 'https://iamironlady.com';
 
 function buildMailto(form) {
-  const programLabel =
-    PROGRAM_OPTIONS.find((p) => p.value === form.program)?.label || form.program;
+  const programLabel = PROGRAM_OPTIONS.find((p) => p.value === form.program)?.label || form.program;
   const body = [
     'Program access request (Iron Lady LMS guest)',
     '',
@@ -97,8 +96,8 @@ export default function GuestRequestAccess({ compact = false }) {
         <>
           <h3 className="guest-request__title">Request program access</h3>
           <p className="muted guest-request__lead">
-            Tell us which track you want. We&apos;ll route your request to the Iron Lady team — no account
-            required to enquire.
+            Tell us which track you want. We&apos;ll route your request to the Iron Lady team — no
+            account required to enquire.
           </p>
         </>
       )}
@@ -158,12 +157,7 @@ export default function GuestRequestAccess({ compact = false }) {
             <Send size={14} aria-hidden="true" />
             {submitting ? 'Sending…' : 'Request access'}
           </button>
-          <a
-            href={SITE_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="btn btn-outline btn-sm"
-          >
+          <a href={SITE_URL} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm">
             <ExternalLink size={14} aria-hidden="true" />
             Explore on iamironlady.com
           </a>

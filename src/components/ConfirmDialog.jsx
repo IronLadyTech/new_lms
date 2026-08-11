@@ -35,8 +35,18 @@ export default function ConfirmDialog({
   if (!open) return null;
 
   return createPortal(
-    <div className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
-      <button type="button" className="confirm-dialog__backdrop" aria-label="Close" onClick={onCancel} />
+    <div
+      className="confirm-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-dialog-title"
+    >
+      <button
+        type="button"
+        className="confirm-dialog__backdrop"
+        aria-label="Close"
+        onClick={onCancel}
+      />
       <div className="confirm-dialog__panel" ref={panelRef}>
         <h3 id="confirm-dialog-title" className="confirm-dialog__title">
           {title}
@@ -46,7 +56,11 @@ export default function ConfirmDialog({
           <button type="button" className="btn btn-outline confirm-dialog__btn" onClick={onCancel}>
             {cancelLabel}
           </button>
-          <button type="button" className={`btn btn-${variant} confirm-dialog__btn`} onClick={onConfirm}>
+          <button
+            type="button"
+            className={`btn btn-${variant} confirm-dialog__btn`}
+            onClick={onConfirm}
+          >
             {confirmLabel}
           </button>
         </div>

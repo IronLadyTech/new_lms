@@ -42,7 +42,14 @@ function youtubeWatchUrl(url) {
   return id ? `https://www.youtube.com/watch?v=${id}` : url;
 }
 
-function NativeVideoPlayer({ videoUrl, videoRef, onTimeUpdate, onEnded, captionsUrl, captionsLabel }) {
+function NativeVideoPlayer({
+  videoUrl,
+  videoRef,
+  onTimeUpdate,
+  onEnded,
+  captionsUrl,
+  captionsLabel,
+}) {
   useEffect(() => {
     const video = videoRef.current;
     if (!video || isHls(videoUrl)) return undefined;
@@ -65,7 +72,13 @@ function NativeVideoPlayer({ videoUrl, videoRef, onTimeUpdate, onEnded, captions
       onEnded={onEnded}
     >
       {captionsUrl ? (
-        <track kind="captions" srcLang="en" label={captionsLabel || 'English'} src={captionsUrl} default />
+        <track
+          kind="captions"
+          srcLang="en"
+          label={captionsLabel || 'English'}
+          src={captionsUrl}
+          default
+        />
       ) : null}
     </video>
   );
@@ -119,7 +132,13 @@ function HlsVideoPlayer({ videoUrl, videoRef, onTimeUpdate, onEnded, captionsUrl
       onEnded={onEnded}
     >
       {captionsUrl ? (
-        <track kind="captions" srcLang="en" label={captionsLabel || 'English'} src={captionsUrl} default />
+        <track
+          kind="captions"
+          srcLang="en"
+          label={captionsLabel || 'English'}
+          src={captionsUrl}
+          default
+        />
       ) : null}
     </video>
   );
@@ -164,8 +183,14 @@ export default function WatchGatedVideo({
     return (
       <div className="mbw-video mbw-video--empty">
         <p>Your instructor hasn&apos;t added a video for this task yet.</p>
-        <p className="muted mbw-video__empty-hint">Contact support if you need access before continuing.</p>
-        <button type="button" className="btn btn-outline btn-sm mbw-video__skip" onClick={() => onComplete?.()}>
+        <p className="muted mbw-video__empty-hint">
+          Contact support if you need access before continuing.
+        </p>
+        <button
+          type="button"
+          className="btn btn-outline btn-sm mbw-video__skip"
+          onClick={() => onComplete?.()}
+        >
           Continue without video
         </button>
       </div>
@@ -214,8 +239,8 @@ export default function WatchGatedVideo({
           )}
         </div>
         <p className="muted mbw-video__hint">
-          YouTube cannot track watch time automatically. When you have finished watching, tap &ldquo;I finished
-          watching&rdquo; below to unlock submission.
+          YouTube cannot track watch time automatically. When you have finished watching, tap
+          &ldquo;I finished watching&rdquo; below to unlock submission.
         </p>
         <div className="mbw-video__embed-actions">
           <a
@@ -279,13 +304,17 @@ export default function WatchGatedVideo({
         )}
       </div>
       <p className="muted mbw-video__hint">
-        Watch the full video to unlock submission. Progress is tracked automatically and saved as you watch.
+        Watch the full video to unlock submission. Progress is tracked automatically and saved as
+        you watch.
         {captionsUrl
           ? ' Captions are available via the player controls.'
           : ' Captions are not available for this video yet.'}
       </p>
       <div className="mbw-video__progress">
-        <div className="mbw-video__bar" style={{ width: `${Math.min(100, watchPercent * 100)}%` }} />
+        <div
+          className="mbw-video__bar"
+          style={{ width: `${Math.min(100, watchPercent * 100)}%` }}
+        />
         <span className="muted">{Math.round(watchPercent * 100)}% watched</span>
       </div>
     </div>

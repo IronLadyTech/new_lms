@@ -45,7 +45,8 @@ export const BM100_STATIC_TASKS = [
     videoUrl: 'https://youtu.be/PBxudEE2ty4',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Complete your Delta / Milestone Table below — fill every block before submitting.',
+    description:
+      'Complete your Delta / Milestone Table below — fill every block before submitting.',
     templateId: 'delta',
     uploadSubmitLabel: 'Submit delta table',
   },
@@ -163,9 +164,7 @@ export const BM100_STATIC_TASKS = [
     type: TASK_TYPES.VIDEO_RECORD,
     requiresWatch: false,
     videoUrl: 'https://youtu.be/zziuOCDP9_g',
-    resourceLinks: [
-      { label: 'Super Power Visualization', url: 'https://youtu.be/YY3aKdZIzc4' },
-    ],
+    resourceLinks: [{ label: 'Super Power Visualization', url: 'https://youtu.be/YY3aKdZIzc4' }],
     unlockDate: null,
     reviewRequired: false,
     description:
@@ -181,9 +180,7 @@ export const BM100_STATIC_TASKS = [
     type: TASK_TYPES.EDITABLE_TEMPLATE,
     requiresWatch: false,
     videoUrl: 'https://youtu.be/YTg3MNJwWuE',
-    resourceLinks: [
-      { label: 'Prep meeting', url: 'https://youtu.be/8Agp3HSAc7A' },
-    ],
+    resourceLinks: [{ label: 'Prep meeting', url: 'https://youtu.be/8Agp3HSAc7A' }],
     unlockDate: null,
     reviewRequired: false,
     description:
@@ -229,9 +226,7 @@ export const BM100_STATIC_TASKS = [
     type: TASK_TYPES.EDITABLE_TEMPLATE,
     requiresWatch: false,
     videoUrl: 'https://youtu.be/hOYKAg9MRp0',
-    resourceLinks: [
-      { label: 'Prep meeting', url: 'https://youtu.be/bz7-5QuFG_k' },
-    ],
+    resourceLinks: [{ label: 'Prep meeting', url: 'https://youtu.be/bz7-5QuFG_k' }],
     unlockDate: null,
     reviewRequired: false,
     description:
@@ -250,7 +245,8 @@ export const BM100_STATIC_TASKS = [
     videoUrl: 'https://youtu.be/4BHf8iKyxr4',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Complete your full strategy document below — fill every required block before submitting.',
+    description:
+      'Complete your full strategy document below — fill every required block before submitting.',
     templateId: 'strategy',
     uploadSubmitLabel: 'Submit strategy document',
   },

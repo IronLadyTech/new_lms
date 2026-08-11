@@ -11,9 +11,18 @@ import {
   confirmPasswordReset,
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
-import { getUserProfile, createUserProfile, ensureSuperAdminIfOwner } from '../services/userService';
+import {
+  getUserProfile,
+  createUserProfile,
+  ensureSuperAdminIfOwner,
+} from '../services/userService';
 import { initNotifications } from '../services/notificationService';
-import { syncPasswordResetToZoho, syncCredentialBeforeReset, ensureZohoUserOnLogin, isZohoConfigured } from '../services/zohoService';
+import {
+  syncPasswordResetToZoho,
+  syncCredentialBeforeReset,
+  ensureZohoUserOnLogin,
+  isZohoConfigured,
+} from '../services/zohoService';
 import { ROLES } from '../utils/roles';
 import { isSuperAdminEmail } from '../utils/constants';
 import {
@@ -112,7 +121,9 @@ export function AuthProvider({ children }) {
 
   const requireAuth = () => {
     if (!auth) {
-      throw new Error('Firebase is not configured. Add your keys to .env and restart the dev server.');
+      throw new Error(
+        'Firebase is not configured. Add your keys to .env and restart the dev server.'
+      );
     }
   };
 
@@ -168,7 +179,10 @@ export function AuthProvider({ children }) {
     try {
       cred = await signInWithEmailAndPassword(auth, trimmedEmail, password);
     } catch (retryErr) {
-      if (retryErr?.code === 'auth/invalid-credential' || retryErr?.code === 'auth/user-not-found') {
+      if (
+        retryErr?.code === 'auth/invalid-credential' ||
+        retryErr?.code === 'auth/user-not-found'
+      ) {
         const zohoReason = zohoProvision?.reason;
         if (zohoReason === 'Password does not match Zoho IL_Users record') {
           throw new Error(
@@ -286,12 +300,11 @@ export function AuthProvider({ children }) {
     return user && loadProfile(user);
   };
 
-  const effectiveRole =
-    user?.isGuest
-      ? ROLES.GUEST
-      : user && isSuperAdminEmail(user.email)
-        ? ROLES.SUPERADMIN
-        : profile?.role || ROLES.STUDENT;
+  const effectiveRole = user?.isGuest
+    ? ROLES.GUEST
+    : user && isSuperAdminEmail(user.email)
+      ? ROLES.SUPERADMIN
+      : profile?.role || ROLES.STUDENT;
 
   const isGuest = effectiveRole === ROLES.GUEST;
   const isBlocked = profile?.blocked === true;

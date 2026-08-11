@@ -50,7 +50,12 @@ function isDateUnlocked(unlockDate) {
 }
 
 /** Reconstruct learner task states from CX submission data (no live watch progress). */
-export function buildCxTaskStates(tasks, submissionsByTaskId = {}, profile = null, program = PROGRAMS.MBW) {
+export function buildCxTaskStates(
+  tasks,
+  submissionsByTaskId = {},
+  profile = null,
+  program = PROGRAMS.MBW
+) {
   const { getUnlockedPhaseIds } = getProgramStageConfig(program);
 
   const sequential = tasks.map((task, index) => {
@@ -169,7 +174,9 @@ export function computeLearnerStage(student, tasks, submissionIndex, program = P
         ts.status !== SUBMISSION_STATUS.LOCKED &&
         !ts.phaseLocked
     ) ||
-    taskStates.find((ts) => !ts.isComplete && ts.status !== SUBMISSION_STATUS.LOCKED && !ts.phaseLocked);
+    taskStates.find(
+      (ts) => !ts.isComplete && ts.status !== SUBMISSION_STATUS.LOCKED && !ts.phaseLocked
+    );
 
   const userSubmissionList = Object.values(userSubs);
   const lastSubmissionMs = userSubmissionList.reduce(
@@ -183,7 +190,12 @@ export function computeLearnerStage(student, tasks, submissionIndex, program = P
   );
 
   const sectionsSummary = taskEngineSections.map((section) => {
-    const p = sectionProgress[section.id] || { done: 0, total: 0, status: SECTION_STATUS.LOCKED, unlocked: false };
+    const p = sectionProgress[section.id] || {
+      done: 0,
+      total: 0,
+      status: SECTION_STATUS.LOCKED,
+      unlocked: false,
+    };
     let bucket = 'locked';
     if (p.unlocked) {
       if (p.status === SECTION_STATUS.DONE) bucket = 'complete';
@@ -247,8 +259,12 @@ export function buildSectionStageFunnel(members, tasks, submissions, program = P
     }));
 
     const complete = rows.filter((r) => r.summary?.bucket === 'complete').map((r) => r.learner);
-    const inProgress = rows.filter((r) => r.summary?.bucket === 'in_progress').map((r) => r.learner);
-    const notStarted = rows.filter((r) => r.summary?.bucket === 'not_started').map((r) => r.learner);
+    const inProgress = rows
+      .filter((r) => r.summary?.bucket === 'in_progress')
+      .map((r) => r.learner);
+    const notStarted = rows
+      .filter((r) => r.summary?.bucket === 'not_started')
+      .map((r) => r.learner);
     const locked = rows.filter((r) => r.summary?.bucket === 'locked').map((r) => r.learner);
 
     return {

@@ -138,7 +138,10 @@ export async function applyZohoBatch(options = {}) {
 }
 
 /** Sync one learner's LMS batch from Zoho (after batch change in CRM). */
-export async function syncUserBatchFromZoho(email, { dryRun = false, provisionIfMissing = true } = {}) {
+export async function syncUserBatchFromZoho(
+  email,
+  { dryRun = false, provisionIfMissing = true } = {}
+) {
   try {
     const { data } = await call('zohoSyncUserBatch', {
       email: email?.trim(),

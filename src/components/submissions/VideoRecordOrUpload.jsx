@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { saveSubmissionBlob, getSubmissionBlob, submissionBlobKey } from '../../utils/submissionBlobStore';
+import {
+  saveSubmissionBlob,
+  getSubmissionBlob,
+  submissionBlobKey,
+} from '../../utils/submissionBlobStore';
 import { getSubmissionProgramConfig } from './submissionProgramConfig';
 import TaskTemplateDownloads from './TaskTemplateDownloads';
 
@@ -7,11 +11,7 @@ const MAX_RECORDING_SECONDS = 300;
 const MAX_UPLOAD_BYTES = 200 * 1024 * 1024;
 
 function pickRecorderMime() {
-  const candidates = [
-    'video/webm;codecs=vp9,opus',
-    'video/webm;codecs=vp8,opus',
-    'video/webm',
-  ];
+  const candidates = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
   if (typeof MediaRecorder === 'undefined') return '';
   return candidates.find((t) => MediaRecorder.isTypeSupported(t)) || '';
 }
@@ -115,7 +115,9 @@ export default function VideoRecordOrUpload({
       setRecordingSeconds((s) => {
         if (s + 1 >= MAX_RECORDING_SECONDS) {
           stopRecord();
-          setError(`Recording stopped at ${MAX_RECORDING_SECONDS / 60} minute limit. Save or retake.`);
+          setError(
+            `Recording stopped at ${MAX_RECORDING_SECONDS / 60} minute limit. Save or retake.`
+          );
         }
         return s + 1;
       });
@@ -311,7 +313,8 @@ export default function VideoRecordOrUpload({
           />
           {skipped && !cloudUrl && !rerecord && (
             <p className="muted mbw-task__hint">
-              Recording saved on this device. Cloud playback will be available after storage is enabled.
+              Recording saved on this device. Cloud playback will be available after storage is
+              enabled.
             </p>
           )}
         </div>
@@ -321,8 +324,8 @@ export default function VideoRecordOrUpload({
         <div className="mbw-submission__saved">
           <p className="success-text">Recording submitted successfully.</p>
           <p className="muted mbw-task__hint">
-            Playback is unavailable because the file was not uploaded to cloud storage. Re-record if you
-            need to review it here.
+            Playback is unavailable because the file was not uploaded to cloud storage. Re-record if
+            you need to review it here.
           </p>
           <button type="button" className="btn btn-outline btn-sm" onClick={startRecordAgain}>
             Record again
@@ -359,8 +362,8 @@ export default function VideoRecordOrUpload({
 
           {!storageEnabled && (
             <p className="mbw-task__hint muted">
-              Cloud storage is not enabled yet — you can still record, preview, and complete this step.
-              The video stays on this device until storage is configured.
+              Cloud storage is not enabled yet — you can still record, preview, and complete this
+              step. The video stays on this device until storage is configured.
             </p>
           )}
 
@@ -392,7 +395,12 @@ export default function VideoRecordOrUpload({
                 </>
               ) : (
                 <div className="mbw-submission__actions">
-                  <button type="button" className="btn btn-outline" onClick={retake} disabled={uploading}>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={retake}
+                    disabled={uploading}
+                  >
                     Retake
                   </button>
                   <button

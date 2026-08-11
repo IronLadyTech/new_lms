@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-const FOCUSABLE =
-  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 /**
  * Trap focus inside a dialog and restore focus to the trigger on close.
@@ -15,7 +14,8 @@ export function useFocusTrap(active, containerRef, { onEscape, restoreFocus = tr
     triggerRef.current = document.activeElement;
     const container = containerRef.current;
 
-    const focusables = () => [...container.querySelectorAll(FOCUSABLE)].filter((el) => !el.disabled);
+    const focusables = () =>
+      [...container.querySelectorAll(FOCUSABLE)].filter((el) => !el.disabled);
     const first = () => focusables()[0];
     const last = () => {
       const list = focusables();

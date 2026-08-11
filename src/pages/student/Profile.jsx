@@ -1,18 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  UserCircle,
-  Palette,
-  LifeBuoy,
-  LogOut,
-  KeyRound,
-  Bell,
-} from 'lucide-react';
-import {
-  EmailAuthProvider,
-  reauthenticateWithCredential,
-  updatePassword,
-} from 'firebase/auth';
+import { UserCircle, Palette, LifeBuoy, LogOut, KeyRound, Bell } from 'lucide-react';
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 import { useAuth } from '../../context/AuthContext';
 import { updateUserProfile } from '../../services/userService';
 import { getRoleLabel } from '../../utils/roles';
@@ -242,8 +231,8 @@ export default function Profile() {
       {!isGuest && !canChangePassword && (
         <SectionCard title="Password" icon={KeyRound} className="profile-section">
           <p className="muted">
-            This account signs in without an email password (for example Google). Password change is not
-            available here.
+            This account signs in without an email password (for example Google). Password change is
+            not available here.
           </p>
         </SectionCard>
       )}
@@ -252,7 +241,9 @@ export default function Profile() {
         <div className="profile-setting-row">
           <div className="profile-setting-row__text">
             <strong>Appearance</strong>
-            <p className="muted">Switch between light and dark mode. Defaults to your system preference.</p>
+            <p className="muted">
+              Switch between light and dark mode. Defaults to your system preference.
+            </p>
           </div>
           <ThemeToggle />
         </div>
@@ -289,7 +280,8 @@ export default function Profile() {
             </label>
           </div>
           <p className="muted profile-notify-note">
-            Preferences are saved on this device. Push delivery still follows your browser permission.
+            Preferences are saved on this device. Push delivery still follows your browser
+            permission.
           </p>
         </SectionCard>
       )}

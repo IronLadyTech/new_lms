@@ -9,7 +9,11 @@ function getIlRegistrationModule() {
 
 function getRegistrationModuleCandidates() {
   const configured = getIlRegistrationModule();
-  return [...new Set([configured, 'CustomModule6', 'IL_Registration', 'IL_Registrations'].filter(Boolean))];
+  return [
+    ...new Set(
+      [configured, 'CustomModule6', 'IL_Registration', 'IL_Registrations'].filter(Boolean)
+    ),
+  ];
 }
 
 function getRegistrationFieldNames() {
@@ -17,19 +21,13 @@ function getRegistrationFieldNames() {
     email: process.env.ZOHO_IL_REG_EMAIL_FIELD?.trim() || 'Email',
     name: process.env.ZOHO_IL_REG_NAME_FIELD?.trim() || 'Name',
     batch: process.env.ZOHO_IL_REG_BATCH_FIELD?.trim() || 'Batch',
-    program:
-      process.env.ZOHO_IL_REG_PROGRAM_FIELD?.trim() ||
-      'Program_Registration_Details',
+    program: process.env.ZOHO_IL_REG_PROGRAM_FIELD?.trim() || 'Program_Registration_Details',
     programAlt: process.env.ZOHO_IL_REG_PROGRAM_ALT_FIELD?.trim() || 'Program',
-    status:
-      process.env.ZOHO_IL_REG_STATUS_FIELD?.trim() || 'Current_Status',
+    status: process.env.ZOHO_IL_REG_STATUS_FIELD?.trim() || 'Current_Status',
     statusAlt: process.env.ZOHO_IL_REG_STATUS_ALT_FIELD?.trim() || 'Lead_Status',
-    ilUserLookup:
-      process.env.ZOHO_IL_REG_ILUSER_LOOKUP_FIELD?.trim() || 'IL_User',
-    username:
-      process.env.ZOHO_IL_REG_USERNAME_FIELD?.trim() || 'Username',
-    password:
-      process.env.ZOHO_IL_REG_PASSWORD_FIELD?.trim() || 'Password',
+    ilUserLookup: process.env.ZOHO_IL_REG_ILUSER_LOOKUP_FIELD?.trim() || 'IL_User',
+    username: process.env.ZOHO_IL_REG_USERNAME_FIELD?.trim() || 'Username',
+    password: process.env.ZOHO_IL_REG_PASSWORD_FIELD?.trim() || 'Password',
   };
 }
 
@@ -49,7 +47,14 @@ function registrationToCredentialFields(reg) {
   if (!reg) return {};
   const f = getRegistrationFieldNames();
   const email = pickField(reg, f.email, 'Email');
-  const username = pickField(reg, f.username, 'Username', 'LMS_Username', 'User_Name', 'IL_Username');
+  const username = pickField(
+    reg,
+    f.username,
+    'Username',
+    'LMS_Username',
+    'User_Name',
+    'IL_Username'
+  );
   let password = pickField(
     reg,
     f.password,
@@ -124,7 +129,15 @@ function getRegistrationCredentialFields() {
       .map((part) => part.trim())
       .filter(Boolean);
   }
-  return ['Username', 'LMS_Username', 'User_Name', 'IL_Username', 'LMS_Password', 'Password', 'IL_Password'];
+  return [
+    'Username',
+    'LMS_Username',
+    'User_Name',
+    'IL_Username',
+    'LMS_Password',
+    'Password',
+    'IL_Password',
+  ];
 }
 
 function extractIlUserLookupId(reg) {
@@ -251,7 +264,10 @@ async function fetchIlRegistrationWithBatch({ maxPages = 50, perPage = 200 } = {
 
   try {
     while (more && pages < maxPages) {
-      const result = await fetchRegistrationViaCoql({ offset: pages * perPage, limit: perPage }, deps);
+      const result = await fetchRegistrationViaCoql(
+        { offset: pages * perPage, limit: perPage },
+        deps
+      );
       rows.push(...result.rows);
       more = result.more;
       pages += 1;
@@ -265,7 +281,9 @@ async function fetchIlRegistrationWithBatch({ maxPages = 50, perPage = 200 } = {
 
     while (more && pages < maxPages) {
       const result = await fetchRegistrationViaList({ page: pages + 1, perPage }, deps);
-      rows.push(...result.rows.filter((r) => pickField(r, getRegistrationFieldNames().batch, 'Batch')));
+      rows.push(
+        ...result.rows.filter((r) => pickField(r, getRegistrationFieldNames().batch, 'Batch'))
+      );
       more = result.more;
       pages += 1;
     }
@@ -282,7 +300,9 @@ async function fetchIlRegistrationWithBatch({ maxPages = 50, perPage = 200 } = {
 }
 
 function normalizeEmail(value) {
-  return String(value || '').trim().toLowerCase();
+  return String(value || '')
+    .trim()
+    .toLowerCase();
 }
 
 /**
@@ -370,8 +390,7 @@ async function searchIlRegistrationByEmail(email, deps) {
   let foundModule = moduleCandidates[0];
 
   for (const module of moduleCandidates) {
-    const selectQuery =
-      `select ${selectFields} from ${module} where ${f.email} = '${safeEmail}' limit 1`;
+    const selectQuery = `select ${selectFields} from ${module} where ${f.email} = '${safeEmail}' limit 1`;
 
     for (const version of ['v7', 'v6', 'v2']) {
       const res = await fetch(`${deps.getApiDomain()}/crm/${version}/coql`, {

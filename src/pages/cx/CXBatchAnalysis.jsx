@@ -5,7 +5,12 @@ import { useProgramAdapter } from '../../hooks/useProgramAdapter';
 import { useCxData } from '../../hooks/useCxData';
 import { getProgramLabel } from '../../data/programTypes';
 import { studentsInBatch } from '../../utils/batchScope';
-import { buildSubmissionIndex, buildModuleTaskBreakdown, countCompletedCells, isCxSubmissionComplete } from '../../utils/cxMetrics';
+import {
+  buildSubmissionIndex,
+  buildModuleTaskBreakdown,
+  countCompletedCells,
+  isCxSubmissionComplete,
+} from '../../utils/cxMetrics';
 import {
   buildLearnerStageRows,
   buildSectionStageFunnel,
@@ -31,7 +36,9 @@ function StatCard({ value, label, variant, onClick }) {
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
     >
-      <span className={`cx-stat__value${variant ? ` cx-stat__value--${variant}` : ''}`}>{value}</span>
+      <span className={`cx-stat__value${variant ? ` cx-stat__value--${variant}` : ''}`}>
+        {value}
+      </span>
       <span className="cx-stat__label">{label}</span>
     </div>
   );
@@ -42,7 +49,10 @@ export default function CXBatchAnalysis() {
   const navigate = useNavigate();
   const { user, role } = useAuth();
   const { program, adapter } = useProgramAdapter();
-  const { batches, users, students, tasks, submissions, loading, refresh } = useCxData(program, adapter);
+  const { batches, users, students, tasks, submissions, loading, refresh } = useCxData(
+    program,
+    adapter
+  );
   const [modal, setModal] = useState(null);
   const [stageFilter, setStageFilter] = useState('all');
   const [trackingOpen, setTrackingOpen] = useState(false);
@@ -69,7 +79,9 @@ export default function CXBatchAnalysis() {
     const ms7 = now - 7 * 86400000;
     const ms30 = now - 30 * 86400000;
     const getMs = (m) =>
-      m.lastActivityAt?.seconds ? m.lastActivityAt.seconds * 1000 : m.lastActivityAt?.toMillis?.() || 0;
+      m.lastActivityAt?.seconds
+        ? m.lastActivityAt.seconds * 1000
+        : m.lastActivityAt?.toMillis?.() || 0;
     return {
       active7: members.filter((m) => getMs(m) >= ms7),
       active30: members.filter((m) => getMs(m) >= ms30),
@@ -105,7 +117,8 @@ export default function CXBatchAnalysis() {
     return members
       .map((m) => ({
         learner: m,
-        done: tasks.filter((t) => isCxSubmissionComplete(subMap[m.id]?.[t.id], taskById[t.id])).length,
+        done: tasks.filter((t) => isCxSubmissionComplete(subMap[m.id]?.[t.id], taskById[t.id]))
+          .length,
       }))
       .sort((a, b) => b.done - a.done);
   }, [members, batchSubs, tasks]);
@@ -118,10 +131,15 @@ export default function CXBatchAnalysis() {
     const today = getTodayKey();
     const start = addDaysToKey(today, -365);
     setAttendanceLoading(true);
-    getBatchAttendanceSummary(members.map((m) => m.id), batch.courseIds, start, today)
+    getBatchAttendanceSummary(
+      members.map((m) => m.id),
+      batch.courseIds,
+      start,
+      today
+    )
       .then(setAttendance)
       .finally(() => setAttendanceLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [batchId, courseIdsKey, memberCount]);
 
   // Aggregate attendance stats for the batch
@@ -137,11 +155,11 @@ export default function CXBatchAnalysis() {
       return a.total > 0 && a.present / a.total < 0.6;
     });
     const avgPct = Math.round(
-      withRecords.reduce((sum, m) => {
+      (withRecords.reduce((sum, m) => {
         const a = attendance[m.id];
         return sum + (a.total > 0 ? a.present / a.total : 0);
       }, 0) /
-        withRecords.length *
+        withRecords.length) *
         100
     );
     return { withRecords, goodAttendance, poorAttendance, avgPct };
@@ -173,7 +191,9 @@ export default function CXBatchAnalysis() {
 
   const completionRate =
     members.length && tasks.length
-      ? Math.round((countCompletedCells(members, tasks, batchSubs) / (members.length * tasks.length)) * 100)
+      ? Math.round(
+          (countCompletedCells(members, tasks, batchSubs) / (members.length * tasks.length)) * 100
+        )
       : 0;
 
   return (
@@ -220,19 +240,25 @@ export default function CXBatchAnalysis() {
             value={activityStats.active7.length}
             label="Active (7d)"
             variant={activityStats.active7.length > 0 ? 'success' : undefined}
-            onClick={() => setModal({ title: 'Active last 7 days', participants: activityStats.active7 })}
+            onClick={() =>
+              setModal({ title: 'Active last 7 days', participants: activityStats.active7 })
+            }
           />
           <StatCard
             value={activityStats.active30.length}
             label="Active (30d)"
             variant={activityStats.active30.length > 0 ? 'success' : undefined}
-            onClick={() => setModal({ title: 'Active last 30 days', participants: activityStats.active30 })}
+            onClick={() =>
+              setModal({ title: 'Active last 30 days', participants: activityStats.active30 })
+            }
           />
           <StatCard
             value={activityStats.neverActive.length}
             label="Never active"
             variant={activityStats.neverActive.length > 0 ? 'danger' : undefined}
-            onClick={() => setModal({ title: 'Never active', participants: activityStats.neverActive })}
+            onClick={() =>
+              setModal({ title: 'Never active', participants: activityStats.neverActive })
+            }
           />
           {adapter.hasTasks && (
             <>
@@ -240,17 +266,15 @@ export default function CXBatchAnalysis() {
                 value={stuckLearners.length}
                 label={`Stuck (${STUCK_DAYS}d+)`}
                 variant={stuckLearners.length > 0 ? 'danger' : undefined}
-                onClick={() =>
-                  stuckLearners.length
-                    ? setStageFilter('stuck')
-                    : undefined
-                }
+                onClick={() => (stuckLearners.length ? setStageFilter('stuck') : undefined)}
               />
               <StatCard
                 value={allTasksCompletedMembers.length}
                 label="All tasks done"
                 variant={allTasksCompletedMembers.length > 0 ? 'success' : undefined}
-                onClick={() => setModal({ title: 'Completed all tasks', participants: allTasksCompletedMembers })}
+                onClick={() =>
+                  setModal({ title: 'Completed all tasks', participants: allTasksCompletedMembers })
+                }
               />
               <StatCard value={`${completionRate}%`} label="Completion rate" />
             </>
@@ -276,7 +300,10 @@ export default function CXBatchAnalysis() {
                 value={attendanceStats.withRecords.length}
                 label="Have records"
                 onClick={() =>
-                  setModal({ title: 'Members with attendance records', participants: attendanceStats.withRecords })
+                  setModal({
+                    title: 'Members with attendance records',
+                    participants: attendanceStats.withRecords,
+                  })
                 }
               />
               <StatCard
@@ -284,7 +311,10 @@ export default function CXBatchAnalysis() {
                 label="Good (≥80%)"
                 variant={attendanceStats.goodAttendance.length > 0 ? 'success' : undefined}
                 onClick={() =>
-                  setModal({ title: 'Good attendance (≥80%)', participants: attendanceStats.goodAttendance })
+                  setModal({
+                    title: 'Good attendance (≥80%)',
+                    participants: attendanceStats.goodAttendance,
+                  })
                 }
               />
               <StatCard
@@ -292,7 +322,10 @@ export default function CXBatchAnalysis() {
                 label="At risk (<60%)"
                 variant={attendanceStats.poorAttendance.length > 0 ? 'danger' : undefined}
                 onClick={() =>
-                  setModal({ title: 'At-risk attendance (<60%)', participants: attendanceStats.poorAttendance })
+                  setModal({
+                    title: 'At-risk attendance (<60%)',
+                    participants: attendanceStats.poorAttendance,
+                  })
                 }
               />
             </div>
@@ -305,8 +338,8 @@ export default function CXBatchAnalysis() {
         <section className="cx-section">
           <h2>Stage funnel</h2>
           <p className="page-sub cx-section__intro">
-            See how many learners have completed, started, or not reached each program section. Click a
-            segment to filter the learner list below.
+            See how many learners have completed, started, or not reached each program section.
+            Click a segment to filter the learner list below.
           </p>
           <CxBatchStageFunnel
             funnel={stageFunnel}

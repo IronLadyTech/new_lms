@@ -32,7 +32,9 @@ export default function BM100TextSubmission({ task, submission, canSubmit, onSub
         disabled={!canSubmit && !saved}
       />
       {saved && (
-        <p className="muted mbw-submission__saved-note">Previously saved — edit and re-submit to update.</p>
+        <p className="muted mbw-submission__saved-note">
+          Previously saved — edit and re-submit to update.
+        </p>
       )}
       <div className="mbw-submission__actions">
         <button

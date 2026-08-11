@@ -317,9 +317,7 @@ export async function getUsersForCxProgram(program, batches = []) {
   if (missingMemberIds.length) {
     try {
       const map = await mergeInQuery(missingMemberIds, async (chunk) => {
-        const snap = await getDocs(
-          query(collection(db, USERS), where(documentId(), 'in', chunk))
-        );
+        const snap = await getDocs(query(collection(db, USERS), where(documentId(), 'in', chunk)));
         return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       });
       map.forEach((u, id) => byId.set(id, u));

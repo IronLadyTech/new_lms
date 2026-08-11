@@ -82,37 +82,35 @@ async function syncAllUsersToZohoPool(db, docs, concurrency = 4) {
 
 // ── Helpers ───────────────────────────────────────────────────
 function currentWeekLabel() {
-  const now   = new Date();
+  const now = new Date();
   const start = new Date(now.getFullYear(), 0, 1);
-  const week  = Math.ceil(((now - start) / 86_400_000 + start.getDay() + 1) / 7);
+  const week = Math.ceil(((now - start) / 86_400_000 + start.getDay() + 1) / 7);
   return `${now.getFullYear()}-W${String(week).padStart(2, '0')}`;
 }
 
 async function getRecurringPostTaskIds() {
-  const snap = await db.collection('mbw_tasks')
-    .where('type', 'in', ['recurring_post'])
-    .get();
+  const snap = await db.collection('mbw_tasks').where('type', 'in', ['recurring_post']).get();
   return snap.docs.map((d) => d.id);
 }
 
 async function getUsersNeedingReminder(taskIds, weekLabel) {
   // Find all users who have a recurring_post submission but haven't posted this week
   const usersSnap = await db.collection('users').get();
-  const pending   = [];
+  const pending = [];
 
   for (const userDoc of usersSnap.docs) {
     const user = { id: userDoc.id, ...userDoc.data() };
     for (const taskId of taskIds) {
-      const subId  = `${user.id}_${taskId}`;
+      const subId = `${user.id}_${taskId}`;
       const subDoc = await db.collection('mbw_submissions').doc(subId).get();
       if (!subDoc.exists) {
         // Never submitted — eligible for reminder
         pending.push({ user, taskId });
         continue;
       }
-      const sub     = subDoc.data();
+      const sub = subDoc.data();
       const entries = sub.weekEntries ?? [];
-      const posted  = entries.some((e) => e.weekLabel === weekLabel);
+      const posted = entries.some((e) => e.weekLabel === weekLabel);
       if (!posted) pending.push({ user, taskId });
     }
   }
@@ -153,14 +151,17 @@ exports.weeklyLinkedInReminder = onSchedule(
     console.log(`Running LinkedIn reminders for ${weekLabel}`);
 
     const transport = nodemailer.createTransport({
-      host:   SMTP_HOST.value(),
-      port:   587,
+      host: SMTP_HOST.value(),
+      port: 587,
       secure: false,
-      auth:   { user: SMTP_USER.value(), pass: SMTP_PASS.value() },
+      auth: { user: SMTP_USER.value(), pass: SMTP_PASS.value() },
     });
 
     const taskIds = await getRecurringPostTaskIds();
-    if (taskIds.length === 0) { console.log('No recurring post tasks found.'); return; }
+    if (taskIds.length === 0) {
+      console.log('No recurring post tasks found.');
+      return;
+    }
 
     const pending = await getUsersNeedingReminder(taskIds, weekLabel);
     console.log(`Sending reminders to ${pending.length} participant(s).`);
@@ -217,17 +218,20 @@ exports.sendTaskReminder = onCall(async (request) => {
   const { fcmToken, displayName } = userDoc.data();
   if (!fcmToken) return { sent: false, reason: 'no_token' };
 
-  const taskTitle = taskDoc.exists ? (taskDoc.data().title || taskId) : taskId;
+  const taskTitle = taskDoc.exists ? taskDoc.data().title || taskId : taskId;
   const firstName = (displayName || '').split(' ')[0] || 'there';
 
-  const sent = await trySend({
-    token: fcmToken,
-    notification: {
-      title: 'Task Reminder',
-      body: `Hi ${firstName}, your task "${taskTitle}" is waiting for you. Complete it today!`,
+  const sent = await trySend(
+    {
+      token: fcmToken,
+      notification: {
+        title: 'Task Reminder',
+        body: `Hi ${firstName}, your task "${taskTitle}" is waiting for you. Complete it today!`,
+      },
+      data: { type: 'task_reminder', taskId, userId },
     },
-    data: { type: 'task_reminder', taskId, userId },
-  }, userId);
+    userId
+  );
 
   if (sent) {
     await db.collection('notifications').add({
@@ -263,10 +267,10 @@ exports.sendReviewNotification = onCall(async (request) => {
   if (!fcmToken) return { sent: false, reason: 'no_token' };
 
   const taskTitle =
-    titleFromClient
-    || (mbwTaskDoc.exists && mbwTaskDoc.data().title)
-    || (bm100TaskDoc.exists && bm100TaskDoc.data().title)
-    || taskId;
+    titleFromClient ||
+    (mbwTaskDoc.exists && mbwTaskDoc.data().title) ||
+    (bm100TaskDoc.exists && bm100TaskDoc.data().title) ||
+    taskId;
 
   const firstName = (displayName || '').split(' ')[0] || 'there';
   const outcomeLabel =
@@ -283,19 +287,22 @@ exports.sendReviewNotification = onCall(async (request) => {
     ? `Hi ${firstName}, "${taskTitle}" was reviewed: ${outcomeLabel}. ${feedbackSnippet}`
     : `Hi ${firstName}, your task "${taskTitle}" was reviewed: ${outcomeLabel}. Open the LMS to see details.`;
 
-  const sent = await trySend({
-    token: fcmToken,
-    notification: {
-      title: 'Task review ready',
-      body,
+  const sent = await trySend(
+    {
+      token: fcmToken,
+      notification: {
+        title: 'Task review ready',
+        body,
+      },
+      data: {
+        type: 'task_review',
+        taskId: String(taskId),
+        userId: String(userId),
+        outcome: String(outcome || ''),
+      },
     },
-    data: {
-      type: 'task_review',
-      taskId: String(taskId),
-      userId: String(userId),
-      outcome: String(outcome || ''),
-    },
-  }, userId);
+    userId
+  );
 
   if (sent) {
     await db.collection('notifications').add({
@@ -327,7 +334,9 @@ exports.sendSessionReminder = onCall(async (request) => {
   const { name: batchName = 'your batch', memberIds = [] } = batchDoc.data();
   if (memberIds.length === 0) return { sent: 0, failed: 0, skipped: 0 };
 
-  const memberDocs = await Promise.all(memberIds.map((uid) => db.collection('users').doc(uid).get()));
+  const memberDocs = await Promise.all(
+    memberIds.map((uid) => db.collection('users').doc(uid).get())
+  );
 
   const targets = memberDocs
     .filter((d) => d.exists && d.data().fcmToken)
@@ -335,7 +344,8 @@ exports.sendSessionReminder = onCall(async (request) => {
 
   if (targets.length === 0) return { sent: 0, failed: 0, skipped: memberIds.length };
 
-  const body = customMessage || `Session reminder for ${batchName}. Check your LMS for the latest updates.`;
+  const body =
+    customMessage || `Session reminder for ${batchName}. Check your LMS for the latest updates.`;
 
   const result = await admin.messaging().sendEachForMulticast({
     tokens: targets.map((t) => t.token),
@@ -369,24 +379,21 @@ exports.sendSessionReminder = onCall(async (request) => {
 });
 
 // ── Zoho CRM — auto-sync on user profile changes ──────────────
-exports.onUserProfileZohoSync = onDocumentWritten(
-  { document: 'users/{userId}' },
-  async (event) => {
-    if (!zoho.isConfigured()) return;
+exports.onUserProfileZohoSync = onDocumentWritten({ document: 'users/{userId}' }, async (event) => {
+  if (!zoho.isConfigured()) return;
 
-    const after = event.data?.after?.data();
-    const before = event.data?.before?.data();
-    if (!after?.email) return;
-    if (!zoho.userProfileChanged(before, after)) return;
+  const after = event.data?.after?.data();
+  const before = event.data?.before?.data();
+  if (!after?.email) return;
+  if (!zoho.userProfileChanged(before, after)) return;
 
-    const userId = event.params.userId;
-    try {
-      await zoho.syncUserToZoho(db, userId, after);
-    } catch (err) {
-      console.error(`Zoho user sync failed for ${userId}:`, err.message);
-    }
+  const userId = event.params.userId;
+  try {
+    await zoho.syncUserToZoho(db, userId, after);
+  } catch (err) {
+    console.error(`Zoho user sync failed for ${userId}:`, err.message);
   }
-);
+});
 
 // ── Zoho CRM — activity notes on new LMS activities ───────────
 exports.onActivityZohoNote = onDocumentCreated(
@@ -786,7 +793,8 @@ exports.zohoLeadWebhook = onRequest({ cors: true }, async (req, res) => {
   if (!zoho.isConfigured() && !hasWebhookCredentials(body)) {
     res.status(503).json({
       ok: false,
-      reason: 'Zoho OAuth not configured on Cloud Functions — deploy functions/.env secrets, or include email+password in webhook',
+      reason:
+        'Zoho OAuth not configured on Cloud Functions — deploy functions/.env secrets, or include email+password in webhook',
     });
     return;
   }
@@ -797,7 +805,8 @@ exports.zohoLeadWebhook = onRequest({ cors: true }, async (req, res) => {
     if (!email) {
       res.status(400).json({
         ok: false,
-        reason: 'email is required — check Deluge POST body (form fields must reach zohoLeadWebhook)',
+        reason:
+          'email is required — check Deluge POST body (form fields must reach zohoLeadWebhook)',
       });
       return;
     }

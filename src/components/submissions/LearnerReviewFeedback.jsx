@@ -19,9 +19,7 @@ function ReviewRound({ entry, round, total, isLatest, actionRequired }) {
       }`}
     >
       <div className="submission-review__head">
-        <strong>
-          {total > 1 ? `Review ${round} of ${total}` : 'Review feedback'}
-        </strong>
+        <strong>{total > 1 ? `Review ${round} of ${total}` : 'Review feedback'}</strong>
         <span className={`mbw-status-pill mbw-status-pill--${tone}`}>{label}</span>
         {reviewedLabel && <span className="muted submission-review__date">{reviewedLabel}</span>}
       </div>
@@ -50,7 +48,9 @@ export default function LearnerReviewFeedback({ submission }) {
   const actionRequired = isLearnerActionRequired(submission.status);
   const latestReview = reviews[reviews.length - 1];
   const latestMeta = getReviewOutcomeMeta(latestReview.outcome);
-  const containerTone = actionRequired ? latestMeta?.tone || 'improvement' : latestMeta?.tone || 'done';
+  const containerTone = actionRequired
+    ? latestMeta?.tone || 'improvement'
+    : latestMeta?.tone || 'done';
 
   return (
     <div

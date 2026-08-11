@@ -1,9 +1,6 @@
 import { useId } from 'react';
 import { Check, Minus, X } from 'lucide-react';
-import {
-  ATTENDANCE_STATUS,
-  attendanceTooltip,
-} from '../../services/attendanceService';
+import { ATTENDANCE_STATUS, attendanceTooltip } from '../../services/attendanceService';
 import { getTodayKey } from '../../utils/streakTimezone';
 
 const LEGEND = [
@@ -139,7 +136,10 @@ export default function AttendanceSection({
                       const dateKey = `${row.year}-${String(row.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                       if (!status) {
                         return (
-                          <td key={day} className="streak-attendance__cell streak-attendance__cell--empty">
+                          <td
+                            key={day}
+                            className="streak-attendance__cell streak-attendance__cell--empty"
+                          >
                             <span className="sr-only">No session on day {day}</span>
                           </td>
                         );
@@ -168,13 +168,15 @@ export default function AttendanceSection({
             {LEGEND.map((item) => {
               const ItemIcon = item.Icon;
               return (
-              <span key={item.status} className="streak-attendance__legend-item">
-                <span className={`streak-attendance__mark streak-attendance__mark--${item.className}`}>
-                  <ItemIcon size={14} aria-hidden />
+                <span key={item.status} className="streak-attendance__legend-item">
+                  <span
+                    className={`streak-attendance__mark streak-attendance__mark--${item.className}`}
+                  >
+                    <ItemIcon size={14} aria-hidden />
+                  </span>
+                  {item.label}
                 </span>
-                {item.label}
-              </span>
-            );
+              );
             })}
           </div>
         </>

@@ -54,9 +54,7 @@ export function programIdToCode(programId) {
 export function getJourneyEntry(programIdOrCode) {
   const asId = String(programIdOrCode || '').toLowerCase();
   const asCode = normalizeCourseCode(programIdOrCode);
-  return (
-    PROGRAM_JOURNEY.find((p) => p.id === asId || p.code === asCode) || null
-  );
+  return PROGRAM_JOURNEY.find((p) => p.id === asId || p.code === asCode) || null;
 }
 
 /**

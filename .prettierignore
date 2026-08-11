@@ -1,0 +1,12 @@
+dist
+node_modules
+.firebase
+test-results
+public
+*.md
+package-lock.json
+firestore.indexes.json
+
+# Tool config and generated/handoff artifacts — not source we own the style of.
+.claude
+docs

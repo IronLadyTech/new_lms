@@ -80,7 +80,13 @@ export const FORM_TEMPLATES = {
     submitLabel: 'Submit worksheet',
     fields: [
       { key: 'name', label: 'Name', type: 'text', required: true, section: 'Your details' },
-      { key: 'batch', label: 'Batch / cohort', type: 'text', required: true, section: 'Your details' },
+      {
+        key: 'batch',
+        label: 'Batch / cohort',
+        type: 'text',
+        required: true,
+        section: 'Your details',
+      },
       { key: 'date', label: 'Date', type: 'text', required: true, section: 'Your details' },
       {
         key: 'position',

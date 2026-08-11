@@ -85,7 +85,11 @@ export function classifyLearnerJourney(student, tasks, submissionIndex) {
 
   if (pct >= 95 && tasks.length > 0) return JOURNEY_LABELS.COMPLETED;
 
-  if (ps === PAYMENT_STATUS.UNPAID && tier !== ACCESS_TIERS.REGISTRATION && tier !== ACCESS_TIERS.FULL) {
+  if (
+    ps === PAYMENT_STATUS.UNPAID &&
+    tier !== ACCESS_TIERS.REGISTRATION &&
+    tier !== ACCESS_TIERS.FULL
+  ) {
     return JOURNEY_LABELS.NONE;
   }
 

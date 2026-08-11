@@ -51,7 +51,11 @@ export default function AdminShell({ title, subtitle, isSuperAdmin = false }) {
     setMenuOpen(false);
   };
 
-  const sidebarLabel = isSuperAdmin ? 'Super Admin' : moderatorView ? 'Customer Expression' : 'Admin';
+  const sidebarLabel = isSuperAdmin
+    ? 'Super Admin'
+    : moderatorView
+      ? 'Customer Expression'
+      : 'Admin';
 
   return (
     <div className="admin-shell">

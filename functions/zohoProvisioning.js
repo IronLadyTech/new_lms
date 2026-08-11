@@ -40,10 +40,13 @@ async function ensureCourseEnrollment(db, uid, profile, program) {
   const enrolled = Array.isArray(profile.enrolledCourses) ? profile.enrolledCourses : [];
   if (enrolled.includes(courseId)) return profile;
 
-  await db.collection('users').doc(uid).update({
-    enrolledCourses: admin.firestore.FieldValue.arrayUnion(courseId),
-    updatedAt: new Date(),
-  });
+  await db
+    .collection('users')
+    .doc(uid)
+    .update({
+      enrolledCourses: admin.firestore.FieldValue.arrayUnion(courseId),
+      updatedAt: new Date(),
+    });
 
   return { ...profile, enrolledCourses: [...enrolled, courseId] };
 }
@@ -146,12 +149,16 @@ async function applyEntitlements(db, uid, record, profile = {}) {
   await db.collection('users').doc(uid).update(updates);
 
   let merged = { ...profile, ...updates };
-  const programForEnrollment = staffProgramLocked ? profile.program : ent.program || updates.program;
+  const programForEnrollment = staffProgramLocked
+    ? profile.program
+    : ent.program || updates.program;
   if (programForEnrollment && !staffProgramLocked) {
     merged = await ensureCourseEnrollment(db, uid, merged, programForEnrollment);
   }
 
-  const resolvedProgram = staffProgramLocked ? profile.program || ent.program : updates.program || ent.program;
+  const resolvedProgram = staffProgramLocked
+    ? profile.program || ent.program
+    : updates.program || ent.program;
 
   const mergedEnt = {
     ...ent,
@@ -206,7 +213,11 @@ async function ensureAuthUser(ent) {
   });
 }
 
-async function provisionFromRecord(db, record, { applyPassword = true, skipUnpaidCheck = false } = {}) {
+async function provisionFromRecord(
+  db,
+  record,
+  { applyPassword = true, skipUnpaidCheck = false } = {}
+) {
   const ent = parseEntitlementsFromRecord(record);
   if (!ent.email) return { ok: false, reason: 'No email on record' };
 
@@ -262,7 +273,13 @@ async function provisionUserFromLead(db, lead, options) {
   return provisionFromRecord(db, lead, options);
 }
 
-async function provisionUserFromEmail(db, getLeadByEmail, searchIlUserByEmail, email, webhookBody = null) {
+async function provisionUserFromEmail(
+  db,
+  getLeadByEmail,
+  searchIlUserByEmail,
+  email,
+  webhookBody = null
+) {
   const trimmed = email?.trim();
   if (!trimmed) return { ok: false, reason: 'Email is required' };
 
@@ -283,13 +300,7 @@ async function provisionFromRegistrationWebhook(db, body, deps) {
   const email = (body?.email || body?.Email || '').trim();
   if (!email) return { ok: false, reason: 'email is required in webhook body' };
 
-  return provisionUserFromEmail(
-    db,
-    deps.getLeadByEmail,
-    deps.searchIlUserByEmail,
-    email,
-    body
-  );
+  return provisionUserFromEmail(db, deps.getLeadByEmail, deps.searchIlUserByEmail, email, body);
 }
 
 /** First login — create Firebase user when Zoho IL_Users credentials match. */

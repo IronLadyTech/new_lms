@@ -32,7 +32,9 @@ export function useAttendanceAnalytics(learnerId, courseId) {
       setError(null);
     } catch (err) {
       console.warn('Attendance load failed', err);
-      setError(err?.userMessage || 'Could not load attendance. Check your connection or try again.');
+      setError(
+        err?.userMessage || 'Could not load attendance. Check your connection or try again.'
+      );
       setDays([]);
     } finally {
       setLoading(false);

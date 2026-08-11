@@ -23,7 +23,9 @@ export default function DeltaTableEditor({ task, submission, canSubmit, onSave }
   const complete = useMemo(() => isDeltaTableComplete(rows), [rows]);
 
   const updateCell = (rowIdx, key, value) => {
-    setRows((prev) => prev.map((row, index) => (index === rowIdx ? { ...row, [key]: value } : row)));
+    setRows((prev) =>
+      prev.map((row, index) => (index === rowIdx ? { ...row, [key]: value } : row))
+    );
     if (validationError) setValidationError('');
   };
 
@@ -43,7 +45,8 @@ export default function DeltaTableEditor({ task, submission, canSubmit, onSave }
   return (
     <div className="mbw-submission mbw-errc mbw-delta">
       <p className="mbw-task__hint">
-        {task.description || 'Complete your Delta / Milestone Table below — every block must be filled.'}
+        {task.description ||
+          'Complete your Delta / Milestone Table below — every block must be filled.'}
       </p>
 
       <div className="mbw-errc__cards">

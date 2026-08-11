@@ -18,9 +18,7 @@ export default function ProgramOutlineDisclosure({ open, onToggle, lessonCount, 
       >
         <ListTree size={18} aria-hidden />
         <span className="program-outline__label">Full program outline</span>
-        {lessonCount > 0 && (
-          <span className="program-outline__count">{lessonCount} lessons</span>
-        )}
+        {lessonCount > 0 && <span className="program-outline__count">{lessonCount} lessons</span>}
         <ChevronDown
           size={18}
           className={`program-outline__chevron${open ? ' is-open' : ''}`}

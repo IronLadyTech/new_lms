@@ -124,14 +124,21 @@ function SessionReminderModal({ batch, onClose }) {
                 onChange={(e) => setMessage(e.target.value)}
                 autoFocus
               />
-              <p className="muted cx-modal__hint">Optional — leave blank for the default message.</p>
+              <p className="muted cx-modal__hint">
+                Optional — leave blank for the default message.
+              </p>
             </>
           )}
         </div>
 
         <div className="cx-modal__footer">
           {!result && (
-            <button type="button" className="btn btn-primary" disabled={sending} onClick={handleSend}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={sending}
+              onClick={handleSend}
+            >
               {sending ? 'Sending…' : 'Send reminder'}
             </button>
           )}
@@ -241,7 +248,10 @@ export default function CXHome() {
     return 'Remind';
   };
 
-  const firstName = String(profile?.displayName ?? '').trim().split(/\s+/)[0] || '';
+  const firstName =
+    String(profile?.displayName ?? '')
+      .trim()
+      .split(/\s+/)[0] || '';
 
   const kpiItems = [
     {
@@ -305,11 +315,16 @@ export default function CXHome() {
         </p>
       )}
 
-      {sessionBatch && <SessionReminderModal batch={sessionBatch} onClose={() => setSessionBatch(null)} />}
+      {sessionBatch && (
+        <SessionReminderModal batch={sessionBatch} onClose={() => setSessionBatch(null)} />
+      )}
 
       <div className="cx-home-grid">
         {adapter.hasTasks && (
-          <section className="cx-panel cx-home-panel cx-home-panel--primary" aria-labelledby="cx-attention-heading">
+          <section
+            className="cx-panel cx-home-panel cx-home-panel--primary"
+            aria-labelledby="cx-attention-heading"
+          >
             <div className="cx-panel__head">
               <h2 id="cx-attention-heading" className="cx-panel__title">
                 Needs your attention
@@ -425,7 +440,11 @@ export default function CXHome() {
                                 {count} learner{count === 1 ? '' : 's'}
                               </span>
                             </span>
-                            <ChevronRight size={18} className="cx-batch-card-home__chevron" aria-hidden />
+                            <ChevronRight
+                              size={18}
+                              className="cx-batch-card-home__chevron"
+                              aria-hidden
+                            />
                           </Link>
                           <button
                             type="button"

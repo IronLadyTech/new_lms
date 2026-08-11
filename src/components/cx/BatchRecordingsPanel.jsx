@@ -7,10 +7,7 @@ import {
   upsertBatchRecordingForSession,
 } from '../../services/groupService';
 import { normalizeEventLink } from '../../utils/eventLinks';
-import {
-  getBatchRecordingPhases,
-  RECORDING_PHASE_OTHER,
-} from '../../data/batchRecordingPhases';
+import { getBatchRecordingPhases, RECORDING_PHASE_OTHER } from '../../data/batchRecordingPhases';
 import {
   findRecordingForSession,
   getBatchRecordingSessions,
@@ -41,9 +38,10 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
   const [error, setError] = useState('');
 
   const recordings = useMemo(
-    () => [...(batch.recordings || [])].sort((a, b) =>
-      (b.date || b.addedAt || '').localeCompare(a.date || a.addedAt || '')
-    ),
+    () =>
+      [...(batch.recordings || [])].sort((a, b) =>
+        (b.date || b.addedAt || '').localeCompare(a.date || a.addedAt || '')
+      ),
     [batch.recordings]
   );
 
@@ -236,7 +234,8 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
   };
 
   const handleRemove = async (rec) => {
-    const displayTitle = rec.title || getSessionTitle(resolvedProgram, rec.sessionId) || 'Recording';
+    const displayTitle =
+      rec.title || getSessionTitle(resolvedProgram, rec.sessionId) || 'Recording';
     const ok = await confirm({
       title: 'Remove recording',
       message: `Remove “${displayTitle}” from this batch?`,
@@ -281,7 +280,9 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
             const suffix = taken && !isEditingThis ? ' (has video)' : '';
             return (
               <option key={session.id} value={session.id}>
-                {session.week ? `${session.week} — ` : ''}{session.title}{suffix}
+                {session.week ? `${session.week} — ` : ''}
+                {session.title}
+                {suffix}
               </option>
             );
           })}
@@ -322,7 +323,12 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
         <button type="submit" className="btn btn-primary btn-sm" disabled={saving}>
           {saving ? 'Saving…' : submitLabel}
         </button>
-        <button type="button" className="btn btn-outline btn-sm" onClick={resetForm} disabled={saving}>
+        <button
+          type="button"
+          className="btn btn-outline btn-sm"
+          onClick={resetForm}
+          disabled={saving}
+        >
           Cancel
         </button>
       </div>
@@ -450,9 +456,9 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
             </>
           )}
 
-          {addingPhaseId === phase.id && !form.sessionId && (
-            renderForm((e) => handleSaveAdd(e, phase.id), 'Add recording', phase.id)
-          )}
+          {addingPhaseId === phase.id &&
+            !form.sessionId &&
+            renderForm((e) => handleSaveAdd(e, phase.id), 'Add recording', phase.id)}
         </div>
       );
     }
@@ -489,9 +495,7 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
       ...phase,
       items: byPhase.map[phase.id] || [],
     })),
-    ...(byPhase.other.length
-      ? [{ ...RECORDING_PHASE_OTHER, items: byPhase.other }]
-      : []),
+    ...(byPhase.other.length ? [{ ...RECORDING_PHASE_OTHER, items: byPhase.other }] : []),
   ];
 
   return (
@@ -505,7 +509,11 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
           : 'Paste an unlisted YouTube (or Drive / Zoom) link under the correct phase for this batch. Only learners in this batch will see these videos.'}
       </p>
 
-      {error && <p className="cx-error" role="alert">{error}</p>}
+      {error && (
+        <p className="cx-error" role="alert">
+          {error}
+        </p>
+      )}
 
       <div className="cx-recording-phases">
         {phaseBlocks.map((phase) => {

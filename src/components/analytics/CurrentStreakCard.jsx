@@ -37,9 +37,7 @@ function HexBadge({ value }) {
 
 export default function CurrentStreakCard({ currentStreak = 0 }) {
   const dayPills =
-    currentStreak > 0
-      ? Array.from({ length: Math.min(currentStreak, 7) }, (_, i) => i + 1)
-      : [];
+    currentStreak > 0 ? Array.from({ length: Math.min(currentStreak, 7) }, (_, i) => i + 1) : [];
 
   return (
     <article className="streak-current-panel">
@@ -49,8 +47,8 @@ export default function CurrentStreakCard({ currentStreak = 0 }) {
           <p className="streak-current-panel__motivation">
             {currentStreak > 0 ? (
               <>
-                Consistency is key! Keep upskilling for at least{' '}
-                <strong>10 minutes</strong> each day to grow your streak.
+                Consistency is key! Keep upskilling for at least <strong>10 minutes</strong> each
+                day to grow your streak.
               </>
             ) : (
               <>

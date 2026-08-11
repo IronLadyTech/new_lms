@@ -13,10 +13,19 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getRecentEventsForNotifications } from '../services/eventService';
-import { getActiveAnnouncements, getActiveAnnouncementsForUser } from '../services/announcementService';
+import {
+  getActiveAnnouncements,
+  getActiveAnnouncementsForUser,
+} from '../services/announcementService';
 import { getUserTickets, statusLabel, TICKET_STATUSES } from '../services/ticketService';
-import { getUserSubmissions as getMbwSubmissions, getStaticTasks as getMbwTasks } from '../services/mbwService';
-import { getUserSubmissions as getBm100Submissions, getStaticTasks as getBm100Tasks } from '../services/bm100Service';
+import {
+  getUserSubmissions as getMbwSubmissions,
+  getStaticTasks as getMbwTasks,
+} from '../services/mbwService';
+import {
+  getUserSubmissions as getBm100Submissions,
+  getStaticTasks as getBm100Tasks,
+} from '../services/bm100Service';
 import { PROGRAMS } from '../data/programTypes';
 import { getReviewOutcomeMeta, getSubmissionReviewHistory } from '../utils/submissionReview';
 import { calendarEventUrl } from './EventPreviewCard';
@@ -104,9 +113,7 @@ function buildNotifications(events, tickets, announcements, reviews, userId) {
           id: `announcement-${a.id}`,
           kind: 'announcement',
           title: safeText(a.title) || 'Announcement',
-          body: tagged
-            ? `${safeSlice(a.body, 80)} · You're tagged`
-            : safeSlice(a.body, 100),
+          body: tagged ? `${safeSlice(a.body, 80)} · You're tagged` : safeSlice(a.body, 100),
           link: '/app/home',
         });
       });
@@ -192,7 +199,9 @@ function buildReviewItems(submissionsMap, tasks, program) {
       });
     });
 
-    return items.sort((a, b) => reviewedAtKey(b.reviewedAt).localeCompare(reviewedAtKey(a.reviewedAt)));
+    return items.sort((a, b) =>
+      reviewedAtKey(b.reviewedAt).localeCompare(reviewedAtKey(a.reviewedAt))
+    );
   } catch (err) {
     console.warn('NotificationBell: could not build review notifications', err);
     return [];
@@ -217,7 +226,9 @@ function NotificationListItem({ notification, onDismiss, onNavigate }) {
         </span>
         <span className="notification-bell__item-copy">
           <span className="notification-bell__item-top">
-            <span className="notification-bell__kind">{KIND_LABELS[notification.kind] || 'Update'}</span>
+            <span className="notification-bell__kind">
+              {KIND_LABELS[notification.kind] || 'Update'}
+            </span>
             <strong>{notification.title}</strong>
           </span>
           {notification.body ? (

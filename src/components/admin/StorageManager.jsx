@@ -189,7 +189,9 @@ export default function StorageManager({ users = [] }) {
     setMessage('');
     try {
       const result = await deleteUserStorage(userId);
-      setMessage(`Removed ${result.deleted} file(s) for ${userLabel(u)} (${result.freedBytesLabel} freed).`);
+      setMessage(
+        `Removed ${result.deleted} file(s) for ${userLabel(u)} (${result.freedBytesLabel} freed).`
+      );
       await load();
     } catch (e) {
       setError(e.message || 'User storage delete failed');
@@ -218,7 +220,9 @@ export default function StorageManager({ users = [] }) {
   if (!isStorageAdminAvailable()) {
     return (
       <section className="admin-section">
-        <div className="alert alert-warning">Firebase is not configured. Add your Firebase keys to enable storage management.</div>
+        <div className="alert alert-warning">
+          Firebase is not configured. Add your Firebase keys to enable storage management.
+        </div>
       </section>
     );
   }
@@ -229,33 +233,56 @@ export default function StorageManager({ users = [] }) {
 
       <div className="section-header">
         <h2>
-          <HardDrive size={20} strokeWidth={2} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+          <HardDrive
+            size={20}
+            strokeWidth={2}
+            style={{ verticalAlign: 'middle', marginRight: 8 }}
+          />
           Storage management
         </h2>
         <p className="page-sub">
-          Monitor overall LMS storage, per-user usage, and clean up orphaned files. Run a bucket scan to index
-          existing files and link them to courses, resources, events, and MBW submissions.
+          Monitor overall LMS storage, per-user usage, and clean up orphaned files. Run a bucket
+          scan to index existing files and link them to courses, resources, events, and MBW
+          submissions.
         </p>
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}
       {message && <div className="alert alert-success">{message}</div>}
 
-      <div className="admin-actions-row" style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+      <div
+        className="admin-actions-row"
+        style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}
+      >
         <button type="button" className="btn btn-primary btn-sm" onClick={load} disabled={loading}>
           <RefreshCw size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
           Refresh
         </button>
-        <button type="button" className="btn btn-outline btn-sm" onClick={handleScan} disabled={scanning}>
+        <button
+          type="button"
+          className="btn btn-outline btn-sm"
+          onClick={handleScan}
+          disabled={scanning}
+        >
           <ScanSearch size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
           {scanning ? 'Scanning bucket…' : 'Scan & index bucket'}
         </button>
-        <button type="button" className="btn btn-outline btn-sm" onClick={handleCleanOrphans} disabled={cleaning}>
+        <button
+          type="button"
+          className="btn btn-outline btn-sm"
+          onClick={handleCleanOrphans}
+          disabled={cleaning}
+        >
           <Trash2 size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
           {cleaning ? 'Cleaning…' : 'Clean orphan files'}
         </button>
         {selectedPaths.size > 0 && (
-          <button type="button" className="btn btn-danger btn-sm" onClick={handleDeleteSelected} disabled={deleting}>
+          <button
+            type="button"
+            className="btn btn-danger btn-sm"
+            onClick={handleDeleteSelected}
+            disabled={deleting}
+          >
             Delete selected ({selectedPaths.size})
           </button>
         )}
@@ -271,7 +298,9 @@ export default function StorageManager({ users = [] }) {
                 <HardDrive size={22} />
               </span>
               <div>
-                <span className="stat-card__value">{overview?.totalBytesLabel || formatStorageBytes(0)}</span>
+                <span className="stat-card__value">
+                  {overview?.totalBytesLabel || formatStorageBytes(0)}
+                </span>
                 <span className="stat-card__label">Total storage</span>
               </div>
             </div>
@@ -290,7 +319,9 @@ export default function StorageManager({ users = [] }) {
               </span>
               <div>
                 <span className="stat-card__value">{overview?.orphanCount ?? 0}</span>
-                <span className="stat-card__label">Orphan files ({overview?.orphanBytesLabel || '0 B'})</span>
+                <span className="stat-card__label">
+                  Orphan files ({overview?.orphanBytesLabel || '0 B'})
+                </span>
               </div>
             </div>
           </div>
@@ -298,7 +329,9 @@ export default function StorageManager({ users = [] }) {
           <div className="card card-pad" style={{ marginBottom: '1.5rem' }}>
             <h3 style={{ marginTop: 0 }}>Storage by folder</h3>
             {folderRows.length === 0 ? (
-              <p className="muted">No indexed files yet. Run &quot;Scan &amp; index bucket&quot; to populate.</p>
+              <p className="muted">
+                No indexed files yet. Run &quot;Scan &amp; index bucket&quot; to populate.
+              </p>
             ) : (
               <ul className="admin-list admin-list--compact">
                 {folderRows.map((row) => (
@@ -306,7 +339,8 @@ export default function StorageManager({ users = [] }) {
                     <div className="admin-list__content">
                       <strong>{row.label}</strong>
                       <p className="admin-list__meta muted">
-                        {row.count} file{row.count !== 1 ? 's' : ''} · {formatStorageBytes(row.bytes)}
+                        {row.count} file{row.count !== 1 ? 's' : ''} ·{' '}
+                        {formatStorageBytes(row.bytes)}
                       </p>
                     </div>
                     <button
@@ -336,7 +370,8 @@ export default function StorageManager({ users = [] }) {
                     <div className="admin-list__content">
                       <strong>{userLabel(row.user)}</strong>
                       <p className="admin-list__meta muted">
-                        {row.count} file{row.count !== 1 ? 's' : ''} · {formatStorageBytes(row.bytes)}
+                        {row.count} file{row.count !== 1 ? 's' : ''} ·{' '}
+                        {formatStorageBytes(row.bytes)}
                       </p>
                     </div>
                     <div style={{ display: 'flex', gap: '0.35rem' }}>
@@ -367,7 +402,16 @@ export default function StorageManager({ users = [] }) {
           </div>
 
           <div className="card card-pad">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '0.5rem',
+                marginBottom: '1rem',
+              }}
+            >
               <h3 style={{ margin: 0 }}>File registry</h3>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <select
@@ -422,7 +466,9 @@ export default function StorageManager({ users = [] }) {
             </div>
 
             {objects.length === 0 ? (
-              <p className="muted">No files match filters. Run a bucket scan if the registry is empty.</p>
+              <p className="muted">
+                No files match filters. Run a bucket scan if the registry is empty.
+              </p>
             ) : (
               <div className="table-scroll-wrap">
                 <table className="admin-table" style={{ width: '100%', fontSize: '0.875rem' }}>
@@ -459,7 +505,10 @@ export default function StorageManager({ users = [] }) {
                         <td>
                           <strong>{obj.fileName || obj.path}</strong>
                           <br />
-                          <span className="muted" style={{ fontSize: '0.75rem', wordBreak: 'break-all' }}>
+                          <span
+                            className="muted"
+                            style={{ fontSize: '0.75rem', wordBreak: 'break-all' }}
+                          >
                             {obj.path}
                           </span>
                         </td>
@@ -486,7 +535,13 @@ export default function StorageManager({ users = [] }) {
                         </td>
                         <td>
                           {obj.url && (
-                            <a href={obj.url} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline" title="Open file">
+                            <a
+                              href={obj.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn btn-sm btn-outline"
+                              title="Open file"
+                            >
                               <ExternalLink size={14} />
                             </a>
                           )}

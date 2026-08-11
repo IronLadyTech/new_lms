@@ -31,7 +31,9 @@ export function normalizeProgramCode(code) {
 
 export function getCourseProgramMeta(code) {
   const normalized = normalizeProgramCode(code);
-  return COURSE_PROGRAM_META[normalized] || { tag: 'Program', duration: 'Self-paced', format: 'Online' };
+  return (
+    COURSE_PROGRAM_META[normalized] || { tag: 'Program', duration: 'Self-paced', format: 'Online' }
+  );
 }
 
 /** Brand cover art for LEP / 100BM / MBW cards when no custom thumbnail is set. */

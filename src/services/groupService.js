@@ -127,9 +127,7 @@ export async function upsertBatchRecordingForSession(groupId, recording) {
 
   const recordings = Array.isArray(group.recordings) ? group.recordings : [];
   const existing = recordings.find(
-    (r) =>
-      r.sessionId === sessionId &&
-      (!phaseId || !r.phaseId || r.phaseId === phaseId)
+    (r) => r.sessionId === sessionId && (!phaseId || !r.phaseId || r.phaseId === phaseId)
   );
 
   const now = new Date().toISOString();
@@ -155,9 +153,7 @@ export async function upsertBatchRecordingForSession(groupId, recording) {
         addedAt: now,
       };
 
-  const next = recordings.filter(
-    (r) => r.sessionId !== sessionId || r.id === entry.id
-  );
+  const next = recordings.filter((r) => r.sessionId !== sessionId || r.id === entry.id);
   if (!existing) next.push(entry);
 
   await updateDoc(doc(db, GROUPS, groupId), {

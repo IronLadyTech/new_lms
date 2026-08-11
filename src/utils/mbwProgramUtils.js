@@ -17,7 +17,8 @@ export function getProgramProgressPct(completedMilestones, totalMilestones) {
 export function getCohortLabel(profile) {
   if (profile?.batchName) return profile.batchName;
   if (profile?.batchId) return `Batch ${profile.batchId}`;
-  const created = profile?.createdAt?.toDate?.() || (profile?.createdAt ? new Date(profile.createdAt) : null);
+  const created =
+    profile?.createdAt?.toDate?.() || (profile?.createdAt ? new Date(profile.createdAt) : null);
   if (created && !Number.isNaN(created.getTime())) {
     return `${created.toLocaleString('default', { month: 'long' })} ${created.getFullYear()} cohort`;
   }
@@ -91,9 +92,7 @@ export function computeSectionProgress(taskStates, profile = null) {
 /** Phase ids the learner may work on (respects sequence + payment gates). */
 export function getUnlockedPhaseIds(taskStates, profile = null) {
   const progress = computeSectionProgress(taskStates, profile);
-  return new Set(
-    MBW_PROGRAM_SECTIONS.filter((s) => progress[s.id]?.unlocked).map((s) => s.id)
-  );
+  return new Set(MBW_PROGRAM_SECTIONS.filter((s) => progress[s.id]?.unlocked).map((s) => s.id));
 }
 
 export function getCurrentSectionId(sectionProgress) {
@@ -142,10 +141,14 @@ export function getLessonRowState(taskState, activeTaskId, nextTaskId) {
   }
 
   if (
-    submission?.status === SUBMISSION_STATUS.NEEDS_IMPROVEMENT
-    || submission?.status === SUBMISSION_STATUS.REJECTED
+    submission?.status === SUBMISSION_STATUS.NEEDS_IMPROVEMENT ||
+    submission?.status === SUBMISSION_STATUS.REJECTED
   ) {
-    return { visual: 'current', reason: 'Action required — review feedback and resubmit', clickable: true };
+    return {
+      visual: 'current',
+      reason: 'Action required — review feedback and resubmit',
+      clickable: true,
+    };
   }
 
   if (id === activeTaskId || id === nextTaskId) {

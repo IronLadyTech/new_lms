@@ -286,11 +286,7 @@ export default function CxOverviewDashboard({
   const activeLegend = useMemo(() => {
     const row = activeStatus[0];
     if (!row) return [];
-    return [
-      ACTIVE_CHART_LABELS.active7,
-      ACTIVE_CHART_LABELS.active30,
-      ACTIVE_CHART_LABELS.inactive,
-    ]
+    return [ACTIVE_CHART_LABELS.active7, ACTIVE_CHART_LABELS.active30, ACTIVE_CHART_LABELS.inactive]
       .map((key) => ({
         key,
         label: key,
@@ -354,7 +350,11 @@ export default function CxOverviewDashboard({
               />
               {compactChart ? (
                 <>
-                  <XAxis type="number" allowDecimals={false} tick={{ fill: tickFill, fontSize: 11 }} />
+                  <XAxis
+                    type="number"
+                    allowDecimals={false}
+                    tick={{ fill: tickFill, fontSize: 11 }}
+                  />
                   <YAxis
                     type="category"
                     dataKey="name"
@@ -503,9 +503,7 @@ export default function CxOverviewDashboard({
           subtitle="All participants in this program"
           total={taskStatusTotal > 0 ? `${taskCompletionPct}%` : null}
           totalLabel="complete"
-          legend={
-            <StatusLegend items={taskStatusData} tokens={tokens} onDrill={onDrill} />
-          }
+          legend={<StatusLegend items={taskStatusData} tokens={tokens} onDrill={onDrill} />}
         >
           {taskStatusTotal === 0 ? (
             <EmptyChart message="No tasks started yet." />
@@ -553,7 +551,10 @@ export default function CxOverviewDashboard({
                     }}
                   />
                 </Pie>
-                <Tooltip contentStyle={tooltipStyle} formatter={(v, n) => [`${v} participants`, n]} />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  formatter={(v, n) => [`${v} participants`, n]}
+                />
               </PieChart>
             </ResponsiveContainer>
           )}
@@ -570,7 +571,10 @@ export default function CxOverviewDashboard({
             <EmptyChart message="No participants enrolled yet." />
           ) : (
             <ResponsiveContainer width="100%" height={chartHeight}>
-              <BarChart data={[enrollmentAssignment]} margin={{ top: 12, right: 8, left: 0, bottom: 4 }}>
+              <BarChart
+                data={[enrollmentAssignment]}
+                margin={{ top: 12, right: 8, left: 0, bottom: 4 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
                 <XAxis dataKey="name" tick={{ fill: tickFill, fontSize: 11 }} />
                 <YAxis allowDecimals={false} tick={{ fill: tickFill, fontSize: 11 }} width={32} />

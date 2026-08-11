@@ -134,7 +134,12 @@ export async function uploadEventImage(file, meta = {}) {
 
 export const ACCEPTED_RESOURCE_TYPES = {
   pdf: ['.pdf', 'application/pdf'],
-  ppt: ['.ppt', '.pptx', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+  ppt: [
+    '.ppt',
+    '.pptx',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  ],
   video: [],
 };
 

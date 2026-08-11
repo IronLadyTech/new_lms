@@ -65,7 +65,11 @@ export default function CxLearnerStageTable({
           </select>
         </label>
         {stuckCount > 0 && stageFilter !== 'stuck' && (
-          <button type="button" className="btn btn-outline btn-sm" onClick={() => onStageFilterChange?.('stuck')}>
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={() => onStageFilterChange?.('stuck')}
+          >
             {stuckCount} stuck
           </button>
         )}
@@ -80,9 +84,14 @@ export default function CxLearnerStageTable({
               const att = attendance[stage.learner.id];
               const attPct = att?.total > 0 ? Math.round((att.present / att.total) * 100) : null;
               return (
-                <li key={stage.learner.id} className={`cx-learner-card${stage.stuck ? ' cx-learner-card--stuck' : ''}`}>
+                <li
+                  key={stage.learner.id}
+                  className={`cx-learner-card${stage.stuck ? ' cx-learner-card--stuck' : ''}`}
+                >
                   <div className="cx-learner-card__head">
-                    <span className="cx-learner-name">{stage.learner.displayName || stage.learner.email}</span>
+                    <span className="cx-learner-name">
+                      {stage.learner.displayName || stage.learner.email}
+                    </span>
                     {stage.stuck && <span className="cx-badge cx-badge--danger">Stuck</span>}
                   </div>
                   <p className="cx-learner-card__stage">{stage.stageLabel}</p>
@@ -94,7 +103,9 @@ export default function CxLearnerStageTable({
                     <span>Last active: {lastActiveLabel(stage)}</span>
                     <span>
                       Tasks:{' '}
-                      <span className={stage.allSectionsDone ? 'cx-badge cx-badge--done' : undefined}>
+                      <span
+                        className={stage.allSectionsDone ? 'cx-badge cx-badge--done' : undefined}
+                      >
                         {stage.completedTaskCount}/{stage.totalTasks}
                       </span>
                     </span>
@@ -107,8 +118,8 @@ export default function CxLearnerStageTable({
                               attPct < 60
                                 ? 'cx-badge cx-badge--danger'
                                 : attPct >= 80
-                                ? 'cx-badge cx-badge--done'
-                                : undefined
+                                  ? 'cx-badge cx-badge--done'
+                                  : undefined
                             }
                           >
                             {attPct}%
@@ -140,12 +151,20 @@ export default function CxLearnerStageTable({
               <tbody>
                 {stages.map((stage) => {
                   const att = attendance[stage.learner.id];
-                  const attPct = att?.total > 0 ? Math.round((att.present / att.total) * 100) : null;
+                  const attPct =
+                    att?.total > 0 ? Math.round((att.present / att.total) * 100) : null;
                   return (
-                    <tr key={stage.learner.id} className={stage.stuck ? 'cx-learner-row--stuck' : undefined}>
+                    <tr
+                      key={stage.learner.id}
+                      className={stage.stuck ? 'cx-learner-row--stuck' : undefined}
+                    >
                       <td>
-                        <span className="cx-learner-name">{stage.learner.displayName || stage.learner.email}</span>
-                        <span className="cx-learner-sub">{stage.learner.phone || stage.learner.email}</span>
+                        <span className="cx-learner-name">
+                          {stage.learner.displayName || stage.learner.email}
+                        </span>
+                        <span className="cx-learner-sub">
+                          {stage.learner.phone || stage.learner.email}
+                        </span>
                         {stage.stuck && <span className="cx-badge cx-badge--danger">Stuck</span>}
                       </td>
                       <td>{stage.stageLabel}</td>
@@ -155,7 +174,11 @@ export default function CxLearnerStageTable({
                       <td className="cx-learner-meta">{stage.nextTask?.title || '—'}</td>
                       <td className="cx-learner-meta">{lastActiveLabel(stage)}</td>
                       <td>
-                        <span className={stage.allSectionsDone ? 'cx-badge cx-badge--done' : 'cx-learner-meta'}>
+                        <span
+                          className={
+                            stage.allSectionsDone ? 'cx-badge cx-badge--done' : 'cx-learner-meta'
+                          }
+                        >
                           {stage.completedTaskCount}/{stage.totalTasks}
                         </span>
                       </td>
@@ -167,8 +190,8 @@ export default function CxLearnerStageTable({
                                 attPct < 60
                                   ? 'cx-badge cx-badge--danger'
                                   : attPct >= 80
-                                  ? 'cx-badge cx-badge--done'
-                                  : 'cx-learner-meta'
+                                    ? 'cx-badge cx-badge--done'
+                                    : 'cx-learner-meta'
                               }
                             >
                               {attPct}%

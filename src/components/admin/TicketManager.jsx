@@ -170,148 +170,182 @@ export default function TicketManager({ users, isSuperAdmin, onRefresh }) {
 
   return (
     <>
-    <section>
-      <h2>Support tickets {openCount > 0 && <span className="badge badge-alert">{openCount} open</span>}</h2>
-      <p className="muted">
-        User messages about course, login &amp; payment issues.
-        {isSuperAdmin ? ' Assign tickets to admins and reply directly.' : ' Reply to assigned tickets.'}
-      </p>
+      <section>
+        <h2>
+          Support tickets{' '}
+          {openCount > 0 && <span className="badge badge-alert">{openCount} open</span>}
+        </h2>
+        <p className="muted">
+          User messages about course, login &amp; payment issues.
+          {isSuperAdmin
+            ? ' Assign tickets to admins and reply directly.'
+            : ' Reply to assigned tickets.'}
+        </p>
 
-      {msg && <p className={msg.includes('resolved') || msg.includes('sent') || msg.includes('Assigned') ? 'success-text' : 'alert alert-error'}>{msg}</p>}
-
-      <div className="admin-form ticket-filters">
-        {[
-          { id: 'open', label: 'Open' },
-          { id: 'assigned', label: 'Assigned' },
-          { id: 'resolved', label: 'Resolved' },
-          { id: 'mine', label: 'Assigned to me' },
-          { id: 'all', label: 'All' },
-        ].map((f) => (
-          <button
-            key={f.id}
-            type="button"
-            className={`btn btn-sm ${filter === f.id ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => setFilter(f.id)}
+        {msg && (
+          <p
+            className={
+              msg.includes('resolved') || msg.includes('sent') || msg.includes('Assigned')
+                ? 'success-text'
+                : 'alert alert-error'
+            }
           >
-            {f.label}
+            {msg}
+          </p>
+        )}
+
+        <div className="admin-form ticket-filters">
+          {[
+            { id: 'open', label: 'Open' },
+            { id: 'assigned', label: 'Assigned' },
+            { id: 'resolved', label: 'Resolved' },
+            { id: 'mine', label: 'Assigned to me' },
+            { id: 'all', label: 'All' },
+          ].map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              className={`btn btn-sm ${filter === f.id ? 'btn-primary' : 'btn-outline'}`}
+              onClick={() => setFilter(f.id)}
+            >
+              {f.label}
+            </button>
+          ))}
+          <button type="button" className="btn btn-outline btn-sm" onClick={loadTickets}>
+            Refresh
           </button>
-        ))}
-        <button type="button" className="btn btn-outline btn-sm" onClick={loadTickets}>
-          Refresh
-        </button>
-      </div>
-
-      {loading ? (
-        <p className="muted">Loading tickets…</p>
-      ) : (
-        <div className="ticket-layout ticket-layout--admin">
-          <ul className="ticket-list">
-            {filtered.map((t) => (
-              <li key={t.id}>
-                <button
-                  type="button"
-                  className={`ticket-list__item${selectedId === t.id ? ' is-active' : ''}`}
-                  onClick={() => setSelectedId(t.id)}
-                >
-                  <strong>{t.subject}</strong>
-                  <span className="muted">{t.userDisplayName} · {t.userEmail}</span>
-                  <span className={`ticket-status ticket-status--${t.status}`}>{statusLabel(t.status)}</span>
-                  <span className="muted">{categoryLabel(t.category)}</span>
-                </button>
-              </li>
-            ))}
-            {filtered.length === 0 && <li className="muted">No tickets in this filter.</li>}
-          </ul>
-
-          {selected && (
-            <div className="ticket-thread">
-              <div className="ticket-thread__header">
-                <div>
-                  <h3>{selected.subject}</h3>
-                  <p className="muted">
-                    From {selected.userDisplayName} ({selected.userEmail}) · {categoryLabel(selected.category)}
-                  </p>
-                </div>
-                <span className={`ticket-status ticket-status--${selected.status}`}>{statusLabel(selected.status)}</span>
-              </div>
-
-              {(isSuperAdmin || role === ROLES.ADMIN) && (
-                <div className="admin-form ticket-actions">
-                  <select
-                    defaultValue={selected.assignedTo || ''}
-                    onChange={(e) => handleAssign(e.target.value)}
-                  >
-                    <option value="">Assign to admin…</option>
-                    {staffUsers.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.displayName} ({u.email})
-                      </option>
-                    ))}
-                  </select>
-                  {selected.assignedToName && (
-                    <span className="muted">Assigned: {selected.assignedToName}</span>
-                  )}
-                  <div className="admin-list__actions">
-                    <button type="button" className="btn btn-outline btn-sm" onClick={handleEditSubject}>
-                      Edit subject
-                    </button>
-                    <button type="button" className="btn btn-danger btn-sm" onClick={handleDelete}>
-                      Delete ticket
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div className="ticket-messages">
-                {messages.map((m) => (
-                  <div
-                    key={m.id}
-                    className={`ticket-message${m.senderRole === 'user' ? ' ticket-message--user' : ' ticket-message--staff'}`}
-                  >
-                    <div className="ticket-message__meta">
-                      <strong>{m.senderName}</strong>
-                      <span className="badge">{m.senderRole}</span>
-                      <span className="muted">{formatTime(m.createdAt)}</span>
-                    </div>
-                    <p>{m.text}</p>
-                  </div>
-                ))}
-              </div>
-
-              {selected.status !== TICKET_STATUSES.RESOLVED ? (
-                <>
-                  <form className="ticket-reply" onSubmit={handleReply}>
-                    <textarea
-                      placeholder="Message user directly…"
-                      value={reply}
-                      onChange={(e) => setReply(e.target.value)}
-                      rows={3}
-                      required
-                    />
-                    <div className="ticket-actions">
-                      <button type="submit" className="btn btn-primary btn-sm">
-                        Send message
-                      </button>
-                      <button type="button" className="btn btn-outline btn-sm" onClick={handleResolve}>
-                        Mark resolved
-                      </button>
-                    </div>
-                  </form>
-                </>
-              ) : (
-                <div className="ticket-actions">
-                  <p className="success-text">Resolved {formatTime(selected.resolvedAt)}</p>
-                  <button type="button" className="btn btn-outline btn-sm" onClick={handleReopen}>
-                    Reopen ticket
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
         </div>
-      )}
-    </section>
-    <ConfirmDialog {...dialogProps} />
+
+        {loading ? (
+          <p className="muted">Loading tickets…</p>
+        ) : (
+          <div className="ticket-layout ticket-layout--admin">
+            <ul className="ticket-list">
+              {filtered.map((t) => (
+                <li key={t.id}>
+                  <button
+                    type="button"
+                    className={`ticket-list__item${selectedId === t.id ? ' is-active' : ''}`}
+                    onClick={() => setSelectedId(t.id)}
+                  >
+                    <strong>{t.subject}</strong>
+                    <span className="muted">
+                      {t.userDisplayName} · {t.userEmail}
+                    </span>
+                    <span className={`ticket-status ticket-status--${t.status}`}>
+                      {statusLabel(t.status)}
+                    </span>
+                    <span className="muted">{categoryLabel(t.category)}</span>
+                  </button>
+                </li>
+              ))}
+              {filtered.length === 0 && <li className="muted">No tickets in this filter.</li>}
+            </ul>
+
+            {selected && (
+              <div className="ticket-thread">
+                <div className="ticket-thread__header">
+                  <div>
+                    <h3>{selected.subject}</h3>
+                    <p className="muted">
+                      From {selected.userDisplayName} ({selected.userEmail}) ·{' '}
+                      {categoryLabel(selected.category)}
+                    </p>
+                  </div>
+                  <span className={`ticket-status ticket-status--${selected.status}`}>
+                    {statusLabel(selected.status)}
+                  </span>
+                </div>
+
+                {(isSuperAdmin || role === ROLES.ADMIN) && (
+                  <div className="admin-form ticket-actions">
+                    <select
+                      defaultValue={selected.assignedTo || ''}
+                      onChange={(e) => handleAssign(e.target.value)}
+                    >
+                      <option value="">Assign to admin…</option>
+                      {staffUsers.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.displayName} ({u.email})
+                        </option>
+                      ))}
+                    </select>
+                    {selected.assignedToName && (
+                      <span className="muted">Assigned: {selected.assignedToName}</span>
+                    )}
+                    <div className="admin-list__actions">
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        onClick={handleEditSubject}
+                      >
+                        Edit subject
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-sm"
+                        onClick={handleDelete}
+                      >
+                        Delete ticket
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="ticket-messages">
+                  {messages.map((m) => (
+                    <div
+                      key={m.id}
+                      className={`ticket-message${m.senderRole === 'user' ? ' ticket-message--user' : ' ticket-message--staff'}`}
+                    >
+                      <div className="ticket-message__meta">
+                        <strong>{m.senderName}</strong>
+                        <span className="badge">{m.senderRole}</span>
+                        <span className="muted">{formatTime(m.createdAt)}</span>
+                      </div>
+                      <p>{m.text}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {selected.status !== TICKET_STATUSES.RESOLVED ? (
+                  <>
+                    <form className="ticket-reply" onSubmit={handleReply}>
+                      <textarea
+                        placeholder="Message user directly…"
+                        value={reply}
+                        onChange={(e) => setReply(e.target.value)}
+                        rows={3}
+                        required
+                      />
+                      <div className="ticket-actions">
+                        <button type="submit" className="btn btn-primary btn-sm">
+                          Send message
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-sm"
+                          onClick={handleResolve}
+                        >
+                          Mark resolved
+                        </button>
+                      </div>
+                    </form>
+                  </>
+                ) : (
+                  <div className="ticket-actions">
+                    <p className="success-text">Resolved {formatTime(selected.resolvedAt)}</p>
+                    <button type="button" className="btn btn-outline btn-sm" onClick={handleReopen}>
+                      Reopen ticket
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+      <ConfirmDialog {...dialogProps} />
     </>
   );
 }

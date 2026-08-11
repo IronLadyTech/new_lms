@@ -77,7 +77,8 @@ export async function getAnnouncements() {
   const snap = await getDocs(collection(db, ANNOUNCEMENTS));
   const items = snap.docs.map((d) => {
     const data = d.data();
-    const title = typeof data.title === 'string' ? data.title.trim() : String(data.title || '').trim();
+    const title =
+      typeof data.title === 'string' ? data.title.trim() : String(data.title || '').trim();
     const body = typeof data.body === 'string' ? data.body : String(data.body ?? '');
     return {
       id: d.id,
@@ -106,7 +107,9 @@ export async function getActiveAnnouncements(limitCount = 30) {
       return {
         id: d.id,
         ...data,
-        title: (typeof data.title === 'string' ? data.title.trim() : String(data.title || '')) || 'Announcement',
+        title:
+          (typeof data.title === 'string' ? data.title.trim() : String(data.title || '')) ||
+          'Announcement',
         body: typeof data.body === 'string' ? data.body : String(data.body ?? ''),
         taggedUserIds: Array.isArray(data.taggedUserIds) ? data.taggedUserIds : [],
         taggedUserNames: Array.isArray(data.taggedUserNames) ? data.taggedUserNames : [],

@@ -3,13 +3,7 @@ import { getProgramShortLabel } from '../../data/programTypes';
 
 const TAGLINE = 'Elevating a million women to the top';
 
-export default function HomeDashboardHero({
-  greeting,
-  firstName,
-  program,
-  subline,
-  cta,
-}) {
+export default function HomeDashboardHero({ greeting, firstName, program, subline, cta }) {
   const programLabel = program ? getProgramShortLabel(program) : null;
 
   return (

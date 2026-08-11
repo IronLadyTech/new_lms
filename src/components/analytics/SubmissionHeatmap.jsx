@@ -9,10 +9,7 @@ const LEGEND_LEVELS = [1, 2, 3, 4, 5];
 
 export default function SubmissionHeatmap({ dailyCounts = [], loading }) {
   const today = getTodayKey();
-  const { weeks, monthLabels } = useMemo(
-    () => buildHeatmapWeeks(dailyCounts, 52),
-    [dailyCounts]
-  );
+  const { weeks, monthLabels } = useMemo(() => buildHeatmapWeeks(dailyCounts, 52), [dailyCounts]);
 
   const scrollRef = useRef(null);
 

@@ -6,11 +6,11 @@ test.describe('Accessibility smoke', () => {
     await page.goto('/auth/login');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
-    const results = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa'])
-      .analyze();
+    const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
 
-    const critical = results.violations.filter((v) => v.impact === 'critical' || v.impact === 'serious');
+    const critical = results.violations.filter(
+      (v) => v.impact === 'critical' || v.impact === 'serious'
+    );
     expect(critical, JSON.stringify(critical, null, 2)).toEqual([]);
   });
 
@@ -18,11 +18,11 @@ test.describe('Accessibility smoke', () => {
     await page.goto('/auth/signup');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
-    const results = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa'])
-      .analyze();
+    const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
 
-    const critical = results.violations.filter((v) => v.impact === 'critical' || v.impact === 'serious');
+    const critical = results.violations.filter(
+      (v) => v.impact === 'critical' || v.impact === 'serious'
+    );
     expect(critical, JSON.stringify(critical, null, 2)).toEqual([]);
   });
 });

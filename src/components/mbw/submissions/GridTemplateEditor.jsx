@@ -7,12 +7,17 @@ import {
 
 export default function GridTemplateEditor({ templateId, task, submission, canSubmit, onSave }) {
   const definition = getFormTemplate(templateId);
-  const [rows, setRows] = useState(() => submission?.templateData?.rows || createGridRows(definition));
+  const [rows, setRows] = useState(
+    () => submission?.templateData?.rows || createGridRows(definition)
+  );
   const [saving, setSaving] = useState(false);
   const [validationError, setValidationError] = useState('');
 
   useEffect(() => {
-    if (submission?.templateData?.templateId === templateId && submission?.templateData?.rows?.length) {
+    if (
+      submission?.templateData?.templateId === templateId &&
+      submission?.templateData?.rows?.length
+    ) {
       setRows(submission.templateData.rows);
     } else {
       setRows(createGridRows(definition));
@@ -26,7 +31,9 @@ export default function GridTemplateEditor({ templateId, task, submission, canSu
     templateId === 'super-power' ? 'Row' : templateId === 'theme' ? 'Theme' : 'Item';
 
   const updateCell = (rowIdx, key, value) => {
-    setRows((prev) => prev.map((row, index) => (index === rowIdx ? { ...row, [key]: value } : row)));
+    setRows((prev) =>
+      prev.map((row, index) => (index === rowIdx ? { ...row, [key]: value } : row))
+    );
     if (validationError) setValidationError('');
   };
 
@@ -119,7 +126,9 @@ export default function GridTemplateEditor({ templateId, task, submission, canSu
           disabled={!canSubmit || saving || !complete}
           onClick={handleSave}
         >
-          {saving ? 'Saving…' : task.uploadSubmitLabel || definition.submitLabel || 'Save submission'}
+          {saving
+            ? 'Saving…'
+            : task.uploadSubmitLabel || definition.submitLabel || 'Save submission'}
         </button>
       </div>
     </div>

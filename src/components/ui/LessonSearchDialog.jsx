@@ -103,7 +103,12 @@ export default function LessonSearchDialog({
           <h2 id="lesson-search-title" className="lesson-search__title">
             Search {programLabel} lessons
           </h2>
-          <button type="button" className="lesson-search__close icon-btn" onClick={onClose} aria-label="Close search">
+          <button
+            type="button"
+            className="lesson-search__close icon-btn"
+            onClick={onClose}
+            aria-label="Close search"
+          >
             <X size={18} aria-hidden="true" />
           </button>
         </header>
@@ -143,13 +148,16 @@ export default function LessonSearchDialog({
                 }}
               >
                 <span className="lesson-search__item-title">{getTaskLabel(ts)}</span>
-                {ts.task.phase && <span className="muted lesson-search__item-meta">{ts.task.phase}</span>}
+                {ts.task.phase && (
+                  <span className="muted lesson-search__item-meta">{ts.task.phase}</span>
+                )}
               </button>
             </li>
           ))}
         </ul>
         <p className="muted lesson-search__hint">
-          Press ↑ ↓ to move, Enter to open. Ctrl+K (or ⌘K) opens this search anywhere on the program page.
+          Press ↑ ↓ to move, Enter to open. Ctrl+K (or ⌘K) opens this search anywhere on the program
+          page.
         </p>
       </div>
     </div>,

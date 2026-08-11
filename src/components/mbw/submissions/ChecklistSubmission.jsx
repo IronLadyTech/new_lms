@@ -8,9 +8,7 @@ export default function ChecklistSubmission({ task, submission, canSubmit, onSub
 
   const toggle = async (item) => {
     if (!canSubmit || saving) return;
-    const next = checked.includes(item)
-      ? checked.filter((i) => i !== item)
-      : [...checked, item];
+    const next = checked.includes(item) ? checked.filter((i) => i !== item) : [...checked, item];
     setChecked(next);
     setSaving(true);
     setError('');

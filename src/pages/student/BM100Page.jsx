@@ -79,7 +79,10 @@ export default function BM100Page() {
   );
   const currentSectionId = useMemo(() => getCurrentSectionId(sectionProgress), [sectionProgress]);
   const totalMilestones = useMemo(() => getTotalMilestones(sectionProgress), [sectionProgress]);
-  const completedMilestones = useMemo(() => getCompletedMilestones(sectionProgress), [sectionProgress]);
+  const completedMilestones = useMemo(
+    () => getCompletedMilestones(sectionProgress),
+    [sectionProgress]
+  );
   const nextTaskId = nextTaskState?.task?.id || null;
 
   const hasLocalOnly = useMemo(
@@ -172,8 +175,7 @@ export default function BM100Page() {
       const nextId = result.blocked ? null : getNextTaskId(result.taskId);
       const sequentialNext = getNextSequentialTaskState(result.taskId);
       const paymentReminder =
-        result.paymentRequired ||
-        (!nextId && sequentialNext?.phaseLocked)
+        result.paymentRequired || (!nextId && sequentialNext?.phaseLocked)
           ? ' Phase 2 and beyond unlock after full program payment — contact Payment support when ready.'
           : '';
 
@@ -213,7 +215,10 @@ export default function BM100Page() {
     if (prevId) openTask(prevId);
   }, [activeTaskId, getPrevTaskId, openTask]);
 
-  const submissionCount = useMemo(() => countSavedSubmissions(mergedTaskStates), [mergedTaskStates]);
+  const submissionCount = useMemo(
+    () => countSavedSubmissions(mergedTaskStates),
+    [mergedTaskStates]
+  );
 
   if (isGuest) {
     return (
@@ -297,7 +302,8 @@ export default function BM100Page() {
               {error && <span>{error} </span>}
               {hasLocalOnly && (
                 <span>
-                  Some work is saved on this device only — admin cannot review until cloud sync works.{' '}
+                  Some work is saved on this device only — admin cannot review until cloud sync
+                  works.{' '}
                 </span>
               )}
               <button type="button" className="btn btn-outline btn-sm" onClick={reload}>
@@ -309,8 +315,8 @@ export default function BM100Page() {
           {!lessonMode && awaitingFullPayment && (
             <div className="alert alert-warning mbw-program-page__payment-gate" role="status">
               <p>
-                You have completed registration access (Onboarding + Phase 1). Phase 2 through Graduation
-                unlock after full program payment.
+                You have completed registration access (Onboarding + Phase 1). Phase 2 through
+                Graduation unlock after full program payment.
               </p>
               <Link to="/app/support" className="btn btn-outline btn-sm">
                 Payment support

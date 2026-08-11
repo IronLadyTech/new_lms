@@ -9,9 +9,7 @@ import { isFullAdmin } from '../utils/roles';
 
 function scopeBatchesForUser(batches, userId, fullAccess) {
   if (fullAccess || !userId) return batches;
-  return batches.filter(
-    (b) => (b.moderatorIds || []).includes(userId) || b.createdBy === userId
-  );
+  return batches.filter((b) => (b.moderatorIds || []).includes(userId) || b.createdBy === userId);
 }
 
 /**
@@ -39,8 +37,7 @@ export function useCxData(program, adapter) {
         adapter.getTasks(),
       ]);
 
-      let programBatches =
-        groupsResult.status === 'fulfilled' ? groupsResult.value : [];
+      let programBatches = groupsResult.status === 'fulfilled' ? groupsResult.value : [];
       const taskList = tasksResult.status === 'fulfilled' ? tasksResult.value : [];
       if (groupsResult.status === 'rejected') failures.push('batches');
       if (tasksResult.status === 'rejected') failures.push('tasks');

@@ -62,9 +62,13 @@ export default function LearnerSubmissionPreview({ submission, task, userId, pro
 
   const preview = submissionPreview(submission, task);
   const submittedLabel = formatSubmissionDate(submission.submittedAt || submission.updatedAt);
-  const { videoUrl: cloudVideoUrl, audioUrl: cloudAudioUrl, fileUrl: cloudFileUrl } =
-    getSubmissionMediaUrls(submission);
-  const localKind = localMeta?.kind || mediaKindFromType(submission.fileType || localMeta?.fileType);
+  const {
+    videoUrl: cloudVideoUrl,
+    audioUrl: cloudAudioUrl,
+    fileUrl: cloudFileUrl,
+  } = getSubmissionMediaUrls(submission);
+  const localKind =
+    localMeta?.kind || mediaKindFromType(submission.fileType || localMeta?.fileType);
 
   const videoUrl = cloudVideoUrl || (localKind === 'video' ? localBlobUrl : null);
   const audioUrl = cloudAudioUrl || (localKind === 'audio' ? localBlobUrl : null);
@@ -81,9 +85,12 @@ export default function LearnerSubmissionPreview({ submission, task, userId, pro
         <p className="muted learner-submission-preview__meta">Submitted {submittedLabel}</p>
       )}
 
-      {preview && !submission.textValue && !videoUrl && !audioUrl && !fileUrl && !isRecurringPost && (
-        <p className="muted learner-submission-preview__summary">{preview}</p>
-      )}
+      {preview &&
+        !submission.textValue &&
+        !videoUrl &&
+        !audioUrl &&
+        !fileUrl &&
+        !isRecurringPost && <p className="muted learner-submission-preview__summary">{preview}</p>}
 
       {submission.textValue && (
         <div className="cx-review-block">
@@ -137,25 +144,32 @@ export default function LearnerSubmissionPreview({ submission, task, userId, pro
         </div>
       )}
 
-      {!videoUrl && !audioUrl && !fileUrl && (submission.hasLocalRecording || submission.storageSkipped) && (
-        <div className="alert alert-warning" role="status">
-          <strong>
-            {isVideoTask ? 'Recording saved on this device only.' : 'File saved on this device only.'}
-          </strong>
-          <span>
-            {' '}
-            Cloud playback is unavailable. Re-open this task on the same device, or upload again so your
-            {isVideoTask ? ' video' : ' file'} is visible here and to your CX team.
-          </span>
-        </div>
-      )}
+      {!videoUrl &&
+        !audioUrl &&
+        !fileUrl &&
+        (submission.hasLocalRecording || submission.storageSkipped) && (
+          <div className="alert alert-warning" role="status">
+            <strong>
+              {isVideoTask
+                ? 'Recording saved on this device only.'
+                : 'File saved on this device only.'}
+            </strong>
+            <span>
+              {' '}
+              Cloud playback is unavailable. Re-open this task on the same device, or upload again
+              so your
+              {isVideoTask ? ' video' : ' file'} is visible here and to your CX team.
+            </span>
+          </div>
+        )}
 
-      {submission.templateData && (submission.templateData.rows || submission.templateData.fields) && (
-        <div className="cx-review-block">
-          <h3 className="cx-review-block__title">Template</h3>
-          <TemplateReadOnly templateData={submission.templateData} task={task} />
-        </div>
-      )}
+      {submission.templateData &&
+        (submission.templateData.rows || submission.templateData.fields) && (
+          <div className="cx-review-block">
+            <h3 className="cx-review-block__title">Template</h3>
+            <TemplateReadOnly templateData={submission.templateData} task={task} />
+          </div>
+        )}
 
       {hasWeekEntries && (
         <div className="cx-review-block">

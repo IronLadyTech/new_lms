@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getCourses, getAssignments } from '../../services/courseService';
-import { getAnnouncements, getActiveAnnouncementsForUser } from '../../services/announcementService';
+import {
+  getAnnouncements,
+  getActiveAnnouncementsForUser,
+} from '../../services/announcementService';
 import { getUserActivities } from '../../services/userService';
 import { getEvents } from '../../services/eventService';
 import AnnouncementFeed from '../../components/AnnouncementFeed';
@@ -104,7 +107,9 @@ export default function Home() {
   useEffect(() => {
     if (loading || window.location.hash !== '#courses') return;
     const timer = window.setTimeout(() => {
-      document.getElementById('home-courses')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document
+        .getElementById('home-courses')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
     return () => window.clearTimeout(timer);
   }, [loading]);
@@ -138,14 +143,12 @@ export default function Home() {
     };
   }, [canOpenMbw, engine.taskStates, profile]);
 
-  const firstName = String(profile?.displayName ?? '').trim().split(/\s+/)[0] || '';
-  const continueCourse =
-    getContinueProgram(profile, courses) ||
-    accessibleCourses[0] ||
-    null;
-  const mbwCourse = canOpenMbw
-    ? courses.find((c) => c.code === 'MBW') || null
-    : null;
+  const firstName =
+    String(profile?.displayName ?? '')
+      .trim()
+      .split(/\s+/)[0] || '';
+  const continueCourse = getContinueProgram(profile, courses) || accessibleCourses[0] || null;
+  const mbwCourse = canOpenMbw ? courses.find((c) => c.code === 'MBW') || null : null;
 
   const heroSubline =
     accessibleCourses.length > 0
@@ -233,14 +236,18 @@ export default function Home() {
 
       <section id="home-courses" className="section dashboard-programs">
         <h2 className="home-section-title">Your programs</h2>
-        <p className="page-sub">Journey order: LEP → 100BM → MBW — locked programs stay visible as upcoming</p>
+        <p className="page-sub">
+          Journey order: LEP → 100BM → MBW — locked programs stay visible as upcoming
+        </p>
 
         {isGuest ? (
           <GuestHomePreview />
         ) : loading ? (
           <p className="muted">Loading courses…</p>
         ) : courses.length === 0 ? (
-          <p className="muted">No courses yet. Ask your admin to add courses from the admin panel.</p>
+          <p className="muted">
+            No courses yet. Ask your admin to add courses from the admin panel.
+          </p>
         ) : (
           <div className="course-grid course-grid--rich">
             {sortedCourses.map((course) => (

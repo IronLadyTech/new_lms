@@ -108,7 +108,11 @@ export default function CXBatches() {
                 />
               </label>
               <div className="cx-form__actions">
-                <button type="submit" className="btn btn-primary btn-sm" disabled={saving || !name.trim()}>
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-sm"
+                  disabled={saving || !name.trim()}
+                >
                   {saving ? 'Creating…' : 'Create batch'}
                 </button>
               </div>
@@ -139,7 +143,11 @@ export default function CXBatches() {
               <p className="muted cx-work-queue__empty-msg">
                 Create your first batch to organize learners and track attendance.
               </p>
-              <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowCreate(true)}>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => setShowCreate(true)}
+              >
                 <Plus size={14} aria-hidden />
                 Create batch
               </button>

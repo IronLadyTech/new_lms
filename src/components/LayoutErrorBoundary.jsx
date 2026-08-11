@@ -33,8 +33,8 @@ export default class LayoutErrorBoundary extends Component {
           <div className="alert alert-error" role="alert">
             <strong>This page hit an error.</strong>
             <p className="muted" style={{ margin: '0.5rem 0 0' }}>
-              Try another section from the menu, or reload the page. If it keeps happening,
-              contact support.
+              Try another section from the menu, or reload the page. If it keeps happening, contact
+              support.
             </p>
             <button
               type="button"

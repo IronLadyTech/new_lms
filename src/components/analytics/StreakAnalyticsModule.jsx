@@ -54,7 +54,9 @@ export default function StreakAnalyticsModule({
   const hasAttendanceData = attendance.gridMonths?.length > 0;
 
   const handleResumePractice = useCallback(() => {
-    const enrolled = courses.filter((c) => c.id && c.id !== 'general' && !String(c.id).startsWith('program-'));
+    const enrolled = courses.filter(
+      (c) => c.id && c.id !== 'general' && !String(c.id).startsWith('program-')
+    );
     const mbw = enrolled.find((c) => c.code === 'MBW');
     if (mbw) {
       navigate('/app/mbw');
@@ -70,11 +72,15 @@ export default function StreakAnalyticsModule({
       return;
     }
     if (progressVariant) {
-      document.getElementById('progress-programs')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document
+        .getElementById('progress-programs')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
     const scrollToCourses = () => {
-      document.getElementById('home-courses')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document
+        .getElementById('home-courses')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
     if (window.location.pathname.endsWith('/home')) {
       scrollToCourses();

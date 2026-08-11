@@ -21,10 +21,7 @@
 
 const { normalizeProgram } = require('./accessTiers');
 const { getIlUsersModule } = require('./zohoIlUsers');
-const {
-  fetchIlRegistrationWithBatch,
-  mergeBatchSources,
-} = require('./zohoIlRegistration');
+const { fetchIlRegistrationWithBatch, mergeBatchSources } = require('./zohoIlRegistration');
 const { previewLeadCohorts } = require('./zohoLeadsCohort');
 
 const IL_USERS_BATCH_FIELDS = [
@@ -60,7 +57,20 @@ const EXPECTED_SPAN_DAYS = {
 
 const MONTH_BATCH_RE = /^[A-Za-z]+\s+\d{4}$/;
 const RANGE_BATCH_RE = /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s*-\s*(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
-const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS_SHORT = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
 
 function splitList(value) {
   return String(value || '')
@@ -137,7 +147,8 @@ function resolvePairing(record) {
   }
 
   const candidates = [];
-  if (enrolment.length === batches.length) candidates.push({ source: 'enrolment', list: enrolment });
+  if (enrolment.length === batches.length)
+    candidates.push({ source: 'enrolment', list: enrolment });
   if (registration.length === batches.length) {
     candidates.push({ source: 'registration', list: registration });
   }
@@ -211,7 +222,9 @@ function buildPlan(records = []) {
   const emailRecordCount = new Map();
 
   records.forEach((record) => {
-    const email = String(record.Email || '').trim().toLowerCase();
+    const email = String(record.Email || '')
+      .trim()
+      .toLowerCase();
     const who = email || record.Username || record.id || 'unknown';
     if (email) emailRecordCount.set(email, (emailRecordCount.get(email) || 0) + 1);
 
@@ -260,12 +273,16 @@ function buildPlan(records = []) {
 
       const span = EXPECTED_SPAN_DAYS[programId];
       if (info.kind === 'range' && span && (info.days < span[0] || info.days > span[1])) {
-        entry.warnings.add(`span ${info.days}d is unusual for ${PROGRAM_SHORT[programId] || programId}`);
+        entry.warnings.add(
+          `span ${info.days}d is unusual for ${PROGRAM_SHORT[programId] || programId}`
+        );
       }
       // Month-name batches are the 100BM convention; elsewhere it hints at a
       // mis-paired program/batch column rather than a real cohort.
       if (info.kind === 'month' && programId !== '100bm') {
-        entry.warnings.add(`month-name batch on ${PROGRAM_SHORT[programId] || programId} — verify pairing`);
+        entry.warnings.add(
+          `month-name batch on ${PROGRAM_SHORT[programId] || programId} — verify pairing`
+        );
       }
 
       if (!byEmail.has(email)) byEmail.set(email, new Map());
@@ -397,7 +414,13 @@ async function fetchViaList({ page = 1, perPage = 200 }, deps) {
  */
 async function previewBatchSync({ maxPages = 10, perPage = 200 } = {}, deps) {
   const ilUsersFetch = await fetchIlUsersWithBatchInternal({ maxPages, perPage }, deps);
-  let registrationFetch = { rows: [], method: 'skipped', coqlError: null, truncated: false, pagesFetched: 0 };
+  let registrationFetch = {
+    rows: [],
+    method: 'skipped',
+    coqlError: null,
+    truncated: false,
+    pagesFetched: 0,
+  };
 
   if (deps.fetchIlRegistrationWithBatch) {
     try {
@@ -445,7 +468,9 @@ async function previewBatchSync({ maxPages = 10, perPage = 200 } = {}, deps) {
     registrationScannedRecords: registrationFetch.rows.length,
     recordsWithBatch: withBatch.length,
     scannedLeads: leadCohorts.scannedLeads || 0,
-    leadCohortsError: leadCohorts.error || (leadCohorts.coqlErrors?.length ? leadCohorts.coqlErrors.join('; ') : null),
+    leadCohortsError:
+      leadCohorts.error ||
+      (leadCohorts.coqlErrors?.length ? leadCohorts.coqlErrors.join('; ') : null),
     leadCohortQueries: leadCohorts.queries || [],
     leadCohortFields: leadCohorts.fieldsUsed || null,
     sources: {

@@ -71,7 +71,9 @@ export default function TaskContent({
       <header className="mbw-task__header">
         {focusMode ? (
           <div className="mbw-task__meta mbw-task__meta--focus">
-            <span className={`mbw-status-pill mbw-status-pill--${primary.tone}`}>{primary.label}</span>
+            <span className={`mbw-status-pill mbw-status-pill--${primary.tone}`}>
+              {primary.label}
+            </span>
           </div>
         ) : (
           <>
@@ -89,7 +91,9 @@ export default function TaskContent({
                 <span className="mbw-task__week-code">{getWeekCode(task)}</span>
               )}
               <span className="mbw-task__duration">{getTaskDurationHint(task)}</span>
-              <span className={`mbw-status-pill mbw-status-pill--${primary.tone}`}>{primary.label}</span>
+              <span className={`mbw-status-pill mbw-status-pill--${primary.tone}`}>
+                {primary.label}
+              </span>
             </div>
           </>
         )}
@@ -104,7 +108,11 @@ export default function TaskContent({
         <div className="alert alert-warning mbw-task__locked">
           <p>Complete the previous task to unlock this one.</p>
           {prevTaskId && (
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => onGoToPrevious?.(prevTaskId)}>
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={() => onGoToPrevious?.(prevTaskId)}
+            >
               Go to previous task <ChevronRight size={14} />
             </button>
           )}
@@ -128,7 +136,9 @@ export default function TaskContent({
         <section className="mbw-task__submission">
           <h2>Your submission</h2>
           {!watched && task.requiresWatch && task.videoUrl && (
-            <p className="mbw-task__hint">Watch at least 90% of the video to unlock the form below.</p>
+            <p className="mbw-task__hint">
+              Watch at least 90% of the video to unlock the form below.
+            </p>
           )}
 
           {showSubmittedPreview ? (
@@ -140,71 +150,71 @@ export default function TaskContent({
             />
           ) : (
             <>
-          {task.type === TASK_TYPES.WATCH_ONLY && (
-            <WatchOnly task={task} submission={submission} />
-          )}
-          {task.type === TASK_TYPES.TEXT && (
-            <TextSubmission
-              key={task.id}
-              task={task}
-              submission={submission}
-              canSubmit={canSubmit}
-              readOnly={!canSubmit && Boolean(submission?.textValue)}
-              onSubmit={handleSubmit}
-            />
-          )}
-          {task.type === TASK_TYPES.LINK && (
-            <LinkSubmission
-              key={task.id}
-              task={task}
-              submission={submission}
-              canSubmit={canSubmit}
-              onSubmit={handleSubmit}
-            />
-          )}
-          {task.type === TASK_TYPES.EDITABLE_TEMPLATE && (
-            <EditableTemplate
-              key={task.id}
-              task={task}
-              submission={submission}
-              canSubmit={canSubmit || !!submission?.templateData}
-              onSave={handleSaveTemplate}
-            />
-          )}
-          {task.type === TASK_TYPES.FILE_UPLOAD && (
-            <FileUpload
-              task={task}
-              submission={submission}
-              canSubmit={canSubmit}
-              userId={userId}
-              onSubmit={handleSubmit}
-            />
-          )}
-          {task.type === TASK_TYPES.VIDEO_RECORD && (
-            <VideoRecordOrUpload
-              task={task}
-              submission={submission}
-              canSubmit={canSubmit}
-              userId={userId}
-              onSubmit={handleSubmit}
-            />
-          )}
-          {task.type === TASK_TYPES.RECURRING_POST && (
-            <RecurringPost
-              task={task}
-              submission={submission}
-              canSubmit={canSubmit}
-              onAddPost={handleRecurring}
-            />
-          )}
-          {task.type === TASK_TYPES.CHECKLIST && (
-            <ChecklistSubmission
-              task={task}
-              submission={submission}
-              canSubmit={canSubmit}
-              onSubmit={handleSubmit}
-            />
-          )}
+              {task.type === TASK_TYPES.WATCH_ONLY && (
+                <WatchOnly task={task} submission={submission} />
+              )}
+              {task.type === TASK_TYPES.TEXT && (
+                <TextSubmission
+                  key={task.id}
+                  task={task}
+                  submission={submission}
+                  canSubmit={canSubmit}
+                  readOnly={!canSubmit && Boolean(submission?.textValue)}
+                  onSubmit={handleSubmit}
+                />
+              )}
+              {task.type === TASK_TYPES.LINK && (
+                <LinkSubmission
+                  key={task.id}
+                  task={task}
+                  submission={submission}
+                  canSubmit={canSubmit}
+                  onSubmit={handleSubmit}
+                />
+              )}
+              {task.type === TASK_TYPES.EDITABLE_TEMPLATE && (
+                <EditableTemplate
+                  key={task.id}
+                  task={task}
+                  submission={submission}
+                  canSubmit={canSubmit || !!submission?.templateData}
+                  onSave={handleSaveTemplate}
+                />
+              )}
+              {task.type === TASK_TYPES.FILE_UPLOAD && (
+                <FileUpload
+                  task={task}
+                  submission={submission}
+                  canSubmit={canSubmit}
+                  userId={userId}
+                  onSubmit={handleSubmit}
+                />
+              )}
+              {task.type === TASK_TYPES.VIDEO_RECORD && (
+                <VideoRecordOrUpload
+                  task={task}
+                  submission={submission}
+                  canSubmit={canSubmit}
+                  userId={userId}
+                  onSubmit={handleSubmit}
+                />
+              )}
+              {task.type === TASK_TYPES.RECURRING_POST && (
+                <RecurringPost
+                  task={task}
+                  submission={submission}
+                  canSubmit={canSubmit}
+                  onAddPost={handleRecurring}
+                />
+              )}
+              {task.type === TASK_TYPES.CHECKLIST && (
+                <ChecklistSubmission
+                  task={task}
+                  submission={submission}
+                  canSubmit={canSubmit}
+                  onSubmit={handleSubmit}
+                />
+              )}
             </>
           )}
 

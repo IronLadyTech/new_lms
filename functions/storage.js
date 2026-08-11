@@ -153,11 +153,20 @@ async function unlinkFromSource(db, link) {
   const { source, sourceId } = link;
 
   if (source === 'course') {
-    await db.collection('courses').doc(sourceId).update({ thumbnail: '', updatedAt: admin.firestore.FieldValue.serverTimestamp() });
+    await db
+      .collection('courses')
+      .doc(sourceId)
+      .update({ thumbnail: '', updatedAt: admin.firestore.FieldValue.serverTimestamp() });
   } else if (source === 'resource') {
-    await db.collection('resources').doc(sourceId).update({ url: '', updatedAt: admin.firestore.FieldValue.serverTimestamp() });
+    await db
+      .collection('resources')
+      .doc(sourceId)
+      .update({ url: '', updatedAt: admin.firestore.FieldValue.serverTimestamp() });
   } else if (source === 'event') {
-    await db.collection('events').doc(sourceId).update({ imageUrl: '', updatedAt: admin.firestore.FieldValue.serverTimestamp() });
+    await db
+      .collection('events')
+      .doc(sourceId)
+      .update({ imageUrl: '', updatedAt: admin.firestore.FieldValue.serverTimestamp() });
   } else if (source === 'mbw') {
     await db.collection('mbw_submissions').doc(sourceId).update({
       fileUrl: admin.firestore.FieldValue.delete(),
@@ -176,7 +185,12 @@ async function deleteStoragePath(db, path, refMap, { unlink = true } = {}) {
   const stored = docSnap.exists ? docSnap.data() : null;
 
   let link = stored
-    ? { linked: stored.linked, source: stored.source, sourceId: stored.sourceId, sourceLabel: stored.sourceLabel }
+    ? {
+        linked: stored.linked,
+        source: stored.source,
+        sourceId: stored.sourceId,
+        sourceLabel: stored.sourceLabel,
+      }
     : resolveLink(path, stored?.url, refMap);
 
   if (!link.linked && refMap) {
@@ -189,7 +203,11 @@ async function deleteStoragePath(db, path, refMap, { unlink = true } = {}) {
     console.warn(`Bucket delete failed for ${path}:`, err.message);
   }
 
-  await db.collection(COLLECTION).doc(docId).delete().catch(() => {});
+  await db
+    .collection(COLLECTION)
+    .doc(docId)
+    .delete()
+    .catch(() => {});
 
   if (unlink && link.linked) {
     await unlinkFromSource(db, link);
@@ -310,7 +328,10 @@ async function scanBucket(db) {
   return { scanned, linked, orphans, total: files.length };
 }
 
-async function listObjects(db, { folder, userId, source, linkedOnly, orphanOnly, limit = 100 } = {}) {
+async function listObjects(
+  db,
+  { folder, userId, source, linkedOnly, orphanOnly, limit = 100 } = {}
+) {
   let query = db.collection(COLLECTION);
 
   if (folder) query = query.where('folder', '==', folder);
@@ -340,7 +361,12 @@ async function cleanOrphans(db) {
 
     const link = resolveLink(path, d.url, refMap);
     if (link.linked) {
-      await doc.ref.update({ linked: true, source: link.source, sourceId: link.sourceId, sourceLabel: link.sourceLabel });
+      await doc.ref.update({
+        linked: true,
+        source: link.source,
+        sourceId: link.sourceId,
+        sourceLabel: link.sourceLabel,
+      });
       continue;
     }
 

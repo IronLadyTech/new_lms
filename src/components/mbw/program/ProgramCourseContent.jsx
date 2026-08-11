@@ -8,8 +8,7 @@ export default function ProgramCourseContent({
   totalMilestones,
   children,
 }) {
-  const pct =
-    totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
+  const pct = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
 
   return (
     <section

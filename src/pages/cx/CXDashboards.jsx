@@ -57,8 +57,16 @@ export default function CXDashboards() {
   const tabParam = searchParams.get('tab');
   const validTabIds = TABS.map((t) => t.id);
   const resolveTab = (value) => (validTabIds.includes(value) ? value : 'overview');
-  const { batches, users, students, activeTasks: tasks, submissions, loading, error, refresh } =
-    useCxData(program, adapter);
+  const {
+    batches,
+    users,
+    students,
+    activeTasks: tasks,
+    submissions,
+    loading,
+    error,
+    refresh,
+  } = useCxData(program, adapter);
   const [modal, setModal] = useState(null);
   const [taskBatchFilter, setTaskBatchFilter] = useState('all');
   const [activeTab, setActiveTab] = useState(() => resolveTab(tabParam));
@@ -193,12 +201,13 @@ export default function CXDashboards() {
   }, [adapter.hasTasks, tasks, students, submissions]);
 
   const batchCompletionData = useMemo(
-    () => perBatch.map(({ batch, learners, pct }) => ({
-      name: batch.name,
-      batchId: batch.id,
-      learners,
-      pct,
-    })),
+    () =>
+      perBatch.map(({ batch, learners, pct }) => ({
+        name: batch.name,
+        batchId: batch.id,
+        learners,
+        pct,
+      })),
     [perBatch]
   );
 
@@ -343,7 +352,10 @@ export default function CXDashboards() {
       </section>
 
       {!loading && actionKpis.length > 0 && (
-        <section className="cx-kpi-group cx-kpi-group--action" aria-labelledby="cx-kpi-action-heading">
+        <section
+          className="cx-kpi-group cx-kpi-group--action"
+          aria-labelledby="cx-kpi-action-heading"
+        >
           <h2 id="cx-kpi-action-heading" className="cx-kpi-group__heading">
             Needs action
           </h2>
@@ -402,123 +414,123 @@ export default function CXDashboards() {
               />
 
               <div className="cx-analytics-grid">
-              {adapter.hasTasks && (pendingReviews > 0 || awaitingResubmit > 0) && (
-                <section className="cx-panel cx-analytics-grid__wide">
-                  <div className="cx-panel__head">
-                    <h2 className="cx-panel__title">Review queue</h2>
-                  </div>
-                  <div className="cx-panel__body">
-                    <p className="cx-analytics-summary">
-                      {pendingReviews > 0 && (
-                        <>
-                          <strong>{pendingReviews}</strong> submission
-                          {pendingReviews === 1 ? '' : 's'} ready to review.
-                        </>
-                      )}
-                      {pendingReviews > 0 && awaitingResubmit > 0 && ' '}
-                      {awaitingResubmit > 0 && (
-                        <>
-                          <strong>{awaitingResubmit}</strong> awaiting learner resubmit.
-                        </>
-                      )}{' '}
-                      <Link to="/cx/reviews">Open reviews</Link>
-                    </p>
-                  </div>
-                </section>
-              )}
-
-              <section className="cx-panel">
-                <div className="cx-panel__head">
-                  <h2 className="cx-panel__title">Session content</h2>
-                </div>
-                <div className="cx-panel__body">
-                  {recordingStats.expected > 0 ? (
-                    <>
-                      <div className="cx-inline-progress cx-inline-progress--lg">
-                        <div className="cx-inline-progress__track">
-                          <div
-                            className="cx-inline-progress__fill"
-                            style={{ width: `${recordingStats.pct}%` }}
-                          />
-                        </div>
-                        <span className="cx-inline-progress__label">{recordingStats.pct}%</span>
-                      </div>
-                      <p className="muted cx-analytics-summary">
-                        {recordingStats.uploaded} of {recordingStats.expected} session slots have
-                        videos uploaded.
-                        {recordingStats.batchesWithGaps > 0 && (
+                {adapter.hasTasks && (pendingReviews > 0 || awaitingResubmit > 0) && (
+                  <section className="cx-panel cx-analytics-grid__wide">
+                    <div className="cx-panel__head">
+                      <h2 className="cx-panel__title">Review queue</h2>
+                    </div>
+                    <div className="cx-panel__body">
+                      <p className="cx-analytics-summary">
+                        {pendingReviews > 0 && (
                           <>
-                            {' '}
-                            {recordingStats.batchesWithGaps} batch
-                            {recordingStats.batchesWithGaps === 1 ? '' : 'es'} need content.
+                            <strong>{pendingReviews}</strong> submission
+                            {pendingReviews === 1 ? '' : 's'} ready to review.
                           </>
                         )}
+                        {pendingReviews > 0 && awaitingResubmit > 0 && ' '}
+                        {awaitingResubmit > 0 && (
+                          <>
+                            <strong>{awaitingResubmit}</strong> awaiting learner resubmit.
+                          </>
+                        )}{' '}
+                        <Link to="/cx/reviews">Open reviews</Link>
                       </p>
-                    </>
-                  ) : (
-                    <p className="muted" style={{ margin: 0 }}>
-                      {recordingStats.uploaded > 0
-                        ? `${recordingStats.uploaded} recording link${recordingStats.uploaded === 1 ? '' : 's'} across batches.`
-                        : 'No session recordings uploaded yet. Add videos from a batch detail page.'}
-                    </p>
-                  )}
-                </div>
-              </section>
+                    </div>
+                  </section>
+                )}
 
-              {attendanceLoading ? (
-                <section className="cx-panel">
-                  <div className="cx-panel__body">
-                    <DashboardSkeleton rows={2} />
-                  </div>
-                </section>
-              ) : attendanceStats ? (
                 <section className="cx-panel">
                   <div className="cx-panel__head">
-                    <h2 className="cx-panel__title">Attendance (30d)</h2>
-                  </div>
-                  <div className="cx-panel__body cx-engagement-stats">
-                    <div className="cx-engagement-stat">
-                      <span className="cx-engagement-stat__value">
-                        {attendanceStats.avgPct != null ? `${attendanceStats.avgPct}%` : '—'}
-                      </span>
-                      <span className="cx-engagement-stat__label">Average</span>
-                    </div>
-                    <div className="cx-engagement-stat">
-                      <span className="cx-engagement-stat__value">{attendanceStats.tracked}</span>
-                      <span className="cx-engagement-stat__label">Tracked</span>
-                    </div>
-                    <div className="cx-engagement-stat">
-                      <span className="cx-engagement-stat__value">{attendanceStats.atRisk}</span>
-                      <span className="cx-engagement-stat__label">At risk (&lt;60%)</span>
-                    </div>
-                  </div>
-                </section>
-              ) : batches.some((b) => b.courseIds?.length) ? null : (
-                <section className="cx-panel">
-                  <div className="cx-panel__head">
-                    <h2 className="cx-panel__title">Attendance</h2>
+                    <h2 className="cx-panel__title">Session content</h2>
                   </div>
                   <div className="cx-panel__body">
-                    <p className="muted" style={{ margin: 0 }}>
-                      Link courses to batches in Admin to track attendance here.
-                    </p>
+                    {recordingStats.expected > 0 ? (
+                      <>
+                        <div className="cx-inline-progress cx-inline-progress--lg">
+                          <div className="cx-inline-progress__track">
+                            <div
+                              className="cx-inline-progress__fill"
+                              style={{ width: `${recordingStats.pct}%` }}
+                            />
+                          </div>
+                          <span className="cx-inline-progress__label">{recordingStats.pct}%</span>
+                        </div>
+                        <p className="muted cx-analytics-summary">
+                          {recordingStats.uploaded} of {recordingStats.expected} session slots have
+                          videos uploaded.
+                          {recordingStats.batchesWithGaps > 0 && (
+                            <>
+                              {' '}
+                              {recordingStats.batchesWithGaps} batch
+                              {recordingStats.batchesWithGaps === 1 ? '' : 'es'} need content.
+                            </>
+                          )}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="muted" style={{ margin: 0 }}>
+                        {recordingStats.uploaded > 0
+                          ? `${recordingStats.uploaded} recording link${recordingStats.uploaded === 1 ? '' : 's'} across batches.`
+                          : 'No session recordings uploaded yet. Add videos from a batch detail page.'}
+                      </p>
+                    )}
                   </div>
                 </section>
-              )}
 
-              <section className="cx-panel cx-analytics-grid__wide">
-                <div className="cx-panel__head">
-                  <h2 className="cx-panel__title">Recent activity</h2>
-                </div>
-                <div className="cx-panel__body">
-                  <CxActivityFeed
-                    items={recentActivity}
-                    loading={false}
-                    emptyMessage="Activity appears when participants submit tasks or use the LMS."
-                  />
-                </div>
-                <CxActivityFeedFooter to="/cx/reviews" label="Open review queue" />
-              </section>
+                {attendanceLoading ? (
+                  <section className="cx-panel">
+                    <div className="cx-panel__body">
+                      <DashboardSkeleton rows={2} />
+                    </div>
+                  </section>
+                ) : attendanceStats ? (
+                  <section className="cx-panel">
+                    <div className="cx-panel__head">
+                      <h2 className="cx-panel__title">Attendance (30d)</h2>
+                    </div>
+                    <div className="cx-panel__body cx-engagement-stats">
+                      <div className="cx-engagement-stat">
+                        <span className="cx-engagement-stat__value">
+                          {attendanceStats.avgPct != null ? `${attendanceStats.avgPct}%` : '—'}
+                        </span>
+                        <span className="cx-engagement-stat__label">Average</span>
+                      </div>
+                      <div className="cx-engagement-stat">
+                        <span className="cx-engagement-stat__value">{attendanceStats.tracked}</span>
+                        <span className="cx-engagement-stat__label">Tracked</span>
+                      </div>
+                      <div className="cx-engagement-stat">
+                        <span className="cx-engagement-stat__value">{attendanceStats.atRisk}</span>
+                        <span className="cx-engagement-stat__label">At risk (&lt;60%)</span>
+                      </div>
+                    </div>
+                  </section>
+                ) : batches.some((b) => b.courseIds?.length) ? null : (
+                  <section className="cx-panel">
+                    <div className="cx-panel__head">
+                      <h2 className="cx-panel__title">Attendance</h2>
+                    </div>
+                    <div className="cx-panel__body">
+                      <p className="muted" style={{ margin: 0 }}>
+                        Link courses to batches in Admin to track attendance here.
+                      </p>
+                    </div>
+                  </section>
+                )}
+
+                <section className="cx-panel cx-analytics-grid__wide">
+                  <div className="cx-panel__head">
+                    <h2 className="cx-panel__title">Recent activity</h2>
+                  </div>
+                  <div className="cx-panel__body">
+                    <CxActivityFeed
+                      items={recentActivity}
+                      loading={false}
+                      emptyMessage="Activity appears when participants submit tasks or use the LMS."
+                    />
+                  </div>
+                  <CxActivityFeedFooter to="/cx/reviews" label="Open review queue" />
+                </section>
               </div>
             </>
           )}
@@ -570,7 +582,10 @@ export default function CXDashboards() {
                             )}
                             <td>{recordings}</td>
                             <td className="cx-data-table__actions-cell">
-                              <Link to={`/cx/batches/${batch.id}`} className="btn btn-outline btn-sm">
+                              <Link
+                                to={`/cx/batches/${batch.id}`}
+                                className="btn btn-outline btn-sm"
+                              >
                                 Open
                               </Link>
                             </td>
@@ -601,7 +616,7 @@ export default function CXDashboards() {
             </section>
           )}
 
-          {adapter.hasTasks && (activeTab === 'tasks') && (
+          {adapter.hasTasks && activeTab === 'tasks' && (
             <section className="cx-panel">
               <div className="cx-panel__head">
                 <h2 className="cx-panel__title">Task-by-task progress</h2>

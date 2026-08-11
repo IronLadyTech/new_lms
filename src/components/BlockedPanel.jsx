@@ -20,9 +20,12 @@ export default function BlockedPanel() {
       </span>
       <h2 className="guest-lock__title">Account blocked</h2>
       <p className="guest-lock__lead">
-        Your access to courses, resources, calendar, and support has been restricted by an administrator.
+        Your access to courses, resources, calendar, and support has been restricted by an
+        administrator.
       </p>
-      <p className="guest-lock__contact">Contact <strong>Iron Lady</strong> to restore access:</p>
+      <p className="guest-lock__contact">
+        Contact <strong>Iron Lady</strong> to restore access:
+      </p>
       <a className="guest-lock__email" href={`mailto:${IRON_LADY_CONTACT_EMAIL}`}>
         <Mail size={17} strokeWidth={2} />
         {IRON_LADY_CONTACT_EMAIL}
@@ -31,7 +34,11 @@ export default function BlockedPanel() {
         <button type="button" className="btn btn-danger guest-lock__btn" onClick={() => signOut()}>
           Sign out
         </button>
-        <button type="button" className="btn btn-outline guest-lock__btn" onClick={handleBackToLogin}>
+        <button
+          type="button"
+          className="btn btn-outline guest-lock__btn"
+          onClick={handleBackToLogin}
+        >
           Back to login
         </button>
       </div>

@@ -97,10 +97,7 @@ export default function Progress() {
     retry: () => {},
   };
 
-  const courses = useMemo(
-    () => getEnrolledCourses(profile, allCourses),
-    [profile, allCourses]
-  );
+  const courses = useMemo(() => getEnrolledCourses(profile, allCourses), [profile, allCourses]);
 
   const enrolledCourseIds = useMemo(
     () => resolveEnrolledFirestoreCourseIds(profile, allCourses),
@@ -113,11 +110,7 @@ export default function Progress() {
 
   const enrollmentKey = useMemo(
     () =>
-      [
-        ...(profile?.enrolledCourses || []),
-        profile?.program || '',
-        ...(profile?.programs || []),
-      ]
+      [...(profile?.enrolledCourses || []), profile?.program || '', ...(profile?.programs || [])]
         .filter(Boolean)
         .join('|'),
     [profile?.enrolledCourses, profile?.program, profile?.programs]
@@ -336,7 +329,6 @@ export default function Progress() {
     },
   ];
 
-
   if (isGuest) {
     return (
       <div className="page progress-page">
@@ -430,7 +422,11 @@ export default function Progress() {
             as="section"
             actions={
               resourceFilterOptions.length > 1 ? (
-                <div className="progress-filter mobile-scroll-row" role="tablist" aria-label="Filter resources by program">
+                <div
+                  className="progress-filter mobile-scroll-row"
+                  role="tablist"
+                  aria-label="Filter resources by program"
+                >
                   {resourceFilterOptions.map((option) => (
                     <button
                       key={option.id}

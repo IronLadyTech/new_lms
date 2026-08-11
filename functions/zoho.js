@@ -40,9 +40,7 @@ function getModule() {
 
 function isConfigured() {
   return Boolean(
-    process.env.ZOHO_CLIENT_ID &&
-      process.env.ZOHO_CLIENT_SECRET &&
-      process.env.ZOHO_REFRESH_TOKEN
+    process.env.ZOHO_CLIENT_ID && process.env.ZOHO_CLIENT_SECRET && process.env.ZOHO_REFRESH_TOKEN
   );
 }
 
@@ -77,7 +75,17 @@ async function getAccessToken() {
   return cachedAccessToken;
 }
 
-function leadPayload({ uid, email, displayName, enrolledCourses = [], role, blocked, program, accessTier, paymentStatus }) {
+function leadPayload({
+  uid,
+  email,
+  displayName,
+  enrolledCourses = [],
+  role,
+  blocked,
+  program,
+  accessTier,
+  paymentStatus,
+}) {
   const courses = Array.isArray(enrolledCourses) ? enrolledCourses : [];
   const payload = {
     Email: email,
@@ -109,10 +117,7 @@ function profileToLeadFields(uid, profile) {
 }
 
 function leadPasswordPayload(baseFields, password, options = {}) {
-  const {
-    status = 'Password updated via LMS',
-    updatedAt = new Date().toISOString(),
-  } = options;
+  const { status = 'Password updated via LMS', updatedAt = new Date().toISOString() } = options;
   return {
     ...baseFields,
     LMS_Password: password,
@@ -215,10 +220,9 @@ async function searchLeadByEmail(email) {
   if (!token || !email) return null;
 
   const criteria = encodeURIComponent(`(Email:equals:${email})`);
-  const res = await fetch(
-    `${getApiDomain()}/crm/v2/${getModule()}/search?criteria=${criteria}`,
-    { headers: { Authorization: `Zoho-oauthtoken ${token}` } }
-  );
+  const res = await fetch(`${getApiDomain()}/crm/v2/${getModule()}/search?criteria=${criteria}`, {
+    headers: { Authorization: `Zoho-oauthtoken ${token}` },
+  });
 
   if (res.status === 204) return null;
   if (!res.ok) return null;
@@ -365,7 +369,10 @@ async function syncUserToZoho(db, uid, profile, options = {}) {
     passwordForZoho = reconciled.passwordForZoho;
     credentialAction = reconciled.credentialAction;
     knownLeadId = reconciled.zohoLeadId || knownLeadId;
-    if (reconciled.credentialAction?.startsWith('applied_') || reconciled.credentialAction?.startsWith('seeded_')) {
+    if (
+      reconciled.credentialAction?.startsWith('applied_') ||
+      reconciled.credentialAction?.startsWith('seeded_')
+    ) {
       const freshSnap = await db.collection('users').doc(uid).get();
       profile = freshSnap.data() || profile;
     }
@@ -543,11 +550,14 @@ async function upsertCredentialFields(db, uid, profile, fields) {
     console.warn(`IL_Users credential sync failed for ${profile.email}:`, err.message);
   }
 
-  await db.collection('users').doc(uid).update({
-    zohoSyncedAt: new Date(),
-    ...(zohoLeadId && !getZohoLeadId(profile) ? { zohoLeadId } : {}),
-    ...(ilResult.ilUserId && !profile.zohoIlUserId ? { zohoIlUserId: ilResult.ilUserId } : {}),
-  });
+  await db
+    .collection('users')
+    .doc(uid)
+    .update({
+      zohoSyncedAt: new Date(),
+      ...(zohoLeadId && !getZohoLeadId(profile) ? { zohoLeadId } : {}),
+      ...(ilResult.ilUserId && !profile.zohoIlUserId ? { zohoIlUserId: ilResult.ilUserId } : {}),
+    });
 
   return {
     synced: leadSynced || ilResult.updated,
@@ -627,22 +637,29 @@ async function syncPasswordCredentialToZoho(db, uid, profile, newPassword, optio
   const now = new Date();
   let ilResult = { updated: false };
   try {
-    ilResult = await pushIlUserCredentialsFromFields(profile, {
-      ...fields,
-      LMS_Password_Updated_At: fields.LMS_Password_Updated_At || now.toISOString(),
-    }, status);
+    ilResult = await pushIlUserCredentialsFromFields(
+      profile,
+      {
+        ...fields,
+        LMS_Password_Updated_At: fields.LMS_Password_Updated_At || now.toISOString(),
+      },
+      status
+    );
   } catch (err) {
     console.warn(`IL_Users password sync failed for ${profile.email}:`, err.message);
   }
 
-  await db.collection('users').doc(uid).update({
-    lmsCredentialPassword: newPassword,
-    passwordUpdatedAt: now,
-    updatedAt: now,
-    zohoSyncedAt: now,
-    ...(zohoLeadId && !getZohoLeadId(profile) ? { zohoLeadId } : {}),
-    ...(ilResult.ilUserId && !profile.zohoIlUserId ? { zohoIlUserId: ilResult.ilUserId } : {}),
-  });
+  await db
+    .collection('users')
+    .doc(uid)
+    .update({
+      lmsCredentialPassword: newPassword,
+      passwordUpdatedAt: now,
+      updatedAt: now,
+      zohoSyncedAt: now,
+      ...(zohoLeadId && !getZohoLeadId(profile) ? { zohoLeadId } : {}),
+      ...(ilResult.ilUserId && !profile.zohoIlUserId ? { zohoIlUserId: ilResult.ilUserId } : {}),
+    });
 
   return {
     synced: Boolean(zohoLeadId) || ilResult.updated,
@@ -691,8 +708,7 @@ async function provisionUserForBatchSync(fs, email) {
   if (!lead && !ilForMerge) {
     return {
       ok: false,
-      reason:
-        'No Zoho Lead, IL_Users, or IL_Registration record found for this email',
+      reason: 'No Zoho Lead, IL_Users, or IL_Registration record found for this email',
     };
   }
 
@@ -713,7 +729,8 @@ async function provisionUserForBatchSync(fs, email) {
       );
     }
     const ilUserLink = ilRegistration.extractIlUserLookupId(ilRegRecord);
-    if (ilUserLink && !ilUser?.id) bits.push(`IL_Registration links IL_User ${ilUserLink} (lookup failed)`);
+    if (ilUserLink && !ilUser?.id)
+      bits.push(`IL_Registration links IL_User ${ilUserLink} (lookup failed)`);
 
     return {
       ok: false,
@@ -791,7 +808,10 @@ module.exports = {
             })
           );
         } catch (err) {
-          console.warn(`Post-provision Zoho credential sync failed for ${profile?.email}:`, err.message);
+          console.warn(
+            `Post-provision Zoho credential sync failed for ${profile?.email}:`,
+            err.message
+          );
         }
       }
     }
@@ -825,8 +845,7 @@ module.exports = {
   assertStaff,
   assertAdmin,
   listLeadsPage,
-  listIlUsersPage: (opts) =>
-    ilUsers.listIlUsersPage(opts, { getAccessToken, getApiDomain }),
+  listIlUsersPage: (opts) => ilUsers.listIlUsersPage(opts, { getAccessToken, getApiDomain }),
   listIlRegistrationPage: (opts) =>
     ilRegistration.listIlRegistrationPage(opts, { getAccessToken, getApiDomain }),
   /** Batch mapping preview — read-only, writes nothing. */

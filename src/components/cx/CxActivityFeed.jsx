@@ -15,7 +15,9 @@ export default function CxActivityFeed({ items, loading, emptyMessage }) {
   }
 
   if (!items?.length) {
-    return <p className="muted cx-activity-feed__empty">{emptyMessage || 'No recent activity yet.'}</p>;
+    return (
+      <p className="muted cx-activity-feed__empty">{emptyMessage || 'No recent activity yet.'}</p>
+    );
   }
 
   return (

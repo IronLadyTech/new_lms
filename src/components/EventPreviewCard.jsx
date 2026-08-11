@@ -14,11 +14,7 @@ export function calendarEventUrl(event) {
 }
 
 export default function EventPreviewCard({ event, onClick }) {
-  const meta = [
-    event.date,
-    event.time ? event.time.slice(0, 5) : null,
-    formatEventType(event.type),
-  ]
+  const meta = [event.date, event.time ? event.time.slice(0, 5) : null, formatEventType(event.type)]
     .filter(Boolean)
     .join(' · ');
 
@@ -28,9 +24,15 @@ export default function EventPreviewCard({ event, onClick }) {
     <>
       <div className="event-preview-card__media">
         {event.imageUrl ? (
-          <EventImage src={event.imageUrl} alt={event.title} className="event-preview-card__image" />
+          <EventImage
+            src={event.imageUrl}
+            alt={event.title}
+            className="event-preview-card__image"
+          />
         ) : (
-          <span className={`event-preview-card__placeholder event-preview-card__placeholder--${event.type || 'general'}`}>
+          <span
+            className={`event-preview-card__placeholder event-preview-card__placeholder--${event.type || 'general'}`}
+          >
             {formatEventType(event.type).slice(0, 1)}
           </span>
         )}
@@ -38,7 +40,9 @@ export default function EventPreviewCard({ event, onClick }) {
       <div className="event-preview-card__body">
         <strong>{event.title}</strong>
         <span className="muted">{meta}</span>
-        {event.description && <span className="event-preview-card__desc muted">{event.description}</span>}
+        {event.description && (
+          <span className="event-preview-card__desc muted">{event.description}</span>
+        )}
       </div>
       {!onClick && (
         <span className="event-preview-card__chevron muted" aria-hidden>

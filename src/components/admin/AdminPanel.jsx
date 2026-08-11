@@ -20,7 +20,11 @@ import {
   setUserBlocked,
   getUserActivities,
 } from '../../services/userService';
-import { uploadResourceFile, uploadCourseAsset, resourceTypeFromFile } from '../../services/storageService';
+import {
+  uploadResourceFile,
+  uploadCourseAsset,
+  resourceTypeFromFile,
+} from '../../services/storageService';
 import {
   getGroups,
   createGroup,
@@ -139,7 +143,9 @@ function formatTime(ts) {
 
 function ActivityListItem({ activity, userMap, courseMap }) {
   const userName =
-    userMap[activity.userId]?.displayName || userMap[activity.userId]?.email?.split('@')[0] || 'User';
+    userMap[activity.userId]?.displayName ||
+    userMap[activity.userId]?.email?.split('@')[0] ||
+    'User';
 
   return (
     <li>
@@ -319,7 +325,8 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
   const stats = {
     total: users.length,
     userAccounts: users.filter((u) => (u.role || ROLES.STUDENT) === ROLES.STUDENT).length,
-    admins: users.filter((u) => [ROLES.ADMIN, ROLES.MODERATOR, ROLES.SUPERADMIN].includes(u.role)).length,
+    admins: users.filter((u) => [ROLES.ADMIN, ROLES.MODERATOR, ROLES.SUPERADMIN].includes(u.role))
+      .length,
     enrolled: users.reduce((n, u) => n + (u.enrolledCourses?.length || 0), 0),
     openTickets: tickets.filter((t) => t.status !== TICKET_STATUSES.RESOLVED).length,
   };
@@ -553,7 +560,8 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
       const result = await deleteUserAccount(targetUser.id);
       const parts = [];
       if (result.mbwSubmissions) parts.push(`${result.mbwSubmissions} submission(s)`);
-      if (result.activities) parts.push(`${result.activities} activit${result.activities === 1 ? 'y' : 'ies'}`);
+      if (result.activities)
+        parts.push(`${result.activities} activit${result.activities === 1 ? 'y' : 'ies'}`);
       if (result.storageFiles) parts.push(`${result.storageFiles} file(s)`);
       const detail = parts.length ? ` Removed ${parts.join(', ')}.` : '';
       setMessage(`${label} has been deleted.${detail}`);
@@ -631,7 +639,12 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
       {!isControlled && (
         <nav className="admin-tabs">
           {TABS.map((t) => (
-            <button key={t.id} type="button" className={tab === t.id ? 'active' : ''} onClick={() => setTab(t.id)}>
+            <button
+              key={t.id}
+              type="button"
+              className={tab === t.id ? 'active' : ''}
+              onClick={() => setTab(t.id)}
+            >
               {t.label}
             </button>
           ))}
@@ -650,8 +663,8 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
               ))}
             </ul>
             <p className="muted">
-              This is a configuration problem on our side, not something you did. Try refreshing — if it
-              keeps happening, contact your technical administrator.
+              This is a configuration problem on our side, not something you did. Try refreshing —
+              if it keeps happening, contact your technical administrator.
             </p>
             {/* Developer remediation detail — superadmin only; business admins cannot act on it. */}
             {isSuperAdmin && (
@@ -693,8 +706,8 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                   <>
                     <strong>The user list could not be loaded.</strong>
                     <p className="muted">
-                      Press Refresh below. If it keeps failing, contact your technical administrator —
-                      this is a configuration issue, not something you did.
+                      Press Refresh below. If it keeps failing, contact your technical administrator
+                      — this is a configuration issue, not something you did.
                     </p>
                     {isSuperAdmin && (
                       <details className="admin-diagnostics">
@@ -721,8 +734,8 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                   <>
                     <strong>No user profiles found in the database yet.</strong>
                     <p className="muted">
-                      The read succeeded but the <code>users</code> collection is empty. Have the learner sign in
-                      once — that creates their profile — then press Refresh.
+                      The read succeeded but the <code>users</code> collection is empty. Have the
+                      learner sign in once — that creates their profile — then press Refresh.
                     </p>
                   </>
                 )}
@@ -754,7 +767,8 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
             </div>
             {stats.openTickets > 0 && (
               <button type="button" className="overview-alert" onClick={() => setTab('tickets')}>
-                <LifeBuoy size={16} /> {stats.openTickets} support ticket(s) need attention — open Tickets →
+                <LifeBuoy size={16} /> {stats.openTickets} support ticket(s) need attention — open
+                Tickets →
               </button>
             )}
 
@@ -782,7 +796,9 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
           <section className="admin-section">
             <div className="admin-card" id="course-form">
               <div className="admin-card__head">
-                <span className="admin-card__icon"><BookOpen size={22} /></span>
+                <span className="admin-card__icon">
+                  <BookOpen size={22} />
+                </span>
                 <div>
                   <h3>{editingCourseId ? 'Edit course' : 'Create a course'}</h3>
                   <p className="muted">
@@ -829,7 +845,11 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 </label>
                 <label className="field">
                   <span>Or upload thumbnail</span>
-                  <input type="file" accept="image/*" onChange={(e) => setCourseThumbnailFile(e.target.files?.[0] || null)} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setCourseThumbnailFile(e.target.files?.[0] || null)}
+                  />
                 </label>
                 <label className="field field--full">
                   <span>Intro video URL</span>
@@ -864,17 +884,30 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                     </div>
                     {c.introUrl && (
                       <div className="admin-list__meta muted">
-                        <a href={c.introUrl} target="_blank" rel="noreferrer" className="link-inline">
+                        <a
+                          href={c.introUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="link-inline"
+                        >
                           Intro link
                         </a>
                       </div>
                     )}
                   </div>
                   <div className="admin-list__actions">
-                    <button type="button" className="btn btn-sm btn-outline" onClick={() => startEditCourse(c)}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline"
+                      onClick={() => startEditCourse(c)}
+                    >
                       Edit
                     </button>
-                    <button type="button" className="btn btn-sm btn-danger" onClick={() => handleDeleteCourse(c.id)}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-danger"
+                      onClick={() => handleDeleteCourse(c.id)}
+                    >
                       Delete
                     </button>
                   </div>
@@ -888,7 +921,9 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
           <section className="admin-section">
             <div className="admin-card">
               <div className="admin-card__head">
-                <span className="admin-card__icon"><Paperclip size={22} /></span>
+                <span className="admin-card__icon">
+                  <Paperclip size={22} />
+                </span>
                 <div>
                   <h3>{editingResourceId ? 'Edit resource' : 'Add a resource'}</h3>
                   <p className="muted">
@@ -898,7 +933,10 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                   </p>
                 </div>
               </div>
-              <form className="admin-card__form admin-card__form--grid" onSubmit={handleCreateResource}>
+              <form
+                className="admin-card__form admin-card__form--grid"
+                onSubmit={handleCreateResource}
+              >
                 <label className="field">
                   <span>Course</span>
                   <select
@@ -927,7 +965,9 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                   <span>Source</span>
                   <select
                     value={resourceForm.uploadMode}
-                    onChange={(e) => setResourceForm({ ...resourceForm, uploadMode: e.target.value })}
+                    onChange={(e) =>
+                      setResourceForm({ ...resourceForm, uploadMode: e.target.value })
+                    }
                     disabled={Boolean(editingResourceId)}
                   >
                     <option value="link">Add via link (URL)</option>
@@ -1009,10 +1049,18 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                     >
                       {r.locked ? 'Unlock' : 'Lock'}
                     </button>
-                    <button type="button" className="btn btn-sm btn-outline" onClick={() => startEditResource(r)}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline"
+                      onClick={() => startEditResource(r)}
+                    >
                       Edit
                     </button>
-                    <button type="button" className="btn btn-sm btn-danger" onClick={() => handleDeleteResource(r.id)}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-danger"
+                      onClick={() => handleDeleteResource(r.id)}
+                    >
                       Delete
                     </button>
                   </div>
@@ -1028,7 +1076,8 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
             <h2>All users ({users.length})</h2>
             <p className="muted">
               Assign roles, block users who should not access the app, or promote staff to admin.
-              {isSuperAdmin && ' Super admins can permanently delete learner accounts from this list.'}
+              {isSuperAdmin &&
+                ' Super admins can permanently delete learner accounts from this list.'}
             </p>
             <div className="admin-form">
               <input
@@ -1051,7 +1100,9 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                       <span className="muted"> {u.email}</span>
                       <span className="badge">{getRoleLabel(u.role)}</span>
                       {u.role === ROLES.MODERATOR && (
-                        <span className="badge badge-program">{getProgramShortLabel(u.program || PROGRAMS.MBW)}</span>
+                        <span className="badge badge-program">
+                          {getProgramShortLabel(u.program || PROGRAMS.MBW)}
+                        </span>
                       )}
                       {u.blocked && <span className="badge badge-blocked">Blocked</span>}
                     </div>
@@ -1115,15 +1166,16 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
             </ul>
             {users.length >= USER_FETCH_LIMIT && (
               <p className="muted admin-fetch-cap" role="status">
-                Showing the {USER_FETCH_LIMIT} most recently created accounts. Older accounts are not
-                loaded, and search below only covers these {USER_FETCH_LIMIT}.
+                Showing the {USER_FETCH_LIMIT} most recently created accounts. Older accounts are
+                not loaded, and search below only covers these {USER_FETCH_LIMIT}.
               </p>
             )}
             {filteredUsers.length > USER_PAGE_SIZE && (
               <div className="admin-form admin-form--pagination">
                 <span className="muted">
                   Showing {(userPage - 1) * USER_PAGE_SIZE + 1}–
-                  {Math.min(userPage * USER_PAGE_SIZE, filteredUsers.length)} of {filteredUsers.length}
+                  {Math.min(userPage * USER_PAGE_SIZE, filteredUsers.length)} of{' '}
+                  {filteredUsers.length}
                   {users.length >= USER_FETCH_LIMIT ? ' loaded' : ''}
                 </span>
                 <button
@@ -1150,7 +1202,10 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
         {tab === 'progress' && fullAdmin && (
           <section>
             <h2>User progress &amp; enrollments ({filteredUsers.length})</h2>
-            <p className="muted">Track which courses each user is enrolled in and their learning activity. Click a row or use View progress to open full details.</p>
+            <p className="muted">
+              Track which courses each user is enrolled in and their learning activity. Click a row
+              or use View progress to open full details.
+            </p>
             <div className="admin-form">
               <input
                 placeholder="Search by name, email, or role"
@@ -1180,53 +1235,53 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                     </tr>
                   ) : (
                     paginatedUsers.map((u) => (
-                    <tr
-                      key={u.id}
-                      className="progress-table__row"
-                      tabIndex={0}
-                      onClick={() => setProgressModalUser(u)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          setProgressModalUser(u);
-                        }
-                      }}
-                    >
-                      <td>
-                        <strong>{u.displayName}</strong>
-                        <br />
-                        <span className="muted">{u.email}</span>
-                      </td>
-                      <td>
-                        <span className="badge">{getRoleLabel(u.role)}</span>
-                      </td>
-                      <td>
-                        {(u.enrolledCourses || []).length === 0 ? (
-                          <span className="muted">None</span>
-                        ) : (
-                          (u.enrolledCourses || []).map((cid) => (
-                            <span key={cid} className="course-pill">
-                              {courseMap[cid]?.code || courseMap[cid]?.title || cid.slice(0, 6)}
-                            </span>
-                          ))
-                        )}
-                      </td>
-                      <td>{u.streak ?? 0}</td>
-                      <td>{activityCountByUser[u.id] || 0}</td>
-                      <td className="muted">{formatTime(u.lastActivityAt)}</td>
-                      <td className="progress-table__actions">
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline"
-                          onClick={(e) => {
-                            e.stopPropagation();
+                      <tr
+                        key={u.id}
+                        className="progress-table__row"
+                        tabIndex={0}
+                        onClick={() => setProgressModalUser(u)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
                             setProgressModalUser(u);
-                          }}
-                        >
-                          View progress
-                        </button>
-                      </td>
-                    </tr>
+                          }
+                        }}
+                      >
+                        <td>
+                          <strong>{u.displayName}</strong>
+                          <br />
+                          <span className="muted">{u.email}</span>
+                        </td>
+                        <td>
+                          <span className="badge">{getRoleLabel(u.role)}</span>
+                        </td>
+                        <td>
+                          {(u.enrolledCourses || []).length === 0 ? (
+                            <span className="muted">None</span>
+                          ) : (
+                            (u.enrolledCourses || []).map((cid) => (
+                              <span key={cid} className="course-pill">
+                                {courseMap[cid]?.code || courseMap[cid]?.title || cid.slice(0, 6)}
+                              </span>
+                            ))
+                          )}
+                        </td>
+                        <td>{u.streak ?? 0}</td>
+                        <td>{activityCountByUser[u.id] || 0}</td>
+                        <td className="muted">{formatTime(u.lastActivityAt)}</td>
+                        <td className="progress-table__actions">
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setProgressModalUser(u);
+                            }}
+                          >
+                            View progress
+                          </button>
+                        </td>
+                      </tr>
                     ))
                   )}
                 </tbody>
@@ -1262,7 +1317,9 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
         {tab === 'calendar' && (
           <section>
             <h2>Events calendar</h2>
-            <p className="muted">Schedule classes, deadlines, and meetings. Visible to all signed-in users.</p>
+            <p className="muted">
+              Schedule classes, deadlines, and meetings. Visible to all signed-in users.
+            </p>
             <EventCalendar events={events} onRefresh={load} createdBy={user?.uid} />
           </section>
         )}
@@ -1271,8 +1328,8 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
           <section>
             <h2>Announcements</h2>
             <p className="muted">
-              Broadcast messages to learners. Choose visibility for 24 hours, 7 days, or 30 days. Tag specific users
-              to highlight them.
+              Broadcast messages to learners. Choose visibility for 24 hours, 7 days, or 30 days.
+              Tag specific users to highlight them.
             </p>
             <AnnouncementManager
               announcements={announcements}
@@ -1452,7 +1509,11 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                       </ul>
                     )}
                   </div>
-                  <button type="button" className="btn btn-sm btn-danger" onClick={() => deleteGroup(g.id).then(load)}>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-danger"
+                    onClick={() => deleteGroup(g.id).then(load)}
+                  >
                     Delete
                   </button>
                 </li>

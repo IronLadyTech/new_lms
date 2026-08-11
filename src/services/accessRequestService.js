@@ -1,4 +1,12 @@
-import { addDoc, collection, getDocs, orderBy, query, limit, serverTimestamp } from 'firebase/firestore';
+import {
+  addDoc,
+  collection,
+  getDocs,
+  orderBy,
+  query,
+  limit,
+  serverTimestamp,
+} from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 const ACCESS_REQUESTS = 'access_requests';
@@ -27,7 +35,9 @@ export async function createAccessRequest({ name, email, program, message }) {
     name: trimmedName.slice(0, ACCESS_REQUEST_LIMITS.name),
     email: trimmedEmail.slice(0, ACCESS_REQUEST_LIMITS.email),
     program: String(program || '').slice(0, 40),
-    message: String(message || '').trim().slice(0, ACCESS_REQUEST_LIMITS.message),
+    message: String(message || '')
+      .trim()
+      .slice(0, ACCESS_REQUEST_LIMITS.message),
     status: 'new',
     source: 'lms_guest',
     createdAt: serverTimestamp(),
