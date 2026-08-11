@@ -13,6 +13,7 @@ import {
 } from '../../services/courseService';
 import {
   getAllUsers,
+  searchUsers,
   USER_FETCH_LIMIT,
   getAllActivities,
   assignAdminRole,
@@ -220,6 +221,8 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
     moderatorIds: [],
   });
   const [userSearch, setUserSearch] = useState('');
+  const [remoteUsers, setRemoteUsers] = useState([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
   const [userPage, setUserPage] = useState(1);
   const [deletingUserId, setDeletingUserId] = useState(null);
   const [progressModalUser, setProgressModalUser] = useState(null);
@@ -235,7 +238,49 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
     [users]
   );
 
-  const filteredUsers = users.filter((u) => {
+  /**
+   * Search hits the server as well as the loaded page: the paged list orders by
+   * createdAt, which omits accounts missing that field, and caps at USER_FETCH_LIMIT.
+   * Without this, older or externally-provisioned accounts were unfindable.
+   */
+  useEffect(() => {
+    const q = userSearch.trim();
+    if (q.length < 2) {
+      setRemoteUsers([]);
+      setSearchingUsers(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setSearchingUsers(true);
+    const timer = setTimeout(() => {
+      searchUsers(q)
+        .then((found) => {
+          if (!cancelled) setRemoteUsers(found);
+        })
+        .catch((e) => {
+          console.error('User search:', e);
+          if (!cancelled) setRemoteUsers([]);
+        })
+        .finally(() => {
+          if (!cancelled) setSearchingUsers(false);
+        });
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [userSearch]);
+
+  const searchPool = useMemo(() => {
+    if (!remoteUsers.length) return users;
+    const byId = new Map(users.map((u) => [u.id, u]));
+    remoteUsers.forEach((u) => byId.set(u.id, u));
+    return [...byId.values()];
+  }, [users, remoteUsers]);
+
+  const filteredUsers = searchPool.filter((u) => {
     const q = userSearch.trim().toLowerCase();
     if (!q) return true;
     return (
@@ -1086,7 +1131,12 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 ' Super admins can permanently delete learner accounts from this list.'}
             </p>
             <div className="admin-form">
+              <label htmlFor="admin-user-search" className="sr-only">
+                Search users by name, email, or role
+              </label>
               <input
+                id="admin-user-search"
+                type="search"
                 placeholder="Search by name, email, or role"
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
@@ -1097,6 +1147,13 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 Refresh
               </button>
             </div>
+            <p className="muted admin-search-note" role="status" aria-live="polite">
+              {searchingUsers
+                ? 'Searching all accounts…'
+                : userSearch.trim().length >= 2
+                  ? `${filteredUsers.length} match${filteredUsers.length === 1 ? '' : 'es'} — searched every account, not just the loaded page.`
+                  : 'Type at least 2 characters to search every account by name or email.'}
+            </p>
             <ul className="admin-list">
               {paginatedUsers.map((u) => (
                 <li key={u.id}>
@@ -1172,8 +1229,8 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
             </ul>
             {users.length >= USER_FETCH_LIMIT && (
               <p className="muted admin-fetch-cap" role="status">
-                Showing the {USER_FETCH_LIMIT} most recently created accounts. Older accounts are
-                not loaded, and search below only covers these {USER_FETCH_LIMIT}.
+                Browsing the {USER_FETCH_LIMIT} most recently created accounts. Search reaches every
+                account, including older ones that are not listed here.
               </p>
             )}
             {filteredUsers.length > USER_PAGE_SIZE && (
@@ -1213,7 +1270,12 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
               or use View progress to open full details.
             </p>
             <div className="admin-form">
+              <label htmlFor="admin-progress-search" className="sr-only">
+                Search users by name, email, or role
+              </label>
               <input
+                id="admin-progress-search"
+                type="search"
                 placeholder="Search by name, email, or role"
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}

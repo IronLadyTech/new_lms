@@ -247,6 +247,49 @@ export async function getUserActivities(uid, limitCount = 20) {
  */
 export const USER_FETCH_LIMIT = 500;
 
+/**
+ * Server-side user lookup by email or display-name prefix.
+ *
+ * Deliberately does NOT go through getAllUsers: that query orders by createdAt,
+ * and Firestore omits documents missing the ordered field entirely — so accounts
+ * created before createdAt was written (or provisioned outside the app) are absent
+ * from the list and were therefore unsearchable. This queries the indexed field
+ * directly, so it finds every account regardless of createdAt or the page cap.
+ */
+export async function searchUsers(term, limitCount = 25) {
+  const raw = String(term || '').trim();
+  if (raw.length < 2) return [];
+
+  const lower = raw.toLowerCase();
+  // Firestore range queries are case-sensitive; emails are stored lowercase but
+  // display names are not, so try the typed form and a Title-cased variant.
+  const titled = lower.charAt(0).toUpperCase() + lower.slice(1);
+  const HIGH = '';
+
+  const prefixQuery = (field, value) =>
+    getDocs(
+      query(
+        collection(db, USERS),
+        where(field, '>=', value),
+        where(field, '<=', value + HIGH),
+        limit(limitCount)
+      )
+    );
+
+  const settled = await Promise.allSettled([
+    prefixQuery('email', lower),
+    prefixQuery('displayName', raw),
+    prefixQuery('displayName', titled),
+  ]);
+
+  const byId = new Map();
+  for (const result of settled) {
+    if (result.status !== 'fulfilled') continue;
+    result.value.docs.forEach((d) => byId.set(d.id, { id: d.id, ...d.data() }));
+  }
+  return [...byId.values()];
+}
+
 export async function getAllUsers(limitCount = USER_FETCH_LIMIT) {
   try {
     const snap = await getDocs(

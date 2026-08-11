@@ -11698,6 +11698,11 @@ button.streak-heatmap__cell:focus-visible {
   align-items: center;
 }
 
+.admin-search-note {
+  margin: calc(-1 * var(--space-2xs)) 0 var(--space-sm);
+  font-size: var(--text-xs);
+}
+
 /* Fetch-cap disclosure — the admin list is paged server-side; say so. */
 .admin-fetch-cap {
   margin: var(--space-sm) 0;
