@@ -3,7 +3,7 @@ export default function AuthBrandHeader() {
   return (
     <div className="auth-card__brand">
       <img
-        src="/iron-lady-logo.png"
+        src="/logo.png"
         alt=""
         className="auth-card__brand-logo"
         width={88}

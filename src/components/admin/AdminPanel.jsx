@@ -13,6 +13,7 @@ import {
 } from '../../services/courseService';
 import {
   getAllUsers,
+  USER_FETCH_LIMIT,
   getAllActivities,
   assignAdminRole,
   setUserProgram,
@@ -72,6 +73,12 @@ import { getAnnouncements } from '../../services/announcementService';
 import { deleteUserAccount } from '../../services/userAdminService';
 
 const RESOURCE_TYPES = ['video', 'pdf', 'ppt', 'assignment', 'mock_test'];
+
+/** Derived from config, never hardcoded — the project id is deployment-specific. */
+const FIREBASE_PROJECT_ID = import.meta.env.VITE_FIREBASE_PROJECT_ID || '';
+const FIREBASE_RULES_URL = FIREBASE_PROJECT_ID
+  ? `https://console.firebase.google.com/project/${FIREBASE_PROJECT_ID}/firestore/rules`
+  : '';
 const USER_PAGE_SIZE = 25;
 export const ADMIN_TABS = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard, desc: 'Dashboard summary' },
@@ -642,31 +649,35 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 <li key={w}>{w}</li>
               ))}
             </ul>
-            {users.length > 0 ? (
-              <p className="muted">
-                Users loaded but other collections did not. This usually means{' '}
-                <strong>Firestore rules are outdated</strong> (missing <code>announcements</code> and{' '}
-                <code>canUseApp</code>). Open{' '}
-                <a
-                  href="https://console.firebase.google.com/project/lmsironlady/firestore/rules"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Firestore → Rules
-                </a>
-                , paste the full <code>firestore.rules</code> file from this project, click <strong>Publish</strong>,
-                then refresh.
-                {profile?.blocked && (
-                  <>
-                    {' '}
-                    Your account also has <code>blocked: true</code> — fixing that now…
-                  </>
-                )}
-              </p>
-            ) : (
-              <p className="muted">
-                Publish <code>firestore.rules</code> in Firebase Console → Firestore → Rules, then refresh.
-              </p>
+            <p className="muted">
+              This is a configuration problem on our side, not something you did. Try refreshing — if it
+              keeps happening, contact your technical administrator.
+            </p>
+            {/* Developer remediation detail — superadmin only; business admins cannot act on it. */}
+            {isSuperAdmin && (
+              <details className="admin-diagnostics">
+                <summary>Technical details</summary>
+                <p className="muted">
+                  {users.length > 0
+                    ? 'Users loaded but other collections did not — Firestore security rules are likely outdated.'
+                    : 'No collections could be read — Firestore security rules are likely unpublished.'}{' '}
+                  Publish <code>firestore.rules</code> from this repository, then refresh.
+                  {FIREBASE_RULES_URL && (
+                    <>
+                      {' '}
+                      <a href={FIREBASE_RULES_URL} target="_blank" rel="noreferrer">
+                        Open Firestore → Rules
+                      </a>
+                    </>
+                  )}
+                  {profile?.blocked && (
+                    <>
+                      {' '}
+                      This account also has <code>blocked: true</code> — clearing it now…
+                    </>
+                  )}
+                </p>
+              </details>
             )}
             <button type="button" className="btn btn-primary btn-sm" onClick={load}>
               Refresh now
@@ -680,23 +691,30 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
               <div className="muted-box admin-message">
                 {usersError ? (
                   <>
-                    <strong>Can't read users — Firestore blocked the request.</strong>
-                    <p className="diag-error">{usersError}</p>
-                    {usersError.includes('permission') ? (
-                      <p className="muted">
-                        Your security rules are not published (or are outdated). Go to{' '}
-                        <a
-                          href="https://console.firebase.google.com/project/lmsironlady/firestore/rules"
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Firestore → Rules
-                        </a>
-                        , paste the contents of <code>firestore.rules</code> from the project, click{' '}
-                        <strong>Publish</strong>, then press Refresh below.
-                      </p>
-                    ) : (
-                      <p className="muted">Press Refresh below after checking your Firebase setup.</p>
+                    <strong>The user list could not be loaded.</strong>
+                    <p className="muted">
+                      Press Refresh below. If it keeps failing, contact your technical administrator —
+                      this is a configuration issue, not something you did.
+                    </p>
+                    {isSuperAdmin && (
+                      <details className="admin-diagnostics">
+                        <summary>Technical details</summary>
+                        <p className="diag-error">{usersError}</p>
+                        {usersError.includes('permission') && (
+                          <p className="muted">
+                            Security rules are unpublished or outdated. Publish{' '}
+                            <code>firestore.rules</code> from this repository, then refresh.
+                            {FIREBASE_RULES_URL && (
+                              <>
+                                {' '}
+                                <a href={FIREBASE_RULES_URL} target="_blank" rel="noreferrer">
+                                  Open Firestore → Rules
+                                </a>
+                              </>
+                            )}
+                          </p>
+                        )}
+                      </details>
                     )}
                   </>
                 ) : (
@@ -1095,11 +1113,18 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 </li>
               )}
             </ul>
+            {users.length >= USER_FETCH_LIMIT && (
+              <p className="muted admin-fetch-cap" role="status">
+                Showing the {USER_FETCH_LIMIT} most recently created accounts. Older accounts are not
+                loaded, and search below only covers these {USER_FETCH_LIMIT}.
+              </p>
+            )}
             {filteredUsers.length > USER_PAGE_SIZE && (
               <div className="admin-form admin-form--pagination">
                 <span className="muted">
                   Showing {(userPage - 1) * USER_PAGE_SIZE + 1}–
                   {Math.min(userPage * USER_PAGE_SIZE, filteredUsers.length)} of {filteredUsers.length}
+                  {users.length >= USER_FETCH_LIMIT ? ' loaded' : ''}
                 </span>
                 <button
                   type="button"

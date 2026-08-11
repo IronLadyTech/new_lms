@@ -34,6 +34,9 @@ function timeAgo(ts) {
   return `${days} days ago`;
 }
 
+/** How many queue items the home panel previews. The KPI never uses this. */
+const ATTENTION_PREVIEW_COUNT = 8;
+
 function learnerInitial(name, email) {
   const source = (name || email || '?').trim();
   return source.charAt(0).toUpperCase();
@@ -154,6 +157,10 @@ export default function CXHome() {
   const [remindResult, setRemindResult] = useState({});
   const [sessionBatch, setSessionBatch] = useState(null);
 
+  /**
+   * Full queue — never truncated. The KPI tile and panel badge must report the real
+   * backlog; only the rendered list is capped (see ATTENTION_PREVIEW_COUNT).
+   */
   const attentionItems = useMemo(() => {
     if (!adapter.hasTasks) return [];
 
@@ -195,9 +202,14 @@ export default function CXHome() {
           Date.parse(b.submittedAt || '') ||
           0;
         return aMs - bMs;
-      })
-      .slice(0, 8);
+      });
   }, [submissions, students, activeTasks, adapter.hasTasks]);
+
+  const visibleAttentionItems = useMemo(
+    () => attentionItems.slice(0, ATTENTION_PREVIEW_COUNT),
+    [attentionItems]
+  );
+  const hiddenAttentionCount = attentionItems.length - visibleAttentionItems.length;
 
   const completionRate = useMemo(() => {
     const completed = countCompletedCells(students, activeTasks, submissions);
@@ -318,7 +330,7 @@ export default function CXHome() {
                 />
               ) : (
                 <ul className="cx-attention-cards">
-                  {attentionItems.map((s) => {
+                  {visibleAttentionItems.map((s) => {
                     const key = `${s.userId}_${s.taskId}`;
                     const alreadySent = remindResult[key] === 'sent';
                     const displayName = s.learner.displayName || s.learner.email;
@@ -364,6 +376,15 @@ export default function CXHome() {
                     );
                   })}
                 </ul>
+              )}
+              {!loading && hiddenAttentionCount > 0 && (
+                <p className="cx-panel__more muted">
+                  Showing {visibleAttentionItems.length} of {attentionItems.length}.{' '}
+                  <Link to="/cx/reviews">
+                    View all {attentionItems.length} pending review
+                    {attentionItems.length === 1 ? '' : 's'}
+                  </Link>
+                </p>
               )}
             </div>
           </section>

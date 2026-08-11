@@ -9,9 +9,10 @@
   --il-charcoal: #231f20;
   --il-gold: #f5b301;
   --il-pink-cta: #ff5a77;
-  /* Accessible text-on-surface variants (WCAG AA); brand red unchanged for non-text */
+  /* Accessible text-on-surface variants (WCAG AA); brand red unchanged for non-text.
+     --primary-text is theme-scoped below: il-red-deep is 5.88:1 on white but only
+     2.97:1 on the dark surface, so dark mode uses the lighter --primary-on-dark. */
   --primary-cta-bg: var(--il-red-hover);
-  --primary-text: var(--il-red-deep);
   --font-heading: 'Gemunu Libre', system-ui, sans-serif;
   --font-body: 'Fira Sans', system-ui, sans-serif;
   --radius: 12px;
@@ -78,6 +79,7 @@
   --primary-soft-bg: color-mix(in srgb, var(--il-red) 8%, transparent);
   --primary-ring: color-mix(in srgb, var(--il-red) 45%, transparent);
   --primary-on-dark: #ff8a8a;
+  --primary-text: #ff8a8a; /* 7.71:1 on --surface */
   --danger: #ef4444;
   --success: #22c55e;
   --warning: #e8a020;
@@ -135,6 +137,7 @@
   --primary-soft-bg: color-mix(in srgb, var(--il-red) 6%, transparent);
   --primary-ring: color-mix(in srgb, var(--il-red) 35%, transparent);
   --primary-on-dark: var(--il-red-deep);
+  --primary-text: var(--il-red-deep); /* 5.88:1 on #fff, 5.40:1 on --bg */
   --danger: #dc2626;
   --success: #16a34a;
   --warning: #d97706;
@@ -209,12 +212,9 @@ html {
 }
 
 a {
+  /* --primary-text is theme-scoped, so this is correct in both themes. */
   color: var(--primary-text);
   text-decoration: none;
-}
-
-[data-theme='dark'] a {
-  color: var(--primary-on-dark);
 }
 
 a:hover {
@@ -11440,6 +11440,38 @@ button.streak-heatmap__cell:focus-visible {
   overflow-x: auto;
 }
 
+/* Superadmin-only remediation detail, collapsed by default. */
+.admin-diagnostics {
+  margin-top: var(--space-sm);
+  font-size: var(--text-sm);
+}
+
+.admin-diagnostics summary {
+  cursor: pointer;
+  color: var(--muted);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+/* Fetch-cap disclosure — the admin list is paged server-side; say so. */
+.admin-fetch-cap {
+  margin: var(--space-sm) 0;
+  padding: var(--space-sm) var(--space-2sm);
+  border-left: 3px solid var(--border-strong);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+/* Truncation disclosure — the queue previews N of M, never silently. */
+.cx-panel__more {
+  margin: var(--space-2sm) 0 0;
+  padding-top: var(--space-2sm);
+  border-top: 1px solid var(--border);
+  font-size: var(--text-sm);
+}
+
 .cx-panel__foot {
   padding: var(--space-2sm) var(--space-md);
   border-top: 1px solid var(--border);
@@ -15812,6 +15844,13 @@ body.notification-sheet-open .bottom-nav {
 
 .lesson-search__empty {
   padding: var(--space-md);
+}
+
+/* Result count — always states the true match total, never a silent truncation. */
+.lesson-search__count {
+  margin: 0;
+  padding: 0 var(--space-md) var(--space-2xs);
+  font-size: var(--text-xs);
 }
 
 .lesson-search__hint {

@@ -10,16 +10,10 @@
   "lang": "en",
   "icons": [
     {
-      "src": "/iron-lady-logo.png",
-      "sizes": "192x192",
+      "src": "/logo.png",
+      "sizes": "2125x2133",
       "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "/iron-lady-logo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
     }
   ]
 }

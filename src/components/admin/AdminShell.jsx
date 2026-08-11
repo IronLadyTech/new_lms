@@ -8,6 +8,7 @@ import AdminNotificationBell from './AdminNotificationBell';
 import ThemeToggle from '../ThemeToggle';
 import WidgetErrorBoundary from '../WidgetErrorBoundary';
 import LayoutErrorBoundary from '../LayoutErrorBoundary';
+import OfflineBanner from '../ui/OfflineBanner';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 function resolveTab(section, navTabs, fallback) {
@@ -150,6 +151,8 @@ export default function AdminShell({ title, subtitle, isSuperAdmin = false }) {
             </WidgetErrorBoundary>
           </div>
         </header>
+
+        <OfflineBanner />
 
         <LayoutErrorBoundary name="admin-panel">
           <AdminPanel isSuperAdmin={isSuperAdmin} tab={tab} onTabChange={handleSelectTab} />

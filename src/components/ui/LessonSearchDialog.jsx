@@ -3,6 +3,9 @@ import { createPortal } from 'react-dom';
 import { Search, X } from 'lucide-react';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 
+/** Results shown at once. The count line always reports the true match total. */
+const RESULT_LIMIT = 25;
+
 export default function LessonSearchDialog({
   open,
   onClose,
@@ -14,8 +17,39 @@ export default function LessonSearchDialog({
   const [query, setQuery] = useState('');
   const panelRef = useRef(null);
   const inputRef = useRef(null);
+  const itemRefs = useRef([]);
 
   useFocusTrap(open, panelRef, { onEscape: onClose });
+
+  /**
+   * Arrow keys move real DOM focus between result buttons rather than emulating a
+   * listbox with aria-activedescendant. Native focus means Enter, screen-reader
+   * announcement, and the focus ring all work with no ARIA to keep in sync.
+   */
+  const focusItem = (index) => {
+    const items = itemRefs.current.filter(Boolean);
+    if (!items.length) return;
+    const next = (index + items.length) % items.length;
+    items[next]?.focus();
+  };
+
+  const onInputKeyDown = (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      focusItem(0);
+    }
+  };
+
+  const onItemKeyDown = (e, index) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      focusItem(index + 1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (index === 0) inputRef.current?.focus();
+      else focusItem(index - 1);
+    }
+  };
 
   useEffect(() => {
     if (!open) {
@@ -30,21 +64,29 @@ export default function LessonSearchDialog({
     };
   }, [open]);
 
-  const results = useMemo(() => {
+  const { results, matchCount, totalCount } = useMemo(() => {
     const q = query.trim().toLowerCase();
     const list = taskStates.filter((ts) => ts?.task?.id);
-    if (!q) return list.slice(0, 15);
-    return list
-      .filter((ts) => {
-        const title = getTaskLabel(ts).toLowerCase();
-        const id = (ts.task.id || '').toLowerCase();
-        const phase = (ts.task.phase || '').toLowerCase();
-        return title.includes(q) || id.includes(q) || phase.includes(q);
-      })
-      .slice(0, 25);
+    const matches = q
+      ? list.filter((ts) => {
+          const title = getTaskLabel(ts).toLowerCase();
+          const id = (ts.task.id || '').toLowerCase();
+          const phase = (ts.task.phase || '').toLowerCase();
+          return title.includes(q) || id.includes(q) || phase.includes(q);
+        })
+      : list;
+
+    return {
+      results: matches.slice(0, RESULT_LIMIT),
+      matchCount: matches.length,
+      totalCount: list.length,
+    };
   }, [query, taskStates, getTaskLabel]);
 
   if (!open) return null;
+
+  // Drop refs for rows that no longer exist so arrow navigation never hits a stale node.
+  itemRefs.current.length = results.length;
 
   return createPortal(
     <div className="lesson-search-backdrop" onClick={onClose}>
@@ -73,33 +115,42 @@ export default function LessonSearchDialog({
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={onInputKeyDown}
             placeholder="Type to filter lessons…"
             autoComplete="off"
           />
         </div>
-        <ul className="lesson-search__results" role="listbox" aria-label="Matching lessons">
-          {results.length === 0 ? (
-            <li className="lesson-search__empty muted">No lessons match your search.</li>
-          ) : (
-            results.map((ts) => (
-              <li key={ts.task.id}>
-                <button
-                  type="button"
-                  className="lesson-search__item"
-                  role="option"
-                  onClick={() => {
-                    onSelect?.(ts.task.id);
-                    onClose?.();
-                  }}
-                >
-                  <span className="lesson-search__item-title">{getTaskLabel(ts)}</span>
-                  {ts.task.phase && <span className="muted lesson-search__item-meta">{ts.task.phase}</span>}
-                </button>
-              </li>
-            ))
-          )}
+        <p className="lesson-search__count muted" role="status" aria-live="polite">
+          {matchCount === 0
+            ? 'No lessons match your search.'
+            : matchCount > results.length
+              ? `Showing ${results.length} of ${matchCount} matching lessons — keep typing to narrow.`
+              : `${matchCount} of ${totalCount} lesson${totalCount === 1 ? '' : 's'}`}
+        </p>
+        <ul className="lesson-search__results">
+          {results.map((ts, index) => (
+            <li key={ts.task.id}>
+              <button
+                type="button"
+                className="lesson-search__item"
+                ref={(el) => {
+                  itemRefs.current[index] = el;
+                }}
+                onKeyDown={(e) => onItemKeyDown(e, index)}
+                onClick={() => {
+                  onSelect?.(ts.task.id);
+                  onClose?.();
+                }}
+              >
+                <span className="lesson-search__item-title">{getTaskLabel(ts)}</span>
+                {ts.task.phase && <span className="muted lesson-search__item-meta">{ts.task.phase}</span>}
+              </button>
+            </li>
+          ))}
         </ul>
-        <p className="muted lesson-search__hint">Tip: press Ctrl+K (or ⌘K) anywhere on this program page.</p>
+        <p className="muted lesson-search__hint">
+          Press ↑ ↓ to move, Enter to open. Ctrl+K (or ⌘K) opens this search anywhere on the program page.
+        </p>
       </div>
     </div>,
     document.body

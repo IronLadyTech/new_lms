@@ -2,11 +2,34 @@ import { useState } from 'react';
 import { Send, ExternalLink } from 'lucide-react';
 import { IRON_LADY_CONTACT_EMAIL } from '../../utils/constants';
 import { PROGRAM_OPTIONS } from '../../data/programTypes';
+import { createAccessRequest } from '../../services/accessRequestService';
 
 const SITE_URL = 'https://iamironlady.com';
 
+function buildMailto(form) {
+  const programLabel =
+    PROGRAM_OPTIONS.find((p) => p.value === form.program)?.label || form.program;
+  const body = [
+    'Program access request (Iron Lady LMS guest)',
+    '',
+    `Name: ${form.name.trim()}`,
+    `Email: ${form.email.trim()}`,
+    `Program interest: ${programLabel}`,
+    '',
+    form.message.trim() || 'I would like to learn more about enrolling.',
+  ].join('\n');
+
+  return `mailto:${IRON_LADY_CONTACT_EMAIL}?subject=${encodeURIComponent(
+    `Program access request — ${programLabel}`
+  )}&body=${encodeURIComponent(body)}`;
+}
+
 /**
- * Guest conversion path — structured request that opens a pre-filled email to Iron Lady.
+ * Guest conversion path.
+ *
+ * The request is persisted to Firestore first, so the lead is captured even when the
+ * visitor has no mail client (where `mailto:` silently no-ops) or abandons the draft.
+ * Email is offered afterwards as an optional extra, never as the delivery mechanism.
  */
 export default function GuestRequestAccess({ compact = false }) {
   const [form, setForm] = useState({
@@ -16,40 +39,52 @@ export default function GuestRequestAccess({ compact = false }) {
     message: '',
   });
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const programLabel =
-      PROGRAM_OPTIONS.find((p) => p.value === form.program)?.label || form.program;
-    const body = [
-      'Program access request (Iron Lady LMS guest)',
-      '',
-      `Name: ${form.name.trim()}`,
-      `Email: ${form.email.trim()}`,
-      `Program interest: ${programLabel}`,
-      '',
-      form.message.trim() || 'I would like to learn more about enrolling.',
-    ].join('\n');
-
-    const mailto = `mailto:${IRON_LADY_CONTACT_EMAIL}?subject=${encodeURIComponent(
-      `Program access request — ${programLabel}`
-    )}&body=${encodeURIComponent(body)}`;
-
-    window.location.href = mailto;
-    setSent(true);
+    setSubmitting(true);
+    setError('');
+    try {
+      await createAccessRequest(form);
+      setSent(true);
+    } catch (err) {
+      console.error(err);
+      setError(
+        'We could not send your request just now. Please try again, or email us directly at ' +
+          `${IRON_LADY_CONTACT_EMAIL}.`
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (sent) {
     return (
       <div className="guest-request guest-request--sent" role="status">
         <p>
-          Your email app should open with a pre-filled message. Send it to complete your request, or visit{' '}
-          <a href={SITE_URL} target="_blank" rel="noreferrer">
-            iamironlady.com
-          </a>{' '}
-          to apply directly.
+          <strong>Request received.</strong> The Iron Lady team will contact you at{' '}
+          {form.email.trim()} about your programme options.
         </p>
-        <button type="button" className="btn btn-outline btn-sm" onClick={() => setSent(false)}>
+        <div className="guest-request__actions">
+          <a href={buildMailto(form)} className="btn btn-outline btn-sm">
+            <Send size={14} aria-hidden="true" />
+            Also email us a copy
+          </a>
+          <a href={SITE_URL} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm">
+            <ExternalLink size={14} aria-hidden="true" />
+            Explore on iamironlady.com
+          </a>
+        </div>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          onClick={() => {
+            setSent(false);
+            setForm((f) => ({ ...f, message: '' }));
+          }}
+        >
           Send another request
         </button>
       </div>
@@ -68,6 +103,11 @@ export default function GuestRequestAccess({ compact = false }) {
         </>
       )}
       <form className="guest-request__form" onSubmit={handleSubmit}>
+        {error && (
+          <p className="alert alert-error" role="alert">
+            {error}
+          </p>
+        )}
         <div className="field">
           <label htmlFor="guest-access-name">Your name</label>
           <input
@@ -114,9 +154,9 @@ export default function GuestRequestAccess({ compact = false }) {
           />
         </div>
         <div className="guest-request__actions">
-          <button type="submit" className="btn btn-primary btn-sm">
+          <button type="submit" className="btn btn-primary btn-sm" disabled={submitting}>
             <Send size={14} aria-hidden="true" />
-            Request access
+            {submitting ? 'Sending…' : 'Request access'}
           </button>
           <a
             href={SITE_URL}

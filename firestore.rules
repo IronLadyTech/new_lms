@@ -141,6 +141,28 @@ service cloud.firestore {
       allow write: if hasAdminAccess();
     }
 
+    // Public guest enquiry form (no account required). Write-only for the public:
+    // create is allowed unauthenticated but strictly shape- and length-validated,
+    // and nobody without staff access can read anything back.
+    match /access_requests/{requestId} {
+      allow read, update, delete: if hasStaffAccess();
+      allow create: if request.resource.data.keys().hasOnly(
+            ['name', 'email', 'program', 'message', 'status', 'source', 'createdAt']
+          )
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 120
+        && request.resource.data.email is string
+        && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+        && request.resource.data.email.size() <= 200
+        && request.resource.data.program is string
+        && request.resource.data.program.size() <= 40
+        && request.resource.data.message is string
+        && request.resource.data.message.size() <= 2000
+        && request.resource.data.status == 'new'
+        && request.resource.data.source == 'lms_guest';
+    }
+
     match /tickets/{ticketId} {
       allow read: if canUseApp() && (
         resource.data.userId == request.auth.uid || hasStaffAccess()

@@ -241,7 +241,13 @@ export async function getUserActivities(uid, limitCount = 20) {
   }
 }
 
-export async function getAllUsers(limitCount = 500) {
+/**
+ * Newest-first page size for the admin user list. Callers should surface this cap
+ * to the user when a full page comes back — otherwise the list silently truncates.
+ */
+export const USER_FETCH_LIMIT = 500;
+
+export async function getAllUsers(limitCount = USER_FETCH_LIMIT) {
   try {
     const snap = await getDocs(
       query(collection(db, USERS), orderBy('createdAt', 'desc'), limit(limitCount))

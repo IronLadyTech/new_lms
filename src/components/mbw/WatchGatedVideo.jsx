@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import Hls from 'hls.js';
 import { ExternalLink, Play, Video } from 'lucide-react';
 
 function isYouTube(url) {
@@ -78,28 +77,33 @@ function HlsVideoPlayer({ videoUrl, videoRef, onTimeUpdate, onEnded, captionsUrl
     if (!video) return undefined;
 
     let hls;
+    let cancelled = false;
 
-    const attach = () => {
-      if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = videoUrl;
-        return;
-      }
-
-      if (Hls.isSupported()) {
-        hls = new Hls();
-        hls.loadSource(videoUrl);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          video.play().catch(() => {});
+    // Safari plays HLS natively — only browsers that need the polyfill pay to download it.
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = videoUrl;
+    } else {
+      import('hls.js')
+        .then(({ default: Hls }) => {
+          if (cancelled || !videoRef.current) return;
+          if (!Hls.isSupported()) {
+            video.src = videoUrl;
+            return;
+          }
+          hls = new Hls();
+          hls.loadSource(videoUrl);
+          hls.attachMedia(video);
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            video.play().catch(() => {});
+          });
+        })
+        .catch(() => {
+          if (!cancelled) video.src = videoUrl;
         });
-      } else {
-        video.src = videoUrl;
-      }
-    };
-
-    attach();
+    }
 
     return () => {
+      cancelled = true;
       hls?.destroy();
     };
   }, [videoRef, videoUrl]);
