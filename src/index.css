@@ -11075,7 +11075,10 @@ button.streak-heatmap__cell:focus-visible {
 
 .cx-program-tab.is-active {
   color: #fff;
-  background: var(--primary);
+  /* White on the raw brand red is 4.01:1. This tab only renders for staff who
+     can switch programme, so the scans have not reached it — fixed on the same
+     rule as every other white-on-red surface rather than left to chance. */
+  background: var(--primary-cta-bg);
 }
 
 .cx-program-tab:disabled {

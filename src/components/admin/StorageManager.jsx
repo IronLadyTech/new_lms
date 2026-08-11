@@ -415,6 +415,7 @@ export default function StorageManager({ users = [] }) {
               <h3 style={{ margin: 0 }}>File registry</h3>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <select
+                  aria-label="Filter files by folder"
                   value={filterFolder}
                   onChange={(e) => setFilterFolder(e.target.value)}
                   className="btn btn-sm btn-outline"
@@ -428,6 +429,7 @@ export default function StorageManager({ users = [] }) {
                   ))}
                 </select>
                 <select
+                  aria-label="Filter files by user"
                   value={filterUserId}
                   onChange={(e) => setFilterUserId(e.target.value)}
                   className="btn btn-sm btn-outline"
@@ -441,6 +443,7 @@ export default function StorageManager({ users = [] }) {
                   ))}
                 </select>
                 <select
+                  aria-label="Filter files by source"
                   value={filterSource}
                   onChange={(e) => setFilterSource(e.target.value)}
                   className="btn btn-sm btn-outline"

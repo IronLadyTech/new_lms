@@ -31,7 +31,7 @@ const CXTaskReview = lazy(() => import('./pages/cx/CXTaskReview'));
 
 function RouteFallback() {
   return (
-    <div className="loading-screen" aria-busy="true" aria-label="Loading page">
+    <div className="loading-screen" role="status" aria-busy="true" aria-label="Loading page">
       <DashboardSkeleton />
     </div>
   );

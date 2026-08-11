@@ -260,6 +260,7 @@ export default function TicketManager({ users, isSuperAdmin, onRefresh }) {
                 {(isSuperAdmin || role === ROLES.ADMIN) && (
                   <div className="admin-form ticket-actions">
                     <select
+                      aria-label="Assign this ticket to an admin"
                       defaultValue={selected.assignedTo || ''}
                       onChange={(e) => handleAssign(e.target.value)}
                     >

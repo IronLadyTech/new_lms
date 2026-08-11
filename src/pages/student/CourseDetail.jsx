@@ -379,7 +379,11 @@ export default function CourseDetail() {
           </ul>
 
           {showMbwTasks && totalMilestones > 0 && (
-            <div className="course-detail-hero__progress" aria-label={`${progressPct}% complete`}>
+            <div
+              className="course-detail-hero__progress"
+              role="img"
+              aria-label={`${progressPct}% complete`}
+            >
               <div className="course-card__progress-bar">
                 <div className="course-card__progress-fill" style={{ width: `${progressPct}%` }} />
               </div>

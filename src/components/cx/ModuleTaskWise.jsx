@@ -38,7 +38,7 @@ export default function ModuleTaskWise({ module, onShowParticipants, defaultOpen
                 <span className="cx-taskwise__num">{i + 1}</span>
                 <div className="cx-taskwise__main">
                   <span className="cx-taskwise__title">{row.task.title}</span>
-                  <div className="cx-taskwise__bar" aria-label={`${pct}% completed`}>
+                  <div className="cx-taskwise__bar" role="img" aria-label={`${pct}% completed`}>
                     <div className="cx-taskwise__fill" style={{ width: `${pct}%` }} />
                   </div>
                 </div>

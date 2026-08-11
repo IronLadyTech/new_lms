@@ -160,7 +160,7 @@ export default function BatchMembersPanel({
                     className="cx-batch-members__move"
                     defaultValue=""
                     disabled={!!busy}
-                    title="Move to another batch"
+                    aria-label="Move this learner to another batch"
                     onChange={(e) => {
                       const targetId = e.target.value;
                       if (!targetId) return;

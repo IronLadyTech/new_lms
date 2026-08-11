@@ -1186,7 +1186,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                         className="cx-program-select"
                         value={u.program || PROGRAMS.MBW}
                         onChange={(e) => handleProgramChange(u.id, e.target.value)}
-                        title="CX program — which program this member manages"
+                        aria-label={`Programme managed by ${u.displayName || u.email}`}
                       >
                         {PROGRAM_OPTIONS.map((p) => (
                           <option key={p.value} value={p.value}>
@@ -1362,7 +1362,11 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
           <section>
             <h2>User activity</h2>
             <div className="admin-form">
-              <select value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)}>
+              <select
+                aria-label="Filter activity by user"
+                value={selectedUserId}
+                onChange={(e) => setSelectedUserId(e.target.value)}
+              >
                 <option value="">All users (recent)</option>
                 {users.map((u) => (
                   <option key={u.id} value={u.id}>
