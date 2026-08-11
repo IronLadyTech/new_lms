@@ -6,6 +6,7 @@ import { ROLES } from '../../utils/roles';
 import ThemeToggle from '../../components/ThemeToggle';
 import PasswordInput from '../../components/ui/PasswordInput';
 import AuthBrandHeader from '../../components/auth/AuthBrandHeader';
+import { IRON_LADY_CONTACT_EMAIL } from '../../utils/constants';
 
 /** Off by default — paid learners provision via Zoho email/password, not Google. */
 const showGoogleAuth = import.meta.env.VITE_ENABLE_GOOGLE_AUTH === 'true';
@@ -276,7 +277,13 @@ export default function AuthPage({ mode = 'login' }) {
           <p className="auth-switch">
             {isLogin ? (
               <>
-                Need help? <a href="mailto:admin@iamironlady.com">Contact Iron Lady support</a>
+                {/* The address is shown, not hidden behind link text: a
+                    mailto silently does nothing when no mail client is set up,
+                    and a signed-out learner cannot reach in-app support. */}
+                Need help? Email{' '}
+                <a href={`mailto:${IRON_LADY_CONTACT_EMAIL}`} className="auth-switch__email">
+                  {IRON_LADY_CONTACT_EMAIL}
+                </a>
               </>
             ) : (
               <>

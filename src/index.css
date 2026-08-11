@@ -11732,6 +11732,11 @@ button.streak-heatmap__cell:focus-visible {
   align-items: center;
 }
 
+/* Support address on the sign-in card — long, and must stay readable on a phone. */
+.auth-switch__email {
+  word-break: break-word;
+}
+
 .admin-search-note {
   margin: calc(-1 * var(--space-2xs)) 0 var(--space-sm);
   font-size: var(--text-xs);

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getCourses, getAssignments } from '../../services/courseService';
+import { getCourses } from '../../services/courseService';
 import {
   getAnnouncements,
   getActiveAnnouncementsForUser,
@@ -23,10 +23,12 @@ import { RefreshCw } from 'lucide-react';
 import EmptyState from '../../components/ui/EmptyState';
 import useMbwEnrollment from '../../hooks/useMbwEnrollment';
 import useTaskEngine from '../../hooks/useTaskEngine';
+import useBm100TaskEngine from '../../hooks/useBm100TaskEngine';
 import {
   computeSectionProgress,
   getTotalMilestones,
   getCompletedMilestones,
+  countPendingTasks,
 } from '../../utils/mbwProgramUtils';
 import {
   canAccessProgram,
@@ -49,7 +51,6 @@ export default function Home() {
   const [courseMap, setCourseMap] = useState({});
   const [announcements, setAnnouncements] = useState([]);
   const [activities, setActivities] = useState([]);
-  const [pendingAssignments, setPendingAssignments] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -80,15 +81,6 @@ export default function Home() {
 
         const today = new Date().toLocaleDateString('en-CA');
         setUpcomingEvents(events.filter((e) => e.date >= today).slice(0, 5));
-
-        const enrolledList = list.filter((c) => profile?.enrolledCourses?.includes(c.id));
-        const assignmentLists = await Promise.all(
-          enrolledList.map((c) =>
-            getAssignments(c.id).then((items) => items.map((a) => ({ ...a, courseTitle: c.title })))
-          )
-        );
-        if (cancelled) return;
-        setPendingAssignments(assignmentLists.flat().slice(0, 5));
       } catch (e) {
         console.error(e);
         if (!cancelled) {
@@ -131,6 +123,21 @@ export default function Home() {
   const { isEnrolled: mbwEnrolled } = useMbwEnrollment();
   const canOpenMbw = canAccessProgram(PROGRAMS.MBW, profile, courses) || mbwEnrolled;
   const engine = useTaskEngine(canOpenMbw && !isGuest ? user?.uid : null);
+
+  const canOpenBm100 = canAccessProgram(PROGRAMS.BM100, profile, courses);
+  const bm100Engine = useBm100TaskEngine(canOpenBm100 && !isGuest ? user?.uid : null);
+
+  /**
+   * Counted from the task engines — the same source the programme pages use.
+   *
+   * This previously read the `assignments` collection, which nothing in the
+   * product ever writes to, so the tile always showed 0 and told learners they
+   * had nothing waiting on them.
+   */
+  const pendingTaskCount = useMemo(
+    () => countPendingTasks(engine.taskStates) + countPendingTasks(bm100Engine.taskStates),
+    [engine.taskStates, bm100Engine.taskStates]
+  );
   const mbwProgress = useMemo(() => {
     if (!canOpenMbw) return null;
     const sp = computeSectionProgress(engine.taskStates, profile);
@@ -165,8 +172,8 @@ export default function Home() {
     {
       id: 'pending',
       label: 'Pending',
-      value: pendingAssignments.length,
-      hint: 'assignments',
+      value: pendingTaskCount,
+      hint: pendingTaskCount === 1 ? 'task' : 'tasks',
     },
     {
       id: 'events',
@@ -280,20 +287,6 @@ export default function Home() {
                 <ActivityLogList activities={activities} courseMap={courseMap} />
               )}
             </section>
-
-            {pendingAssignments.length > 0 && (
-              <section className="section dashboard-secondary">
-                <h2 className="home-section-title">Pending assignments</h2>
-                <ul className="list-cards">
-                  {pendingAssignments.map((a) => (
-                    <li key={a.id}>
-                      <strong>{a.title}</strong>
-                      <span className="muted"> — {a.courseTitle}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
           </div>
 
           {user?.uid && (

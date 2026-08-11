@@ -10,6 +10,20 @@ import { hasFullProgramAccess, normalizePaymentStatus, PAYMENT_STATUS } from '..
 export const REGISTRATION_PAYMENT_LOCK_TOOLTIP =
   'You have paid only the registration amount. Complete full program payment to unlock this section.';
 
+/**
+ * Tasks the learner can act on right now: unlocked, and not yet handed in.
+ *
+ * Work sent back for rework counts as pending — the learner still has to do
+ * something — while submitted and completed work does not, even though it is
+ * not finished from staff's point of view. The dashboard tile answers "what is
+ * waiting on me", not "what is unfinished".
+ */
+export function countPendingTasks(taskStates = []) {
+  return taskStates.filter(
+    (ts) => ts?.status !== SUBMISSION_STATUS.LOCKED && !submissionUnlocksNext(ts?.status)
+  ).length;
+}
+
 export function getProgramProgressPct(completedMilestones, totalMilestones) {
   return totalMilestones ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
 }
