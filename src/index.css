@@ -225,6 +225,16 @@ a:hover {
   text-decoration: underline;
 }
 
+/* WCAG 1.4.1 (Use of Colour): a link sitting inside a block of text must be
+   distinguishable by more than colour. The accent does not reach 3:1 against
+   body copy, so prose links carry a permanent underline. Standalone links —
+   nav, cards, buttons — are unaffected. */
+p a,
+li a {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
 #root {
   min-height: 100vh;
 }
@@ -539,7 +549,8 @@ img.logo-mark {
   background: none;
   font: inherit;
   font-size: var(--text-sm);
-  color: var(--primary);
+  /* Text at body size — needs the AA-safe variant, not the raw brand red (4.01:1). */
+  color: var(--primary-text);
   cursor: pointer;
   text-decoration: underline;
 }
