@@ -20,3 +20,8 @@ docs/screenshots/.test-creds*
 
 # Saved Playwright auth state (contains live tokens).
 e2e/.auth-state.local.json
+
+# Firestore emulator debug log.
+firestore-debug.log
+firebase-debug.log
+ui-debug.log

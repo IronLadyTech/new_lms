@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { initializeFirestore } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider, connectAuthEmulator } from 'firebase/auth';
+import { initializeFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions } from 'firebase/functions';
 import { getMessaging, isSupported } from 'firebase/messaging';
@@ -17,6 +17,15 @@ const firebaseConfig = {
 
 const configured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
 
+/**
+ * Point Firestore at the local emulator instead of the live project.
+ *
+ * Set only by the write-path tests, so they can exercise the real service code
+ * against a throwaway database. Never true in a production build: the flag has
+ * to be passed in explicitly, and a build without it cannot reach the emulator.
+ */
+const useEmulator = import.meta.env.VITE_FIRESTORE_EMULATOR === 'true';
+
 // Only initialize Firebase when real credentials are present. Calling getAuth()
 // with an empty apiKey throws (auth/invalid-api-key) and would crash the whole
 // app at import time, leaving a blank page. When not configured we export null
@@ -32,11 +41,17 @@ let googleProvider = null;
 if (configured) {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
+  if (useEmulator) {
+    connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+  }
   // Force long-polling auto-detect: avoids cases where the streaming connection
   // stalls behind some networks/proxies, which can make reads hang. Reliable
   // in-memory cache keeps the app fast without the cross-tab lock issues that
   // the persistent multi-tab cache can hit.
   db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
+  if (useEmulator) {
+    connectFirestoreEmulator(db, '127.0.0.1', 8080);
+  }
   storage = getStorage(app);
   functions = getFunctions(app);
   googleProvider = new GoogleAuthProvider();

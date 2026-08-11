@@ -40,7 +40,9 @@ export default defineConfig({
     // Node by default — component tests opt into jsdom with a per-file
     // `@vitest-environment jsdom` docblock, so pure logic keeps the fast path.
     environment: 'node',
+    // rules-test/ needs the Firestore emulator; it runs via `npm run test:rules`.
     include: ['src/**/*.{test,spec}.{js,jsx}'],
+    exclude: ['**/node_modules/**', 'rules-test/**'],
     globals: false,
     /*
      * Worker threads rather than Vitest 4's default forked child processes.
