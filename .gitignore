@@ -10,6 +10,9 @@ test-results
 playwright-report
 .gstack/
 
+# Firebase CLI deploy cache — regenerated on every deploy.
+.firebase/
+
 # Local-only test credentials used for capturing walkthrough screenshots.
 # Never commit these.
 *.local
