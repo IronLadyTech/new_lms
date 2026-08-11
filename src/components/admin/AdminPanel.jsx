@@ -67,11 +67,14 @@ import {
   ListChecks,
   Megaphone,
   HardDrive,
+  Inbox,
 } from 'lucide-react';
 import ConfirmDialog from '../ConfirmDialog';
 import UserProgressModal from './UserProgressModal';
 import { formatUserCreatedAt, inferUserOrigin } from '../../utils/userOrigin';
 import AnnouncementManager from './AnnouncementManager';
+import AccessRequestManager from './AccessRequestManager';
+import { getAccessRequests } from '../../services/accessRequestService';
 import { useConfirm } from '../../hooks/useConfirm';
 import { getAnnouncements } from '../../services/announcementService';
 import { deleteUserAccount } from '../../services/userAdminService';
@@ -92,6 +95,7 @@ export const ADMIN_TABS = [
   { id: 'activity', label: 'Activity', icon: Clock, desc: 'Activity log' },
   { id: 'calendar', label: 'Calendar', icon: CalendarDays, desc: 'Events' },
   { id: 'announcements', label: 'Announcements', icon: Megaphone, desc: 'Broadcast to learners' },
+  { id: 'access', label: 'Access requests', icon: Inbox, desc: 'Guest programme enquiries' },
   { id: 'courses', label: 'Courses', icon: BookOpen, desc: 'Create & upload courses' },
   { id: 'resources', label: 'Resources', icon: Paperclip, desc: 'PDF / PPT / links' },
   { id: 'groups', label: 'Batches', icon: Boxes, desc: 'Learner batches' },
@@ -173,6 +177,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
   const [events, setEvents] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
+  const [accessRequests, setAccessRequests] = useState([]);
   const [activities, setActivities] = useState([]);
   const [internalTab, setInternalTab] = useState('overview');
   // Controlled when AdminShell drives the tab via the sidebar; otherwise local.
@@ -282,6 +287,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
       tryLoad('Groups', getGroups, setGroups),
       tryLoad('Events', getEvents, setEvents),
       tryLoad('Announcements', getAnnouncements, setAnnouncements),
+      tryLoad('Access requests', getAccessRequests, setAccessRequests),
       tryLoad('Tickets', getAllTickets, setTickets),
     ]);
 
@@ -1338,6 +1344,10 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
               createdBy={user?.uid}
             />
           </section>
+        )}
+
+        {tab === 'access' && fullAdmin && (
+          <AccessRequestManager requests={accessRequests} onReload={load} />
         )}
 
         {tab === 'tickets' && (

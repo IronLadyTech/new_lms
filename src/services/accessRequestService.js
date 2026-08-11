@@ -1,15 +1,37 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
+  doc,
   getDocs,
   orderBy,
   query,
   limit,
   serverTimestamp,
+  updateDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 const ACCESS_REQUESTS = 'access_requests';
+
+export const ACCESS_REQUEST_STATUSES = {
+  NEW: 'new',
+  CONTACTED: 'contacted',
+  CLOSED: 'closed',
+};
+
+export const ACCESS_REQUEST_FILTERS = [
+  { id: 'all', label: 'All' },
+  { id: ACCESS_REQUEST_STATUSES.NEW, label: 'New' },
+  { id: ACCESS_REQUEST_STATUSES.CONTACTED, label: 'Contacted' },
+  { id: ACCESS_REQUEST_STATUSES.CLOSED, label: 'Closed' },
+];
+
+export function accessRequestStatusLabel(status) {
+  if (status === ACCESS_REQUEST_STATUSES.CONTACTED) return 'Contacted';
+  if (status === ACCESS_REQUEST_STATUSES.CLOSED) return 'Closed';
+  return 'New';
+}
 
 /** Mirrors the length caps in firestore.rules — keep the two in sync. */
 export const ACCESS_REQUEST_LIMITS = {
@@ -52,4 +74,17 @@ export async function getAccessRequests(limitCount = 100) {
     query(collection(db, ACCESS_REQUESTS), orderBy('createdAt', 'desc'), limit(limitCount))
   );
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/** Staff-only: move an enquiry through new -> contacted -> closed. */
+export async function setAccessRequestStatus(id, status) {
+  await updateDoc(doc(db, ACCESS_REQUESTS, id), {
+    status,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+/** Staff-only. */
+export async function deleteAccessRequest(id) {
+  await deleteDoc(doc(db, ACCESS_REQUESTS, id));
 }
