@@ -37,8 +37,16 @@ export default defineConfig({
     },
   },
   test: {
+    // Node by default — component tests opt into jsdom with a per-file
+    // `@vitest-environment jsdom` docblock, so pure logic keeps the fast path.
     environment: 'node',
     include: ['src/**/*.{test,spec}.{js,jsx}'],
     globals: false,
+    // Cold jsdom start-up has been observed taking >100s on a fresh machine,
+    // which can fail whole-file collection. CI always cold-starts, so give
+    // set-up real headroom rather than trading it for a flaky red build.
+    testTimeout: 15_000,
+    hookTimeout: 30_000,
+    teardownTimeout: 15_000,
   },
 });
