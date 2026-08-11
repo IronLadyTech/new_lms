@@ -4,6 +4,9 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
+/** Saved staff session. Contains auth tokens — gitignored via `*.local`. */
+export const STAFF_STATE_PATH = path.join(here, '.auth-state.local.json');
+
 /**
  * Credentials for authenticated scans.
  *

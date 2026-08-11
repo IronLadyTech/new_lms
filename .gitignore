@@ -17,3 +17,6 @@ playwright-report
 # Never commit these.
 *.local
 docs/screenshots/.test-creds*
+
+# Saved Playwright auth state (contains live tokens).
+e2e/.auth-state.local.json

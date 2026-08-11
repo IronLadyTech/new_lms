@@ -1,4 +1,14 @@
 import { defineConfig } from '@playwright/test';
+import { STAFF_STATE_PATH } from './e2e/authFixture.js';
+
+const MOBILE = {
+  browserName: 'chromium',
+  viewport: { width: 375, height: 812 },
+  isMobile: true,
+  hasTouch: true,
+  userAgent:
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+};
 
 export default defineConfig({
   testDir: 'e2e',
@@ -12,16 +22,23 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   projects: [
+    // Signs in once; the staff project reuses the session rather than each of
+    // its 12 tests logging in against the real Firebase project.
+    {
+      name: 'setup',
+      testMatch: /auth\.setup\.js/,
+      use: { ...MOBILE },
+    },
     {
       name: 'mobile-chrome',
-      use: {
-        browserName: 'chromium',
-        viewport: { width: 375, height: 812 },
-        isMobile: true,
-        hasTouch: true,
-        userAgent:
-          'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
-      },
+      testIgnore: [/auth\.setup\.js/, /a11y-staff\.spec\.js/],
+      use: { ...MOBILE },
+    },
+    {
+      name: 'mobile-chrome-staff',
+      testMatch: /a11y-staff\.spec\.js/,
+      dependencies: ['setup'],
+      use: { ...MOBILE, storageState: STAFF_STATE_PATH },
     },
   ],
   webServer: {

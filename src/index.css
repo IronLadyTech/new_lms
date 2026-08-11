@@ -84,6 +84,7 @@
   --success: #22c55e;
   --warning: #e8a020;
   --warning-text: #e8a020; /* already 6.42:1 on its own tint in dark */
+  --warning-on: #000000; /* text ON a --warning fill — 9.48:1 */
   --accent: var(--il-gold);
   --font: var(--font-body);
   --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.4);
@@ -150,6 +151,7 @@
      and icons; --warning-text is the darker variant small labels need to clear 4.5:1
      when sitting on a --warning tint (5.35:1 vs 3.92:1). */
   --warning-text: #7c5200;
+  --warning-on: #ffffff; /* text ON a --warning fill — 5.02:1 */
   --accent: var(--il-gold);
   --shadow-lg: 0 20px 40px rgba(35, 31, 32, 0.1);
   --shadow-md: 0 12px 28px rgba(35, 31, 32, 0.08);
@@ -3968,7 +3970,8 @@ html:has(.student-layout--mbw) #root {
 
 .badge-alert {
   background: var(--warning);
-  color: #000;
+  /* Theme-aware: black reads on the dark amber, white on the light one. */
+  color: var(--warning-on);
 }
 
 .ticket-layout {
