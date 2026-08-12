@@ -655,11 +655,12 @@
           </tr>
           <tr>
             <td><b>Performance</b></td>
-            <td><span class="pill pill--gap">Good, with one limit</span></td>
+            <td><span class="pill pill--gap">Good, with one failure</span></td>
             <td class="num">7 / 10</td>
             <td>
-              61% lighter than at the start; heavy libraries load only when actually needed. Marked
-              down because the CX screens slow sharply beyond ~500 learners — see the load test.
+              Eight of nine screens pass their response-time criteria at 1,000 learners; the
+              analytics screen fails at 101s worst case. A learner's first visit is also heavier than
+              it needs to be. Both are quantified in the performance test.
             </td>
           </tr>
           <tr>
@@ -897,9 +898,15 @@
             <td>Measured the production build</td>
           </tr>
           <tr>
-            <td>Scale</td>
-            <td>Staff screens usable at 1,000 learners, including with staff working concurrently</td>
-            <td>Timed every staff screen against seeded databases of 100 / 500 / 1,000 learners</td>
+            <td>Scale &amp; response time</td>
+            <td>
+              Every screen usable within 10s at 1,000 learners, and within 3s for daily tools —
+              Nielsen's response-time limits
+            </td>
+            <td>
+              Five timed runs per screen at production volume, reporting average, worst case,
+              database time and data transferred
+            </td>
           </tr>
           <tr>
             <td>Accessibility</td>
@@ -1051,19 +1058,246 @@
 
   <!-- Load test ------------------------------------------------------------->
   <section>
-    <h2>The load test — what happens as the cohort grows</h2>
+    <h2>Performance test</h2>
     <p>
       The last open reliability question was what the product does with a large intake. It had never
-      been tested, so the honest answer was "nobody knows". It has now been measured: a throwaway
-      copy of the database was filled with <b>100, then 500, then 1,000 learners</b> — up to 8,000
-      task submissions — and every staff screen was timed at each size. No live data was touched.
-    </p>
-    <p>
-      The measure is <b>time until the screen is actually usable</b>: loading placeholders gone and
-      real content on the page. That is stricter than "the page appeared", which a shell does
-      instantly while the content is still arriving.
+      been tested, so the honest answer was "nobody knows". It has now been measured against a
+      throwaway copy of the database filled to production scale. No live data was touched.
     </p>
 
+    <h3>Test conditions</h3>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Data volume</td>
+            <td>
+              1,000 learners in the MBW programme (3,000 accounts in total), 8,000 task submissions,
+              20 batches, 25 announcements, 40 scheduled events
+            </td>
+          </tr>
+          <tr>
+            <td>Roles exercised</td>
+            <td>Superadmin (all batches in scope) and an enrolled learner</td>
+          </tr>
+          <tr>
+            <td>Runs per screen</td>
+            <td>5, each from a cleared page so nothing is served from a warm screen</td>
+          </tr>
+          <tr>
+            <td>Measured as</td>
+            <td>
+              <b>Time to usable</b> — loading placeholders gone <em>and</em> real content painted.
+              Stricter than "the page appeared", which a shell does instantly while the content is
+              still arriving.
+            </td>
+          </tr>
+          <tr>
+            <td>API response</td>
+            <td>First database query issued to last response received, measured at the browser</td>
+          </tr>
+          <tr>
+            <td>Environment</td>
+            <td>
+              Local database emulator, desktop viewport, unthrottled network. Absolute figures are
+              therefore <em>pessimistic</em> against the live service on one count (everything shares
+              one machine) and <em>optimistic</em> on another (no internet latency). Comparisons
+              between screens, and between before and after, are unaffected.
+            </td>
+          </tr>
+          <tr>
+            <td>Tooling</td>
+            <td>
+              Playwright driving a real browser;
+              <span class="mono">npm run loadtest</span> reproduces it
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Pass / fail criteria</h3>
+    <p>
+      Thresholds are Nielsen's response-time limits, not preference. One second is the limit for a
+      user's train of thought to remain unbroken; ten seconds is the limit for holding their
+      attention at all. A staff screen doing real work sits between the two.
+    </p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Result</th>
+            <th class="num">Slowest run</th>
+            <th>Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="pill pill--pass">Pass</span></td>
+            <td class="num">≤ 3s</td>
+            <td>The screen keeps up with the person using it.</td>
+          </tr>
+          <tr>
+            <td><span class="pill pill--gap">Concern</span></td>
+            <td class="num">3–10s</td>
+            <td>Usable, but the wait is noticed. Acceptable occasionally, not all day.</td>
+          </tr>
+          <tr>
+            <td><span class="pill pill--high">Fail</span></td>
+            <td class="num">&gt; 10s</td>
+            <td>Attention is lost; staff will assume it is broken and reload.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">
+      Judged on the <b>slowest</b> of the five runs rather than the average, because the worst run is
+      what a user actually meets and then remembers.
+    </p>
+
+    <h3>Results</h3>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Screen</th>
+            <th class="num">Avg</th>
+            <th class="num">Max</th>
+            <th class="num">API avg</th>
+            <th class="num">API max</th>
+            <th class="num">Data</th>
+            <th class="num">Calls</th>
+            <th>Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Learner — MBW programme</td>
+            <td class="num">0.68s</td>
+            <td class="num">0.70s</td>
+            <td class="num">0.27s</td>
+            <td class="num">0.28s</td>
+            <td class="num">0.7 KB</td>
+            <td class="num">5</td>
+            <td><span class="pill pill--pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Admin — overview</td>
+            <td class="num">1.06s</td>
+            <td class="num">1.12s</td>
+            <td class="num">0.95s</td>
+            <td class="num">0.99s</td>
+            <td class="num">1.8 KB</td>
+            <td class="num">8</td>
+            <td><span class="pill pill--pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Admin — users</td>
+            <td class="num">1.10s</td>
+            <td class="num">1.26s</td>
+            <td class="num">1.02s</td>
+            <td class="num">1.18s</td>
+            <td class="num">2.1 KB</td>
+            <td class="num">8</td>
+            <td><span class="pill pill--pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Learner — home</td>
+            <td class="num">1.22s</td>
+            <td class="num">1.31s</td>
+            <td class="num">1.13s</td>
+            <td class="num">1.29s</td>
+            <td class="num">1.6 KB</td>
+            <td class="num">8</td>
+            <td><span class="pill pill--pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Learner — progress</td>
+            <td class="num">1.36s</td>
+            <td class="num">1.45s</td>
+            <td class="num">1.33s</td>
+            <td class="num">1.44s</td>
+            <td class="num">2.4 KB</td>
+            <td class="num">9</td>
+            <td><span class="pill pill--pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>CX — reviews</td>
+            <td class="num">3.08s</td>
+            <td class="num">4.00s</td>
+            <td class="num">3.06s</td>
+            <td class="num">3.97s</td>
+            <td class="num">12.9 KB</td>
+            <td class="num">41</td>
+            <td><span class="pill pill--gap">Concern</span></td>
+          </tr>
+          <tr>
+            <td>CX — home</td>
+            <td class="num">3.22s</td>
+            <td class="num">3.36s</td>
+            <td class="num">3.14s</td>
+            <td class="num">3.28s</td>
+            <td class="num">3.0 KB</td>
+            <td class="num">12</td>
+            <td><span class="pill pill--gap">Concern</span></td>
+          </tr>
+          <tr>
+            <td>CX — batches</td>
+            <td class="num">3.30s</td>
+            <td class="num">3.55s</td>
+            <td class="num">3.29s</td>
+            <td class="num">3.55s</td>
+            <td class="num">5.0 KB</td>
+            <td class="num">17</td>
+            <td><span class="pill pill--gap">Concern</span></td>
+          </tr>
+          <tr>
+            <td><b>CX — analytics</b></td>
+            <td class="num">56.7s</td>
+            <td class="num">101.4s</td>
+            <td class="num">48.3s</td>
+            <td class="num">100.9s</td>
+            <td class="num">134.1 KB</td>
+            <td class="num">22</td>
+            <td><span class="pill pill--high">Fail</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      <b>Eight of nine screens pass or are within tolerance. One fails.</b> The analytics screen took
+      <b class="mono">101 seconds</b> at its worst — and its best run was
+      <b class="mono">19.5 seconds</b>, a fivefold spread between identical requests. That
+      inconsistency matters as much as the average: a screen that is sometimes slow and sometimes
+      unusable cannot be planned around.
+    </p>
+    <p>
+      <b>The database is the whole story.</b> On every screen the API time is within a few percent of
+      the total — on CX home, 3.14s of a 3.22s wait. The browser is doing almost nothing. This is
+      what rules out the usual performance work: no amount of interface tuning, caching or
+      re-rendering would move these numbers, because the time is spent waiting for records to arrive.
+      The lever is to ask for fewer, which is exactly what the fixes below do.
+    </p>
+    <p>
+      <b>Data volume tracks the verdict almost exactly.</b> The screens that pass move 0.7–2.4 KB;
+      the ones flagged move 3–13 KB; the one that fails moves 134 KB. The three CX screens sitting
+      just above the three-second line are there because they still read the full learner roster —
+      correct, and the reason their figures are exact, but the next thing to address.
+    </p>
+
+    <h3>How each screen behaves as the cohort grows</h3>
+    <p>
+      The table above is a single volume. This one is the same screens measured at three, which is
+      what separates a screen that is merely slow from one that will get worse with every intake.
+      These are the figures <em>before</em> the fixes described below.
+    </p>
     <div class="scroll">
       <table>
         <thead>
@@ -1334,70 +1568,73 @@
       </p>
     </div>
 
-    <div class="callout callout--open">
+    <div class="callout callout--done">
       <div class="callout__head">
-        <h3>OPS-02 — the CX home and analytics screens still load everything</h3>
-        <span class="pill pill--high">Open — needs a decision</span>
+        <h3>CX-LOAD-04 — the home page now counts instead of fetching</h3>
+        <span class="pill pill--pass">Closed — pending index deployment</span>
       </div>
       <p>
-        Three of the five screens are now fixed. The two that remain — the CX home page and the
-        analytics page — still download <strong>every learner and every submission in the
-        programme</strong>, roughly 9,000 records at 1,000 learners, and work the totals out in the
-        browser. At 1,000 learners they take about <b class="mono">66s</b> and
-        <b class="mono">79s</b>.
+        The home page downloaded every learner and every submission to produce three numbers and
+        eight rows. At 1,000 MBW learners that was <b class="mono">69.6s</b>. It now fetches learners
+        only — a thousand load in about a second, and the participant count has to stay exact — and
+        asks the database for the rest: the backlog is a count, the preview is eight rows, and the
+        completed-work figure is one count per active task. <b class="mono">69.6s → 5.9s</b>.
       </p>
       <p>
-        <b>Why the existing safeguard does not catch it.</b> The code already narrows submissions to
-        the batches a staff member owns. That genuinely helps a moderator who owns a few batches. It
-        does nothing for a CX lead or an admin who oversees <em>all</em> batches — which is precisely
-        the person who will be on the screen when the cohort is large.
+        <b>This was the item previously flagged as needing a business decision, and it turned out not
+        to.</b> The concern was that "completed learner-task pairs, limited to current learners and
+        active tasks" could not be counted by the database without shifting the number. It can be,
+        one count per active task. Rather than argue it, the old and new versions were run against
+        the same database: <strong>every figure came back identical</strong> — 1,000 participants,
+        6,000 needing attention, 16% complete, 8 preview rows. No decision required after all.
       </p>
       <p>
-        <b>Under real staffing this was the failure point.</b> With eight CX staff opening the review
-        queue at the same time against 1,000 learners,
-        <strong>five of the eight never finished loading</strong> within three minutes. That
-        particular screen is now fixed; the same exposure remains on the two above.
+        <b>An earlier attempt at this was wrong, and nearly shipped.</b> A first comparison showed 32%
+        against 16% and looked like proof the figure had to move. The cause was the test data: it
+        wrote every learner's work into the MBW collection including learners in other programmes,
+        which is not how the product writes it, and doubled anything counted from it. Worse, the test
+        data had no task catalogue, so the percentage divided by zero and read 0% on both sides —
+        concealing the discrepancy entirely. Both were fixed before the comparison was trusted.
+      </p>
+    </div>
+
+    <div class="callout callout--open">
+      <div class="callout__head">
+        <h3>OPS-02 — the analytics screen still loads the whole programme</h3>
+        <span class="pill pill--high">Open</span>
+      </div>
+      <p>
+        One screen remains. Analytics still downloads every learner and every submission, and it is
+        the only outright <b>failure</b> in the results above: <b class="mono">56.7s</b> on average
+        and <b class="mono">101.4s</b> at worst, against a ten-second limit. Its best run was 19.5s,
+        so it is not merely slow but unpredictable.
       </p>
       <p>
-        <b>The cause is now pinned down precisely.</b> The wait was split into time spent fetching
-        data and time spent by the browser working with it. Of a 81-second load,
-        <strong>the browser's own share was 3 milliseconds</strong> — on the reviews screen, 11.
-        Effectively all of it is fetching records. That rules out the usual performance work
-        (rendering, caching, tuning the interface) and leaves exactly one lever: request fewer
-        records.
+        <b>Why this one is harder than the others.</b> The screens already fixed needed totals and a
+        page of rows, both of which a database can answer directly. Analytics draws charts of how far
+        each learner has progressed through each module, which genuinely requires the underlying
+        records rather than a count of them. It cannot simply be converted the same way.
       </p>
       <p>
-        <b>The obvious shortcut was tried, and it does not work.</b> The tempting fix is to leave the
-        figures as they are but stop the page waiting for them — show the work queue immediately and
-        let the two slow tiles fill in behind it. Built and measured, that took the home page from
-        66s to 40s and no further. The reason is that the small query and the large one share a
-        connection: the request for eight rows sat behind the request for nine thousand and arrived
-        at the same time as everything else. Deferring <em>when</em> a figure is displayed does not
-        help when the cost is in fetching it at all. That attempt was discarded rather than shipped —
-        it also moved the participants figure, which is exactly what must not happen.
+        <b>What it needs.</b> Either the charts are built from figures maintained as learners submit
+        work — rather than recalculated from scratch on every visit — or the screen loads one module
+        at a time instead of the whole programme at once. Estimated at <b>3–5 days</b>. It is a
+        reporting screen rather than a daily working tool, which is why it is last in the queue
+        rather than first.
       </p>
       <p>
-        <b>So the real fix needs the one open question answered.</b> These screens must ask the
-        database for counts instead of fetching records, and the blocker is the
-        <b>Tasks completed %</b> tile. Today that counts completed learner-task pairs, limited to
-        learners currently in the programme and tasks still in use — a combination the database
-        cannot express in a single count. A straight count would also include retired tasks and
-        departed learners, so the percentage could move slightly. Moving a number the business
-        already reports on is a decision, not a technical detail. Estimated at <b>2–3 days</b> once
-        that call is made.
-      </p>
-      <p>
-        <b>Until then.</b> Nothing is broken below roughly 500 learners, where the worst screen is
-        about 8 seconds. The risk is specifically a large intake — so this should be scheduled
-        <em>before</em>, not after, the next big cohort.
+        <b>Until then.</b> Nothing else is broken. The daily CX screens are between 3.1s and 3.6s at
+        1,000 learners, and the learner site is unaffected throughout.
       </p>
     </div>
 
     <p class="muted">
-      <b>How to read these numbers.</b> The test ran against a local copy of the database with eight
-      browsers on one machine, so the absolute seconds are pessimistic compared with the live
-      service. What is not an artefact of the setup is the <em>shape</em>: the amount of data each CX
-      screen requests grows with the size of the cohort, and that is a property of the product.
+      <b>One further test, reported separately.</b> Eight staff were put on the review queue
+      simultaneously at 1,000 learners, before it was fixed: five of the eight never finished loading
+      within three minutes. That was eight browsers and the database competing for one machine, so
+      the absolute figure is pessimistic — but it is the reason the queue was fixed first rather than
+      last. It has not yet been re-run against the fixed version, so no claim is made about
+      concurrency today beyond the single-user figures above.
     </p>
   </section>
 
@@ -1593,20 +1830,20 @@
           <tr>
             <td class="mono">OPS-02</td>
             <td>
-              Staff screens with a large learner base.<br /><b>Expected:</b> usable at 1,000
-              learners.
+              Open the CX analytics screen with 1,000 learners enrolled.<br /><b>Expected:</b> usable
+              within 10s, consistently.
             </td>
             <td>
-              Now measured. Admin is flat and fast at every size. The three CX screens slow sharply
-              as the cohort grows: <b>2s at 100 learners, 8s at 500, 42–71s at 1,000</b>. With eight
-              CX staff working at once at 1,000 learners, <b>five of eight sessions never finished
-              loading</b> within three minutes.
+              <b>56.7s average, 101.4s worst, 19.5s best</b> over five runs — a fivefold spread
+              between identical requests. 134 KB fetched, of which 48.3s average is spent waiting on
+              the database. Eight of the nine screens tested pass or are within tolerance; this is
+              the only failure.
             </td>
             <td>Reliability &amp; performance</td>
             <td><span class="pill pill--high">High</span></td>
             <td>
-              One cause fixed (see CX-LOAD-01). The remaining cause is architectural — see
-              <b>Scaling</b> in the recommendations.
+              Build the charts from figures kept up to date as learners submit, or load one module at
+              a time. 3–5 days. It is a reporting screen, not a daily tool.
             </td>
           </tr>
         </tbody>
@@ -1771,10 +2008,9 @@ npm run test:rules   →  65 passed    database rules and writes
 npm run test:e2e     →  25 passed    accessibility and mobile
 npm run build        → succeeded     performance measurement
 
-npm run loadtest:seed 1000 20 8      fill a throwaway database
-npm run loadtest                     time every staff screen at that size
-npm run loadtest:learners 1000 12    create real learner accounts
-npx playwright test --config playwright.load.config.js learnerLoad</pre>
+npm run loadtest:seed 2000 20 8      fill a throwaway database
+npm run loadtest:learners 1000 12    add real learner accounts
+npm run loadtest                     5 runs per screen, avg / max / API / data size</pre>
       <p style="margin-top: 0.9rem">
         Layout figures were measured in a real browser at 1440, 1280, 768 and 375 pixels. The load
         figures came from filling a local, throwaway copy of the database with 100, 500 and 1,000
