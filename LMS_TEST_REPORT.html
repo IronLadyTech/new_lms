@@ -1679,22 +1679,46 @@
         records rather than a count of them. It cannot simply be converted the same way.
       </p>
       <p>
-        <b>A cheaper fix was attempted and rejected.</b> The screen has three views, and only two of
-        them — by batch and by task — obviously need every record. The plan was to load the full
-        history when one of those is opened and leave the default view fast. On inspection the
-        default view also draws two charts that need per-learner detail: progress by batch, and
-        status by task. Loading it that way would have left both charts silently empty, which is
-        worse than a slow screen because nothing on the page would say the figures were missing. The
-        change was reverted rather than shipped.
+        <b>Two cheaper fixes were tried and rejected, which is how the right one was found.</b> The
+        first was to load the full history only when the deeper views are opened. That fails because
+        the default view also draws two charts needing per-learner detail, and they would have gone
+        silently blank. The second was to replace the fetch with database counts, as was done
+        successfully on the home page and the review queue. That fails for a subtler reason worth
+        stating, because it is what determines the real fix.
       </p>
       <p>
-        <b>What it actually needs.</b> Eight separate calculations on this screen read the full
-        submission history, and they are not all counts — several need to know which learner did
-        which task, so that clicking a figure can list the people behind it. The workable shape is to
-        show counts from the database and fetch the underlying names only when someone opens a
-        drill-down. That is a genuine piece of engineering rather than a switch to flip:
-        <b>3–5 days</b>. It is a reporting screen rather than an hour-to-hour tool, which is why it
-        is last in the queue.
+        <b>Why counting does not work here.</b> The charts do not ask "how many tasks are complete".
+        They ask <em>"how is each learner doing"</em> — a learner is shown as needing attention if
+        <em>any</em> of their tasks was sent back, and as finished only if <em>every</em> one is done.
+        That is a judgement about each person across all 29 tasks at once, and no count can produce
+        it. Counting answers questions about totals; this screen asks questions about individuals.
+      </p>
+      <p>
+        <b>So the fix is to stop asking the question at the wrong moment.</b> Working out "how is this
+        learner doing" the instant someone opens a dashboard means re-reading their entire history —
+        for every learner, every time. The answer instead belongs on the learner's own record, kept
+        current as they submit work: a small summary of how many tasks they have finished and whether
+        anything is waiting on them.
+      </p>
+      <p>
+        The product already does exactly this elsewhere. A learner's record carries their streak and
+        the date they were last active — both maintained as they go, rather than recalculated by
+        reading their history. This applies the same established pattern to programme progress.
+      </p>
+      <p>
+        <b>What that changes.</b> The analytics screen already loads every learner, and does so in
+        about a second. With the summary on each record it would have everything it needs from that
+        one load: no submission history, no per-task queries, and a cost that stops depending on how
+        much work has been submitted. It would join the other screens at a few seconds instead of one
+        to two minutes.
+      </p>
+      <p>
+        <b>What it requires, and why it is not simply done.</b> Three things: recording the summary
+        whenever a submission is saved, filling it in once for learners who already have work in the
+        system, and pointing the screen at it. The middle step touches live learner data, and the
+        first changes what happens on every submission — so it needs the same explicit go-ahead the
+        database indexes did, rather than arriving unannounced. <b>3–5 days</b>, most of it in
+        verifying the summaries agree with the figures they replace.
       </p>
       <p>
         <b>Until then.</b> Nothing else is broken. The daily CX screens are between 3.1s and 3.6s at
@@ -1921,8 +1945,9 @@
             <td>Reliability &amp; performance</td>
             <td><span class="pill pill--high">High</span></td>
             <td>
-              Build the charts from figures kept up to date as learners submit, or load one module at
-              a time. 3–5 days. It is a reporting screen, not a daily tool.
+              Keep a small progress summary on each learner's record, maintained as they submit —
+              the same pattern already used for streaks. Needs a one-off backfill of existing
+              learners, so it requires sign-off. 3–5 days.
             </td>
           </tr>
         </tbody>
@@ -2055,14 +2080,15 @@
         <span class="phase__n">3</span>
         <div class="phase__body">
           <span class="phase__when">Before the next large intake</span>
-          <strong>Make the CX screens fetch by the page, and decide on cohort discussion</strong>
+          <strong>Finish the analytics screen, and decide on cohort discussion</strong>
           <p>
-            The load test has now been run, and it found a real ceiling: past roughly 500 learners
-            the CX screens slow sharply, and at 1,000 learners with eight staff working at once most
-            sessions did not finish loading. The cause is that those screens download the entire
-            programme's data on every visit. Changing them to request one page at a time is
-            <b>3–5 days</b> of engineering, and it is the one item on this list that should be
-            scheduled <em>before</em> a large intake rather than after.
+            The load test found a real ceiling and most of it has since been removed: the review
+            queue, the batch screens, the CX home page and admin account browsing are all fixed and
+            measured. One screen remains — analytics, which still takes between 20 seconds and 100.
+            The fix is to keep a small progress summary on each learner's record rather than
+            recalculating it from their whole history on every visit. <b>3–5 days</b>, and it needs
+            your go-ahead first because it fills in data for learners who already have work in the
+            system.
           </p>
           <p>
             Cohort discussion is a separate, strategic decision: the peer network is part of what is
