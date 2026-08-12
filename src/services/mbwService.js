@@ -16,6 +16,7 @@ import { loadLocalSubmissions, saveLocalSubmission, getLocalSubmission } from '.
 import { recordSubmissionEvent } from './submissionEventService';
 import { statusForReviewOutcome, buildReviewEntry } from '../utils/submissionReview';
 import { mergeInQuery } from '../utils/firestoreChunks';
+import { buildProgressSummary } from '../utils/progressSummary';
 
 export { loadLocalSubmissions };
 
@@ -1339,6 +1340,26 @@ export async function getSubmission(userId, taskId) {
   return getLocalSubmission(userId, taskId);
 }
 
+/**
+ * Recalculates and stores one learner's progress summary.
+ *
+ * Exported so the backfill can reuse exactly the same path as live writes —
+ * two implementations of the same figure would eventually disagree.
+ */
+export async function updateProgressSummary(userId) {
+  if (!db || !userId) return null;
+
+  const [tasks, submissionMap] = await Promise.all([getTasks(), getUserSubmissions(userId)]);
+  const summary = buildProgressSummary(tasks, Object.values(submissionMap || {}));
+
+  await setDoc(
+    doc(db, 'users', userId),
+    { mbwProgress: summary, mbwProgressAt: serverTimestamp() },
+    { merge: true }
+  );
+  return summary;
+}
+
 export async function getUserSubmissions(userId) {
   const map = { ...loadLocalSubmissions(userId) };
   if (db) {
@@ -1431,6 +1452,20 @@ export async function saveSubmission(userId, taskId, payload, { batchId = 'defau
         : { ...data, createdAt: serverTimestamp() };
       // merge create/update in one call — updateDoc on a missing doc returns permission-denied.
       await setDoc(ref, writeData, { merge: true });
+      /*
+       * Keep the learner's progress summary current.
+       *
+       * Recomputed from this learner's own submissions rather than adjusted by
+       * a step, so a missed or out-of-order write cannot leave the figure
+       * drifting from the truth. It costs one query over that learner's tasks -
+       * paid on their save, not on every dashboard that would otherwise have to
+       * work it out for everybody.
+       *
+       * Deliberately not awaited and never allowed to throw: a learner's
+       * submission must succeed whether or not the reporting figure updates.
+       */
+      updateProgressSummary(userId).catch(() => {});
+
       const qualifying = [
         SUBMISSION_STATUS.SUBMITTED,
         SUBMISSION_STATUS.UNDER_REVIEW,

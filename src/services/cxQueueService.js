@@ -46,13 +46,24 @@ export const CX_ACTION_STATUSES = ['needs_improvement', 'rejected'];
 export const CX_QUEUE_STATUSES = [...CX_ACTION_STATUSES, ...CX_PENDING_STATUSES];
 
 /**
+ * What counts as done for the completion figure.
+ *
+ * Deliberately the same three statuses the existing calculation treats as
+ * complete — work that has been handed over counts, whether or not a reviewer
+ * has got to it yet. Changing this set would move a number the business
+ * reports on.
+ */
+export const CX_COMPLETE_STATUSES = ['completed', 'submitted', 'under_review'];
+
+/**
  * Firestore allows one `in` per query, so a status list and a batch list cannot
  * both be ranges. Batch is therefore matched with `==`, which is what the UI
  * offers anyway: one batch at a time, or all of them.
  */
-function buildConstraints({ statuses, batchId }) {
+function buildConstraints({ statuses, batchId, taskId }) {
   const constraints = [];
   if (batchId && batchId !== 'all') constraints.push(where('batchId', '==', batchId));
+  if (taskId) constraints.push(where('taskId', '==', taskId));
   if (statuses?.length) constraints.push(where('status', 'in', statuses));
   return constraints;
 }
@@ -63,11 +74,11 @@ function buildConstraints({ statuses, batchId }) {
  * Returns null when the count cannot be obtained, so callers can tell "none"
  * from "not known" and avoid displaying a confident zero.
  */
-export async function countSubmissions(collectionName, { statuses, batchId } = {}) {
+export async function countSubmissions(collectionName, { statuses, batchId, taskId } = {}) {
   if (!db) return null;
   try {
     const snap = await getCountFromServer(
-      query(collection(db, collectionName), ...buildConstraints({ statuses, batchId }))
+      query(collection(db, collectionName), ...buildConstraints({ statuses, batchId, taskId }))
     );
     return snap.data().count;
   } catch (err) {
@@ -84,23 +95,42 @@ export async function countSubmissions(collectionName, { statuses, batchId } = {
  */
 export async function getSubmissionsPage(
   collectionName,
-  { statuses, batchId, pageSize = 50, cursor = null } = {}
+  { statuses, batchId, taskId, pageSize = 50, cursor = null, oldestFirst = false } = {}
 ) {
   if (!db) return { rows: [], cursor: null, done: true };
 
-  const constraints = [
-    ...buildConstraints({ statuses, batchId }),
-    orderBy('updatedAt', 'desc'),
-    ...(cursor ? [startAfter(cursor)] : []),
-    limit(pageSize),
-  ];
-
-  const snap = await getDocs(query(collection(db, collectionName), ...constraints));
-  return {
-    rows: snap.docs.map((d) => ({ id: d.id, ...d.data() })),
-    cursor: snap.docs.length ? snap.docs[snap.docs.length - 1] : null,
-    done: snap.docs.length < pageSize,
+  const run = async (direction) => {
+    const snap = await getDocs(
+      query(
+        collection(db, collectionName),
+        ...buildConstraints({ statuses, batchId, taskId }),
+        orderBy('updatedAt', direction),
+        ...(cursor ? [startAfter(cursor)] : []),
+        limit(pageSize)
+      )
+    );
+    return {
+      rows: snap.docs.map((d) => ({ id: d.id, ...d.data() })),
+      cursor: snap.docs.length ? snap.docs[snap.docs.length - 1] : null,
+      done: snap.docs.length < pageSize,
+    };
   };
+
+  if (!oldestFirst) return run('desc');
+
+  /*
+   * Oldest-first needs its own index, since an index serves one direction. If it
+   * is not live yet the queue falls back to newest-first rather than failing —
+   * a preview in a slightly different order beats an error, and it means the
+   * code can ship before the index finishes building.
+   */
+  try {
+    return await run('asc');
+  } catch (err) {
+    if (err?.code !== 'failed-precondition') throw err;
+    console.warn('Oldest-first index missing; showing newest first for now');
+    return run('desc');
+  }
 }
 
 /** A single submission, for screens that deep-link into one. */

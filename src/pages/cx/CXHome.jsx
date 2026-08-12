@@ -16,10 +16,9 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useProgramAdapter } from '../../hooks/useProgramAdapter';
 import { useCxData } from '../../hooks/useCxData';
+import { useCxAttention } from '../../hooks/useCxAttention';
 import { isLearnerActionRequired, getSubmissionReviewDisplay } from '../../utils/submissionReview';
-import { SUBMISSION_STATUS } from '../../services/mbwService';
 import { sendTaskReminder, sendSessionReminder } from '../../services/notificationService';
-import { countCompletedCells } from '../../utils/cxMetrics';
 import CxKpiStrip from '../../components/cx/CxKpiStrip';
 import DashboardSkeleton from '../../components/ui/DashboardSkeleton';
 import EmptyState from '../../components/ui/EmptyState';
@@ -154,11 +153,35 @@ function SessionReminderModal({ batch, onClose }) {
 export default function CXHome() {
   const { profile } = useAuth();
   const { program, adapter } = useProgramAdapter();
-  const { batches, students, activeTasks, submissions, loading, error, refresh } = useCxData(
-    program,
-    adapter
-  );
+  /*
+   * Learners are still fetched in full — a thousand load in about a second and
+   * the participant count has to stay exact. Submissions are not: at eight per
+   * learner they were the whole of a sixty-second wait, and everything this
+   * page shows from them is a count or eight rows.
+   */
+  const {
+    batches,
+    students,
+    activeTasks,
+    loading: rosterLoading,
+    error,
+    refresh: refreshRoster,
+  } = useCxData(program, adapter, { submissions: 'none' });
+
+  const activeTaskIds = useMemo(() => activeTasks.map((t) => t.id), [activeTasks]);
+  const attention = useCxAttention({
+    collectionName: adapter.submissionCollection,
+    enabled: adapter.hasTasks,
+    activeTaskIds,
+  });
+
+  const loading = rosterLoading || attention.loading;
   const navigate = useNavigate();
+
+  const refresh = () => {
+    refreshRoster();
+    attention.refresh();
+  };
 
   const [remindingId, setRemindingId] = useState(null);
   const [remindResult, setRemindResult] = useState({});
@@ -174,11 +197,7 @@ export default function CXHome() {
     const userById = new Map(students.map((s) => [s.id, s]));
     const taskById = new Map(activeTasks.map((t) => [t.id, t]));
 
-    return submissions
-      .filter((s) => {
-        if (isLearnerActionRequired(s.status)) return true;
-        return [SUBMISSION_STATUS.SUBMITTED, SUBMISSION_STATUS.UNDER_REVIEW].includes(s.status);
-      })
+    return attention.items
       .map((s) => {
         const needsResubmit = isLearnerActionRequired(s.status);
         const display = getSubmissionReviewDisplay(s);
@@ -210,19 +229,25 @@ export default function CXHome() {
           0;
         return aMs - bMs;
       });
-  }, [submissions, students, activeTasks, adapter.hasTasks]);
+  }, [attention.items, students, activeTasks, adapter.hasTasks]);
 
-  const visibleAttentionItems = useMemo(
-    () => attentionItems.slice(0, ATTENTION_PREVIEW_COUNT),
-    [attentionItems]
-  );
-  const hiddenAttentionCount = attentionItems.length - visibleAttentionItems.length;
+  const visibleAttentionItems = attentionItems;
+  /** The whole backlog, counted by the database — not the size of the preview. */
+  const attentionTotal = attention.total ?? 0;
+  const hiddenAttentionCount = Math.max(0, attentionTotal - visibleAttentionItems.length);
 
+  /*
+   * Same arithmetic as before — completed learner-task pairs over the pairs that
+   * could exist. The numerator is now counted by the database per active task
+   * instead of derived from every submission, which is what made this page slow.
+   */
   const completionRate = useMemo(() => {
-    const completed = countCompletedCells(students, activeTasks, submissions);
+    const completed = attention.completedCells;
     const possible = students.length * activeTasks.length;
-    return possible ? Math.round((completed / possible) * 100) : 0;
-  }, [students, activeTasks, submissions]);
+    // null, not 0 — a figure we could not obtain must not be shown as "none".
+    if (completed === null || !possible) return null;
+    return Math.round((Math.min(completed, possible) / possible) * 100);
+  }, [attention.completedCells, students.length, activeTasks.length]);
 
   const openReview = (userId, taskId) => navigate(`/cx/review/${userId}/${taskId}`);
 
@@ -265,14 +290,14 @@ export default function CXHome() {
           {
             id: 'attention',
             label: 'Needs attention',
-            value: attentionItems.length,
+            value: attentionTotal,
             icon: ClipboardCheck,
-            tone: attentionItems.length > 0 ? 'warning' : undefined,
+            tone: attentionTotal > 0 ? 'warning' : undefined,
           },
           {
             id: 'progress',
             label: 'Tasks completed',
-            value: `${completionRate}%`,
+            value: completionRate === null ? '—' : `${completionRate}%`,
             icon: TrendingUp,
           },
         ]
@@ -328,15 +353,13 @@ export default function CXHome() {
             <div className="cx-panel__head">
               <h2 id="cx-attention-heading" className="cx-panel__title">
                 Needs your attention
-                {attentionItems.length > 0 && (
-                  <span className="cx-panel__count">{attentionItems.length}</span>
-                )}
+                {attentionTotal > 0 && <span className="cx-panel__count">{attentionTotal}</span>}
               </h2>
             </div>
             <div className="cx-panel__body">
               {loading ? (
                 <DashboardSkeleton rows={3} />
-              ) : attentionItems.length === 0 ? (
+              ) : visibleAttentionItems.length === 0 ? (
                 <EmptyState
                   icon={Sparkles}
                   title="You're all caught up"
@@ -394,10 +417,10 @@ export default function CXHome() {
               )}
               {!loading && hiddenAttentionCount > 0 && (
                 <p className="cx-panel__more muted">
-                  Showing {visibleAttentionItems.length} of {attentionItems.length}.{' '}
+                  Showing {visibleAttentionItems.length} of {attentionTotal}.{' '}
                   <Link to="/cx/reviews">
-                    View all {attentionItems.length} pending review
-                    {attentionItems.length === 1 ? '' : 's'}
+                    View all {attentionTotal} pending review
+                    {attentionTotal === 1 ? '' : 's'}
                   </Link>
                 </p>
               )}

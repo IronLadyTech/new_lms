@@ -3,9 +3,14 @@ import {
   buildEnrollmentAssignmentChart,
   buildPaymentStatusChart,
   buildActiveStatusChart,
+  classifyLearnerJourney,
+  buildBatchStatusChart,
   ACTIVE_CHART_LABELS,
+  JOURNEY_LABELS,
 } from './cxCrmDashboard';
 import { PAYMENT_STATUS } from '../data/accessTiers';
+import { buildProgressSummary } from './progressSummary';
+import { buildSubmissionIndex } from './cxMetrics';
 
 /**
  * Every chart here is a stacked total. The invariant that matters is that the
@@ -120,5 +125,106 @@ describe('buildActiveStatusChart', () => {
   it('returns a zeroed row for an empty cohort', () => {
     const [row] = buildActiveStatusChart([]);
     expect(row.total).toBe(0);
+  });
+});
+
+/**
+ * The batch-status chart had no tests, which is how a missing import in the
+ * module it lives in passed the whole suite. The chart is read as a statement
+ * about where every batch stands, so the arithmetic behind it is pinned here.
+ */
+const tasks = [
+  { id: 't1', phase: 'quarter-1' },
+  { id: 't2', phase: 'quarter-1' },
+  { id: 't3', phase: 'quarter-1' },
+  { id: 't4', phase: 'quarter-1' },
+];
+
+const learner = (over = {}) => ({
+  id: 'u1',
+  paymentStatus: 'paid',
+  lastActivityAt: { seconds: Math.floor(Date.now() / 1000) },
+  ...over,
+});
+
+const subs = (statuses) =>
+  statuses.map((status, i) => ({ userId: 'u1', taskId: `t${i + 1}`, status }));
+
+/** Same learner, same work — one route reads the record, the other the history. */
+function bothRoutes(statuses, over = {}) {
+  const submissions = subs(statuses);
+  const index = buildSubmissionIndex(submissions);
+
+  const viaHistory = classifyLearnerJourney(learner(over), tasks, index);
+  const viaSummary = classifyLearnerJourney(
+    learner({ ...over, mbwProgress: buildProgressSummary(tasks, submissions) }),
+    tasks,
+    {} // deliberately empty: if the summary is not used this cannot be right
+  );
+  return { viaHistory, viaSummary };
+}
+
+describe('classifyLearnerJourney', () => {
+  it('reads the learner record and the history to the same answer, part way through', () => {
+    const { viaHistory, viaSummary } = bothRoutes(['completed', 'submitted']);
+    expect(viaSummary).toBe(viaHistory);
+    expect(viaSummary).toBe(JOURNEY_LABELS.ONGOING);
+  });
+
+  it('agrees once every task is done', () => {
+    const { viaHistory, viaSummary } = bothRoutes([
+      'completed',
+      'completed',
+      'completed',
+      'completed',
+    ]);
+    expect(viaSummary).toBe(viaHistory);
+    expect(viaSummary).toBe(JOURNEY_LABELS.COMPLETED);
+  });
+
+  it('agrees for a paid learner who has not started and is inactive', () => {
+    const old = { seconds: Math.floor((Date.now() - 60 * 86400000) / 1000) };
+    const { viaHistory, viaSummary } = bothRoutes([], { lastActivityAt: old });
+    expect(viaSummary).toBe(viaHistory);
+    expect(viaSummary).toBe(JOURNEY_LABELS.AWAITING);
+  });
+
+  it('agrees for an unpaid learner', () => {
+    const { viaHistory, viaSummary } = bothRoutes([], { paymentStatus: 'unpaid' });
+    expect(viaSummary).toBe(viaHistory);
+    expect(viaSummary).toBe(JOURNEY_LABELS.NONE);
+  });
+
+  it('does not count work from a phase the chart is not showing', () => {
+    const otherPhase = [{ id: 'x1', phase: 'quarter-4' }];
+    const submissions = [{ userId: 'u1', taskId: 'x1', status: 'completed' }];
+    const summary = buildProgressSummary([...tasks, ...otherPhase], submissions);
+    // Complete in quarter-4, nothing in quarter-1: must not read as finished.
+    expect(classifyLearnerJourney(learner({ mbwProgress: summary }), tasks, {})).not.toBe(
+      JOURNEY_LABELS.COMPLETED
+    );
+  });
+});
+
+describe('buildBatchStatusChart', () => {
+  it('counts each batch’s learners into journey buckets', () => {
+    const users = [
+      {
+        id: 'a',
+        paymentStatus: 'paid',
+        mbwProgress: buildProgressSummary(
+          tasks,
+          subs(['completed', 'completed', 'completed', 'completed'])
+        ),
+      },
+      { id: 'b', paymentStatus: 'unpaid' },
+    ];
+    const batches = [{ id: 'b1', name: 'Batch 1', memberIds: ['a', 'b'] }];
+
+    const [row] = buildBatchStatusChart(batches, users, tasks, []);
+    expect(row.name).toBe('Batch 1');
+    expect(row.total).toBe(2);
+    expect(row[JOURNEY_LABELS.COMPLETED]).toBe(1);
+    expect(row[JOURNEY_LABELS.NONE]).toBe(1);
   });
 });
