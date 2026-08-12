@@ -11793,6 +11793,23 @@ button.streak-heatmap__cell:focus-visible {
   font-size: var(--text-sm);
 }
 
+/* Progressive reveal for the review queue — see QUEUE_PAGE_SIZE in CXReviews. */
+.cx-review-list__more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2sm);
+  margin-top: var(--space-2sm);
+  padding-top: var(--space-2sm);
+  border-top: 1px solid var(--border);
+}
+
+.cx-review-list__more p {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
 .cx-panel__foot {
   padding: var(--space-2sm) var(--space-md);
   border-top: 1px solid var(--border);

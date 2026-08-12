@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ClipboardCheck, RefreshCw } from 'lucide-react';
 import { useProgramAdapter } from '../../hooks/useProgramAdapter';
@@ -57,6 +57,17 @@ function isVisibleCxSubmission(status) {
   ].includes(status);
 }
 
+/**
+ * How many queue rows are put on the page at once.
+ *
+ * The queue is a working list, so nothing may be hidden permanently — every
+ * item stays reachable through "Show more". The cap exists because the list was
+ * previously rendered whole: at 1,000 learners that meant 8,000 rows and 50,000
+ * DOM nodes, and the page took just under a minute to become usable. Counts and
+ * filters still run over the full queue; only the rendered slice is bounded.
+ */
+const QUEUE_PAGE_SIZE = 50;
+
 function matchesQueueFilter(submission, filterId) {
   if (filterId === 'pending') {
     return [SUBMISSION_STATUS.SUBMITTED, SUBMISSION_STATUS.UNDER_REVIEW].includes(
@@ -81,6 +92,12 @@ export default function CXReviews() {
   const [remindResult, setRemindResult] = useState({});
   const [batchFilter, setBatchFilter] = useState('all');
   const [queueFilter, setQueueFilter] = useState('all');
+  const [visibleCount, setVisibleCount] = useState(QUEUE_PAGE_SIZE);
+
+  // Changing a filter is a new queue, so start from the top of it again.
+  useEffect(() => {
+    setVisibleCount(QUEUE_PAGE_SIZE);
+  }, [batchFilter, queueFilter]);
 
   const batchMemberIds = useMemo(() => {
     if (batchFilter === 'all') return null;
@@ -114,6 +131,12 @@ export default function CXReviews() {
         );
       });
   }, [submissions, students, tasks, batchFilter, batchMemberIds, queueFilter]);
+
+  const visibleSubmissions = useMemo(
+    () => reviewSubmissions.slice(0, visibleCount),
+    [reviewSubmissions, visibleCount]
+  );
+  const hiddenSubmissionCount = reviewSubmissions.length - visibleSubmissions.length;
 
   const actionRequiredCount = useMemo(
     () =>
@@ -268,7 +291,7 @@ export default function CXReviews() {
             />
           ) : (
             <ul className="cx-review-list">
-              {reviewSubmissions.map((s) => {
+              {visibleSubmissions.map((s) => {
                 const key = `${s.userId}_${s.taskId}`;
                 const alreadySent = remindResult[key] === 'sent';
                 const display = getSubmissionReviewDisplay(s);
@@ -309,6 +332,21 @@ export default function CXReviews() {
                 );
               })}
             </ul>
+          )}
+
+          {!loading && hiddenSubmissionCount > 0 && (
+            <div className="cx-review-list__more">
+              <p className="muted" aria-live="polite">
+                Showing {visibleSubmissions.length} of {reviewSubmissions.length} submissions
+              </p>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => setVisibleCount((n) => n + QUEUE_PAGE_SIZE)}
+              >
+                Show {Math.min(QUEUE_PAGE_SIZE, hiddenSubmissionCount)} more
+              </button>
+            </div>
           )}
         </div>
       </section>
