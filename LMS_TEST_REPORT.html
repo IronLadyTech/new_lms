@@ -1135,6 +1135,78 @@
       learners costs four times the wait, but doubling from 500 to 1,000 costs eight times more.
     </p>
 
+    <h3>The learner site scales; the staff site is where the limit is</h3>
+    <p>
+      The two need separating, because they behave completely differently. Everything above concerns
+      <em>staff</em> screens looking at a large roster. The site the learners themselves use was
+      measured separately, by signing real accounts in and timing their own pages against a cohort of
+      100 and then 1,000.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Learner screen</th>
+            <th class="num">Cohort of 100</th>
+            <th class="num">Cohort of 1,000</th>
+            <th class="num">Data fetched</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Home / dashboard</td>
+            <td class="num">0.8s</td>
+            <td class="num">1.1s</td>
+            <td class="num">2.1 KB</td>
+          </tr>
+          <tr>
+            <td>MBW programme</td>
+            <td class="num">1.3s</td>
+            <td class="num">0.8s</td>
+            <td class="num">1.1 KB</td>
+          </tr>
+          <tr>
+            <td>100BM programme</td>
+            <td class="num">0.8s</td>
+            <td class="num">0.7s</td>
+            <td class="num">1.1 KB</td>
+          </tr>
+          <tr>
+            <td>Progress</td>
+            <td class="num">1.2s</td>
+            <td class="num">1.4s</td>
+            <td class="num">2.5 KB</td>
+          </tr>
+          <tr>
+            <td>Calendar</td>
+            <td class="num">1.2s</td>
+            <td class="num">1.2s</td>
+            <td class="num">2.5 KB</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      <b>The cohort size makes no difference whatsoever.</b> Not "a small difference" — the amount of
+      data fetched is <em>identical</em> at 100 learners and at 1,000, down to the byte (the MBW page
+      pulls 1,094 bytes either way). The small variations in seconds are measurement noise; two
+      screens happened to be quicker with the larger cohort.
+    </p>
+    <p>
+      This is by design rather than luck. A learner's pages ask only for that learner's own record,
+      their own submissions, and the shared course list — never for the roll. Adding learners adds
+      nothing to what any one of them downloads. <b>By contrast the CX home page pulls 2.8 KB at 100
+      learners and 80 KB at 1,000</b>, which is the whole of the problem described above, and why it
+      is confined to the staff side.
+    </p>
+    <p class="muted">
+      <b>Still untested:</b> a large number of learners submitting work at the same moment — a
+      deadline evening. Reading scales flatly, as shown; writing has not been put under the same
+      test.
+    </p>
+
     <div class="callout callout--done">
       <div class="callout__head">
         <h3>CX-LOAD-01 — the review queue put every submission on the page at once</h3>
@@ -1638,7 +1710,9 @@ npm run test:e2e     →  25 passed    accessibility and mobile
 npm run build        → succeeded     performance measurement
 
 npm run loadtest:seed 1000 20 8      fill a throwaway database
-npm run loadtest                     time every staff screen at that size</pre>
+npm run loadtest                     time every staff screen at that size
+npm run loadtest:learners 1000 12    create real learner accounts
+npx playwright test --config playwright.load.config.js learnerLoad</pre>
       <p style="margin-top: 0.9rem">
         Layout figures were measured in a real browser at 1440, 1280, 768 and 375 pixels. The load
         figures came from filling a local, throwaway copy of the database with 100, 500 and 1,000
