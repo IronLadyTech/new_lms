@@ -41,6 +41,18 @@
   --bp-sm: 640px;
   --bp-md: 768px;
   --bp-lg: 1024px;
+  --bp-xl: 1440px;
+  /*
+   * Layout widths (UI-01/UI-02).
+   *
+   * --content caps the page so a 24" monitor does not stretch a phone layout
+   * across it; --prose caps running text at a readable measure while tables,
+   * grids and cards use the full --content width. Together these are what stop
+   * the desktop from being "the mobile layout, wider".
+   */
+  --content: 1280px;
+  --content-narrow: 880px;
+  --prose: 68ch;
   /* Radius scale (--radius kept as the 12px default) */
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -748,26 +760,24 @@ img.logo-mark {
   font-weight: 500;
 }
 
+/*
+ * One width for every learner page. The old values (720 / 1180 / 1200 / none)
+ * meant each page decided independently how much screen to use, so the shell
+ * shifted width as you navigated. Padding grows with the viewport so the
+ * content never sits hard against the edge on a large screen.
+ */
 .student-main {
   flex: 1;
-  padding: var(--space-md);
-  max-width: 720px;
+  padding: var(--space-md) clamp(var(--space-md), 4vw, var(--space-2xl));
+  max-width: var(--content);
   margin: 0 auto;
   width: 100%;
   scroll-padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + var(--space-md));
 }
-.student-main--wide {
-  max-width: 1180px;
-}
 
-.student-main--home {
-  max-width: min(1200px, 100%);
-}
-
-.student-main--mbw {
-  max-width: none;
-  width: 100%;
-  padding: var(--space-md) clamp(0.75rem, 2vw, 1.25rem);
+/* Reading-led pages stay narrower — a settings form gains nothing from 1280px. */
+.student-main--narrow {
+  max-width: var(--content-narrow);
 }
 
 .student-layout--mbw {
@@ -829,8 +839,16 @@ html:has(.student-layout--mbw) #root {
   grid-area: main;
   margin-left: 0;
   width: 100%;
-  max-width: none;
   min-width: 0;
+  /* This selector is on every learner page, so it — not `.student-main` — is
+     what actually decides the width. It previously said `none`, which is why
+     content stretched to fill a 1920px monitor. */
+  max-width: var(--content);
+  margin-inline: auto;
+}
+
+.student-layout--course .student-main--narrow {
+  max-width: var(--content-narrow);
 }
 
 .student-layout--course .student-main--mbw {
@@ -16340,4 +16358,88 @@ body.notification-sheet-open .bottom-nav {
 
 .home-banner-carousel__arrow svg {
   transition: transform 0.15s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Responsive layout (UI-01 / UI-02)
+
+   The product was built mobile-first and then stretched: at 1440px a learner
+   page rendered one column 1,328px wide, so body text ran to ~200 characters
+   and staff scrolled through lists that would have fitted on one screen.
+
+   These rules add the missing large-screen behaviour. Nothing below 1024px
+   changes — the phone layout was already correct and is left alone.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Running text keeps a readable measure at any width; cards, grids and tables
+   use the full container. A wide column is not the same as a wide page. */
+.page-header__subtitle,
+.section-card__desc,
+.empty-state__message,
+.page-sub,
+.support-page .admin-form--stacked,
+.profile-page .profile-setting-row__text p {
+  max-width: var(--prose);
+}
+
+@media (min-width: 1024px) {
+  /* Settings-style pages: cards side by side instead of a single tall column. */
+  .profile-page {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-lg);
+    align-items: start;
+  }
+  .profile-page > .page-header {
+    grid-column: 1 / -1;
+  }
+
+  /* Support: raise-a-ticket beside the ticket list rather than above it. */
+  .support-page {
+    display: grid;
+    grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+    gap: var(--space-lg);
+    align-items: start;
+  }
+  .support-page > .page-header,
+  .support-page > .alert {
+    grid-column: 1 / -1;
+  }
+
+  /* Dashboard secondary panels sit in a row, not stacked. */
+  .dashboard-secondary-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-lg);
+    align-items: start;
+  }
+
+  /*
+   * Admin lists become real rows: identity, meta and actions in columns, so a
+   * screen shows many records instead of a few tall blocks.
+   */
+  .admin-list li {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) auto;
+    align-items: center;
+    gap: var(--space-md);
+  }
+  .admin-list .user-row {
+    display: contents;
+  }
+  .admin-list .user-row__meta {
+    margin: 0;
+    text-align: left;
+  }
+  .admin-list .user-row__controls,
+  .admin-list__actions {
+    justify-content: flex-end;
+  }
+}
+
+@media (min-width: 1240px) {
+  /* Three across once there is genuinely room, rather than two very wide cards. */
+  .profile-page {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }

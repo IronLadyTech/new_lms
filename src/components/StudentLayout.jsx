@@ -20,9 +20,9 @@ export default function StudentLayout() {
   const isMbwRoute = location.pathname.includes('/mbw');
   const isBm100Route = location.pathname.includes('/100bm');
   const isProgramTaskRoute = isMbwRoute || isBm100Route;
-  const isCourseDetailRoute = /^\/app\/course\//.test(location.pathname);
-  const isHomePage = /^\/app\/home\/?$/.test(location.pathname);
-  const isProgressPage = /^\/app\/progress\/?$/.test(location.pathname);
+  // Reading- and form-led pages read better narrower; everything else uses the
+  // full content width and lays out in columns above 1024px.
+  const isNarrowPage = /^\/app\/(profile|support)\/?$/.test(location.pathname);
   const isLightShell = isProgramTaskRoute;
   const showAdminLink = isAdminRole(role) && !isGuest;
   const accessBlocked = isBlocked && !isAdminRole(role);
@@ -94,8 +94,8 @@ export default function StudentLayout() {
         <main
           id="main-content"
           className={`student-main${isLightShell ? ' student-main--mbw' : ''}${
-            isHomePage || isProgressPage ? ' student-main--home' : ''
-          }${isCourseDetailRoute ? ' student-main--wide' : ''}`}
+            isNarrowPage ? ' student-main--narrow' : ''
+          }`}
         >
           <LayoutErrorBoundary name="student-page" resetKey={location.pathname}>
             <Outlet />
