@@ -12,7 +12,7 @@ import {
   setResourceLocked,
 } from '../../services/courseService';
 import {
-  getAllUsers,
+  getUsersPage,
   searchUsers,
   USER_FETCH_LIMIT,
   getAllActivities,
@@ -190,6 +190,10 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
   const [error, setError] = useState('');
   const [loadWarnings, setLoadWarnings] = useState([]);
   const [usersError, setUsersError] = useState('');
+  /** Cursor for the next page of accounts, and whether any remain. */
+  const [userCursor, setUserCursor] = useState(null);
+  const [moreUsers, setMoreUsers] = useState(false);
+  const [loadingMoreUsers, setLoadingMoreUsers] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [userActivities, setUserActivities] = useState([]);
 
@@ -240,7 +244,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
 
   /**
    * Search hits the server as well as the loaded page: the paged list orders by
-   * createdAt, which omits accounts missing that field, and caps at USER_FETCH_LIMIT.
+   * createdAt, which omits accounts missing that field.
    * Without this, older or externally-provisioned accounts were unfindable.
    */
   useEffect(() => {
@@ -305,6 +309,26 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
     userPage * USER_PAGE_SIZE
   );
 
+  /** Appends the next page of accounts to the list already on screen. */
+  const loadMoreUsers = async () => {
+    if (!userCursor || loadingMoreUsers) return;
+    setLoadingMoreUsers(true);
+    try {
+      const page = await getUsersPage({ cursor: userCursor });
+      setUsers((prev) => {
+        const seen = new Set(prev.map((u) => u.id));
+        return [...prev, ...page.rows.filter((u) => !seen.has(u.id))];
+      });
+      setUserCursor(page.cursor);
+      setMoreUsers(!page.done);
+    } catch (e) {
+      console.error('Users (next page):', e);
+      setUsersError(`${e.code ? `[${e.code}] ` : ''}${e.message}`);
+    } finally {
+      setLoadingMoreUsers(false);
+    }
+  };
+
   const load = async () => {
     setLoading(true);
     setError('');
@@ -325,7 +349,16 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
     };
 
     await Promise.all([
-      tryLoad('Users', getAllUsers, setUsers),
+      tryLoad(
+        'Users',
+        async () => {
+          const page = await getUsersPage({});
+          setUserCursor(page.cursor);
+          setMoreUsers(!page.done);
+          return page.rows;
+        },
+        setUsers
+      ),
       tryLoad('Courses', getCourses, setCourses),
       tryLoad('Resources', getResources, setResources),
       tryLoad('Activity', () => getAllActivities(150), setActivities),
@@ -1227,11 +1260,21 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                 </li>
               )}
             </ul>
-            {users.length >= USER_FETCH_LIMIT && (
-              <p className="muted admin-fetch-cap" role="status">
-                Browsing the {USER_FETCH_LIMIT} most recently created accounts. Search reaches every
-                account, including older ones that are not listed here.
-              </p>
+            {moreUsers && (
+              <div className="admin-fetch-cap">
+                <p className="muted" role="status">
+                  {users.length} accounts loaded, newest first. Accounts without a recorded creation
+                  date are not listed here — search finds those.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={loadMoreUsers}
+                  disabled={loadingMoreUsers}
+                >
+                  {loadingMoreUsers ? 'Loading…' : `Load ${USER_FETCH_LIMIT} more`}
+                </button>
+              </div>
             )}
             {filteredUsers.length > USER_PAGE_SIZE && (
               <div className="admin-form admin-form--pagination">
@@ -1239,7 +1282,7 @@ export default function AdminPanel({ isSuperAdmin = false, tab: controlledTab, o
                   Showing {(userPage - 1) * USER_PAGE_SIZE + 1}–
                   {Math.min(userPage * USER_PAGE_SIZE, filteredUsers.length)} of{' '}
                   {filteredUsers.length}
-                  {users.length >= USER_FETCH_LIMIT ? ' loaded' : ''}
+                  {moreUsers ? ' loaded' : ''}
                 </span>
                 <button
                   type="button"

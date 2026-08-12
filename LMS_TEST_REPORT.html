@@ -1679,11 +1679,22 @@
         records rather than a count of them. It cannot simply be converted the same way.
       </p>
       <p>
-        <b>What it needs.</b> Either the charts are built from figures maintained as learners submit
-        work — rather than recalculated from scratch on every visit — or the screen loads one module
-        at a time instead of the whole programme at once. Estimated at <b>3–5 days</b>. It is a
-        reporting screen rather than a daily working tool, which is why it is last in the queue
-        rather than first.
+        <b>A cheaper fix was attempted and rejected.</b> The screen has three views, and only two of
+        them — by batch and by task — obviously need every record. The plan was to load the full
+        history when one of those is opened and leave the default view fast. On inspection the
+        default view also draws two charts that need per-learner detail: progress by batch, and
+        status by task. Loading it that way would have left both charts silently empty, which is
+        worse than a slow screen because nothing on the page would say the figures were missing. The
+        change was reverted rather than shipped.
+      </p>
+      <p>
+        <b>What it actually needs.</b> Eight separate calculations on this screen read the full
+        submission history, and they are not all counts — several need to know which learner did
+        which task, so that clicking a figure can list the people behind it. The workable shape is to
+        show counts from the database and fetch the underlying names only when someone opens a
+        drill-down. That is a genuine piece of engineering rather than a switch to flip:
+        <b>3–5 days</b>. It is a reporting screen rather than an hour-to-hour tool, which is why it
+        is last in the queue.
       </p>
       <p>
         <b>Until then.</b> Nothing else is broken. The daily CX screens are between 3.1s and 3.6s at
@@ -1869,10 +1880,15 @@
             <td>
               Admin views a learner base above 500.<br /><b>Expected:</b> all accounts browsable.
             </td>
-            <td>Browsing caps at 500, though search reaches every account.</td>
+            <td>
+              <b>Fixed.</b> The list now continues past 500 on request — verified against 1,200
+              accounts, loading 500, then 1,000, then the remainder. Accounts with no recorded
+              creation date are still absent from browsing and still found by search; the list says
+              so rather than implying it is complete.
+            </td>
             <td>Backend / data</td>
-            <td><span class="pill pill--gap">Medium</span></td>
-            <td>Cursor pagination. The cap is disclosed on screen today.</td>
+            <td><span class="pill pill--pass">Closed</span></td>
+            <td>None. Retest by browsing past the first page in Admin → Users.</td>
           </tr>
           <tr>
             <td class="mono">PROD-01</td>

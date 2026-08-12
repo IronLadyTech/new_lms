@@ -9,6 +9,7 @@ import {
   where,
   orderBy,
   limit,
+  startAfter,
   documentId,
   serverTimestamp,
   arrayUnion,
@@ -309,6 +310,37 @@ export async function getAllUsers(limitCount = USER_FETCH_LIMIT) {
     });
     return users.slice(0, limitCount);
   }
+}
+
+/**
+ * One page of accounts, newest first, with a cursor for the next.
+ *
+ * Browsing used to stop at the first 500 accounts, so on a larger roster the
+ * rest could only be reached by searching for them by name. This lets the list
+ * continue past that point without ever loading the whole collection at once.
+ *
+ * Ordering is on `createdAt`, which Firestore requires the field to be present
+ * for — accounts created before it was recorded are therefore still absent from
+ * browsing, and still findable by search. That is a data gap rather than a
+ * paging one, and the list says so on screen.
+ */
+export async function getUsersPage({ pageSize = USER_FETCH_LIMIT, cursor = null } = {}) {
+  if (!db) return { rows: [], cursor: null, done: true };
+
+  const snap = await getDocs(
+    query(
+      collection(db, USERS),
+      orderBy('createdAt', 'desc'),
+      ...(cursor ? [startAfter(cursor)] : []),
+      limit(pageSize)
+    )
+  );
+
+  return {
+    rows: snap.docs.map((d) => ({ id: d.id, ...d.data() })),
+    cursor: snap.docs.length ? snap.docs[snap.docs.length - 1] : null,
+    done: snap.docs.length < pageSize,
+  };
 }
 
 /** Fetch specific user docs by id (chunked `in` queries). */
