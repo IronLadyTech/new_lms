@@ -197,7 +197,8 @@ export default function Home() {
 
   return (
     <div className="page home-page dashboard-page">
-      <HomeBannerCarousel />
+      {/* Guests have nothing to resume, so they keep the banner-first layout. */}
+      {isGuest && <HomeBannerCarousel />}
 
       {!isGuest && loading && <DashboardSkeleton />}
 
@@ -216,14 +217,17 @@ export default function Home() {
 
       {!isGuest && !loading && !loadError && (
         <div className="dashboard-shell">
+          {/*
+           * Resume first (UX-02). A returning learner's intent is almost always
+           * "carry on from where I stopped"; that card previously sat fourth,
+           * below the fold on a phone, behind a banner and two summary blocks.
+           */}
           <HomeDashboardHero
             greeting={timeGreeting()}
             firstName={firstName}
             program={profile?.program}
             subline={heroSubline}
           />
-
-          <HomeQuickStats stats={quickStats} />
 
           <div className="dashboard-main-row">
             <HomeContinueCard
@@ -238,6 +242,8 @@ export default function Home() {
             />
             <HomeSchedulePanel events={upcomingEvents} />
           </div>
+
+          <HomeQuickStats stats={quickStats} />
         </div>
       )}
 
@@ -278,28 +284,38 @@ export default function Home() {
 
       {!isGuest && !loading && (
         <>
-          <div className="dashboard-secondary-row">
-            <section className="section dashboard-secondary">
-              <h2 className="home-section-title">Last activity</h2>
-              {activities.length === 0 ? (
-                <p className="muted">No activity yet. Open a program and start a lesson.</p>
-              ) : (
-                <ActivityLogList activities={activities} courseMap={courseMap} />
+          {/*
+           * Reference material, not the reason a learner opened the page.
+           * Collapsed by default so the dashboard ends shortly after the
+           * programmes list; open state is remembered by the browser.
+           */}
+          <details className="dashboard-disclosure">
+            <summary>
+              <span className="dashboard-disclosure__title">Your progress</span>
+              <span className="dashboard-disclosure__hint muted">Streaks and activity</span>
+            </summary>
+            <div className="dashboard-disclosure__body">
+              {user?.uid && (
+                <StreakAnalyticsModule
+                  learnerId={user.uid}
+                  courses={accessibleCourses}
+                  showBrowseLink={false}
+                  homeVariant
+                />
               )}
-            </section>
-          </div>
+              <section className="section dashboard-secondary">
+                <h3 className="home-section-title">Last activity</h3>
+                {activities.length === 0 ? (
+                  <p className="muted">No activity yet. Open a program and start a lesson.</p>
+                ) : (
+                  <ActivityLogList activities={activities} courseMap={courseMap} />
+                )}
+              </section>
+            </div>
+          </details>
 
-          {user?.uid && (
-            <section className="section dashboard-progress">
-              <h2 className="home-section-title">Your progress</h2>
-              <StreakAnalyticsModule
-                learnerId={user.uid}
-                courses={accessibleCourses}
-                showBrowseLink={false}
-                homeVariant
-              />
-            </section>
-          )}
+          {/* Kept, but below the fold rather than the first thing on the page. */}
+          <HomeBannerCarousel />
         </>
       )}
     </div>

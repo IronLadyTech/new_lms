@@ -283,17 +283,20 @@ export default function BM100Page() {
                 completedMilestones={completedMilestones}
                 totalMilestones={totalMilestones}
               />
-              <div className="mbw-program-page__search-row">
-                <button
-                  type="button"
-                  className="btn btn-outline btn-sm mbw-program-page__search-btn"
-                  onClick={() => setSearchOpen(true)}
-                >
-                  <Search size={16} aria-hidden="true" />
-                  Search lessons
-                  <kbd className="mbw-program-page__kbd">Ctrl+K</kbd>
-                </button>
-              </div>
+              {/*
+               * Styled as a search field, not a button (UX-03). It opens the
+               * search dialogue, but a control that looks like a field is what
+               * makes people realise search exists at all.
+               */}
+              <button
+                type="button"
+                className="lesson-search-trigger"
+                onClick={() => setSearchOpen(true)}
+              >
+                <Search size={18} aria-hidden="true" className="lesson-search-trigger__icon" />
+                <span className="lesson-search-trigger__text">Search lessons and sections</span>
+                <kbd className="lesson-search-trigger__kbd">Ctrl K</kbd>
+              </button>
             </>
           )}
 
