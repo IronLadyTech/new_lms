@@ -1233,14 +1233,24 @@
         records.
       </p>
       <p>
-        <b>What it needs, and the one open question.</b> The same treatment as the review queue —
-        ask the database for counts and a page rather than fetching everything. The reason it has not
-        simply been done is the <b>Tasks completed %</b> tile. Today that figure counts completed
-        learner-task pairs, limited to learners currently in the programme and tasks still in use.
-        Counting it in the database is what makes the screen cheap, but a straight count would also
-        include retired tasks and departed learners, so the percentage could move slightly. Moving a
-        number the business already reports on is a decision, not a technical detail. Estimated at
-        <b>2–3 days</b> once that call is made.
+        <b>The obvious shortcut was tried, and it does not work.</b> The tempting fix is to leave the
+        figures as they are but stop the page waiting for them — show the work queue immediately and
+        let the two slow tiles fill in behind it. Built and measured, that took the home page from
+        66s to 40s and no further. The reason is that the small query and the large one share a
+        connection: the request for eight rows sat behind the request for nine thousand and arrived
+        at the same time as everything else. Deferring <em>when</em> a figure is displayed does not
+        help when the cost is in fetching it at all. That attempt was discarded rather than shipped —
+        it also moved the participants figure, which is exactly what must not happen.
+      </p>
+      <p>
+        <b>So the real fix needs the one open question answered.</b> These screens must ask the
+        database for counts instead of fetching records, and the blocker is the
+        <b>Tasks completed %</b> tile. Today that counts completed learner-task pairs, limited to
+        learners currently in the programme and tasks still in use — a combination the database
+        cannot express in a single count. A straight count would also include retired tasks and
+        departed learners, so the percentage could move slightly. Moving a number the business
+        already reports on is a decision, not a technical detail. Estimated at <b>2–3 days</b> once
+        that call is made.
       </p>
       <p>
         <b>Until then.</b> Nothing is broken below roughly 500 learners, where the worst screen is
