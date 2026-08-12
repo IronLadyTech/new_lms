@@ -7,6 +7,7 @@ import {
   PAYMENT_CHART_LABELS,
   formatMonthLabel,
 } from './cxCrmDashboard';
+import { classifyFromSummary } from './progressSummary';
 import { isLearnerActionRequired } from './submissionReview';
 
 export const TASK_STATUS_LABELS = {
@@ -61,6 +62,23 @@ function formatTitle(segments, count) {
 /** Exclusive learner bucket — matches task-status pie slices and drill-down. */
 export function classifyLearnerTaskStatus(student, tasks, submissionIndex) {
   if (!tasks?.length) return null;
+
+  /*
+   * Prefer the summary carried on the learner's own record.
+   *
+   * It is maintained as they submit, so it answers without reading anybody's
+   * submission history — which is what let the analytics screen stop
+   * downloading the whole programme. Falls through to the original calculation
+   * when a learner has no summary yet, so the two can run side by side while
+   * the backfill catches up.
+   */
+  const phases = [...new Set(tasks.map((t) => t.phase).filter(Boolean))];
+  const fromSummary = classifyFromSummary(student?.mbwProgress, phases);
+  if (fromSummary) {
+    if (fromSummary === 'action') return TASK_STATUS_LABELS.ACTION;
+    if (fromSummary === 'done') return TASK_STATUS_LABELS.DONE;
+    return TASK_STATUS_LABELS.NOT_STARTED;
+  }
 
   let anyAction = false;
   let allComplete = true;
