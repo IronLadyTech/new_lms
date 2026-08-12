@@ -197,7 +197,12 @@ export default function Home() {
 
   return (
     <div className="page home-page dashboard-page">
-      {/* Guests have nothing to resume, so they keep the banner-first layout. */}
+      {/*
+       * The promotional carousel is for people deciding whether to enrol. A
+       * signed-in learner has already bought, so it is noise on their
+       * dashboard — and parking it at the foot of the page just stranded it.
+       * Guests, who are still deciding, keep it at the top.
+       */}
       {isGuest && <HomeBannerCarousel />}
 
       {!isGuest && loading && <DashboardSkeleton />}
@@ -313,9 +318,6 @@ export default function Home() {
               </section>
             </div>
           </details>
-
-          {/* Kept, but below the fold rather than the first thing on the page. */}
-          <HomeBannerCarousel />
         </>
       )}
     </div>

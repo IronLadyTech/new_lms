@@ -6005,7 +6005,10 @@ body.notification-sheet-open .mbw-lesson-nav--sticky {
 
 .streak-analytics__summary {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* Two side by side only when there is room; below that they stack rather
+     than squeezing a date range like '6 Jun 2026 - 12 Aug 2026' onto four
+     lines, which is what the narrow column produced. */
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
   gap: var(--space-md);
   margin-bottom: 1.25rem;
 }
@@ -14909,12 +14912,19 @@ textarea:focus-visible,
   justify-content: space-between;
   gap: var(--space-md);
   margin-bottom: var(--space-md);
+  /* Long filter labels ('Leadership Essentials Program') used to push the
+     controls past the card edge. Wrapping lets them drop to their own line. */
+  flex-wrap: wrap;
 }
 
 .section-card__heading {
   display: flex;
   align-items: flex-start;
   gap: var(--space-sm);
+  /* min-width:0 defeats the flex default of min-width:auto, which otherwise
+     refuses to shrink below the content and forces the row to overflow. */
+  min-width: 0;
+  flex: 1 1 14rem;
 }
 
 .section-card__icon {
@@ -14947,7 +14957,10 @@ textarea:focus-visible,
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  flex-shrink: 0;
+  /* Was flex-shrink: 0, which is what made the filter row overflow the card
+     rather than scroll inside it. */
+  min-width: 0;
+  max-width: 100%;
 }
 
 .section-card__body {
@@ -16539,8 +16552,18 @@ body.notification-sheet-open .bottom-nav {
 @media (min-width: 1024px) {
   .dashboard-disclosure__body {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    /*
+     * Not equal columns. The streak heatmap is a wide calendar grid — halving
+     * the row squeezed it into its own horizontal scrollbar while the activity
+     * list sat in white space. Weighted so each gets the width it needs.
+     */
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
     align-items: start;
     gap: var(--space-lg);
+  }
+
+  /* Both columns must be allowed to shrink, or the grid overflows instead. */
+  .dashboard-disclosure__body > * {
+    min-width: 0;
   }
 }
