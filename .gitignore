@@ -25,3 +25,6 @@ e2e/.auth-state.local.json
 firestore-debug.log
 firebase-debug.log
 ui-debug.log
+
+# Generated standalone copy of the report for opening in a browser.
+LMS_TEST_REPORT.view.html

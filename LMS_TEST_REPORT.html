@@ -583,36 +583,118 @@
   </header>
 
   <div class="result">
-    <p class="result__head">
-      Overall quality: production-ready at current cohort size
-    </p>
+    <p class="result__head">Overall quality: ready for the cohorts Iron Lady runs today</p>
     <p>
-      Ten quality areas were assessed against stated criteria, backed by
-      <strong>466 automated tests</strong> and hands-on review of every screen in all three roles.
-      Forty-three defects were found across this programme of work;
-      <strong>forty-two are fixed, tested and live.</strong> The remaining one — the analytics
-      screen — is described in full below rather than buried.
-    </p>
-    <p>
-      The largest of them was that the product had been designed for a phone and stretched to fit a
-      desktop. That is now closed, and the layout is re-checked at five screen sizes on every
-      change.
-    </p>
-    <p>
-      The final open question — how the product behaves with a large intake — has now been measured
-      rather than assumed, and it produced the one genuine engineering item on this report.
-      <strong
-        >The CX screens are comfortable up to about 500 learners and slow sharply beyond it</strong
-      >; at 1,000 learners, with several staff working at once, most sessions did not finish loading.
-      Part of the cause is already fixed. The rest is <b>3–5 days</b> of work, and it is the one
-      thing that should be scheduled <em>before</em> a large cohort rather than after.
-    </p>
-    <p>
-      <strong>Nothing is broken at the size Iron Lady operates at today.</strong> Everything else
-      that remains is a decision, not a defect: how much staff time to spend clearing reviews by
-      hand, and whether to add certificates and cohort discussion. Those are commercial calls.
+      Forty-three defects were found across this programme of work and
+      <strong>forty-two are fixed, tested and live</strong>, backed by
+      <strong>466 automated tests</strong> that run on every change. One remains open, described
+      below. Nothing is broken at the size Iron Lady operates at now.
     </p>
   </div>
+
+  <!-- One-minute summary ----------------------------------------------------->
+  <section>
+    <h2>In one minute</h2>
+    <p class="muted">
+      The rest of this report is the evidence. This section is the whole of the argument.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Question</th>
+            <th>Answer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Can it take a large intake?</b></td>
+            <td>
+              <b>Learners, yes — without qualification.</b> Their screens take about a second whether
+              the programme has 100 people or 1,000, because a learner's page only ever asks about
+              that learner. Staff screens were the risk and are now fixed, bar one.
+            </td>
+          </tr>
+          <tr>
+            <td><b>What was actually wrong?</b></td>
+            <td>
+              Staff screens downloaded the entire programme every time they opened. At 1,000 learners
+              the review queue took <b>71 seconds</b>, and with eight staff on it at once,
+              <b>five never loaded at all</b>.
+            </td>
+          </tr>
+          <tr>
+            <td><b>What is it now?</b></td>
+            <td>
+              Reviews <b>71s → 2s</b>. Batches <b>68s → 1.3s</b>. CX home <b>70s → 6s</b>. Admin
+              account browsing no longer stops at 500. Every figure on those screens was checked
+              unchanged.
+            </td>
+          </tr>
+          <tr>
+            <td><b>What is still broken?</b></td>
+            <td>
+              <b>One screen: analytics.</b> Between 20 and 100 seconds. It is a reporting screen
+              rather than an hour-to-hour tool. Most of the fix is built; the last step needs
+              <b>1–2 days</b>.
+            </td>
+          </tr>
+          <tr>
+            <td><b>Anything else worth knowing?</b></td>
+            <td>
+              A learner's <em>first</em> visit downloads about 930 KB and takes 8 seconds on a phone.
+              That is not about growth — it is the same on day one. Roughly a third of that weight is
+              removable in half a day.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>What needs a decision from you</h3>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Decision</th>
+            <th class="num">Cost</th>
+            <th>If you do nothing</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Finish the analytics screen</td>
+            <td class="num">1–2 days</td>
+            <td>That one screen stays slow. Nothing else is affected.</td>
+          </tr>
+          <tr>
+            <td>Shrink the images a learner downloads on first visit</td>
+            <td class="num">½ day</td>
+            <td>First impressions stay slower than they need to be on a phone.</td>
+          </tr>
+          <tr>
+            <td>Certificates when a learner finishes</td>
+            <td class="num">Commercial call</td>
+            <td>
+              Learners finish a paid programme with nothing to show for it — and nothing shareable on
+              LinkedIn.
+            </td>
+          </tr>
+          <tr>
+            <td>Cohort discussion inside the product</td>
+            <td class="num">Commercial call</td>
+            <td>The peer network stays on WhatsApp, where none of it is visible to you.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      <b>The one thing to schedule before a large intake</b> is the analytics screen. Everything else
+      on this list can wait for a quiet week.
+    </p>
+  </section>
 
   <!-- Scorecard ------------------------------------------------------------->
   <section>
@@ -634,7 +716,7 @@
             <td><b>Functional correctness</b></td>
             <td><span class="pill pill--pass">Strong</span></td>
             <td class="num">9 / 10</td>
-            <td>Every core journey completes. 352 logic tests, all business rules covered.</td>
+            <td>Every core journey completes. 371 logic tests, all business rules covered.</td>
           </tr>
           <tr>
             <td><b>Backend &amp; data integrity</b></td>
@@ -876,7 +958,7 @@
             <td>
               Feature behaves as the business rule specifies — see <b>What the system enforces</b>
             </td>
-            <td>352 automated tests over every business rule module</td>
+            <td>371 automated tests over every business rule module</td>
           </tr>
           <tr>
             <td>Backend &amp; data</td>
