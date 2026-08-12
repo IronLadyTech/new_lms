@@ -282,6 +282,45 @@
     border-radius: 4px;
     background: var(--surface);
   }
+
+  /* Figures ---------------------------------------------------------------- */
+  figure {
+    margin: 1.6rem 0;
+    padding: 1.2rem 1.2rem 1rem;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--surface);
+  }
+  figure svg {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    /* Strokes and text inherit this, so the drawing follows the theme. */
+    color: var(--ink);
+  }
+  figcaption {
+    margin-top: 0.9rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--rule);
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+    line-height: 1.55;
+  }
+  .fig-label {
+    font-size: 12px;
+    fill: var(--ink-muted);
+  }
+  .fig-value {
+    font-size: 13px;
+    font-weight: 700;
+    fill: var(--ink);
+  }
+  .fig-title {
+    font-size: 13px;
+    font-weight: 700;
+    fill: var(--ink);
+  }
   table {
     border-collapse: collapse;
     width: 100%;
@@ -651,6 +690,51 @@
         </tbody>
       </table>
     </div>
+
+
+    <figure>
+      <svg
+        viewBox="0 0 720 250"
+        role="img"
+        aria-label="At 1,000 learners the reviews queue went from 71 seconds to 2, batches from 68 to 1.3, and CX home from 70 to 6. Analytics remains at up to 101 seconds and is the one screen still open."
+      >
+        <text x="190" y="22" class="fig-title">Time to open a staff screen, with 1,000 learners enrolled</text>
+        <rect x="190" y="30" width="14" height="8" rx="2" fill="var(--risk)" />
+        <text x="210" y="38" class="fig-label">before</text>
+        <rect x="262" y="30" width="14" height="8" rx="2" fill="var(--pass)" />
+        <text x="282" y="38" class="fig-label">after</text>
+
+        <text x="176" y="61" text-anchor="end" class="fig-label">Reviews queue</text>
+        <rect x="190" y="46" width="302.4" height="9" rx="2" fill="var(--risk)" />
+        <text x="500.4" y="55" class="fig-label" fill="var(--risk)">71.3s</text>
+        <rect x="190" y="59" width="8.5" height="9" rx="2" fill="var(--pass)" />
+        <text x="206.5" y="68" class="fig-value" fill="var(--pass)">2s</text>
+        <text x="176" y="107" text-anchor="end" class="fig-label">Batches</text>
+        <rect x="190" y="92" width="288.4" height="9" rx="2" fill="var(--risk)" />
+        <text x="486.4" y="101" class="fig-label" fill="var(--risk)">68s</text>
+        <rect x="190" y="105" width="5.5" height="9" rx="2" fill="var(--pass)" />
+        <text x="203.5" y="114" class="fig-value" fill="var(--pass)">1.3s</text>
+        <text x="176" y="153" text-anchor="end" class="fig-label">CX home</text>
+        <rect x="190" y="138" width="295.1" height="9" rx="2" fill="var(--risk)" />
+        <text x="493.1" y="147" class="fig-label" fill="var(--risk)">69.6s</text>
+        <rect x="190" y="151" width="25.0" height="9" rx="2" fill="var(--pass)" />
+        <text x="223.0" y="160" class="fig-value" fill="var(--pass)">5.9s</text>
+        <text x="176" y="199" text-anchor="end" class="fig-label">Analytics</text>
+        <rect x="190" y="184" width="430.0" height="9" rx="2" fill="var(--risk)" />
+        <text x="628.0" y="193" class="fig-label" fill="var(--risk)">101.4s</text>
+        <text x="190" y="214" class="fig-label">not yet fixed — the one screen still open</text>
+
+        <line x1="190" y1="232" x2="620" y2="232" stroke="var(--rule)" stroke-width="1" />
+        <text x="190" y="246" class="fig-label">0s</text>
+        <text x="620" y="246" text-anchor="end" class="fig-label">100s</text>
+      </svg>
+      <figcaption>
+        <b>Three of the four are done.</b> Each pair is the same screen, on the same data, before and
+        after. The figures on those screens were checked unchanged — this is the same information
+        arriving faster, not less of it. Analytics is the remaining bar, and the one item on the
+        decision list that touches a large intake.
+      </figcaption>
+    </figure>
 
     <h3>What needs a decision from you</h3>
     <div class="scroll">
@@ -1164,6 +1248,71 @@
       </p>
     </div>
 
+
+    <figure>
+      <svg
+        viewBox="0 0 760 300"
+        role="img"
+        aria-label="A learner's screen asks the database for three records belonging to that learner. A staff screen asked for every learner and every submission — about nine thousand records — then worked the totals out in the browser."
+      >
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" />
+          </marker>
+        </defs>
+
+        <text x="0" y="16" class="fig-title">A learner opens their page</text>
+        <rect x="0" y="34" width="150" height="52" rx="4" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <text x="75" y="59" text-anchor="middle" class="fig-label">One learner</text>
+        <text x="75" y="76" text-anchor="middle" class="fig-label">on a phone</text>
+
+        <line x1="152" y1="60" x2="292" y2="60" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar)" />
+        <text x="222" y="50" text-anchor="middle" class="fig-label">my record,</text>
+        <text x="222" y="80" text-anchor="middle" class="fig-label">my submissions</text>
+
+        <rect x="300" y="24" width="160" height="72" rx="4" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <text x="380" y="55" text-anchor="middle" class="fig-label">Database</text>
+        <text x="380" y="76" text-anchor="middle" class="fig-value" fill="var(--pass)">3 records</text>
+
+        <line x1="462" y1="60" x2="588" y2="60" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar)" />
+        <text x="525" y="50" text-anchor="middle" class="fig-label">draws the</text>
+        <text x="525" y="80" text-anchor="middle" class="fig-label">page</text>
+        <rect x="596" y="34" width="150" height="52" rx="4" fill="none" stroke="var(--pass)" stroke-width="2" />
+        <text x="671" y="65" text-anchor="middle" class="fig-value" fill="var(--pass)">about 1 second</text>
+
+        <line x1="0" y1="130" x2="760" y2="130" stroke="var(--rule)" stroke-width="1" />
+
+        <text x="0" y="166" class="fig-title">A staff member opens a screen — before the fix</text>
+        <rect x="0" y="184" width="150" height="52" rx="4" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <text x="75" y="209" text-anchor="middle" class="fig-label">One staff</text>
+        <text x="75" y="226" text-anchor="middle" class="fig-label">member</text>
+
+        <line x1="152" y1="210" x2="292" y2="210" stroke="var(--risk)" stroke-width="3" marker-end="url(#ar)" />
+        <text x="222" y="200" text-anchor="middle" class="fig-label">every learner,</text>
+        <text x="222" y="230" text-anchor="middle" class="fig-label">every submission</text>
+
+        <rect x="300" y="174" width="160" height="72" rx="4" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <text x="380" y="205" text-anchor="middle" class="fig-label">Database</text>
+        <text x="380" y="226" text-anchor="middle" class="fig-value" fill="var(--risk)">9,000 records</text>
+
+        <line x1="462" y1="210" x2="588" y2="210" stroke="var(--risk)" stroke-width="3" marker-end="url(#ar)" />
+        <text x="525" y="200" text-anchor="middle" class="fig-label">adds it all up</text>
+        <text x="525" y="230" text-anchor="middle" class="fig-label">in the browser</text>
+        <rect x="596" y="184" width="150" height="52" rx="4" fill="none" stroke="var(--risk)" stroke-width="2" />
+        <text x="671" y="215" text-anchor="middle" class="fig-value" fill="var(--risk)">up to 100 seconds</text>
+
+        <text x="0" y="284" class="fig-label">
+          The thicker path is the one that grew with every learner enrolled.
+        </text>
+      </svg>
+      <figcaption>
+        <b>Why growth hurt one side and not the other.</b> A learner's page only ever asks about that
+        learner, so enrolling a thousand more changes nothing about it. A staff screen's job is to
+        look at everybody — so it asked for everybody, every time it opened. The fixes replaced that
+        thick arrow with a request for a count and a single page of results.
+      </figcaption>
+    </figure>
+
     <h3>Test conditions</h3>
     <div class="scroll">
       <table>
@@ -1419,11 +1568,10 @@
       unusable cannot be planned around.
     </p>
     <p>
-      <b>The database is the whole story.</b> On every screen the API time is within a few percent of
-      the total — on CX home, 3.14s of a 3.22s wait. The browser is doing almost nothing. This is
-      what rules out the usual performance work: no amount of interface tuning, caching or
-      re-rendering would move these numbers, because the time is spent waiting for records to arrive.
-      The lever is to ask for fewer, which is exactly what the fixes below do.
+      <b>The database is the whole story.</b> On every screen the wait is almost entirely the
+      database answering — on CX home, 3.14s of a 3.22s total. That rules out the usual performance
+      work: no amount of interface tuning or caching moves these numbers. The only lever is to ask
+      for fewer records, which is what the fixes below do.
     </p>
     <p>
       <b>Data volume tracks the verdict almost exactly.</b> The screens that pass move 0.7–2.4 KB;
@@ -1434,80 +1582,56 @@
 
     <h3>How each screen behaves as the cohort grows</h3>
     <p>
-      The table above is a single volume. This one is the same screens measured at three, which is
-      what separates a screen that is merely slow from one that will get worse with every intake.
-      These are the figures <em>before</em> the fixes described below.
+      A single measurement says whether a screen is slow today. Three say whether it will still work
+      after the next intake — which is the question that matters. These are the figures
+      <em>before</em> the fixes described below.
     </p>
-    <div class="scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Staff screen</th>
-            <th class="num">100 learners</th>
-            <th class="num">500 learners</th>
-            <th class="num">1,000 learners</th>
-            <th>Verdict</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Admin — users</td>
-            <td class="num">1.0s</td>
-            <td class="num">1.1s</td>
-            <td class="num">1.0s</td>
-            <td><span class="pill pill--pass">Flat — scales</span></td>
-          </tr>
-          <tr>
-            <td>Admin — overview</td>
-            <td class="num">0.7s</td>
-            <td class="num">1.0s</td>
-            <td class="num">1.0s</td>
-            <td><span class="pill pill--pass">Flat — scales</span></td>
-          </tr>
-          <tr>
-            <td>CX — home</td>
-            <td class="num">2.0s</td>
-            <td class="num">8.0s</td>
-            <td class="num">64.0s</td>
-            <td><span class="pill pill--high">Degrades sharply</span></td>
-          </tr>
-          <tr>
-            <td>CX — analytics</td>
-            <td class="num">2.2s</td>
-            <td class="num">9.0s</td>
-            <td class="num">42.4s</td>
-            <td><span class="pill pill--high">Degrades sharply</span></td>
-          </tr>
-          <tr>
-            <td>CX — reviews</td>
-            <td class="num">1.9s</td>
-            <td class="num">7.9s</td>
-            <td class="num">71.3s</td>
-            <td><span class="pill pill--high">Degrades sharply</span></td>
-          </tr>
-          <tr>
-            <td>CX — batches <b>(after fix)</b></td>
-            <td class="num">—</td>
-            <td class="num">—</td>
-            <td class="num">1.3s</td>
-            <td><span class="pill pill--pass">Fixed — now flat</span></td>
-          </tr>
-          <tr>
-            <td>CX — reviews <b>(after fix)</b></td>
-            <td class="num">—</td>
-            <td class="num">—</td>
-            <td class="num">4.1s</td>
-            <td><span class="pill pill--pass">Fixed — from 71.3s</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
 
-    <p>
-      <b>Admin scales; CX does not.</b> The admin screens are unchanged whether there are 100
-      learners or 1,000. The three CX screens get worse faster than the cohort grows — five times the
-      learners costs four times the wait, but doubling from 500 to 1,000 costs eight times more.
-    </p>
+    <figure>
+      <svg
+        viewBox="0 0 720 340"
+        role="img"
+        aria-label="As the cohort grows from 100 to 1,000 learners, learner and admin screens stay flat at about one second, while CX staff screens climb from two seconds to about seventy — far past the ten-second limit."
+      >
+        <line x1="90" y1="270.0" x2="660" y2="270.0" stroke="currentColor" stroke-width="1.5" />
+        <line x1="90" y1="40" x2="90" y2="270.0" stroke="currentColor" stroke-width="1.5" />
+
+        <line x1="90" y1="212.5" x2="660" y2="212.5" stroke="var(--rule)" stroke-width="1" />
+        <line x1="90" y1="155.0" x2="660" y2="155.0" stroke="var(--rule)" stroke-width="1" />
+        <line x1="90" y1="97.5" x2="660" y2="97.5" stroke="var(--rule)" stroke-width="1" />
+        <text x="80" y="274.0" text-anchor="end" class="fig-label">0s</text>
+        <text x="80" y="216.5" text-anchor="end" class="fig-label">20s</text>
+        <text x="80" y="159.0" text-anchor="end" class="fig-label">40s</text>
+        <text x="80" y="101.5" text-anchor="end" class="fig-label">60s</text>
+
+        <line x1="90" y1="241.2" x2="660" y2="241.2" stroke="var(--risk)" stroke-width="1.5" stroke-dasharray="6 4" />
+        <text x="96" y="233.2" class="fig-label" fill="var(--risk)">10s — attention is lost beyond here</text>
+
+        <polyline points="100,264.2 360,247.0 620,68.8" fill="none" stroke="var(--risk)" stroke-width="3" />
+        <circle cx="100" cy="264.2" r="4" fill="var(--risk)" />
+        <circle cx="360" cy="247.0" r="4" fill="var(--risk)" />
+        <circle cx="620" cy="68.8" r="5" fill="var(--risk)" />
+        <text x="620" y="54.8" text-anchor="middle" class="fig-value" fill="var(--risk)">70s</text>
+        <text x="644" y="196" text-anchor="end" class="fig-label" fill="var(--risk)">CX staff screens</text>
+
+        <polyline points="100,267.1 360,266.8 620,267.1" fill="none" stroke="var(--pass)" stroke-width="3" />
+        <circle cx="100" cy="267.1" r="4" fill="var(--pass)" />
+        <circle cx="360" cy="266.8" r="4" fill="var(--pass)" />
+        <circle cx="620" cy="267.1" r="5" fill="var(--pass)" />
+        <text x="616" y="256" text-anchor="end" class="fig-label" fill="var(--pass)">Learner and admin screens</text>
+
+        <text x="100" y="292" text-anchor="middle" class="fig-label">100 learners</text>
+        <text x="360" y="292" text-anchor="middle" class="fig-label">500</text>
+        <text x="620" y="292" text-anchor="middle" class="fig-label">1,000</text>
+        <text x="375" y="322" text-anchor="middle" class="fig-label">Size of the programme</text>
+      </svg>
+      <figcaption>
+        <b>One line is a product that scales; the other is one that does not.</b> The green line never
+        moves — a learner's page costs the same whatever the cohort. The red line is not merely
+        steeper: it gets worse faster than the cohort grows, so each intake costs more than the last.
+        The screens on that line have since been fixed, bar analytics.
+      </figcaption>
+    </figure>
 
     <h3>The learner site scales; the staff site is where the limit is</h3>
     <p>
@@ -1575,12 +1699,6 @@
       and nothing else. Adding learners cannot slow down a request that was never looking at them.
     </p>
 
-    <p>
-      <b>Why the staff side behaved so differently.</b> A staff screen's job is to look at everybody,
-      so it was asking for everybody: the CX home page pulled 2.8 KB with 100 learners and 80 KB with
-      1,000 — nearly thirty times more, for the same screen. That is the whole of the problem
-      described above, and it is confined to the staff side by its nature.
-    </p>
     <p>
       <b>Those seconds are the database's share, not the learner's experience.</b> They were measured
       with the site already downloaded and no network delay, which isolates the question this section
