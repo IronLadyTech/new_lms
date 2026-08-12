@@ -1,5 +1,6 @@
 import { SUBMISSION_STATUS } from '../services/mbwService';
 import { PROGRAMS } from '../data/programTypes';
+import { summaryForPhases } from './progressSummary';
 import { MBW_PROGRAM_SECTIONS } from '../data/mbwProgramStructure';
 import { BM100_PROGRAM_SECTIONS } from '../data/bm100ProgramStructure';
 
@@ -117,8 +118,20 @@ export function buildSubmissionIndex(submissions = []) {
 
 export function countCompletedCells(students, tasks, submissions) {
   const index = buildSubmissionIndex(submissions);
+  const phases = [...new Set((tasks || []).map((t) => t.phase).filter(Boolean))];
+
   let done = 0;
   students.forEach((student) => {
+    /*
+     * Each learner's own record first. It is kept current as they submit, so
+     * the figure is the same either way — but this route does not need the
+     * programme's submission history to be downloaded to produce it.
+     */
+    const rolled = summaryForPhases(student?.mbwProgress, phases);
+    if (rolled) {
+      done += rolled.complete;
+      return;
+    }
     tasks.forEach((task) => {
       const sub = index[student.id]?.[task.id];
       if (isCxSubmissionComplete(sub)) done += 1;

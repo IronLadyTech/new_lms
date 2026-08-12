@@ -6,6 +6,7 @@ import {
 } from '../data/accessTiers';
 import { studentsInBatch } from './batchScope';
 import { buildSubmissionIndex, isCxSubmissionComplete } from './cxMetrics';
+import { summaryForPhases } from './progressSummary';
 
 /** Plain-language labels aligned with Zoho CRM cohort views. */
 export const JOURNEY_LABELS = {
@@ -68,6 +69,12 @@ function formatMonthLabel(key) {
 
 function learnerTaskPct(student, tasks, submissionIndex) {
   if (!tasks.length) return 0;
+
+  // The learner's own record answers this without reading anybody's history.
+  const phases = [...new Set(tasks.map((t) => t.phase).filter(Boolean))];
+  const rolled = summaryForPhases(student?.mbwProgress, phases);
+  if (rolled?.total) return Math.round((rolled.complete / rolled.total) * 100);
+
   let done = 0;
   tasks.forEach((task) => {
     if (isCxSubmissionComplete(submissionIndex[student.id]?.[task.id])) done += 1;
