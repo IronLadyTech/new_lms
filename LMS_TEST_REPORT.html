@@ -1111,6 +1111,13 @@
             <td class="num">71.3s</td>
             <td><span class="pill pill--high">Degrades sharply</span></td>
           </tr>
+          <tr>
+            <td>CX — batches <b>(after fix)</b></td>
+            <td class="num">—</td>
+            <td class="num">—</td>
+            <td class="num">1.3s</td>
+            <td><span class="pill pill--pass">Fixed — now flat</span></td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1144,9 +1151,26 @@
       </p>
     </div>
 
+    <div class="callout callout--done">
+      <div class="callout__head">
+        <h3>CX-LOAD-02 — two screens were loading data they never showed</h3>
+        <span class="pill pill--pass">Closed</span>
+      </div>
+      <p>
+        The batches screen downloaded every submission in the programme and then displayed none of
+        them — it only lists batches and their learners. The batch-analysis screen downloaded every
+        submission in the programme and then discarded all but the one batch being looked at.
+      </p>
+      <p>
+        <b>Measured effect at 1,000 learners:</b> the batches screen went from tens of seconds to
+        <b class="mono">1.3s</b>, and the data it pulls fell from about <b class="mono">80 KB</b> to
+        <b class="mono">2.8 KB</b>. Each screen now asks for what it actually shows.
+      </p>
+    </div>
+
     <div class="callout callout--open">
       <div class="callout__head">
-        <h3>OPS-02 — CX screens load the whole programme's data every time</h3>
+        <h3>OPS-02 — the three main CX screens load the whole programme's data every time</h3>
         <span class="pill pill--high">Open — needs a decision</span>
       </div>
       <p>
@@ -1169,11 +1193,20 @@
         at all.
       </p>
       <p>
-        <b>What it needs.</b> The screens should ask the database for a page of results and a count,
+        <b>The cause is now pinned down precisely.</b> The wait was split into time spent fetching
+        data and time spent by the browser working with it. Of a 81-second load,
+        <strong>the browser's own share was 3 milliseconds</strong> — on the reviews screen, 11.
+        Effectively all of it is fetching records. That rules out the usual performance work
+        (rendering, caching, tuning the interface) and leaves exactly one lever: request fewer
+        records.
+      </p>
+      <p>
+        <b>What it needs.</b> The screens should ask the database for a page of results plus a count,
         rather than fetching everything and working it out locally. This is a change to how the data
-        is queried, not to the design — so it is a deliberate piece of engineering work, and it
-        affects how the KPI figures are calculated. That is why it is flagged for a decision rather
-        than already fixed. Estimated at <b>3–5 days</b>.
+        is queried, not to the design — so it is a deliberate piece of engineering work. It also
+        needs new database indexes to be put live before the change ships, and it affects the basis
+        on which the completion percentage is calculated. That is why it is flagged for a decision
+        rather than already fixed. Estimated at <b>3–5 days</b>.
       </p>
       <p>
         <b>Until then.</b> Nothing is broken below roughly 500 learners, where the worst screen is

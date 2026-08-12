@@ -15,8 +15,20 @@ function scopeBatchesForUser(batches, userId, fullAccess) {
 /**
  * Loads CX data scoped to one program.
  * Users + submissions are queried by batch/program/status — not full collection dumps.
+ *
+ * `options.submissions` says how much of the submission history the calling screen
+ * actually needs. Submissions outnumber learners several times over, so a screen
+ * that asks for more than it uses is the single most expensive thing on the page:
+ *
+ *   'all'  — every submission in scope. Only the analytics screen genuinely needs
+ *            this, because its charts are cohort-wide aggregates.
+ *   'batch'— just the batch named by `options.batchId`.
+ *   'none' — skip the fetch. For screens that never read a submission.
+ *
+ * Anything not listed is treated as 'all', so an unconverted caller keeps working.
  */
-export function useCxData(program, adapter) {
+export function useCxData(program, adapter, options = {}) {
+  const { submissions: submissionScope = 'all', batchId: scopeBatchId = null } = options;
   const { user, role } = useAuth();
   const fullBatchAccess = isFullAdmin(role);
   const [batches, setBatches] = useState([]);
@@ -44,17 +56,22 @@ export function useCxData(program, adapter) {
 
       programBatches = scopeBatchesForUser(programBatches, user?.uid, fullBatchAccess);
 
-      const batchIds = programBatches.map((b) => b.id).filter(Boolean);
+      const allBatchIds = programBatches.map((b) => b.id).filter(Boolean);
+      // A batch-scoped screen reads one batch, not the whole programme.
+      const batchIds =
+        submissionScope === 'batch' ? allBatchIds.filter((id) => id === scopeBatchId) : allBatchIds;
 
       setBatches(programBatches);
       setTasks(taskList || []);
 
       const loadSubmissions =
-        !batchIds.length && adapter.getAllSubmissions
-          ? adapter.getAllSubmissions()
-          : adapter.getSubmissions
-            ? adapter.getSubmissions({ batchIds, includePending: true })
-            : Promise.resolve([]);
+        submissionScope === 'none'
+          ? Promise.resolve([])
+          : !batchIds.length && submissionScope !== 'batch' && adapter.getAllSubmissions
+            ? adapter.getAllSubmissions()
+            : adapter.getSubmissions
+              ? adapter.getSubmissions({ batchIds, includePending: true })
+              : Promise.resolve([]);
 
       const [usersResult, subsResult] = await Promise.allSettled([
         getUsersForCxProgram(program, programBatches),
@@ -66,7 +83,13 @@ export function useCxData(program, adapter) {
       if (usersResult.status === 'rejected') failures.push('learners');
       if (subsResult.status === 'rejected') failures.push('submissions');
 
-      if (!subs?.length && adapter.getAllSubmissions) {
+      /*
+       * A scoped query coming back empty is a legitimate answer — an empty batch,
+       * or a screen that asked for nothing. Only widen to the whole collection when
+       * the caller actually wanted everything, otherwise this fallback silently
+       * undoes the scoping and re-reads the entire programme.
+       */
+      if (!subs?.length && submissionScope === 'all' && adapter.getAllSubmissions) {
         try {
           subs = await adapter.getAllSubmissions();
         } catch {
@@ -101,7 +124,7 @@ export function useCxData(program, adapter) {
     } finally {
       setLoading(false);
     }
-  }, [program, adapter, user?.uid, fullBatchAccess]);
+  }, [program, adapter, user?.uid, fullBatchAccess, submissionScope, scopeBatchId]);
 
   useEffect(() => {
     load();

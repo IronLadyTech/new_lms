@@ -49,9 +49,12 @@ export default function CXBatchAnalysis() {
   const navigate = useNavigate();
   const { user, role } = useAuth();
   const { program, adapter } = useProgramAdapter();
+  // Everything on this screen is filtered to this one batch anyway, so fetching
+  // the whole programme's submissions was work thrown away.
   const { batches, users, students, tasks, submissions, loading, refresh } = useCxData(
     program,
-    adapter
+    adapter,
+    { submissions: 'batch', batchId }
   );
   const [modal, setModal] = useState(null);
   const [stageFilter, setStageFilter] = useState('all');

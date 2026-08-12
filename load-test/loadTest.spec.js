@@ -95,6 +95,12 @@ const SCREENS = [
     ready: '.bottom-nav',
     content: '.cx-review-list, .empty-state',
   },
+  {
+    name: 'CX — batches',
+    path: '/cx/batches',
+    ready: '.bottom-nav',
+    content: '.cx-batches-page .cx-panel__body',
+  },
 ];
 
 /** While any of these are on the page, the screen is still loading. */

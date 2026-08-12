@@ -12,7 +12,10 @@ import DashboardSkeleton from '../../components/ui/DashboardSkeleton';
 export default function CXBatches() {
   const { user } = useAuth();
   const { program, adapter } = useProgramAdapter();
-  const { batches, students, loading, error, refresh } = useCxData(program, adapter);
+  // This screen lists batches and their learners; it never reads a submission.
+  const { batches, students, loading, error, refresh } = useCxData(program, adapter, {
+    submissions: 'none',
+  });
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
