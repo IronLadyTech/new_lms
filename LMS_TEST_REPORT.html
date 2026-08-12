@@ -1201,6 +1201,68 @@
       learners and 80 KB at 1,000</b>, which is the whole of the problem described above, and why it
       is confined to the staff side.
     </p>
+    <p>
+      <b>Those seconds are the database's share, not the learner's experience.</b> They were measured
+      with the site already downloaded and no network delay, which isolates the question this section
+      is about — does the cohort size matter — and answers it cleanly. It is not what a learner feels
+      on a first visit. Measured again cold, on a phone-grade 4G connection with a slower processor,
+      the same dashboard takes <b class="mono">8.3s</b> and pulls <b class="mono">930 KB</b>.
+    </p>
+    <p>
+      That is a separate problem with a separate cause, and it is not about scale — it is the same on
+      day one with ten learners. Roughly a third of that weight is avoidable:
+    </p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>What is downloaded</th>
+            <th class="num">Now</th>
+            <th>Why it is more than it needs to be</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Three programme cover images</td>
+            <td class="num">277 KB</td>
+            <td>
+              1024×576 photographs, sent at full size to fill a small card. Also saved as
+              <span class="mono">.png</span> while actually being JPEGs.
+            </td>
+          </tr>
+          <tr>
+            <td>Logo</td>
+            <td class="num">57 KB</td>
+            <td>
+              <b>2125×2133 pixels, displayed at 48.</b> Around forty times more image than the page
+              ever shows, on every screen.
+            </td>
+          </tr>
+          <tr>
+            <td>Four text font weights</td>
+            <td class="num">98 KB</td>
+            <td>Regular, medium, semibold and bold all load; the design needs two of them.</td>
+          </tr>
+          <tr>
+            <td>Application code</td>
+            <td class="num">~230 KB</td>
+            <td>Already split so heavy parts load only when used. Reasonable.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Resizing the images to the size they are displayed at, and dropping the two unused font
+      weights, would remove roughly <strong>330 KB — about a third of the first visit</strong> —
+      without a single change to how the product looks or works. Repeat visits are already cached, so
+      this is specifically the cost of a learner's <em>first</em> impression.
+    </p>
+    <p>
+      One thing to watch as time passes: the dashboard reads every announcement ever published. With
+      three years of them the page grows from <b class="mono">615</b> elements to
+      <b class="mono">3,640</b>. It is not slow today, but it is the same unbounded pattern that made
+      the review queue unusable, and it should be capped before it becomes one.
+    </p>
     <p class="muted">
       <b>Still untested:</b> a large number of learners submitting work at the same moment — a
       deadline evening. Reading scales flatly, as shown; writing has not been put under the same

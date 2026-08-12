@@ -46,7 +46,7 @@ const COURSES = [
 
 const daysAgo = (n) => new Date(Date.now() - n * 86400000);
 
-async function seed(db, count, concurrentAccounts) {
+async function seed(db, count, concurrentAccounts, annCount, eventCount) {
   const batchWrite = [];
 
   COURSES.forEach((c, i) => {
@@ -63,7 +63,7 @@ async function seed(db, count, concurrentAccounts) {
   });
 
   // Content the dashboard reads whole. It grows with time, not with headcount.
-  for (let i = 0; i < 25; i++) {
+  for (let i = 0; i < annCount; i++) {
     batchWrite.push({
       ref: doc(db, 'announcements', `load-ann-${i}`),
       data: {
@@ -75,7 +75,7 @@ async function seed(db, count, concurrentAccounts) {
       },
     });
   }
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < eventCount; i++) {
     batchWrite.push({
       ref: doc(db, 'events', `load-event-${i}`),
       data: {
@@ -147,20 +147,32 @@ async function seed(db, count, concurrentAccounts) {
   }
   process.stdout.write('\n');
 
-  return { accounts: uids.length, cohort: count, docs: batchWrite.length };
+  return {
+    accounts: uids.length,
+    cohort: count,
+    announcements: annCount,
+    events: eventCount,
+    docs: batchWrite.length,
+  };
 }
 
 const cohort = Number(process.argv[2] || 1000);
 const accounts = Number(process.argv[3] || 10);
+/* Announcements and events grow with how long the LMS has been running, not
+ * with headcount, so they are varied independently of the cohort. */
+const annCount = Number(process.argv[4] || 25);
+const eventCount = Number(process.argv[5] || 40);
 
 const testEnv = await initializeTestEnvironment({
   projectId: PROJECT,
   firestore: { host: '127.0.0.1', port: 8080 },
 });
 
-console.log(`Seeding learner site: cohort ${cohort}, ${accounts} sign-in-able accounts…`);
+console.log(
+  `Seeding learner site: cohort ${cohort}, ${accounts} accounts, ${annCount} announcements, ${eventCount} events…`
+);
 await testEnv.withSecurityRulesDisabled(async (ctx) => {
-  const result = await seed(ctx.firestore(), cohort, accounts);
+  const result = await seed(ctx.firestore(), cohort, accounts, annCount, eventCount);
   console.log('Seeded:', result);
 });
 process.exit(0);
