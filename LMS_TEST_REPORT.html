@@ -588,9 +588,10 @@
     </p>
     <p>
       Ten quality areas were assessed against stated criteria, backed by
-      <strong>447 automated tests</strong> and hands-on review of every screen in all three roles.
-      Forty defects were found across this programme of work;
-      <strong>all forty are fixed, tested and live.</strong>
+      <strong>466 automated tests</strong> and hands-on review of every screen in all three roles.
+      Forty-three defects were found across this programme of work;
+      <strong>forty-two are fixed, tested and live.</strong> The remaining one — the analytics
+      screen — is described in full below rather than buried.
     </p>
     <p>
       The largest of them was that the product had been designed for a phone and stretched to fit a
@@ -1609,7 +1610,7 @@
     <div class="callout callout--done">
       <div class="callout__head">
         <h3>CX-LOAD-03 — the review queue now reads a page at a time</h3>
-        <span class="pill pill--pass">Closed — pending index deployment</span>
+        <span class="pill pill--pass">Closed</span>
       </div>
       <p>
         The reviews screen no longer downloads the programme to work out what to show. It asks the
@@ -1625,16 +1626,15 @@
         everything it downloaded.
       </p>
       <p>
-        <b>One deployment note.</b> This needs new database indexes to be live before the change
-        ships. Until they are, the screen reports that the index is missing and names it as the
-        cause. The change is therefore held on a branch rather than merged.
+        <b>The database indexes this needs are live</b>, and were confirmed against the real project
+        before the change was merged rather than assumed.
       </p>
     </div>
 
     <div class="callout callout--done">
       <div class="callout__head">
         <h3>CX-LOAD-04 — the home page now counts instead of fetching</h3>
-        <span class="pill pill--pass">Closed — pending index deployment</span>
+        <span class="pill pill--pass">Closed</span>
       </div>
       <p>
         The home page downloaded every learner and every submission to produce three numbers and
@@ -1713,12 +1713,25 @@
         to two minutes.
       </p>
       <p>
-        <b>What it requires, and why it is not simply done.</b> Three things: recording the summary
-        whenever a submission is saved, filling it in once for learners who already have work in the
-        system, and pointing the screen at it. The middle step touches live learner data, and the
-        first changes what happens on every submission — so it needs the same explicit go-ahead the
-        database indexes did, rather than arriving unannounced. <b>3–5 days</b>, most of it in
-        verifying the summaries agree with the figures they replace.
+        <b>Most of it is now built.</b> Each learner's record carries the summary, it is kept
+        current as they submit, three of the four calculations behind this screen read it instead of
+        the submission history, and a script exists to fill it in for learners who already have work
+        in the system. That is all live and tested, and none of it changes anything on screen yet.
+      </p>
+      <p>
+        <b>The last step was built, measured, and withdrawn.</b> With the remaining calculation
+        converted the screen opens in seconds. But it draws before the fallback data arrives, so the
+        completion figure read <b>0%</b> for around fifty seconds before correcting itself to the
+        right value. A wrong number that quietly fixes itself is worse than a slow correct one —
+        somebody reads it, acts on it, and never learns it was wrong. It was reverted rather than
+        shipped, and found only by running the old and new versions against the same database and
+        comparing every figure.
+      </p>
+      <p>
+        <b>What remains</b> is to re-apply that step with every affected figure showing as
+        unavailable until its data has arrived, rather than as zero — the same treatment already in
+        place on the CX home page and the participant list. <b>1–2 days</b>, with the design settled
+        rather than open.
       </p>
       <p>
         <b>Until then.</b> Nothing else is broken. The daily CX screens are between 3.1s and 3.6s at
@@ -1959,7 +1972,7 @@
   <section>
     <h2>Evidence base</h2>
     <p>
-      447 automated tests run on every change to the product. The largest suite covers the rules in
+      466 automated tests run on every change to the product. The largest suite covers the rules in
       <b>What the system enforces</b> above — so a change that breaks one of those decisions fails
       the build rather than reaching a learner.
     </p>
@@ -2108,9 +2121,9 @@
         estimated, and no test was written to pass.
       </p>
       <pre>
-npm test             → 352 passed    business rules
+npm test             → 371 passed    business rules
 npm run test:rules   →  65 passed    database rules and writes
-npm run test:e2e     →  25 passed    accessibility and mobile
+npm run test:e2e     →  30 passed    accessibility and mobile
 npm run build        → succeeded     performance measurement
 
 npm run loadtest:seed 2000 20 8      fill a throwaway database
