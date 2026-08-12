@@ -6162,7 +6162,9 @@ body.notification-sheet-open .mbw-lesson-nav--sticky {
 .streak-heatmap__months {
   display: flex;
   gap: 3px;
-  margin-left: 2rem;
+  /* Matches the pinned weekday column (1.65rem) plus the grid-wrap gap (6px),
+     which is what keeps each month label over its own column. */
+  margin-left: calc(1.65rem + var(--space-2xs));
   margin-bottom: 0.35rem;
   min-width: max-content;
 }
@@ -6189,6 +6191,16 @@ body.notification-sheet-open .mbw-lesson-nav--sticky {
   padding-top: 1px;
   flex-shrink: 0;
   width: 1.65rem;
+  /*
+   * The chart auto-scrolls to the newest week on load, and these labels sit
+   * inside that scrolling area — so Sun/Tue/Thu/Sat scrolled straight out of
+   * view and left an unlabelled grid of squares. Pinned to the left edge so
+   * they stay readable at any scroll position.
+   */
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface);
 }
 
 .streak-heatmap__weekday {
