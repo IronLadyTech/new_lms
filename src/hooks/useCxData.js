@@ -25,10 +25,17 @@ function scopeBatchesForUser(batches, userId, fullAccess) {
  *   'batch'— just the batch named by `options.batchId`.
  *   'none' — skip the fetch. For screens that never read a submission.
  *
+ * `options.users` does the same for the learner list: 'none' skips it, for a
+ * screen that fetches the handful of learners it names rather than the roll.
+ *
  * Anything not listed is treated as 'all', so an unconverted caller keeps working.
  */
 export function useCxData(program, adapter, options = {}) {
-  const { submissions: submissionScope = 'all', batchId: scopeBatchId = null } = options;
+  const {
+    submissions: submissionScope = 'all',
+    users: userScope = 'all',
+    batchId: scopeBatchId = null,
+  } = options;
   const { user, role } = useAuth();
   const fullBatchAccess = isFullAdmin(role);
   const [batches, setBatches] = useState([]);
@@ -74,7 +81,7 @@ export function useCxData(program, adapter, options = {}) {
               : Promise.resolve([]);
 
       const [usersResult, subsResult] = await Promise.allSettled([
-        getUsersForCxProgram(program, programBatches),
+        userScope === 'none' ? Promise.resolve([]) : getUsersForCxProgram(program, programBatches),
         loadSubmissions,
       ]);
 
@@ -124,7 +131,7 @@ export function useCxData(program, adapter, options = {}) {
     } finally {
       setLoading(false);
     }
-  }, [program, adapter, user?.uid, fullBatchAccess, submissionScope, scopeBatchId]);
+  }, [program, adapter, user?.uid, fullBatchAccess, submissionScope, userScope, scopeBatchId]);
 
   useEffect(() => {
     load();

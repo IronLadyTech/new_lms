@@ -9,6 +9,7 @@ import {
   getSubmission as getMbwSubmission,
   reviewSubmission as reviewMbwSubmission,
   submissionDocId as mbwSubmissionDocId,
+  MBW_SUBMISSIONS,
 } from '../services/mbwService';
 import {
   getTasks as getBm100Tasks,
@@ -17,6 +18,7 @@ import {
   getSubmission as getBm100Submission,
   reviewSubmission as reviewBm100Submission,
   submissionDocId as bm100SubmissionDocId,
+  BM100_SUBMISSIONS,
 } from '../services/bm100Service';
 import { PROGRAMS } from './programTypes';
 
@@ -28,6 +30,8 @@ export const PROGRAM_ADAPTERS = {
     id: PROGRAMS.MBW,
     shortLabel: 'MBW',
     hasTasks: true,
+    /** Collection the paged queue reads. Null where a program has no queue. */
+    submissionCollection: MBW_SUBMISSIONS,
     getTasks: getMbwTasks,
     /** @param {{ batchIds?: string[], includePending?: boolean }} scope */
     getSubmissions: getMbwSubmissionsForCx,
@@ -40,6 +44,7 @@ export const PROGRAM_ADAPTERS = {
     id: PROGRAMS.LEP,
     shortLabel: 'LEP',
     hasTasks: false,
+    submissionCollection: null,
     getTasks: noTasks,
     getSubmissions: noSubmissions,
   },
@@ -47,6 +52,7 @@ export const PROGRAM_ADAPTERS = {
     id: PROGRAMS.BM100,
     shortLabel: '100BM',
     hasTasks: true,
+    submissionCollection: BM100_SUBMISSIONS,
     getTasks: getBm100Tasks,
     /** @param {{ batchIds?: string[], includePending?: boolean }} scope */
     getSubmissions: getBm100SubmissionsForCx,

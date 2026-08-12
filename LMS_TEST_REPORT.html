@@ -1118,6 +1118,13 @@
             <td class="num">1.3s</td>
             <td><span class="pill pill--pass">Fixed — now flat</span></td>
           </tr>
+          <tr>
+            <td>CX — reviews <b>(after fix)</b></td>
+            <td class="num">—</td>
+            <td class="num">—</td>
+            <td class="num">4.1s</td>
+            <td><span class="pill pill--pass">Fixed — from 71.3s</span></td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1126,6 +1133,140 @@
       <b>Admin scales; CX does not.</b> The admin screens are unchanged whether there are 100
       learners or 1,000. The three CX screens get worse faster than the cohort grows — five times the
       learners costs four times the wait, but doubling from 500 to 1,000 costs eight times more.
+    </p>
+
+    <h3>The learner site scales; the staff site is where the limit is</h3>
+    <p>
+      The two need separating, because they behave completely differently. Everything above concerns
+      <em>staff</em> screens looking at a large roster. The site the learners themselves use was
+      measured separately, by signing real accounts in and timing their own pages against a cohort of
+      100 and then 1,000.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Learner screen</th>
+            <th class="num">Cohort of 100</th>
+            <th class="num">Cohort of 1,000</th>
+            <th class="num">Data fetched</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Home / dashboard</td>
+            <td class="num">0.8s</td>
+            <td class="num">1.1s</td>
+            <td class="num">2.1 KB</td>
+          </tr>
+          <tr>
+            <td>MBW programme</td>
+            <td class="num">1.3s</td>
+            <td class="num">0.8s</td>
+            <td class="num">1.1 KB</td>
+          </tr>
+          <tr>
+            <td>100BM programme</td>
+            <td class="num">0.8s</td>
+            <td class="num">0.7s</td>
+            <td class="num">1.1 KB</td>
+          </tr>
+          <tr>
+            <td>Progress</td>
+            <td class="num">1.2s</td>
+            <td class="num">1.4s</td>
+            <td class="num">2.5 KB</td>
+          </tr>
+          <tr>
+            <td>Calendar</td>
+            <td class="num">1.2s</td>
+            <td class="num">1.2s</td>
+            <td class="num">2.5 KB</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      <b>The cohort size makes no difference whatsoever.</b> Not "a small difference" — the amount of
+      data fetched is <em>identical</em> at 100 learners and at 1,000, down to the byte (the MBW page
+      pulls 1,094 bytes either way). The small variations in seconds are measurement noise; two
+      screens happened to be quicker with the larger cohort.
+    </p>
+    <p>
+      This is by design rather than luck. A learner's pages ask only for that learner's own record,
+      their own submissions, and the shared course list — never for the roll. Adding learners adds
+      nothing to what any one of them downloads. <b>By contrast the CX home page pulls 2.8 KB at 100
+      learners and 80 KB at 1,000</b>, which is the whole of the problem described above, and why it
+      is confined to the staff side.
+    </p>
+    <p>
+      <b>Those seconds are the database's share, not the learner's experience.</b> They were measured
+      with the site already downloaded and no network delay, which isolates the question this section
+      is about — does the cohort size matter — and answers it cleanly. It is not what a learner feels
+      on a first visit. Measured again cold, on a phone-grade 4G connection with a slower processor,
+      the same dashboard takes <b class="mono">8.3s</b> and pulls <b class="mono">930 KB</b>.
+    </p>
+    <p>
+      That is a separate problem with a separate cause, and it is not about scale — it is the same on
+      day one with ten learners. Roughly a third of that weight is avoidable:
+    </p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>What is downloaded</th>
+            <th class="num">Now</th>
+            <th>Why it is more than it needs to be</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Three programme cover images</td>
+            <td class="num">277 KB</td>
+            <td>
+              1024×576 photographs, sent at full size to fill a small card. Also saved as
+              <span class="mono">.png</span> while actually being JPEGs.
+            </td>
+          </tr>
+          <tr>
+            <td>Logo</td>
+            <td class="num">57 KB</td>
+            <td>
+              <b>2125×2133 pixels, displayed at 48.</b> Around forty times more image than the page
+              ever shows, on every screen.
+            </td>
+          </tr>
+          <tr>
+            <td>Four text font weights</td>
+            <td class="num">98 KB</td>
+            <td>Regular, medium, semibold and bold all load; the design needs two of them.</td>
+          </tr>
+          <tr>
+            <td>Application code</td>
+            <td class="num">~230 KB</td>
+            <td>Already split so heavy parts load only when used. Reasonable.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Resizing the images to the size they are displayed at, and dropping the two unused font
+      weights, would remove roughly <strong>330 KB — about a third of the first visit</strong> —
+      without a single change to how the product looks or works. Repeat visits are already cached, so
+      this is specifically the cost of a learner's <em>first</em> impression.
+    </p>
+    <p>
+      One thing to watch as time passes: the dashboard reads every announcement ever published. With
+      three years of them the page grows from <b class="mono">615</b> elements to
+      <b class="mono">3,640</b>. It is not slow today, but it is the same unbounded pattern that made
+      the review queue unusable, and it should be capped before it becomes one.
+    </p>
+    <p class="muted">
+      <b>Still untested:</b> a large number of learners submitting work at the same moment — a
+      deadline evening. Reading scales flatly, as shown; writing has not been put under the same
+      test.
     </p>
 
     <div class="callout callout--done">
@@ -1168,16 +1309,42 @@
       </p>
     </div>
 
+    <div class="callout callout--done">
+      <div class="callout__head">
+        <h3>CX-LOAD-03 — the review queue now reads a page at a time</h3>
+        <span class="pill pill--pass">Closed — pending index deployment</span>
+      </div>
+      <p>
+        The reviews screen no longer downloads the programme to work out what to show. It asks the
+        database for three totals and one page of fifty submissions, then fetches only the learners
+        named on that page. <b>Show more</b> fetches the next fifty.
+      </p>
+      <p>
+        <b>Measured at 1,000 learners:</b> <b class="mono">71.3s → 4.1s</b>, and the data pulled fell
+        from about <b class="mono">80 KB</b> to <b class="mono">10 KB</b>. Crucially the figures on
+        screen are unchanged — the queue total, "needs review" and "awaiting resubmit" were checked
+        against the old behaviour and came back identical (8,000 / 4,000 / 2,000), because the totals
+        are now counted by the database over the whole queue rather than by the browser over
+        everything it downloaded.
+      </p>
+      <p>
+        <b>One deployment note.</b> This needs new database indexes to be live before the change
+        ships. Until they are, the screen reports that the index is missing and names it as the
+        cause. The change is therefore held on a branch rather than merged.
+      </p>
+    </div>
+
     <div class="callout callout--open">
       <div class="callout__head">
-        <h3>OPS-02 — the three main CX screens load the whole programme's data every time</h3>
+        <h3>OPS-02 — the CX home and analytics screens still load everything</h3>
         <span class="pill pill--high">Open — needs a decision</span>
       </div>
       <p>
-        With the page-size problem fixed, a second and deeper cause remains: opening any CX screen
-        downloads <strong>every learner and every submission in the programme</strong> — roughly
-        9,000 records at 1,000 learners — and then does the sorting and counting in the browser. That
-        is the whole of the remaining wait.
+        Three of the five screens are now fixed. The two that remain — the CX home page and the
+        analytics page — still download <strong>every learner and every submission in the
+        programme</strong>, roughly 9,000 records at 1,000 learners, and work the totals out in the
+        browser. At 1,000 learners they take about <b class="mono">66s</b> and
+        <b class="mono">79s</b>.
       </p>
       <p>
         <b>Why the existing safeguard does not catch it.</b> The code already narrows submissions to
@@ -1186,11 +1353,10 @@
         the person who will be on the screen when the cohort is large.
       </p>
       <p>
-        <b>Under real staffing this is the failure point.</b> With eight CX staff opening the review
+        <b>Under real staffing this was the failure point.</b> With eight CX staff opening the review
         queue at the same time against 1,000 learners,
-        <strong>five of the eight never finished loading</strong> within three minutes. One person
-        alone waited about 71 seconds; eight people at once pushed it past the point of being usable
-        at all.
+        <strong>five of the eight never finished loading</strong> within three minutes. That
+        particular screen is now fixed; the same exposure remains on the two above.
       </p>
       <p>
         <b>The cause is now pinned down precisely.</b> The wait was split into time spent fetching
@@ -1201,12 +1367,24 @@
         records.
       </p>
       <p>
-        <b>What it needs.</b> The screens should ask the database for a page of results plus a count,
-        rather than fetching everything and working it out locally. This is a change to how the data
-        is queried, not to the design — so it is a deliberate piece of engineering work. It also
-        needs new database indexes to be put live before the change ships, and it affects the basis
-        on which the completion percentage is calculated. That is why it is flagged for a decision
-        rather than already fixed. Estimated at <b>3–5 days</b>.
+        <b>The obvious shortcut was tried, and it does not work.</b> The tempting fix is to leave the
+        figures as they are but stop the page waiting for them — show the work queue immediately and
+        let the two slow tiles fill in behind it. Built and measured, that took the home page from
+        66s to 40s and no further. The reason is that the small query and the large one share a
+        connection: the request for eight rows sat behind the request for nine thousand and arrived
+        at the same time as everything else. Deferring <em>when</em> a figure is displayed does not
+        help when the cost is in fetching it at all. That attempt was discarded rather than shipped —
+        it also moved the participants figure, which is exactly what must not happen.
+      </p>
+      <p>
+        <b>So the real fix needs the one open question answered.</b> These screens must ask the
+        database for counts instead of fetching records, and the blocker is the
+        <b>Tasks completed %</b> tile. Today that counts completed learner-task pairs, limited to
+        learners currently in the programme and tasks still in use — a combination the database
+        cannot express in a single count. A straight count would also include retired tasks and
+        departed learners, so the percentage could move slightly. Moving a number the business
+        already reports on is a decision, not a technical detail. Estimated at <b>2–3 days</b> once
+        that call is made.
       </p>
       <p>
         <b>Until then.</b> Nothing is broken below roughly 500 learners, where the worst screen is
@@ -1594,7 +1772,9 @@ npm run test:e2e     →  25 passed    accessibility and mobile
 npm run build        → succeeded     performance measurement
 
 npm run loadtest:seed 1000 20 8      fill a throwaway database
-npm run loadtest                     time every staff screen at that size</pre>
+npm run loadtest                     time every staff screen at that size
+npm run loadtest:learners 1000 12    create real learner accounts
+npx playwright test --config playwright.load.config.js learnerLoad</pre>
       <p style="margin-top: 0.9rem">
         Layout figures were measured in a real browser at 1440, 1280, 768 and 375 pixels. The load
         figures came from filling a local, throwaway copy of the database with 100, 500 and 1,000
