@@ -45,6 +45,24 @@ export async function seed({ learners, batches: batchCount, tasksPerLearner }) {
   const users = [];
   const groups = [];
   const submissions = [];
+  const tasks = [];
+
+  /*
+   * A task catalogue, so the completion percentage is exercised rather than
+   * dividing by zero. The phases are the ones CX treats as active.
+   */
+  for (let t = 0; t < tasksPerLearner; t++) {
+    tasks.push({
+      ref: doc(db, 'mbw_tasks', `task-${t}`),
+      data: {
+        title: `Task ${t + 1}`,
+        phase: t % 2 === 0 ? 'pre-preparation' : 'quarter-1',
+        module: 'pre-preparation',
+        order: t,
+        type: 'text',
+      },
+    });
+  }
 
   // Staff the test signs in as.
   users.push({
@@ -95,6 +113,14 @@ export async function seed({ learners, batches: batchCount, tasksPerLearner }) {
       },
     });
 
+    /*
+     * Only MBW learners have MBW submissions. Seeding every learner into
+     * mbw_submissions made the collection contain work from people who are not
+     * in the programme, which is not how the product writes it and quietly
+     * doubled anything counted from it.
+     */
+    if (batchIndex % 2 !== 0) continue;
+
     for (let t = 0; t < tasksPerLearner; t++) {
       const statuses = ['submitted', 'under_review', 'completed', 'needs_improvement'];
       submissions.push({
@@ -112,11 +138,17 @@ export async function seed({ learners, batches: batchCount, tasksPerLearner }) {
     }
   }
 
+  await commitInChunks('tasks', tasks);
   await commitInChunks('users', users);
   await commitInChunks('batches', groups);
   await commitInChunks('submissions', submissions);
 
-  return { users: users.length, batches: groups.length, submissions: submissions.length };
+  return {
+    users: users.length,
+    tasks: tasks.length,
+    batches: groups.length,
+    submissions: submissions.length,
+  };
 }
 
 /** Created in the Auth emulator first; the profile must match its uid. */
