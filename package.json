@@ -17,7 +17,8 @@
     "loadtest:seed": "node load-test/seed.js",
     "loadtest": "playwright test --config playwright.load.config.js performance",
     "loadtest:learners": "node load-test/seedLearners.js",
-    "loadtest:all": "playwright test --config playwright.load.config.js"
+    "loadtest:all": "playwright test --config playwright.load.config.js",
+    "report": "node scripts/openReport.mjs"
   },
   "dependencies": {
     "@fontsource/fira-sans": "^5.3.0",
