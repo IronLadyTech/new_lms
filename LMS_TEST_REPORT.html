@@ -1065,6 +1065,22 @@
       throwaway copy of the database filled to production scale. No live data was touched.
     </p>
 
+    <div class="callout callout--done">
+      <div class="callout__head">
+        <h3>In one paragraph</h3>
+      </div>
+      <p>
+        The database was loaded with <b>1,000 learners and 8,000 pieces of submitted work</b>, and
+        every screen was opened five times and timed. <strong>Learners are unaffected by growth
+        entirely</strong> — their screens take about a second whether the programme has 100 people or
+        1,000. Staff screens were the problem, and three of the four have been fixed; they now sit at
+        three seconds where two of them previously took over a minute. <strong>One screen still
+        fails</strong>: the analytics page, which can take anything from 20 seconds to 100. It is a
+        reporting screen rather than something used hour to hour, and it is the last item on the
+        list.
+      </p>
+    </div>
+
     <h3>Test conditions</h3>
     <div class="scroll">
       <table>
@@ -1162,6 +1178,47 @@
     </p>
 
     <h3>Results</h3>
+    <p>What each column is measuring:</p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Column</th>
+            <th>What it means</th>
+            <th>Why it is here</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Avg</b> / <b>Max</b></td>
+            <td>How long before the screen can actually be used — typical, then worst of five runs</td>
+            <td>The average is the everyday experience; the worst is the one people complain about</td>
+          </tr>
+          <tr>
+            <td><b>API</b></td>
+            <td>How much of that time was spent waiting for the database to answer</td>
+            <td>
+              Separates a slow database from a slow screen. If this is close to the total, no amount
+              of design or interface work will help — the fix has to be in what is asked for.
+            </td>
+          </tr>
+          <tr>
+            <td><b>Data</b></td>
+            <td>How much information travels to the browser to draw the screen once</td>
+            <td>
+              The clearest early-warning signal. It rises with the size of the cohort long before
+              anyone notices a delay, so it predicts trouble rather than reporting it.
+            </td>
+          </tr>
+          <tr>
+            <td><b>Calls</b></td>
+            <td>How many separate requests the screen makes to the database</td>
+            <td>Each one is a round trip, and each one is billed</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
     <div class="scroll">
       <table>
         <thead>
@@ -1381,10 +1438,10 @@
       <table>
         <thead>
           <tr>
-            <th>Learner screen</th>
-            <th class="num">Cohort of 100</th>
-            <th class="num">Cohort of 1,000</th>
-            <th class="num">Data fetched</th>
+            <th>Screen a learner opens</th>
+            <th class="num">With 100 learners</th>
+            <th class="num">With 1,000 learners</th>
+            <th>Does growth slow it down?</th>
           </tr>
         </thead>
         <tbody>
@@ -1392,48 +1449,54 @@
             <td>Home / dashboard</td>
             <td class="num">0.8s</td>
             <td class="num">1.1s</td>
-            <td class="num">2.1 KB</td>
+            <td><span class="pill pill--pass">No</span></td>
           </tr>
           <tr>
             <td>MBW programme</td>
             <td class="num">1.3s</td>
             <td class="num">0.8s</td>
-            <td class="num">1.1 KB</td>
+            <td><span class="pill pill--pass">No — faster, in fact</span></td>
           </tr>
           <tr>
             <td>100BM programme</td>
             <td class="num">0.8s</td>
             <td class="num">0.7s</td>
-            <td class="num">1.1 KB</td>
+            <td><span class="pill pill--pass">No</span></td>
           </tr>
           <tr>
             <td>Progress</td>
             <td class="num">1.2s</td>
             <td class="num">1.4s</td>
-            <td class="num">2.5 KB</td>
+            <td><span class="pill pill--pass">No</span></td>
           </tr>
           <tr>
             <td>Calendar</td>
             <td class="num">1.2s</td>
             <td class="num">1.2s</td>
-            <td class="num">2.5 KB</td>
+            <td><span class="pill pill--pass">No</span></td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <p>
-      <b>The cohort size makes no difference whatsoever.</b> Not "a small difference" — the amount of
-      data fetched is <em>identical</em> at 100 learners and at 1,000, down to the byte (the MBW page
-      pulls 1,094 bytes either way). The small variations in seconds are measurement noise; two
-      screens happened to be quicker with the larger cohort.
+      <b>Every screen lands around a second at both sizes, and two are quicker with the larger
+      cohort.</b> That last part is the giveaway: if growth were costing anything, no screen could be
+      faster with ten times the learners. The differences are the ordinary variation of any
+      measurement, not a trend.
     </p>
     <p>
-      This is by design rather than luck. A learner's pages ask only for that learner's own record,
-      their own submissions, and the shared course list — never for the roll. Adding learners adds
-      nothing to what any one of them downloads. <b>By contrast the CX home page pulls 2.8 KB at 100
-      learners and 80 KB at 1,000</b>, which is the whole of the problem described above, and why it
-      is confined to the staff side.
+      The proof is not really in the seconds, though — it is in what gets sent. Opening the MBW page
+      transfers <b>1,094 bytes whether the programme has 100 learners or 1,000</b>. Not "about the
+      same": the identical number, to the byte, because the page asks for that learner's own record
+      and nothing else. Adding learners cannot slow down a request that was never looking at them.
+    </p>
+
+    <p>
+      <b>Why the staff side behaved so differently.</b> A staff screen's job is to look at everybody,
+      so it was asking for everybody: the CX home page pulled 2.8 KB with 100 learners and 80 KB with
+      1,000 — nearly thirty times more, for the same screen. That is the whole of the problem
+      described above, and it is confined to the staff side by its nature.
     </p>
     <p>
       <b>Those seconds are the database's share, not the learner's experience.</b> They were measured
