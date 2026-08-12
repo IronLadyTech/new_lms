@@ -1118,6 +1118,13 @@
             <td class="num">1.3s</td>
             <td><span class="pill pill--pass">Fixed — now flat</span></td>
           </tr>
+          <tr>
+            <td>CX — reviews <b>(after fix)</b></td>
+            <td class="num">—</td>
+            <td class="num">—</td>
+            <td class="num">4.1s</td>
+            <td><span class="pill pill--pass">Fixed — from 71.3s</span></td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1168,16 +1175,42 @@
       </p>
     </div>
 
+    <div class="callout callout--done">
+      <div class="callout__head">
+        <h3>CX-LOAD-03 — the review queue now reads a page at a time</h3>
+        <span class="pill pill--pass">Closed — pending index deployment</span>
+      </div>
+      <p>
+        The reviews screen no longer downloads the programme to work out what to show. It asks the
+        database for three totals and one page of fifty submissions, then fetches only the learners
+        named on that page. <b>Show more</b> fetches the next fifty.
+      </p>
+      <p>
+        <b>Measured at 1,000 learners:</b> <b class="mono">71.3s → 4.1s</b>, and the data pulled fell
+        from about <b class="mono">80 KB</b> to <b class="mono">10 KB</b>. Crucially the figures on
+        screen are unchanged — the queue total, "needs review" and "awaiting resubmit" were checked
+        against the old behaviour and came back identical (8,000 / 4,000 / 2,000), because the totals
+        are now counted by the database over the whole queue rather than by the browser over
+        everything it downloaded.
+      </p>
+      <p>
+        <b>One deployment note.</b> This needs new database indexes to be live before the change
+        ships. Until they are, the screen reports that the index is missing and names it as the
+        cause. The change is therefore held on a branch rather than merged.
+      </p>
+    </div>
+
     <div class="callout callout--open">
       <div class="callout__head">
-        <h3>OPS-02 — the three main CX screens load the whole programme's data every time</h3>
+        <h3>OPS-02 — the CX home and analytics screens still load everything</h3>
         <span class="pill pill--high">Open — needs a decision</span>
       </div>
       <p>
-        With the page-size problem fixed, a second and deeper cause remains: opening any CX screen
-        downloads <strong>every learner and every submission in the programme</strong> — roughly
-        9,000 records at 1,000 learners — and then does the sorting and counting in the browser. That
-        is the whole of the remaining wait.
+        Three of the five screens are now fixed. The two that remain — the CX home page and the
+        analytics page — still download <strong>every learner and every submission in the
+        programme</strong>, roughly 9,000 records at 1,000 learners, and work the totals out in the
+        browser. At 1,000 learners they take about <b class="mono">66s</b> and
+        <b class="mono">79s</b>.
       </p>
       <p>
         <b>Why the existing safeguard does not catch it.</b> The code already narrows submissions to
@@ -1186,11 +1219,10 @@
         the person who will be on the screen when the cohort is large.
       </p>
       <p>
-        <b>Under real staffing this is the failure point.</b> With eight CX staff opening the review
+        <b>Under real staffing this was the failure point.</b> With eight CX staff opening the review
         queue at the same time against 1,000 learners,
-        <strong>five of the eight never finished loading</strong> within three minutes. One person
-        alone waited about 71 seconds; eight people at once pushed it past the point of being usable
-        at all.
+        <strong>five of the eight never finished loading</strong> within three minutes. That
+        particular screen is now fixed; the same exposure remains on the two above.
       </p>
       <p>
         <b>The cause is now pinned down precisely.</b> The wait was split into time spent fetching
@@ -1201,12 +1233,14 @@
         records.
       </p>
       <p>
-        <b>What it needs.</b> The screens should ask the database for a page of results plus a count,
-        rather than fetching everything and working it out locally. This is a change to how the data
-        is queried, not to the design — so it is a deliberate piece of engineering work. It also
-        needs new database indexes to be put live before the change ships, and it affects the basis
-        on which the completion percentage is calculated. That is why it is flagged for a decision
-        rather than already fixed. Estimated at <b>3–5 days</b>.
+        <b>What it needs, and the one open question.</b> The same treatment as the review queue —
+        ask the database for counts and a page rather than fetching everything. The reason it has not
+        simply been done is the <b>Tasks completed %</b> tile. Today that figure counts completed
+        learner-task pairs, limited to learners currently in the programme and tasks still in use.
+        Counting it in the database is what makes the screen cheap, but a straight count would also
+        include retired tasks and departed learners, so the percentage could move slightly. Moving a
+        number the business already reports on is a decision, not a technical detail. Estimated at
+        <b>2–3 days</b> once that call is made.
       </p>
       <p>
         <b>Until then.</b> Nothing is broken below roughly 500 learners, where the worst screen is

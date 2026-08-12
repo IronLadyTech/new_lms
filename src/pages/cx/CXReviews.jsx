@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ClipboardCheck, RefreshCw } from 'lucide-react';
 import { useProgramAdapter } from '../../hooks/useProgramAdapter';
 import { useCxData } from '../../hooks/useCxData';
+import { useCxReviewQueue, PAGE_SIZE as QUEUE_PAGE_SIZE } from '../../hooks/useCxReviewQueue';
 import { getProgramLabel } from '../../data/programTypes';
 import { isLearnerActionRequired, getSubmissionReviewDisplay } from '../../utils/submissionReview';
 import { SUBMISSION_STATUS } from '../../services/mbwService';
 import { sendTaskReminder } from '../../services/notificationService';
-import { studentsInBatch } from '../../utils/batchScope';
 import PageHeader from '../../components/ui/PageHeader';
 import EmptyState from '../../components/ui/EmptyState';
 import DashboardSkeleton from '../../components/ui/DashboardSkeleton';
@@ -47,77 +47,66 @@ function resolveTask(taskById, submission) {
   };
 }
 
-function isVisibleCxSubmission(status) {
-  return [
-    SUBMISSION_STATUS.SUBMITTED,
-    SUBMISSION_STATUS.UNDER_REVIEW,
-    SUBMISSION_STATUS.COMPLETED,
-    SUBMISSION_STATUS.NEEDS_IMPROVEMENT,
-    SUBMISSION_STATUS.REJECTED,
-  ].includes(status);
-}
-
-/**
- * How many queue rows are put on the page at once.
- *
- * The queue is a working list, so nothing may be hidden permanently — every
- * item stays reachable through "Show more". The cap exists because the list was
- * previously rendered whole: at 1,000 learners that meant 8,000 rows and 50,000
- * DOM nodes, and the page took just under a minute to become usable. Counts and
- * filters still run over the full queue; only the rendered slice is bounded.
- */
-const QUEUE_PAGE_SIZE = 50;
-
-function matchesQueueFilter(submission, filterId) {
-  if (filterId === 'pending') {
-    return [SUBMISSION_STATUS.SUBMITTED, SUBMISSION_STATUS.UNDER_REVIEW].includes(
-      submission.status
-    );
-  }
-  if (filterId === 'action') {
-    return isLearnerActionRequired(submission.status);
-  }
-  return isVisibleCxSubmission(submission.status);
-}
-
 export default function CXReviews() {
   const { program, adapter } = useProgramAdapter();
-  const { batches, users, students, tasks, submissions, loading, error, refresh } = useCxData(
-    program,
-    adapter
-  );
+  /*
+   * Only the batch list and the task catalogue come from here — both are small
+   * and fixed. The queue itself is read a page at a time below, so this screen
+   * no longer pulls the programme's learners or submission history.
+   */
+  const {
+    batches,
+    tasks,
+    loading: refLoading,
+    error: refError,
+    refresh: refreshRefs,
+  } = useCxData(program, adapter, { submissions: 'none', users: 'none' });
   const navigate = useNavigate();
 
   const [remindingId, setRemindingId] = useState(null);
   const [remindResult, setRemindResult] = useState({});
   const [batchFilter, setBatchFilter] = useState('all');
   const [queueFilter, setQueueFilter] = useState('all');
-  const [visibleCount, setVisibleCount] = useState(QUEUE_PAGE_SIZE);
 
-  // Changing a filter is a new queue, so start from the top of it again.
-  useEffect(() => {
-    setVisibleCount(QUEUE_PAGE_SIZE);
-  }, [batchFilter, queueFilter]);
+  const {
+    rows,
+    learners,
+    counts,
+    totalForFilter,
+    loading: queueLoading,
+    loadingMore,
+    error: queueError,
+    done,
+    loadMore,
+    refresh: refreshQueue,
+  } = useCxReviewQueue({
+    collectionName: adapter.submissionCollection,
+    queueFilter,
+    batchId: batchFilter,
+  });
 
-  const batchMemberIds = useMemo(() => {
-    if (batchFilter === 'all') return null;
-    const batch = batches.find((b) => b.id === batchFilter);
-    if (!batch) return new Set();
-    return new Set(studentsInBatch(batch, users).map((m) => m.id));
-  }, [batchFilter, batches, users]);
+  const loading = refLoading || queueLoading;
+  const error = queueError || refError;
 
-  const reviewSubmissions = useMemo(() => {
-    const userById = new Map(students.map((s) => [s.id, s]));
+  const refresh = () => {
+    refreshRefs();
+    refreshQueue();
+  };
+
+  /*
+   * The page arrives newest-activity-first from the database. Within it the
+   * original priority order still applies: work handed back to the learner
+   * first, then work waiting on a reviewer, then by recency.
+   */
+  const visibleSubmissions = useMemo(() => {
     const taskById = new Map(tasks.map((t) => [t.id, t]));
-    return submissions
-      .filter((s) => matchesQueueFilter(s, queueFilter))
+    return rows
       .map((s) => ({
         ...s,
-        learner: userById.get(s.userId),
+        learner: learners[s.userId],
         task: resolveTask(taskById, s),
       }))
       .filter((s) => s.learner)
-      .filter((s) => !batchMemberIds || batchMemberIds.has(s.userId))
       .sort((a, b) => {
         const actionDelta =
           Number(isLearnerActionRequired(b.status)) - Number(isLearnerActionRequired(a.status));
@@ -130,29 +119,11 @@ export default function CXReviews() {
           submittedMs(b.submittedAt || b.updatedAt) - submittedMs(a.submittedAt || a.updatedAt)
         );
       });
-  }, [submissions, students, tasks, batchFilter, batchMemberIds, queueFilter]);
+  }, [rows, learners, tasks]);
 
-  const visibleSubmissions = useMemo(
-    () => reviewSubmissions.slice(0, visibleCount),
-    [reviewSubmissions, visibleCount]
-  );
-  const hiddenSubmissionCount = reviewSubmissions.length - visibleSubmissions.length;
-
-  const actionRequiredCount = useMemo(
-    () =>
-      submissions.filter(
-        (s) => isLearnerActionRequired(s.status) && isVisibleCxSubmission(s.status)
-      ).length,
-    [submissions]
-  );
-
-  const pendingReviewCount = useMemo(
-    () =>
-      submissions.filter((s) =>
-        [SUBMISSION_STATUS.SUBMITTED, SUBMISSION_STATUS.UNDER_REVIEW].includes(s.status)
-      ).length,
-    [submissions]
-  );
+  const reviewSubmissions = visibleSubmissions;
+  const actionRequiredCount = counts.action;
+  const pendingReviewCount = counts.pending;
 
   const openReview = (userId, taskId) => navigate(`/cx/review/${userId}/${taskId}`);
 
@@ -202,7 +173,7 @@ export default function CXReviews() {
       ? 'No submissions waiting for review right now.'
       : queueFilter === 'action'
         ? 'No learners are waiting to resubmit after your feedback.'
-        : submissions.length > 0
+        : counts.all > 0
           ? 'No submissions match this filter.'
           : 'When learners submit tasks, they appear here.';
 
@@ -235,9 +206,8 @@ export default function CXReviews() {
       <section className="cx-panel">
         <div className="cx-panel__head">
           <h2 className="cx-panel__title">Submission queue</h2>
-          {reviewSubmissions.length > 0 && (
-            <span className="cx-count-badge">{reviewSubmissions.length}</span>
-          )}
+          {/* The whole queue, not the page currently loaded. */}
+          {totalForFilter > 0 && <span className="cx-count-badge">{totalForFilter}</span>}
         </div>
         <div className="cx-panel__body">
           <div className="cx-reviews-toolbar">
@@ -334,17 +304,19 @@ export default function CXReviews() {
             </ul>
           )}
 
-          {!loading && hiddenSubmissionCount > 0 && (
+          {!loading && !done && (
             <div className="cx-review-list__more">
               <p className="muted" aria-live="polite">
-                Showing {visibleSubmissions.length} of {reviewSubmissions.length} submissions
+                Showing {visibleSubmissions.length}
+                {totalForFilter === null ? '' : ` of ${totalForFilter}`} submissions
               </p>
               <button
                 type="button"
                 className="btn btn-outline btn-sm"
-                onClick={() => setVisibleCount((n) => n + QUEUE_PAGE_SIZE)}
+                onClick={loadMore}
+                disabled={loadingMore}
               >
-                Show {Math.min(QUEUE_PAGE_SIZE, hiddenSubmissionCount)} more
+                {loadingMore ? 'Loading…' : `Show ${QUEUE_PAGE_SIZE} more`}
               </button>
             </div>
           )}

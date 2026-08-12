@@ -141,6 +141,18 @@ test('screen timing and database cost at volume', async ({ browser }) => {
     const usableMs = Date.now() - started;
     const stats = tracker.read();
 
+    /*
+     * A screen that crashed renders its error boundary, which is fast and cheap
+     * and would otherwise be recorded as an excellent result. There is no build
+     * step catching a stale identifier in JSX, so this is the check that does.
+     */
+    const crashed = await page
+      .getByText(/this page hit an error/i)
+      .first()
+      .isVisible()
+      .catch(() => false);
+    expect(crashed, `${screen.name} rendered its error boundary`).toBe(false);
+
     // How much is actually on screen, and does the browser still respond?
     const detail = await page.evaluate(() => {
       const t0 = performance.now();
