@@ -12414,8 +12414,10 @@ button.streak-heatmap__cell:focus-visible {
   height: 1.5rem;
   padding: 0 var(--space-2xs);
   border-radius: 999px;
-  background: #ea580c;
-  color: #fff;
+  /* Was white on #ea580c at 3.56:1. The warning pair is already contrast-checked
+     in both themes (5.02:1 light, 9.48:1 dark) and carries the same meaning. */
+  background: var(--warning);
+  color: var(--warning-on);
   font-size: var(--text-xs);
   font-weight: 700;
 }
