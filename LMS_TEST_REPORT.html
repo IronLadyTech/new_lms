@@ -923,50 +923,46 @@
             <td><span class="pill pill--gap">One failure</span></td>
           </tr>
           <tr>
-            <td><b>Writing at scale</b></td>
+            <td><b>Many learners submitting at once</b></td>
             <td>
-              <b>The structural risk has been ruled out</b> — see below. Measuring actual throughput
-              still needs the practice cloud project, which Google will not enable without a
-              company-billed account. That billing link is a <b>business / finance</b> decision. The
-              laptop copy tops out at about 0.2 submissions a second, which is a limit of the copy
-              rather than of the real service. Live learners' system is never used for volume writes.
+              It will not jam — nothing in the product funnels submissions through one shared record,
+              which is how systems like this fail on a deadline night. <b>How fast it actually goes is
+              still unmeasured</b>, and needs the practice environment described below.
             </td>
-            <td><span class="pill pill--gap">Risk ruled out; capacity unmeasured</span></td>
+            <td><span class="pill pill--gap">Safe, speed unknown</span></td>
           </tr>
           <tr>
-            <td><b>Staff working simultaneously</b></td>
+            <td><b>Several staff at once</b></td>
             <td>
-              Re-run after the fixes: <b>eight of eight sessions now succeed</b>, where five of eight
-              previously failed outright. Multi-runner GitHub Actions workflow is ready; quantified
-              timings still need the same billed staging project (separate machines talking to real
-              Firestore), not one laptop.
+              <b>Eight of eight sessions now succeed</b>, where five of eight failed before the fixes.
+              The timings from that test describe the test laptop rather than the product, so no
+              speed is claimed from it.
             </td>
-            <td><span class="pill pill--gap">Improved, not quantified</span></td>
+            <td><span class="pill pill--gap">Better, speed unknown</span></td>
           </tr>
           <tr>
-            <td><b>Real devices</b></td>
+            <td><b>Real phones and tablets</b></td>
             <td>
-              Phone and tablet sizes were emulated. <b>Safari engine (Playwright WebKit)</b> smoke on
-              public auth pages now runs in CI. Physical iPhone/Android hardware was not used.
+              Phone and tablet screen sizes were simulated, and Safari's engine is now checked
+              automatically on every change. Nothing was run on a physical handset.
             </td>
-            <td><span class="pill pill--gap">Partial — WebKit in CI</span></td>
+            <td><span class="pill pill--gap">Partly</span></td>
           </tr>
           <tr>
-            <td><b>Scale against the live service</b></td>
+            <td><b>Volume tests on the live system</b></td>
             <td>
-              All volume testing used a local emulator copy, never production. Staging cloud volume
-              waits on the business linking a billing account to
-              <code>lmsironlady-staging</code> (free Spark cannot create Firestore on that project).
+              Deliberately never done. Pressure-testing the real system would mean putting invented
+              learners and invented work in front of real ones.
             </td>
-            <td><span class="pill pill--none">By design + billing gate</span></td>
+            <td><span class="pill pill--pass">Avoided on purpose</span></td>
           </tr>
           <tr>
-            <td><b>Penetration testing</b></td>
+            <td><b>Attempting to break in</b></td>
             <td>
-              Permissions were tested (<code>npm run test:rules</code>). Adversarial attack testing
-              was not part of this work — see <code>docs/PENTEST_SCOPE.md</code>.
+              Who is allowed to see what was tested thoroughly. Deliberate attack testing by a
+              security specialist was not part of this work.
             </td>
-            <td><span class="pill pill--none">Out of scope</span></td>
+            <td><span class="pill pill--none">Not attempted</span></td>
           </tr>
         </tbody>
       </table>
@@ -994,10 +990,9 @@
       fund the environment.
     </p>
     <p>
-            <b>The gap worth closing next is writing at scale — and that handoff is to the business.</b>
-      Engineering has the harness, the staging project id, and the safety rails that refuse
-      production. What is left is linking a billed Firebase account so those tests can run against a
-      real cloud database without touching learners.
+            <b>The gap worth closing next is knowing how fast submissions can arrive.</b> The tests are
+      written and the safeguards that refuse the live system are in place. What is missing is the
+      practice environment to run them in, and that is a form to fill in rather than work to do.
     </p>
   </section>
 
