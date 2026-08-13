@@ -916,16 +916,20 @@
           </tr>
           <tr>
             <td><b>Writing at scale</b></td>
-            <td>Many learners submitting at once — a deadline evening. Never exercised.</td>
-            <td><span class="pill pill--none">Not tested</span></td>
+            <td>
+              Attempted. The local database tops out at about 0.2 submissions a second whether five
+              learners are writing or twenty-five — a limit of the test copy, not of the real
+              service, which handles hundreds. The question cannot be answered on this equipment.
+            </td>
+            <td><span class="pill pill--none">Unanswerable here</span></td>
           </tr>
           <tr>
             <td><b>Staff working simultaneously</b></td>
             <td>
-              Measured once <em>before</em> the fixes, where five of eight sessions failed. Not
-              re-run since.
+              Re-run after the fixes: <b>eight of eight sessions now succeed</b>, where five of eight
+              previously failed outright. The timings, though, are the test machine — see below.
             </td>
-            <td><span class="pill pill--none">Stale</span></td>
+            <td><span class="pill pill--gap">Improved, not quantified</span></td>
           </tr>
           <tr>
             <td><b>Real devices</b></td>
@@ -983,9 +987,9 @@
           <tr>
             <td><b>CX team</b></td>
             <td>
-              This is where the damage was. At 1,000 learners the review queue took over a minute,
-              and with eight staff on it at once most sessions never loaded — the working day stops
-              rather than slows. Three of the four screens they use daily are now under four seconds.
+              This is where the damage was. At 1,000 learners the review queue took over a minute to
+              open for a single person, which is enough on its own to stall a working day. Three of
+              the four screens they use daily are now under four seconds.
             </td>
             <td><span class="pill pill--pass">Largely resolved</span></td>
           </tr>
@@ -2240,12 +2244,18 @@
     </div>
 
     <p class="muted">
-      <b>One further test, reported separately.</b> Eight staff were put on the review queue
-      simultaneously at 1,000 learners, before it was fixed: five of the eight never finished loading
-      within three minutes. That was eight browsers and the database competing for one machine, so
-      the absolute figure is pessimistic — but it is the reason the queue was fixed first rather than
-      last. It has not yet been re-run against the fixed version, so no claim is made about
-      concurrency today beyond the single-user figures above.
+      <b>On several staff at once — what can and cannot be claimed.</b> Eight staff were put on the
+      review queue together at 1,000 learners, before and after the fix. Before, five of the eight
+      never loaded at all; after, all eight succeed. That comparison is sound, because both runs used
+      the same equipment.
+    </p>
+    <p class="muted">
+      The <em>timings</em> from those runs are not sound, and are therefore not quoted. Screen time
+      rose from 2 seconds with one browser to 8 with two, 40 with four and about 100 with eight —
+      roughly five times worse per doubling. Nothing in the product behaves that way; that is one
+      laptop running eight browsers and the database at once, and what it measures is the laptop.
+      Answering the concurrency question properly needs load generated from separate machines, which
+      is worth doing before a large intake and has not been done.
     </p>
   </section>
 

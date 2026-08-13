@@ -175,7 +175,9 @@ test('screen timing and database cost at volume', async ({ browser }) => {
 
 test('concurrent staff sessions', async ({ browser }) => {
   test.setTimeout(600_000);
-  const CONCURRENCY = 8;
+  /* Varying this is how machine contention is told apart from a server limit:
+     time that climbs with the browser count is this laptop, not the product. */
+  const CONCURRENCY = Number(process.env.STAFF_CONCURRENCY || 8);
 
   const run = async (i) => {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
@@ -183,6 +185,7 @@ test('concurrent staff sessions', async ({ browser }) => {
     const started = Date.now();
     try {
       await signInAsStaff(page);
+      const signedIn = Date.now();
       // The reviews queue, because it is the heaviest screen staff actually use.
       await page.goto('/cx/reviews');
       await page.waitForFunction(
@@ -192,7 +195,18 @@ test('concurrent staff sessions', async ({ browser }) => {
         undefined,
         { timeout: 180_000, polling: 200 }
       );
-      return { i, ms: Date.now() - started, ok: true };
+      /*
+       * Split so the screen is not blamed for the sign-in. Eight browsers and the
+       * database share one machine here, and authentication is the part that
+       * contends hardest.
+       */
+      return {
+        i,
+        signInMs: signedIn - started,
+        screenMs: Date.now() - signedIn,
+        ms: Date.now() - started,
+        ok: true,
+      };
     } catch (err) {
       return { i, ms: Date.now() - started, ok: false, err: String(err).slice(0, 80) };
     } finally {
