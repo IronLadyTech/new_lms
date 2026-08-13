@@ -602,6 +602,73 @@
     outline-offset: 2px;
     border-radius: 2px;
   }
+  /* Print ------------------------------------------------------------------
+     The document is the deliverable, so paper is a first-class target rather
+     than an afterthought: light palette regardless of the reader's theme,
+     nothing split across a page turn that should be read together. */
+  @media print {
+    :root {
+      --bg: #ffffff;
+      --surface: #ffffff;
+      --surface-sunk: #fafaf8;
+    }
+    body {
+      background: #ffffff;
+    }
+    .wrap {
+      max-width: none;
+      padding: 0;
+    }
+
+    /* A finding split over a page turn reads as two half-findings. */
+    figure,
+    .callout,
+    .suite,
+    tr,
+    .phase {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    h2,
+    h3 {
+      break-after: avoid;
+      page-break-after: avoid;
+    }
+    h2 {
+      break-before: page;
+      page-break-before: page;
+    }
+    /* …except the first, which would otherwise open on a blank sheet. */
+    section:first-of-type h2 {
+      break-before: auto;
+      page-break-before: auto;
+    }
+
+    /* Tables scroll on screen; on paper they must simply fit. */
+    .scroll {
+      overflow: visible;
+    }
+    table {
+      font-size: 9.5pt;
+    }
+
+    /* The reasoning behind a finding is part of the record. */
+    details {
+      display: block;
+    }
+    details > summary {
+      list-style: none;
+    }
+    details > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     * {
       animation: none !important;

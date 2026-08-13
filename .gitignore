@@ -2,8 +2,12 @@ node_modules
 dist
 .env
 .env.local
+.env.staging
 functions/.env
 functions/.env.local
+.secrets/
+*.sa.json
+*-sa.json
 *.log
 .DS_Store
 test-results
@@ -28,3 +32,6 @@ ui-debug.log
 
 # Generated standalone copy of the report for opening in a browser.
 LMS_TEST_REPORT.view.html
+
+# Generated deliverable — rebuild with npm run report:pdf
+Iron Lady LMS — Quality Assessment.pdf

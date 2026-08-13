@@ -24,7 +24,8 @@
     "loadtest:writes:staging": "node load-test/writeLoad.staging.js",
     "loadtest:seed:staging": "node load-test/seed.staging.js",
     "loadtest:staff:staging": "playwright test --config playwright.staging-load.config.js",
-    "images": "node scripts/optimizeImages.mjs"
+    "images": "node scripts/optimizeImages.mjs",
+    "report:pdf": "node scripts/makeReportPdf.mjs"
   },
   "dependencies": {
     "@fontsource/fira-sans": "^5.3.0",
