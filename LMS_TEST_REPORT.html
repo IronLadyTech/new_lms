@@ -717,102 +717,7 @@
     </p>
   </div>
 
-  <section class="ceo-brief">
-    <h2>What we need from you</h2>
-    <p class="muted">Only these items need a yes / no. Everything else can wait.</p>
-
-    <ol class="ceo-decisions">
-      <li>
-        <span class="who">Ask engineering · 1–2 days</span>
-        <strong>1. Fix the slow analytics screen before a large intake</strong>
-        <span class="why">
-          Managers’ reports can take up to a minute or more when many learners are enrolled. Learners
-          are unaffected. Fix when you plan a big new batch.
-        </span>
-      </li>
-      <li>
-        <span class="who">Ask finance / ops · business decision</span>
-        <strong>2. Approve a small paid “practice” cloud account for safe testing</strong>
-        <span class="why">
-          A separate practice environment — never the live learner system — to prove the platform
-          handles many people submitting at once, like a deadline evening. Google enables that
-          practice database only once a company billing account is linked, so the approval sits with
-          <b>business / finance</b> rather than engineering.
-          <br /><br />
-          <b>Two things worth knowing before deciding.</b> The account bills only for what is used
-          and keeps the same free monthly allowance, so tests of this size typically cost a few
-          pounds or nothing at all — worth confirming current terms, but this is not a budget item.
-          And the fault that would make a deadline evening <em>certain</em> to struggle has already
-          been ruled out by reading the code: nothing in the product funnels submissions through a
-          single shared record, which is how systems of this kind normally fail under a rush.
-          <br /><br />
-          So this is worth doing before a large intake, and is not urgent this week.
-        </span>
-      </li>
-      <li>
-        <span class="who">Commercial · when you choose</span>
-        <strong>3. Later: certificates and in-app cohort discussion</strong>
-        <span class="why">
-          Nice for marketing and community; not required for the product to work. Certificates mean
-          something shareable on LinkedIn; discussion today still lives on WhatsApp.
-        </span>
-      </li>
-    </ol>
-
-  </section>
-
-  <div class="tech-divider" id="technical-detail">
-    <p class="eyebrow">Technical detail</p>
-    <h2>Evidence pack (for the team)</h2>
-    <p class="muted">
-      Same conclusions as the brief above, with numbers and test coverage for engineering and ops.
-    </p>
-  </div>
-
-  <section>
-    <h2>Staff screen times (1,000 learners)</h2>
-    <figure>
-      <svg
-        viewBox="0 0 720 250"
-        role="img"
-        aria-label="At 1,000 learners the reviews queue went from 71 seconds to 2, batches from 68 to 1.3, and CX home from 70 to 6. Analytics remains at up to 101 seconds."
-      >
-        <text x="190" y="22" class="fig-title">Time to open a staff screen, with 1,000 learners enrolled</text>
-        <rect x="190" y="30" width="14" height="8" rx="2" fill="var(--risk)" />
-        <text x="210" y="38" class="fig-label">before</text>
-        <rect x="262" y="30" width="14" height="8" rx="2" fill="var(--pass)" />
-        <text x="282" y="38" class="fig-label">after</text>
-
-        <text x="176" y="61" text-anchor="end" class="fig-label">Reviews queue</text>
-        <rect x="190" y="46" width="302.4" height="9" rx="2" fill="var(--risk)" />
-        <text x="500.4" y="55" class="fig-label" fill="var(--risk)">71.3s</text>
-        <rect x="190" y="59" width="8.5" height="9" rx="2" fill="var(--pass)" />
-        <text x="206.5" y="68" class="fig-value" fill="var(--pass)">2s</text>
-        <text x="176" y="107" text-anchor="end" class="fig-label">Batches</text>
-        <rect x="190" y="92" width="288.4" height="9" rx="2" fill="var(--risk)" />
-        <text x="486.4" y="101" class="fig-label" fill="var(--risk)">68s</text>
-        <rect x="190" y="105" width="5.5" height="9" rx="2" fill="var(--pass)" />
-        <text x="203.5" y="114" class="fig-value" fill="var(--pass)">1.3s</text>
-        <text x="176" y="153" text-anchor="end" class="fig-label">CX home</text>
-        <rect x="190" y="138" width="295.1" height="9" rx="2" fill="var(--risk)" />
-        <text x="493.1" y="147" class="fig-label" fill="var(--risk)">69.6s</text>
-        <rect x="190" y="151" width="25.0" height="9" rx="2" fill="var(--pass)" />
-        <text x="223.0" y="160" class="fig-value" fill="var(--pass)">5.9s</text>
-        <text x="176" y="199" text-anchor="end" class="fig-label">Analytics</text>
-        <rect x="190" y="184" width="430.0" height="9" rx="2" fill="var(--risk)" />
-        <text x="628.0" y="193" class="fig-label" fill="var(--risk)">101.4s</text>
-        <text x="190" y="214" class="fig-label">not yet fixed — the one screen still open</text>
-
-        <line x1="190" y1="232" x2="620" y2="232" stroke="var(--rule)" stroke-width="1" />
-        <text x="190" y="246" class="fig-label">0s</text>
-        <text x="620" y="246" text-anchor="end" class="fig-label">100s</text>
-      </svg>
-      <figcaption>
-        Same screens, same data, before and after. Faster — not less information. Analytics is the
-        remaining bar.
-      </figcaption>
-    </figure>
-  </section>
+  
 
   <!-- Production readiness --------------------------------------------------->
   <section>
@@ -865,6 +770,190 @@
       Neither condition blocks release today. Both concern the next intake rather than this one.
     </p>
   </section>
+<section class="ceo-brief">
+    <h2>What we need from you</h2>
+    <p class="muted">Only these items need a yes / no. Everything else can wait.</p>
+
+    <ol class="ceo-decisions">
+      <li>
+        <span class="who">Ask engineering · 1–2 days</span>
+        <strong>1. Fix the slow analytics screen before a large intake</strong>
+        <span class="why">
+          Managers’ reports can take up to a minute or more when many learners are enrolled. Learners
+          are unaffected. Fix when you plan a big new batch.
+        </span>
+      </li>
+      <li>
+        <span class="who">Ask finance / ops · business decision</span>
+        <strong>2. Approve a small paid “practice” cloud account for safe testing</strong>
+        <span class="why">
+          A separate practice environment — never the live learner system — to prove the platform
+          handles many people submitting at once, like a deadline evening. Google enables that
+          practice database only once a company billing account is linked, so the approval sits with
+          <b>business / finance</b> rather than engineering.
+          <br /><br />
+          <b>Two things worth knowing before deciding.</b> The account bills only for what is used
+          and keeps the same free monthly allowance, so tests of this size typically cost a few
+          pounds or nothing at all — worth confirming current terms, but this is not a budget item.
+          And the fault that would make a deadline evening <em>certain</em> to struggle has already
+          been ruled out by reading the code: nothing in the product funnels submissions through a
+          single shared record, which is how systems of this kind normally fail under a rush.
+          <br /><br />
+          So this is worth doing before a large intake, and is not urgent this week.
+        </span>
+      </li>
+      <li>
+        <span class="who">Commercial · when you choose</span>
+        <strong>3. Later: certificates and in-app cohort discussion</strong>
+        <span class="why">
+          Nice for marketing and community; not required for the product to work. Certificates mean
+          something shareable on LinkedIn; discussion today still lives on WhatsApp.
+        </span>
+      </li>
+    </ol>
+
+  </section>
+<section>
+    <h2>Staff screen times (1,000 learners)</h2>
+    <figure>
+      <svg
+        viewBox="0 0 720 250"
+        role="img"
+        aria-label="At 1,000 learners the reviews queue went from 71 seconds to 2, batches from 68 to 1.3, and CX home from 70 to 6. Analytics remains at up to 101 seconds."
+      >
+        <text x="190" y="22" class="fig-title">Time to open a staff screen, with 1,000 learners enrolled</text>
+        <rect x="190" y="30" width="14" height="8" rx="2" fill="var(--risk)" />
+        <text x="210" y="38" class="fig-label">before</text>
+        <rect x="262" y="30" width="14" height="8" rx="2" fill="var(--pass)" />
+        <text x="282" y="38" class="fig-label">after</text>
+
+        <text x="176" y="61" text-anchor="end" class="fig-label">Reviews queue</text>
+        <rect x="190" y="46" width="302.4" height="9" rx="2" fill="var(--risk)" />
+        <text x="500.4" y="55" class="fig-label" fill="var(--risk)">71.3s</text>
+        <rect x="190" y="59" width="8.5" height="9" rx="2" fill="var(--pass)" />
+        <text x="206.5" y="68" class="fig-value" fill="var(--pass)">2s</text>
+        <text x="176" y="107" text-anchor="end" class="fig-label">Batches</text>
+        <rect x="190" y="92" width="288.4" height="9" rx="2" fill="var(--risk)" />
+        <text x="486.4" y="101" class="fig-label" fill="var(--risk)">68s</text>
+        <rect x="190" y="105" width="5.5" height="9" rx="2" fill="var(--pass)" />
+        <text x="203.5" y="114" class="fig-value" fill="var(--pass)">1.3s</text>
+        <text x="176" y="153" text-anchor="end" class="fig-label">CX home</text>
+        <rect x="190" y="138" width="295.1" height="9" rx="2" fill="var(--risk)" />
+        <text x="493.1" y="147" class="fig-label" fill="var(--risk)">69.6s</text>
+        <rect x="190" y="151" width="25.0" height="9" rx="2" fill="var(--pass)" />
+        <text x="223.0" y="160" class="fig-value" fill="var(--pass)">5.9s</text>
+        <text x="176" y="199" text-anchor="end" class="fig-label">Analytics</text>
+        <rect x="190" y="184" width="430.0" height="9" rx="2" fill="var(--risk)" />
+        <text x="628.0" y="193" class="fig-label" fill="var(--risk)">101.4s</text>
+        <text x="190" y="214" class="fig-label">not yet fixed — the one screen still open</text>
+
+        <line x1="190" y1="232" x2="620" y2="232" stroke="var(--rule)" stroke-width="1" />
+        <text x="190" y="246" class="fig-label">0s</text>
+        <text x="620" y="246" text-anchor="end" class="fig-label">100s</text>
+      </svg>
+      <figcaption>
+        Same screens, same data, before and after. Faster — not less information. Analytics is the
+        remaining bar.
+      </figcaption>
+    </figure>
+  </section>
+
+
+  <div class="tech-divider" id="technical-detail">
+    <p class="eyebrow">Technical detail</p>
+    <h2>Evidence pack (for the team)</h2>
+    <p class="muted">
+      Same conclusions as the brief above, with numbers and test coverage for engineering and ops.
+    </p>
+  </div>
+
+
+
+  <!-- Scorecard ------------------------------------------------------------->
+  <section>
+    <h2>Quality scorecard</h2>
+    <p>Each area was scored against the criteria in the next section, not against opinion.</p>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Area</th>
+            <th>Verdict</th>
+            <th class="num">Rating</th>
+            <th>What decided it</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Functional correctness</b></td>
+            <td><span class="pill pill--pass">Strong</span></td>
+            <td class="num">9 / 10</td>
+            <td>Every core journey completes. 371 logic tests, all business rules covered.</td>
+          </tr>
+          <tr>
+            <td><b>Backend &amp; data integrity</b></td>
+            <td><span class="pill pill--pass">Strong</span></td>
+            <td class="num">9 / 10</td>
+            <td>65 tests against a real database. No role can reach another's data.</td>
+          </tr>
+          <tr>
+            <td><b>Accessibility</b></td>
+            <td><span class="pill pill--pass">Strong</span></td>
+            <td class="num">9 / 10</td>
+            <td>All 21 pages pass WCAG 2.1 AA, scanned automatically on every change.</td>
+          </tr>
+          <tr>
+            <td><b>Error handling</b></td>
+            <td><span class="pill pill--pass">Good</span></td>
+            <td class="num">8 / 10</td>
+            <td>20 screens have a failure state with a retry. Offline is signalled.</td>
+          </tr>
+          <tr>
+            <td><b>Performance</b></td>
+            <td><span class="pill pill--gap">Good, with one failure</span></td>
+            <td class="num">7 / 10</td>
+            <td>
+              Eight of nine screens pass their response-time criteria at 1,000 learners; the
+              analytics screen fails at 101s worst case. A learner's first visit is also heavier than
+              it needs to be. Both are quantified in the performance test.
+            </td>
+          </tr>
+          <tr>
+            <td><b>Admin &amp; CX workflows</b></td>
+            <td><span class="pill pill--gap">Adequate</span></td>
+            <td class="num">6 / 10</td>
+            <td>Everything is reachable, but the review queue has no bulk actions.</td>
+          </tr>
+          <tr>
+            <td><b>User flow</b></td>
+            <td><span class="pill pill--pass">Good</span></td>
+            <td class="num">8 / 10</td>
+            <td>Resume is first on the dashboard; lesson search is visible. No dead ends.</td>
+          </tr>
+          <tr>
+            <td><b>Responsive design</b></td>
+            <td><span class="pill pill--pass">Strong</span></td>
+            <td class="num">9 / 10</td>
+            <td>Verified at five screen sizes from phone to 1920px, on every change.</td>
+          </tr>
+          <tr>
+            <td><b>UI consistency &amp; layout</b></td>
+            <td><span class="pill pill--pass">Good</span></td>
+            <td class="num">8 / 10</td>
+            <td>Now lays out in columns above 1024px and caps at a readable width.</td>
+          </tr>
+          <tr>
+            <td><b>Product completeness</b></td>
+            <td><span class="pill pill--none">Gap</span></td>
+            <td class="num">5 / 10</td>
+            <td>No certificates, no peer discussion. A strategic choice, not a defect.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
 
   <!-- Scope and coverage ------------------------------------------------------>
   <section>
@@ -996,624 +1085,6 @@
     </p>
   </section>
 
-  <!-- Business impact --------------------------------------------------------->
-  <section>
-    <h2>What it means for the business</h2>
-    <p>
-      Severity in engineering terms is not the same as consequence. This is what each finding cost,
-      and who paid it.
-    </p>
-
-    <div class="scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Who or what</th>
-            <th>Exposure</th>
-            <th>Position now</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><b>Learners</b></td>
-            <td>
-              None from the scaling problem — their screens never depended on how many others were
-              enrolled. The one cost they carry is a first visit that downloads more than it needs,
-              which affects first impressions rather than function.
-            </td>
-            <td><span class="pill pill--pass">Low</span></td>
-          </tr>
-          <tr>
-            <td><b>CX team</b></td>
-            <td>
-              This is where the damage was. At 1,000 learners the review queue took over a minute to
-              open for a single person, which is enough on its own to stall a working day. Three of
-              the four screens they use daily are now under four seconds.
-            </td>
-            <td><span class="pill pill--pass">Largely resolved</span></td>
-          </tr>
-          <tr>
-            <td><b>Operations</b></td>
-            <td>
-              Reviews are still cleared one at a time; there is no way to approve in bulk. That is a
-              standing cost in staff hours which grows directly with intake size — a product decision
-              rather than a defect.
-            </td>
-            <td><span class="pill pill--gap">Ongoing cost</span></td>
-          </tr>
-          <tr>
-            <td><b>Management visibility</b></td>
-            <td>
-              The analytics screen is how progress across batches is seen. At 20&ndash;100 seconds it
-              gets avoided rather than used, which means decisions get made without it.
-            </td>
-            <td><span class="pill pill--high">Open</span></td>
-          </tr>
-          <tr>
-            <td><b>Revenue</b></td>
-            <td>
-              No defect found in payment status, access tiers or enrolment. Separately, learners
-              finish a paid programme with nothing shareable — a missed acquisition channel rather
-              than a fault.
-            </td>
-            <td><span class="pill pill--pass">No exposure</span></td>
-          </tr>
-          <tr>
-            <td><b>Data and security</b></td>
-            <td>
-              65 tests confirm no role can reach another's data, and the batch-scoping rule fails
-              closed — an unknown batch grants nothing rather than everything. The rules were checked
-              by deliberately weakening one and confirming the tests caught it.
-            </td>
-            <td><span class="pill pill--pass">No exposure found</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <p>
-      <b>In one line:</b> the cost of everything found here fell on staff time and management
-      visibility. No learner lost work, and no data was reachable by anyone who should not see it.
-    </p>
-  </section>
-
-  <!-- What was fixed ---------------------------------------------------------->
-  <section>
-    <h2>What was fixed, and how we know</h2>
-    <p>
-      Forty-two of the forty-three defects are closed. These are the ones with a number attached —
-      each measured before and after on the same data, and each now guarded by a test that fails the
-      build if it comes back.
-    </p>
-
-    <div class="scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>What was wrong</th>
-            <th class="num">Before</th>
-            <th class="num">After</th>
-            <th>Retested by</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Review queue loaded the whole programme</td>
-            <td class="num">71.3s</td>
-            <td class="num">2.0s</td>
-            <td>Timed run at 1,000 learners; figures compared against the old version</td>
-          </tr>
-          <tr>
-            <td>Batches screen fetched data it never displayed</td>
-            <td class="num">68s</td>
-            <td class="num">1.3s</td>
-            <td>Timed run at 1,000 learners</td>
-          </tr>
-          <tr>
-            <td>CX home recalculated totals in the browser</td>
-            <td class="num">69.6s</td>
-            <td class="num">5.9s</td>
-            <td>Both versions run against one database; every figure identical</td>
-          </tr>
-          <tr>
-            <td>Review queue drew 8,000 rows at once</td>
-            <td class="num">50,134 elements</td>
-            <td class="num">487</td>
-            <td>Element count measured in the browser</td>
-          </tr>
-          <tr>
-            <td>Admin could not browse past 500 accounts</td>
-            <td class="num">500 max</td>
-            <td class="num">No limit</td>
-            <td>Paged through 1,200 accounts</td>
-          </tr>
-          <tr>
-            <td>Desktop was the phone layout stretched</td>
-            <td class="num">~200 characters per line</td>
-            <td class="num">~68</td>
-            <td>Layout re-measured at five widths on every change</td>
-          </tr>
-          <tr>
-            <td>Pending-task tile always read zero</td>
-            <td class="num">Always 0</td>
-            <td class="num">Real count</td>
-            <td>Counted from the same source the programme pages use</td>
-          </tr>
-          <tr>
-            <td>Admin search could not find some accounts</td>
-            <td class="num">Missed accounts</td>
-            <td class="num">Reaches all</td>
-            <td>Search no longer depends on a field some records lack</td>
-          </tr>
-          <tr>
-            <td>Images sent far larger than the space they are shown in</td>
-            <td class="num">8.3s first visit</td>
-            <td class="num">4.4s</td>
-            <td>Timed cold on a throttled phone connection; every image checked still larger than its
-              displayed size</td>
-          </tr>
-          <tr>
-            <td>Text too faint to read against its background</td>
-            <td class="num">3.45 : 1</td>
-            <td class="num">5.93 : 1</td>
-            <td>Automated contrast scan of all 21 pages, every change</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <p>
-      <b>Two of these were found only because a fix was checked rather than trusted.</b> The CX home
-      figures were compared against the old version on the same database and initially disagreed —
-      32% against 16% — which turned out to be a fault in the test data rather than the product, but
-      would have shipped a wrong number had nobody looked. And an early version of the review-queue
-      fix crashed the page, which the timing test recorded as an excellent result until it was taught
-      that a crashed screen loads very fast indeed.
-    </p>
-  </section>
-
-  <!-- Scorecard ------------------------------------------------------------->
-  <section>
-    <h2>Quality scorecard</h2>
-    <p>Each area was scored against the criteria in the next section, not against opinion.</p>
-
-    <div class="scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Area</th>
-            <th>Verdict</th>
-            <th class="num">Rating</th>
-            <th>What decided it</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><b>Functional correctness</b></td>
-            <td><span class="pill pill--pass">Strong</span></td>
-            <td class="num">9 / 10</td>
-            <td>Every core journey completes. 371 logic tests, all business rules covered.</td>
-          </tr>
-          <tr>
-            <td><b>Backend &amp; data integrity</b></td>
-            <td><span class="pill pill--pass">Strong</span></td>
-            <td class="num">9 / 10</td>
-            <td>65 tests against a real database. No role can reach another's data.</td>
-          </tr>
-          <tr>
-            <td><b>Accessibility</b></td>
-            <td><span class="pill pill--pass">Strong</span></td>
-            <td class="num">9 / 10</td>
-            <td>All 21 pages pass WCAG 2.1 AA, scanned automatically on every change.</td>
-          </tr>
-          <tr>
-            <td><b>Error handling</b></td>
-            <td><span class="pill pill--pass">Good</span></td>
-            <td class="num">8 / 10</td>
-            <td>20 screens have a failure state with a retry. Offline is signalled.</td>
-          </tr>
-          <tr>
-            <td><b>Performance</b></td>
-            <td><span class="pill pill--gap">Good, with one failure</span></td>
-            <td class="num">7 / 10</td>
-            <td>
-              Eight of nine screens pass their response-time criteria at 1,000 learners; the
-              analytics screen fails at 101s worst case. A learner's first visit is also heavier than
-              it needs to be. Both are quantified in the performance test.
-            </td>
-          </tr>
-          <tr>
-            <td><b>Admin &amp; CX workflows</b></td>
-            <td><span class="pill pill--gap">Adequate</span></td>
-            <td class="num">6 / 10</td>
-            <td>Everything is reachable, but the review queue has no bulk actions.</td>
-          </tr>
-          <tr>
-            <td><b>User flow</b></td>
-            <td><span class="pill pill--pass">Good</span></td>
-            <td class="num">8 / 10</td>
-            <td>Resume is first on the dashboard; lesson search is visible. No dead ends.</td>
-          </tr>
-          <tr>
-            <td><b>Responsive design</b></td>
-            <td><span class="pill pill--pass">Strong</span></td>
-            <td class="num">9 / 10</td>
-            <td>Verified at five screen sizes from phone to 1920px, on every change.</td>
-          </tr>
-          <tr>
-            <td><b>UI consistency &amp; layout</b></td>
-            <td><span class="pill pill--pass">Good</span></td>
-            <td class="num">8 / 10</td>
-            <td>Now lays out in columns above 1024px and caps at a readable width.</td>
-          </tr>
-          <tr>
-            <td><b>Product completeness</b></td>
-            <td><span class="pill pill--none">Gap</span></td>
-            <td class="num">5 / 10</td>
-            <td>No certificates, no peer discussion. A strategic choice, not a defect.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- What the system enforces ---------------------------------------------->
-  <section>
-    <h2>What the system enforces</h2>
-    <p>
-      Below are the rules the LMS applies on its own, without anyone having to remember them. They
-      are business decisions — who may see what, what unlocks when, what counts as finished —
-      written into the product. <strong>Every rule here is covered by automated tests</strong>, so a
-      future change that breaks one is caught before it reaches a learner.
-    </p>
-
-    <div class="scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Rule</th>
-            <th>What the system does</th>
-            <th>Why it matters</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><b>Programme order</b></td>
-            <td>
-              LEP → 100 Board Members → MBW. A learner sees all three; only the ones they are
-              entitled to will open.
-            </td>
-            <td>Locked programmes stay visible, so the path ahead is clear rather than hidden.</td>
-          </tr>
-          <tr>
-            <td><b>Payment decides access</b></td>
-            <td>
-              Unpaid opens nothing. Registration deposit opens the early sections. Full payment
-              opens the programme.
-            </td>
-            <td>
-              Read from Zoho, which spells the same status several ways. Anything unrecognised is
-              treated as unpaid — it errs toward locking, never toward giving content away.
-            </td>
-          </tr>
-          <tr>
-            <td><b>Sections unlock in sequence</b></td>
-            <td>
-              A section opens only when the one before it is finished, the deposit or full payment
-              is in, and the learner is in a batch — whichever that section requires.
-            </td>
-            <td>
-              A paying learner still cannot skip to Quarter 3, and a learner who has finished
-              Quarter 1 still cannot continue on a deposit alone.
-            </td>
-          </tr>
-          <tr>
-            <td><b>Every submission is reviewed</b></td>
-            <td>
-              Work goes Locked → Available → Submitted → Under review → Complete. A reviewer chooses
-              approve, ask for improvement, or reject.
-            </td>
-            <td>
-              Work sent back does not count as done, does not add to progress, and stays the
-              learner's next task. Work already submitted does not block them from carrying on.
-            </td>
-          </tr>
-          <tr>
-            <td><b>Five levels of access</b></td>
-            <td>Guest → Learner → CX → Admin → Super Admin, each including everything below it.</td>
-            <td>
-              CX can review and manage their batches but cannot change roles or delete a cohort.
-              Admins cannot delete accounts. Only Super Admin can.
-            </td>
-          </tr>
-          <tr>
-            <td><b>CX sees only their own batches</b></td>
-            <td>
-              A CX member sees learners in batches assigned to them, within their own programme.
-            </td>
-            <td>One cohort's staff cannot see another cohort's learners.</td>
-          </tr>
-          <tr>
-            <td><b>Streaks count consecutive days</b></td>
-            <td>
-              Any activity counts the day. A second activity the same day adds nothing. A missed day
-              resets to one.
-            </td>
-            <td>
-              Days are measured in India time wherever the learner or server is, so someone working
-              at half past midnight gets credit for the right day.
-            </td>
-          </tr>
-          <tr>
-            <td><b>Attendance</b></td>
-            <td>
-              A learner may mark themselves present but never absent. Only staff can record an
-              absence. Below 60% flags the learner as at risk.
-            </td>
-            <td>Attendance records cannot be quietly improved by the person being measured.</td>
-          </tr>
-          <tr>
-            <td><b>Guest browsing</b></td>
-            <td>
-              A guest session lives in the browser and disappears when the tab closes. Guests cannot
-              read course content, submit anything, or be enrolled.
-            </td>
-            <td>Lets a prospective learner look around without creating an account.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="callout">
-      <div class="callout__head">
-        <h3>One rule worth a decision from you</h3>
-        <span class="pill pill--gap">Needs a business call</span>
-      </div>
-      <p>
-        <strong>"Rejected" is final.</strong> Of the three review outcomes, approve and ask-for-
-        improvement both leave the learner a way forward. Reject does not: there is no resubmission,
-        no appeal, and no route back for that piece of work.
-      </p>
-      <p>
-        That may be exactly right. But it is the one rule where the system makes a decision a human
-        might later want to reverse, and it is worth confirming that is intended rather than
-        inherited. If it is not, allowing a reviewer to reopen a rejected submission is a small
-        change.
-      </p>
-    </div>
-  </section>
-
-  <!-- Methodology ----------------------------------------------------------->
-  <section>
-    <h2>How each area was assessed</h2>
-    <p>
-      Every rating above traces to a published standard or a measured threshold, so the findings can
-      be argued with rather than merely believed.
-    </p>
-
-    <div class="scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Area</th>
-            <th>Standard applied</th>
-            <th>Method</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>UI &amp; layout</td>
-            <td>
-              Content should occupy the available screen; text columns of 50–75 characters;
-              consistent spacing from a defined scale
-            </td>
-            <td>Measured container and content widths at four viewport sizes</td>
-          </tr>
-          <tr>
-            <td>User experience</td>
-            <td>Nielsen's 10 usability heuristics; Hick's Law for choice count</td>
-            <td>Walkthrough as each of the three roles</td>
-          </tr>
-          <tr>
-            <td>User flow</td>
-            <td>Primary task reachable in three actions or fewer; no dead ends</td>
-            <td>Counted actions for each core journey</td>
-          </tr>
-          <tr>
-            <td>Video &amp; task completion</td>
-            <td>Progress must survive interruption; gate behaviour must match what is claimed</td>
-            <td>End-to-end submit, review and resubmit against a live database</td>
-          </tr>
-          <tr>
-            <td>Admin &amp; CX</td>
-            <td>Operational tasks completable without developer help; actions reversible</td>
-            <td>Task-by-task walkthrough of every admin section</td>
-          </tr>
-          <tr>
-            <td>Functional</td>
-            <td>
-              Feature behaves as the business rule specifies — see <b>What the system enforces</b>
-            </td>
-            <td>371 automated tests over every business rule module</td>
-          </tr>
-          <tr>
-            <td>Backend &amp; data</td>
-            <td>No role may read or write data outside its remit</td>
-            <td>65 tests against a throwaway copy of the real database</td>
-          </tr>
-          <tr>
-            <td>Responsive</td>
-            <td>Usable at 375px, 768px and 1440px; no sideways scrolling; 44px touch targets</td>
-            <td>Automated checks plus measurement at each width</td>
-          </tr>
-          <tr>
-            <td>Error handling</td>
-            <td>Every failure explains itself and offers a way forward</td>
-            <td>Reviewed the failure path of every data-loading screen</td>
-          </tr>
-          <tr>
-            <td>Performance</td>
-            <td>Interactive within 3s on a mid-range phone on 3G</td>
-            <td>Measured the production build</td>
-          </tr>
-          <tr>
-            <td>Scale &amp; response time</td>
-            <td>
-              Every screen usable within 10s at 1,000 learners, and within 3s for daily tools —
-              Nielsen's response-time limits
-            </td>
-            <td>
-              Five timed runs per screen at production volume, reporting average, worst case,
-              database time and data transferred
-            </td>
-          </tr>
-          <tr>
-            <td>Accessibility</td>
-            <td>WCAG 2.1 Level AA</td>
-            <td>Automated scanner on all 21 pages, run on every change</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- The measured UI finding, now closed ---------------------------------->
-  <section>
-    <h2>The layout finding — found by measurement, now fixed</h2>
-    <p>
-      This was the largest remaining gap when the assessment began. It is included because how it
-      was found matters as much as the fix: the numbers below came from measuring the running
-      product at five screen sizes, not from an opinion about how it looked.
-    </p>
-
-    <div class="callout callout--done">
-      <div class="callout__head">
-        <h3>The desktop was the phone layout, stretched</h3>
-        <span class="pill pill--pass">Closed</span>
-      </div>
-      <p>
-        On a 1,440px screen, learner pages rendered <strong>a single column 1,328px wide</strong>.
-        Body text therefore ran to roughly 200 characters per line against a readable maximum of
-        about 75, and a support field spanned <b class="mono">1,278px</b> to hold a one-line
-        subject. The admin user list was single-column with no grid at any width, so staff scrolled
-        through records that would have fitted on one screen.
-      </p>
-      <p>
-        <b>The cause was not missing design work.</b> The layout offered four different widths
-        depending on the page, but a more specific rule elsewhere overrode all of them with "no
-        limit" — and that rule applied to every learner page. The intended widths had never once
-        taken effect, and the shell quietly changed width as you moved between pages.
-      </p>
-      <p>
-        <b>Now.</b> One width system: pages grow with the screen up to 1,280px and then stop, so a
-        large monitor gets comfortable margins instead of stretched content. Above 1,024px, settings
-        and support pages lay out in columns, dashboard panels sit side by side, and admin lists
-        become real rows. <strong>Nothing below 1,024px changed</strong> — the phone layout was
-        already right.
-      </p>
-      <p>
-        <b>How it was caught.</b> The new responsive check failed on its first run at 1440px and
-        1920px. Without it, the fix would have been applied, produced no visible change, and looked
-        like it had worked.
-      </p>
-    </div>
-
-    <div class="scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Measure</th>
-            <th class="num">Before</th>
-            <th class="num">After</th>
-            <th>Effect</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Learner page width on a 1920px monitor</td>
-            <td class="num">1840px</td>
-            <td class="num">1280px</td>
-            <td>Content stops stretching; margins appear</td>
-          </tr>
-          <tr>
-            <td>Admin list row height at 1440px</td>
-            <td class="num">154px</td>
-            <td class="num">78px</td>
-            <td><b>Roughly twice as many learners visible per screen</b></td>
-          </tr>
-          <tr>
-            <td>Columns on settings pages at 1440px</td>
-            <td class="num">1</td>
-            <td class="num">3</td>
-            <td>Cards side by side instead of a tall stack</td>
-          </tr>
-          <tr>
-            <td>Running text width</td>
-            <td class="num">~200 ch</td>
-            <td class="num">~68 ch</td>
-            <td>Within the readable range</td>
-          </tr>
-          <tr>
-            <td>Phone layout at 375px</td>
-            <td class="num">375px</td>
-            <td class="num">375px</td>
-            <td>Deliberately unchanged</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Device</th>
-            <th class="num">Width</th>
-            <th class="num">Content</th>
-            <th>Layout</th>
-            <th>Checked automatically</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Phone</td>
-            <td class="num">375px</td>
-            <td class="num">375px</td>
-            <td>Single column</td>
-            <td><span class="pill pill--pass">Every change</span></td>
-          </tr>
-          <tr>
-            <td>Tablet</td>
-            <td class="num">768px</td>
-            <td class="num">688px</td>
-            <td>Single column</td>
-            <td><span class="pill pill--pass">Every change</span></td>
-          </tr>
-          <tr>
-            <td>Laptop</td>
-            <td class="num">1024px</td>
-            <td class="num">944px</td>
-            <td>Two columns</td>
-            <td><span class="pill pill--pass">Every change</span></td>
-          </tr>
-          <tr>
-            <td>MacBook</td>
-            <td class="num">1440px</td>
-            <td class="num">1280px</td>
-            <td>Two to three columns</td>
-            <td><span class="pill pill--pass">Every change</span></td>
-          </tr>
-          <tr>
-            <td>Desktop monitor</td>
-            <td class="num">1920px</td>
-            <td class="num">1280px</td>
-            <td>Two to three columns, centred</td>
-            <td><span class="pill pill--pass">Every change</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
 
   <!-- Load test ------------------------------------------------------------->
   <section>
@@ -2487,6 +1958,280 @@
     </p>
   </section>
 
+
+  <!-- Business impact --------------------------------------------------------->
+  <section>
+    <h2>What it means for the business</h2>
+    <p>
+      Severity in engineering terms is not the same as consequence. This is what each finding cost,
+      and who paid it.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Who or what</th>
+            <th>Exposure</th>
+            <th>Position now</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Learners</b></td>
+            <td>
+              None from the scaling problem — their screens never depended on how many others were
+              enrolled. The one cost they carry is a first visit that downloads more than it needs,
+              which affects first impressions rather than function.
+            </td>
+            <td><span class="pill pill--pass">Low</span></td>
+          </tr>
+          <tr>
+            <td><b>CX team</b></td>
+            <td>
+              This is where the damage was. At 1,000 learners the review queue took over a minute to
+              open for a single person, which is enough on its own to stall a working day. Three of
+              the four screens they use daily are now under four seconds.
+            </td>
+            <td><span class="pill pill--pass">Largely resolved</span></td>
+          </tr>
+          <tr>
+            <td><b>Operations</b></td>
+            <td>
+              Reviews are still cleared one at a time; there is no way to approve in bulk. That is a
+              standing cost in staff hours which grows directly with intake size — a product decision
+              rather than a defect.
+            </td>
+            <td><span class="pill pill--gap">Ongoing cost</span></td>
+          </tr>
+          <tr>
+            <td><b>Management visibility</b></td>
+            <td>
+              The analytics screen is how progress across batches is seen. At 20&ndash;100 seconds it
+              gets avoided rather than used, which means decisions get made without it.
+            </td>
+            <td><span class="pill pill--high">Open</span></td>
+          </tr>
+          <tr>
+            <td><b>Revenue</b></td>
+            <td>
+              No defect found in payment status, access tiers or enrolment. Separately, learners
+              finish a paid programme with nothing shareable — a missed acquisition channel rather
+              than a fault.
+            </td>
+            <td><span class="pill pill--pass">No exposure</span></td>
+          </tr>
+          <tr>
+            <td><b>Data and security</b></td>
+            <td>
+              65 tests confirm no role can reach another's data, and the batch-scoping rule fails
+              closed — an unknown batch grants nothing rather than everything. The rules were checked
+              by deliberately weakening one and confirming the tests caught it.
+            </td>
+            <td><span class="pill pill--pass">No exposure found</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      <b>In one line:</b> the cost of everything found here fell on staff time and management
+      visibility. No learner lost work, and no data was reachable by anyone who should not see it.
+    </p>
+  </section>
+
+
+  <!-- What was fixed ---------------------------------------------------------->
+  <section>
+    <h2>What was fixed, and how we know</h2>
+    <p>
+      Forty-two of the forty-three defects are closed. These are the ones with a number attached —
+      each measured before and after on the same data, and each now guarded by a test that fails the
+      build if it comes back.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>What was wrong</th>
+            <th class="num">Before</th>
+            <th class="num">After</th>
+            <th>Retested by</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Review queue loaded the whole programme</td>
+            <td class="num">71.3s</td>
+            <td class="num">2.0s</td>
+            <td>Timed run at 1,000 learners; figures compared against the old version</td>
+          </tr>
+          <tr>
+            <td>Batches screen fetched data it never displayed</td>
+            <td class="num">68s</td>
+            <td class="num">1.3s</td>
+            <td>Timed run at 1,000 learners</td>
+          </tr>
+          <tr>
+            <td>CX home recalculated totals in the browser</td>
+            <td class="num">69.6s</td>
+            <td class="num">5.9s</td>
+            <td>Both versions run against one database; every figure identical</td>
+          </tr>
+          <tr>
+            <td>Review queue drew 8,000 rows at once</td>
+            <td class="num">50,134 elements</td>
+            <td class="num">487</td>
+            <td>Element count measured in the browser</td>
+          </tr>
+          <tr>
+            <td>Admin could not browse past 500 accounts</td>
+            <td class="num">500 max</td>
+            <td class="num">No limit</td>
+            <td>Paged through 1,200 accounts</td>
+          </tr>
+          <tr>
+            <td>Desktop was the phone layout stretched</td>
+            <td class="num">~200 characters per line</td>
+            <td class="num">~68</td>
+            <td>Layout re-measured at five widths on every change</td>
+          </tr>
+          <tr>
+            <td>Pending-task tile always read zero</td>
+            <td class="num">Always 0</td>
+            <td class="num">Real count</td>
+            <td>Counted from the same source the programme pages use</td>
+          </tr>
+          <tr>
+            <td>Admin search could not find some accounts</td>
+            <td class="num">Missed accounts</td>
+            <td class="num">Reaches all</td>
+            <td>Search no longer depends on a field some records lack</td>
+          </tr>
+          <tr>
+            <td>Images sent far larger than the space they are shown in</td>
+            <td class="num">8.3s first visit</td>
+            <td class="num">4.4s</td>
+            <td>Timed cold on a throttled phone connection; every image checked still larger than its
+              displayed size</td>
+          </tr>
+          <tr>
+            <td>Text too faint to read against its background</td>
+            <td class="num">3.45 : 1</td>
+            <td class="num">5.93 : 1</td>
+            <td>Automated contrast scan of all 21 pages, every change</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      <b>Two of these were found only because a fix was checked rather than trusted.</b> The CX home
+      figures were compared against the old version on the same database and initially disagreed —
+      32% against 16% — which turned out to be a fault in the test data rather than the product, but
+      would have shipped a wrong number had nobody looked. And an early version of the review-queue
+      fix crashed the page, which the timing test recorded as an excellent result until it was taught
+      that a crashed screen loads very fast indeed.
+    </p>
+  </section>
+
+
+  <!-- Formal QA table ------------------------------------------------------->
+  <section>
+    <h2>Open findings — QA detail</h2>
+    <p>
+      Severity here means consequence, not effort:
+      <b>Critical</b> — work or data can be lost.
+      <b>High</b> — someone cannot do their job.
+      <b>Medium</b> — a real cost, worked around today.
+      <b>Low</b> — noticeable, not obstructive.
+      <b>No Critical or High defects remain open</b> other than the analytics screen.
+    </p>
+    <p>
+      Everything found during this programme is fixed except the items below, which are improvements
+      rather than defects. Severity follows standard practice: Critical blocks a release, High
+      damages the experience, Medium is a noticeable rough edge, Low is polish.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Scenario &amp; expected result</th>
+            <th>Actual result</th>
+            <th>Type</th>
+            <th>Severity</th>
+            <th>Recommended action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="mono">UX-01</td>
+            <td>CX clears a backlog of 47 reviews.<br /><b>Expected:</b> review in batches.</td>
+            <td>One at a time; roughly 90 minutes of clicking.</td>
+            <td>UX / throughput</td>
+            <td><span class="pill pill--gap">High</span></td>
+            <td>Multi-select, bulk approve, and j/k/Enter keyboard navigation.</td>
+          </tr>
+          <tr>
+            <td class="mono">OPS-01</td>
+            <td>
+              Admin views a learner base above 500.<br /><b>Expected:</b> all accounts browsable.
+            </td>
+            <td>
+              <b>Fixed.</b> The list now continues past 500 on request — verified against 1,200
+              accounts, loading 500, then 1,000, then the remainder. Accounts with no recorded
+              creation date are still absent from browsing and still found by search; the list says
+              so rather than implying it is complete.
+            </td>
+            <td>Backend / data</td>
+            <td><span class="pill pill--pass">Closed</span></td>
+            <td>None. Retest by browsing past the first page in Admin → Users.</td>
+          </tr>
+          <tr>
+            <td class="mono">PROD-01</td>
+            <td>Learner completes a programme.<br /><b>Expected:</b> something to show for it.</td>
+            <td>No certificate exists.</td>
+            <td>Product gap</td>
+            <td><span class="pill pill--gap">Medium</span></td>
+            <td>Highest-return addition available — see recommendations.</td>
+          </tr>
+          <tr>
+            <td class="mono">PROD-02</td>
+            <td>Cohort learners discuss the programme.<br /><b>Expected:</b> a place to talk.</td>
+            <td>None; conversation happens on WhatsApp.</td>
+            <td>Product gap</td>
+            <td><span class="pill pill--gap">Medium</span></td>
+            <td>Cohort discussion keeps engagement measurable.</td>
+          </tr>
+          <tr>
+            <td class="mono">OPS-02</td>
+            <td>
+              Open the CX analytics screen with 1,000 learners enrolled.<br /><b>Expected:</b> usable
+              within 10s, consistently.
+            </td>
+            <td>
+              <b>56.7s average, 101.4s worst, 19.5s best</b> over five runs — a fivefold spread
+              between identical requests. 134 KB fetched, of which 48.3s average is spent waiting on
+              the database. Eight of the nine screens tested pass or are within tolerance; this is
+              the only failure.
+            </td>
+            <td>Reliability &amp; performance</td>
+            <td><span class="pill pill--high">High</span></td>
+            <td>
+              Keep a small progress summary on each learner's record, maintained as they submit —
+              the same pattern already used for streaks. Needs a one-off backfill of existing
+              learners, so it requires sign-off. 3–5 days.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
   <!-- Area by area ---------------------------------------------------------->
   <section>
     <h2>Findings by area</h2>
@@ -2620,99 +2365,367 @@
     </div>
   </section>
 
-  <!-- Formal QA table ------------------------------------------------------->
+
+  <!-- The measured UI finding, now closed ---------------------------------->
   <section>
-    <h2>Open findings — QA detail</h2>
+    <h2>The layout finding — found by measurement, now fixed</h2>
     <p>
-      Severity here means consequence, not effort:
-      <b>Critical</b> — work or data can be lost.
-      <b>High</b> — someone cannot do their job.
-      <b>Medium</b> — a real cost, worked around today.
-      <b>Low</b> — noticeable, not obstructive.
-      <b>No Critical or High defects remain open</b> other than the analytics screen.
+      This was the largest remaining gap when the assessment began. It is included because how it
+      was found matters as much as the fix: the numbers below came from measuring the running
+      product at five screen sizes, not from an opinion about how it looked.
     </p>
+
+    <div class="callout callout--done">
+      <div class="callout__head">
+        <h3>The desktop was the phone layout, stretched</h3>
+        <span class="pill pill--pass">Closed</span>
+      </div>
+      <p>
+        On a 1,440px screen, learner pages rendered <strong>a single column 1,328px wide</strong>.
+        Body text therefore ran to roughly 200 characters per line against a readable maximum of
+        about 75, and a support field spanned <b class="mono">1,278px</b> to hold a one-line
+        subject. The admin user list was single-column with no grid at any width, so staff scrolled
+        through records that would have fitted on one screen.
+      </p>
+      <p>
+        <b>The cause was not missing design work.</b> The layout offered four different widths
+        depending on the page, but a more specific rule elsewhere overrode all of them with "no
+        limit" — and that rule applied to every learner page. The intended widths had never once
+        taken effect, and the shell quietly changed width as you moved between pages.
+      </p>
+      <p>
+        <b>Now.</b> One width system: pages grow with the screen up to 1,280px and then stop, so a
+        large monitor gets comfortable margins instead of stretched content. Above 1,024px, settings
+        and support pages lay out in columns, dashboard panels sit side by side, and admin lists
+        become real rows. <strong>Nothing below 1,024px changed</strong> — the phone layout was
+        already right.
+      </p>
+      <p>
+        <b>How it was caught.</b> The new responsive check failed on its first run at 1440px and
+        1920px. Without it, the fix would have been applied, produced no visible change, and looked
+        like it had worked.
+      </p>
+    </div>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Measure</th>
+            <th class="num">Before</th>
+            <th class="num">After</th>
+            <th>Effect</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Learner page width on a 1920px monitor</td>
+            <td class="num">1840px</td>
+            <td class="num">1280px</td>
+            <td>Content stops stretching; margins appear</td>
+          </tr>
+          <tr>
+            <td>Admin list row height at 1440px</td>
+            <td class="num">154px</td>
+            <td class="num">78px</td>
+            <td><b>Roughly twice as many learners visible per screen</b></td>
+          </tr>
+          <tr>
+            <td>Columns on settings pages at 1440px</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+            <td>Cards side by side instead of a tall stack</td>
+          </tr>
+          <tr>
+            <td>Running text width</td>
+            <td class="num">~200 ch</td>
+            <td class="num">~68 ch</td>
+            <td>Within the readable range</td>
+          </tr>
+          <tr>
+            <td>Phone layout at 375px</td>
+            <td class="num">375px</td>
+            <td class="num">375px</td>
+            <td>Deliberately unchanged</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Device</th>
+            <th class="num">Width</th>
+            <th class="num">Content</th>
+            <th>Layout</th>
+            <th>Checked automatically</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Phone</td>
+            <td class="num">375px</td>
+            <td class="num">375px</td>
+            <td>Single column</td>
+            <td><span class="pill pill--pass">Every change</span></td>
+          </tr>
+          <tr>
+            <td>Tablet</td>
+            <td class="num">768px</td>
+            <td class="num">688px</td>
+            <td>Single column</td>
+            <td><span class="pill pill--pass">Every change</span></td>
+          </tr>
+          <tr>
+            <td>Laptop</td>
+            <td class="num">1024px</td>
+            <td class="num">944px</td>
+            <td>Two columns</td>
+            <td><span class="pill pill--pass">Every change</span></td>
+          </tr>
+          <tr>
+            <td>MacBook</td>
+            <td class="num">1440px</td>
+            <td class="num">1280px</td>
+            <td>Two to three columns</td>
+            <td><span class="pill pill--pass">Every change</span></td>
+          </tr>
+          <tr>
+            <td>Desktop monitor</td>
+            <td class="num">1920px</td>
+            <td class="num">1280px</td>
+            <td>Two to three columns, centred</td>
+            <td><span class="pill pill--pass">Every change</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <!-- What the system enforces ---------------------------------------------->
+  <section>
+    <h2>What the system enforces</h2>
     <p>
-      Everything found during this programme is fixed except the items below, which are improvements
-      rather than defects. Severity follows standard practice: Critical blocks a release, High
-      damages the experience, Medium is a noticeable rough edge, Low is polish.
+      Below are the rules the LMS applies on its own, without anyone having to remember them. They
+      are business decisions — who may see what, what unlocks when, what counts as finished —
+      written into the product. <strong>Every rule here is covered by automated tests</strong>, so a
+      future change that breaks one is caught before it reaches a learner.
     </p>
 
     <div class="scroll">
       <table>
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Scenario &amp; expected result</th>
-            <th>Actual result</th>
-            <th>Type</th>
-            <th>Severity</th>
-            <th>Recommended action</th>
+            <th>Rule</th>
+            <th>What the system does</th>
+            <th>Why it matters</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td class="mono">UX-01</td>
-            <td>CX clears a backlog of 47 reviews.<br /><b>Expected:</b> review in batches.</td>
-            <td>One at a time; roughly 90 minutes of clicking.</td>
-            <td>UX / throughput</td>
-            <td><span class="pill pill--gap">High</span></td>
-            <td>Multi-select, bulk approve, and j/k/Enter keyboard navigation.</td>
+            <td><b>Programme order</b></td>
+            <td>
+              LEP → 100 Board Members → MBW. A learner sees all three; only the ones they are
+              entitled to will open.
+            </td>
+            <td>Locked programmes stay visible, so the path ahead is clear rather than hidden.</td>
           </tr>
           <tr>
-            <td class="mono">OPS-01</td>
+            <td><b>Payment decides access</b></td>
             <td>
-              Admin views a learner base above 500.<br /><b>Expected:</b> all accounts browsable.
+              Unpaid opens nothing. Registration deposit opens the early sections. Full payment
+              opens the programme.
             </td>
             <td>
-              <b>Fixed.</b> The list now continues past 500 on request — verified against 1,200
-              accounts, loading 500, then 1,000, then the remainder. Accounts with no recorded
-              creation date are still absent from browsing and still found by search; the list says
-              so rather than implying it is complete.
+              Read from Zoho, which spells the same status several ways. Anything unrecognised is
+              treated as unpaid — it errs toward locking, never toward giving content away.
             </td>
-            <td>Backend / data</td>
-            <td><span class="pill pill--pass">Closed</span></td>
-            <td>None. Retest by browsing past the first page in Admin → Users.</td>
           </tr>
           <tr>
-            <td class="mono">PROD-01</td>
-            <td>Learner completes a programme.<br /><b>Expected:</b> something to show for it.</td>
-            <td>No certificate exists.</td>
-            <td>Product gap</td>
-            <td><span class="pill pill--gap">Medium</span></td>
-            <td>Highest-return addition available — see recommendations.</td>
+            <td><b>Sections unlock in sequence</b></td>
+            <td>
+              A section opens only when the one before it is finished, the deposit or full payment
+              is in, and the learner is in a batch — whichever that section requires.
+            </td>
+            <td>
+              A paying learner still cannot skip to Quarter 3, and a learner who has finished
+              Quarter 1 still cannot continue on a deposit alone.
+            </td>
           </tr>
           <tr>
-            <td class="mono">PROD-02</td>
-            <td>Cohort learners discuss the programme.<br /><b>Expected:</b> a place to talk.</td>
-            <td>None; conversation happens on WhatsApp.</td>
-            <td>Product gap</td>
-            <td><span class="pill pill--gap">Medium</span></td>
-            <td>Cohort discussion keeps engagement measurable.</td>
+            <td><b>Every submission is reviewed</b></td>
+            <td>
+              Work goes Locked → Available → Submitted → Under review → Complete. A reviewer chooses
+              approve, ask for improvement, or reject.
+            </td>
+            <td>
+              Work sent back does not count as done, does not add to progress, and stays the
+              learner's next task. Work already submitted does not block them from carrying on.
+            </td>
           </tr>
           <tr>
-            <td class="mono">OPS-02</td>
+            <td><b>Five levels of access</b></td>
+            <td>Guest → Learner → CX → Admin → Super Admin, each including everything below it.</td>
             <td>
-              Open the CX analytics screen with 1,000 learners enrolled.<br /><b>Expected:</b> usable
-              within 10s, consistently.
+              CX can review and manage their batches but cannot change roles or delete a cohort.
+              Admins cannot delete accounts. Only Super Admin can.
+            </td>
+          </tr>
+          <tr>
+            <td><b>CX sees only their own batches</b></td>
+            <td>
+              A CX member sees learners in batches assigned to them, within their own programme.
+            </td>
+            <td>One cohort's staff cannot see another cohort's learners.</td>
+          </tr>
+          <tr>
+            <td><b>Streaks count consecutive days</b></td>
+            <td>
+              Any activity counts the day. A second activity the same day adds nothing. A missed day
+              resets to one.
             </td>
             <td>
-              <b>56.7s average, 101.4s worst, 19.5s best</b> over five runs — a fivefold spread
-              between identical requests. 134 KB fetched, of which 48.3s average is spent waiting on
-              the database. Eight of the nine screens tested pass or are within tolerance; this is
-              the only failure.
+              Days are measured in India time wherever the learner or server is, so someone working
+              at half past midnight gets credit for the right day.
             </td>
-            <td>Reliability &amp; performance</td>
-            <td><span class="pill pill--high">High</span></td>
+          </tr>
+          <tr>
+            <td><b>Attendance</b></td>
             <td>
-              Keep a small progress summary on each learner's record, maintained as they submit —
-              the same pattern already used for streaks. Needs a one-off backfill of existing
-              learners, so it requires sign-off. 3–5 days.
+              A learner may mark themselves present but never absent. Only staff can record an
+              absence. Below 60% flags the learner as at risk.
             </td>
+            <td>Attendance records cannot be quietly improved by the person being measured.</td>
+          </tr>
+          <tr>
+            <td><b>Guest browsing</b></td>
+            <td>
+              A guest session lives in the browser and disappears when the tab closes. Guests cannot
+              read course content, submit anything, or be enrolled.
+            </td>
+            <td>Lets a prospective learner look around without creating an account.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <div class="callout__head">
+        <h3>One rule worth a decision from you</h3>
+        <span class="pill pill--gap">Needs a business call</span>
+      </div>
+      <p>
+        <strong>"Rejected" is final.</strong> Of the three review outcomes, approve and ask-for-
+        improvement both leave the learner a way forward. Reject does not: there is no resubmission,
+        no appeal, and no route back for that piece of work.
+      </p>
+      <p>
+        That may be exactly right. But it is the one rule where the system makes a decision a human
+        might later want to reverse, and it is worth confirming that is intended rather than
+        inherited. If it is not, allowing a reviewer to reopen a rejected submission is a small
+        change.
+      </p>
+    </div>
+  </section>
+
+
+  <!-- Methodology ----------------------------------------------------------->
+  <section>
+    <h2>How each area was assessed</h2>
+    <p>
+      Every rating above traces to a published standard or a measured threshold, so the findings can
+      be argued with rather than merely believed.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Area</th>
+            <th>Standard applied</th>
+            <th>Method</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>UI &amp; layout</td>
+            <td>
+              Content should occupy the available screen; text columns of 50–75 characters;
+              consistent spacing from a defined scale
+            </td>
+            <td>Measured container and content widths at four viewport sizes</td>
+          </tr>
+          <tr>
+            <td>User experience</td>
+            <td>Nielsen's 10 usability heuristics; Hick's Law for choice count</td>
+            <td>Walkthrough as each of the three roles</td>
+          </tr>
+          <tr>
+            <td>User flow</td>
+            <td>Primary task reachable in three actions or fewer; no dead ends</td>
+            <td>Counted actions for each core journey</td>
+          </tr>
+          <tr>
+            <td>Video &amp; task completion</td>
+            <td>Progress must survive interruption; gate behaviour must match what is claimed</td>
+            <td>End-to-end submit, review and resubmit against a live database</td>
+          </tr>
+          <tr>
+            <td>Admin &amp; CX</td>
+            <td>Operational tasks completable without developer help; actions reversible</td>
+            <td>Task-by-task walkthrough of every admin section</td>
+          </tr>
+          <tr>
+            <td>Functional</td>
+            <td>
+              Feature behaves as the business rule specifies — see <b>What the system enforces</b>
+            </td>
+            <td>371 automated tests over every business rule module</td>
+          </tr>
+          <tr>
+            <td>Backend &amp; data</td>
+            <td>No role may read or write data outside its remit</td>
+            <td>65 tests against a throwaway copy of the real database</td>
+          </tr>
+          <tr>
+            <td>Responsive</td>
+            <td>Usable at 375px, 768px and 1440px; no sideways scrolling; 44px touch targets</td>
+            <td>Automated checks plus measurement at each width</td>
+          </tr>
+          <tr>
+            <td>Error handling</td>
+            <td>Every failure explains itself and offers a way forward</td>
+            <td>Reviewed the failure path of every data-loading screen</td>
+          </tr>
+          <tr>
+            <td>Performance</td>
+            <td>Interactive within 3s on a mid-range phone on 3G</td>
+            <td>Measured the production build</td>
+          </tr>
+          <tr>
+            <td>Scale &amp; response time</td>
+            <td>
+              Every screen usable within 10s at 1,000 learners, and within 3s for daily tools —
+              Nielsen's response-time limits
+            </td>
+            <td>
+              Five timed runs per screen at production volume, reporting average, worst case,
+              database time and data transferred
+            </td>
+          </tr>
+          <tr>
+            <td>Accessibility</td>
+            <td>WCAG 2.1 Level AA</td>
+            <td>Automated scanner on all 21 pages, run on every change</td>
           </tr>
         </tbody>
       </table>
     </div>
   </section>
+
 
   <!-- Evidence -------------------------------------------------------------->
   <section>
@@ -2791,6 +2804,7 @@
       </table>
     </div>
   </section>
+
 
   <!-- Recommendations ------------------------------------------------------->
   <section>
@@ -2871,6 +2885,7 @@
       </div>
     </div>
   </section>
+
 
   <!-- Method note ----------------------------------------------------------->
   <section>
