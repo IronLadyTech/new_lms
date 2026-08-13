@@ -1151,6 +1151,13 @@
             <td>Search no longer depends on a field some records lack</td>
           </tr>
           <tr>
+            <td>Images sent far larger than the space they are shown in</td>
+            <td class="num">8.3s first visit</td>
+            <td class="num">4.4s</td>
+            <td>Timed cold on a throttled phone connection; every image checked still larger than its
+              displayed size</td>
+          </tr>
+          <tr>
             <td>Text too faint to read against its background</td>
             <td class="num">3.45 : 1</td>
             <td class="num">5.93 : 1</td>
@@ -2035,7 +2042,7 @@
       <svg
         viewBox="0 0 720 268"
         role="img"
-        aria-label="With 1,000 learners enrolled, every day-to-day learner screen opens in 0.7 to 1.4 seconds, comfortably inside the three-second target. The exception is a learner's first ever visit on a phone, at 8.3 seconds."
+        aria-label="With 1,000 learners enrolled, every day-to-day learner screen opens in 0.7 to 1.4 seconds. A learner's first ever visit on a phone was 8.3 seconds and is now 4.4 after the images were resized."
       >
         <text x="0" y="20" class="fig-title">What a learner waits, with 1,000 enrolled</text>
         <text x="0" y="40" class="fig-label">
@@ -2061,8 +2068,8 @@
         <rect x="250" y="178" width="53.2" height="13" rx="2" fill="var(--pass)" />
         <text x="311.2" y="189" class="fig-value" fill="var(--pass)">1.4s</text>
         <text x="238" y="218" text-anchor="end" class="fig-label">First ever visit, on a phone</text>
-        <rect x="250" y="208" width="315.4" height="13" rx="2" fill="var(--gap)" />
-        <text x="573.4" y="219" class="fig-value" fill="var(--gap)">8.3s</text>
+        <rect x="250" y="208" width="167.2" height="13" rx="2" fill="var(--gap)" />
+        <text x="425.2" y="219" class="fig-value" fill="var(--gap)">4.4s</text>
 
         <line x1="250" y1="240" x2="630" y2="240" stroke="var(--rule)" stroke-width="1" />
         <text x="250" y="256" class="fig-label">0s</text>
@@ -2071,10 +2078,11 @@
       <figcaption>
         <b>The people the product exists for are not affected by its size.</b> Every screen a learner
         uses opens in about a second with a thousand enrolled — the same as with a hundred, because
-        their pages only ask about them. The one exception is their <em>first</em> visit, before
-        anything is stored on the device: 8.3 seconds on a phone, roughly a third of which is
-        pictures larger than the space they are shown in. That is a first-impression cost, not a
-        scaling one, and it is the same on day one.
+        their pages only ask about them. Their <em>first</em> visit, before anything is stored on the
+        device, was the one weak spot at 8.3 seconds on a phone; resizing the pictures to the space
+        they are actually shown in brought that to <b>4.4</b> — still over the three-second target and
+        still worth closing, but never a scaling problem: it is the same on day one with ten
+        learners.
       </figcaption>
     </figure>
 
@@ -2268,7 +2276,8 @@
       with the site already downloaded and no network delay, which isolates the question this section
       is about — does the cohort size matter — and answers it cleanly. It is not what a learner feels
       on a first visit. Measured again cold, on a phone-grade 4G connection with a slower processor,
-      the same dashboard takes <b class="mono">8.3s</b> and pulls <b class="mono">930 KB</b>.
+      the same dashboard took <b class="mono">8.3s</b> and pulled <b class="mono">930 KB</b>. It now
+      takes <b class="mono">4.4s</b> and pulls <b class="mono">604 KB</b>.
     </p>
     <p>
       That is a separate problem with a separate cause, and it is not about scale — it is the same on
@@ -2314,10 +2323,16 @@
       </table>
     </div>
     <p>
-      Resizing the images to the size they are displayed at, and dropping the two unused font
-      weights, would remove roughly <strong>330 KB — about a third of the first visit</strong> —
-      without a single change to how the product looks or works. Repeat visits are already cached, so
-      this is specifically the cost of a learner's <em>first</em> impression.
+      <b>The images are done.</b> Resizing them to the size they are actually displayed at removed
+      <strong>233 KB</strong> and took the first visit from 8.3 seconds to <b>4.4</b>, with nothing
+      on screen changing — every picture is still larger than the space it occupies, and the
+      lettering on the programme covers stays sharp. The logo alone had been forty-four times wider
+      than the space it is shown in.
+    </p>
+    <p>
+      What is left of that list is the fonts: four weights of the body typeface load where the design
+      uses two, which is roughly <b>50 KB</b> more. That one is a design decision rather than a
+      technical one, so it is left open.
     </p>
     <p>
       One thing to watch as time passes: the dashboard reads every announcement ever published. With
