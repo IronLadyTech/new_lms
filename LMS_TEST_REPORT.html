@@ -646,14 +646,11 @@
       break-after: avoid;
       page-break-after: avoid;
     }
-    h2 {
-      break-before: page;
-      page-break-before: page;
-    }
-    /* …except the first, which would otherwise open on a blank sheet. */
-    section:first-of-type h2 {
-      break-before: auto;
-      page-break-before: auto;
+    /* Sections flow rather than each claiming a fresh sheet: forcing a break per
+       heading padded the document out and left half-empty pages wherever a
+       figure would not fit in what was left. */
+    section {
+      break-inside: auto;
     }
 
     /* Tables scroll on screen; on paper they must simply fit. */
@@ -661,7 +658,21 @@
       overflow: visible;
     }
     table {
-      font-size: 9.5pt;
+      font-size: 9pt;
+    }
+    body {
+      font-size: 10pt;
+      line-height: 1.45;
+    }
+    section {
+      margin-top: 1.4rem;
+    }
+    figure {
+      margin: 1rem 0;
+      padding: 0.8rem;
+    }
+    .callout {
+      padding: 1rem;
     }
 
     /* The reasoning behind a finding is part of the record. */

@@ -16,9 +16,18 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+/*
+ * --brief keeps only what precedes the "Technical detail" divider: the verdict,
+ * the decisions, and the chart showing what changed. Three or four pages a chief
+ * executive will actually finish, rather than twenty-five they will not open.
+ */
+const BRIEF = process.argv.includes('--brief');
+
 const SOURCE = 'LMS_TEST_REPORT.html';
 const STANDALONE = 'LMS_TEST_REPORT.view.html';
-const OUTPUT = 'Iron Lady LMS — Quality Assessment.pdf';
+const OUTPUT = BRIEF
+  ? 'Iron Lady LMS — Quality Assessment (brief).pdf'
+  : 'Iron Lady LMS — Quality Assessment.pdf';
 
 if (!fs.existsSync(SOURCE)) {
   console.error(`Cannot find ${SOURCE} — run this from the project root.`);
@@ -53,6 +62,27 @@ await page.goto(pathToFileURL(path.resolve(STANDALONE)).href, { waitUntil: 'load
 await page.evaluate(() => {
   document.querySelectorAll('details').forEach((d) => d.setAttribute('open', ''));
 });
+
+if (BRIEF) {
+  const kept = await page.evaluate(() => {
+    const divider = document.querySelector('.tech-divider');
+    if (!divider) return null;
+    // Everything from the divider onward belongs to the evidence pack.
+    let node = divider;
+    const doomed = [];
+    while (node) {
+      doomed.push(node);
+      node = node.nextElementSibling;
+    }
+    doomed.forEach((n) => n.remove());
+    return document.querySelectorAll('h2').length;
+  });
+  if (kept === null) {
+    console.error('Could not find the brief/evidence divider — refusing to guess where to cut.');
+    process.exit(1);
+  }
+  console.log(`Brief: kept ${kept} sections.`);
+}
 await page.waitForTimeout(400);
 
 const date = new Date().toLocaleDateString('en-GB', {
@@ -61,8 +91,15 @@ const date = new Date().toLocaleDateString('en-GB', {
   year: 'numeric',
 });
 
+/*
+ * Written to a scratch file first, then moved into place. A PDF left open in a
+ * viewer holds a lock on Windows, and failing the whole build for that is
+ * needless when the only thing missing is somewhere to put it.
+ */
+const SCRATCH = OUTPUT.replace(/\.pdf$/, '.tmp.pdf');
+
 await page.pdf({
-  path: OUTPUT,
+  path: SCRATCH,
   format: 'A4',
   printBackground: true,
   margin: { top: '16mm', bottom: '18mm', left: '14mm', right: '14mm' },
@@ -76,9 +113,18 @@ await page.pdf({
     </div>`,
 });
 
-const pages = await page.evaluate(() => document.querySelectorAll('h2').length);
 await browser.close();
 
-const kb = Math.round(fs.statSync(OUTPUT).size / 1024);
-console.log(`Wrote "${OUTPUT}" — ${kb} KB, ${pages} sections.`);
+let written = OUTPUT;
+try {
+  fs.renameSync(SCRATCH, OUTPUT);
+} catch (err) {
+  if (err.code !== 'EBUSY' && err.code !== 'EPERM') throw err;
+  written = OUTPUT.replace(/\.pdf$/, ' (new).pdf');
+  fs.renameSync(SCRATCH, written);
+  console.warn(`"${OUTPUT}" is open somewhere, so this went to "${written}" instead.`);
+}
+
+const kb = Math.round(fs.statSync(written).size / 1024);
+console.log(`Wrote "${written}" — ${kb} KB.`);
 console.log('Attach that file. It needs no internet connection and nothing to install.');
