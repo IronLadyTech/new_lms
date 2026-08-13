@@ -4,7 +4,10 @@
       "WebSearch",
       "Read(//c/Users/Magvig/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.6.2/.claude/skills/ui-ux-pro-max/**)",
       "Bash(python scripts/search.py \"education learning course platform professional\" --domain product -n 5)",
-      "Bash(python scripts/search.py \"progressive disclosure empty state loading content priority mobile\" --domain ux -n 10)"
+      "Bash(python scripts/search.py \"progressive disclosure empty state loading content priority mobile\" --domain ux -n 10)",
+      "Bash(python addsections.py)",
+      "Bash(rm -f addsections.py)",
+      "Bash(node check.mjs)"
     ]
   },
   "enabledPlugins": {

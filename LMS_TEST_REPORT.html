@@ -780,6 +780,322 @@
     </p>
   </section>
 
+  <!-- Production readiness --------------------------------------------------->
+  <section>
+    <h2>Is it production-ready?</h2>
+
+    <div class="callout callout--done">
+      <div class="callout__head">
+        <h3>Ready, with two conditions</h3>
+        <span class="pill pill--pass">Release approved</span>
+      </div>
+      <p>
+        <b>Ready now</b> for the cohort sizes Iron Lady runs today, and for the learners themselves
+        at any size measured. Nothing on the open list can lose a learner's work, expose one
+        learner's data to another, or affect a payment. The two conditions below concern a screen
+        being slow and a figure being reliable — not anything breaking.
+      </p>
+    </div>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Condition</th>
+            <th>Why it matters</th>
+            <th>Needed before</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Fix the analytics screen</b></td>
+            <td>
+              20&ndash;100 seconds at 1,000 learners. Usable today; not usable after a large intake.
+            </td>
+            <td>The next large intake</td>
+          </tr>
+          <tr>
+            <td><b>Run the progress backfill</b></td>
+            <td>
+              Fills in a figure for learners who already have work in the system. Until it runs the
+              product falls back to the slower calculation — correct, but the analytics fix depends
+              on it.
+            </td>
+            <td>The analytics fix</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="muted">
+      Neither condition blocks release today. Both concern the next intake rather than this one.
+    </p>
+  </section>
+
+  <!-- Scope and coverage ------------------------------------------------------>
+  <section>
+    <h2>What was tested — and what was not</h2>
+    <p>
+      A report is only as good as its coverage, so this states both halves. Anything missing below is
+      a known gap rather than a silent one.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Area</th>
+            <th>How it was tested</th>
+            <th>Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Business rules</td>
+            <td>371 automated tests across all 28 rule modules</td>
+            <td><span class="pill pill--pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Data separation and permissions</td>
+            <td>
+              65 tests against a real database — including deliberately weakening a rule to confirm
+              the tests catch it
+            </td>
+            <td><span class="pill pill--pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Accessibility</td>
+            <td>Automated WCAG 2.1 AA scan of all 21 pages, on every change</td>
+            <td><span class="pill pill--pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Responsive layout</td>
+            <td>Measured at 375, 768, 1024, 1440 and 1920 pixels</td>
+            <td><span class="pill pill--pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Learner journeys</td>
+            <td>Signed in as real learners; video, tasks, progress and calendar exercised</td>
+            <td><span class="pill pill--pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Staff and admin journeys</td>
+            <td>Signed in as CX and admin; reviews, batches, users and tickets exercised</td>
+            <td><span class="pill pill--pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Reading at scale</td>
+            <td>Every screen timed five times at 100, 500 and 1,000 learners</td>
+            <td><span class="pill pill--gap">One failure</span></td>
+          </tr>
+          <tr>
+            <td><b>Writing at scale</b></td>
+            <td>Many learners submitting at once — a deadline evening. Never exercised.</td>
+            <td><span class="pill pill--none">Not tested</span></td>
+          </tr>
+          <tr>
+            <td><b>Staff working simultaneously</b></td>
+            <td>
+              Measured once <em>before</em> the fixes, where five of eight sessions failed. Not
+              re-run since.
+            </td>
+            <td><span class="pill pill--none">Stale</span></td>
+          </tr>
+          <tr>
+            <td><b>Real devices</b></td>
+            <td>Phone and tablet sizes were emulated, not run on physical hardware or Safari.</td>
+            <td><span class="pill pill--none">Not tested</span></td>
+          </tr>
+          <tr>
+            <td><b>Scale against the live service</b></td>
+            <td>All volume testing used a local copy of the database, never the production one.</td>
+            <td><span class="pill pill--none">By design</span></td>
+          </tr>
+          <tr>
+            <td><b>Penetration testing</b></td>
+            <td>Permissions were tested; adversarial attack testing was not part of this work.</td>
+            <td><span class="pill pill--none">Out of scope</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      <b>The gap worth closing next is writing at scale.</b> Reading scales flatly, which is now
+      measured rather than assumed — but a deadline evening puts a different kind of pressure on the
+      system, and that has never been observed.
+    </p>
+  </section>
+
+  <!-- Business impact --------------------------------------------------------->
+  <section>
+    <h2>What it means for the business</h2>
+    <p>
+      Severity in engineering terms is not the same as consequence. This is what each finding cost,
+      and who paid it.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Who or what</th>
+            <th>Exposure</th>
+            <th>Position now</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Learners</b></td>
+            <td>
+              None from the scaling problem — their screens never depended on how many others were
+              enrolled. The one cost they carry is a first visit that downloads more than it needs,
+              which affects first impressions rather than function.
+            </td>
+            <td><span class="pill pill--pass">Low</span></td>
+          </tr>
+          <tr>
+            <td><b>CX team</b></td>
+            <td>
+              This is where the damage was. At 1,000 learners the review queue took over a minute,
+              and with eight staff on it at once most sessions never loaded — the working day stops
+              rather than slows. Three of the four screens they use daily are now under four seconds.
+            </td>
+            <td><span class="pill pill--pass">Largely resolved</span></td>
+          </tr>
+          <tr>
+            <td><b>Operations</b></td>
+            <td>
+              Reviews are still cleared one at a time; there is no way to approve in bulk. That is a
+              standing cost in staff hours which grows directly with intake size — a product decision
+              rather than a defect.
+            </td>
+            <td><span class="pill pill--gap">Ongoing cost</span></td>
+          </tr>
+          <tr>
+            <td><b>Management visibility</b></td>
+            <td>
+              The analytics screen is how progress across batches is seen. At 20&ndash;100 seconds it
+              gets avoided rather than used, which means decisions get made without it.
+            </td>
+            <td><span class="pill pill--high">Open</span></td>
+          </tr>
+          <tr>
+            <td><b>Revenue</b></td>
+            <td>
+              No defect found in payment status, access tiers or enrolment. Separately, learners
+              finish a paid programme with nothing shareable — a missed acquisition channel rather
+              than a fault.
+            </td>
+            <td><span class="pill pill--pass">No exposure</span></td>
+          </tr>
+          <tr>
+            <td><b>Data and security</b></td>
+            <td>
+              65 tests confirm no role can reach another's data, and the batch-scoping rule fails
+              closed — an unknown batch grants nothing rather than everything. The rules were checked
+              by deliberately weakening one and confirming the tests caught it.
+            </td>
+            <td><span class="pill pill--pass">No exposure found</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      <b>In one line:</b> the cost of everything found here fell on staff time and management
+      visibility. No learner lost work, and no data was reachable by anyone who should not see it.
+    </p>
+  </section>
+
+  <!-- What was fixed ---------------------------------------------------------->
+  <section>
+    <h2>What was fixed, and how we know</h2>
+    <p>
+      Forty-two of the forty-three defects are closed. These are the ones with a number attached —
+      each measured before and after on the same data, and each now guarded by a test that fails the
+      build if it comes back.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>What was wrong</th>
+            <th class="num">Before</th>
+            <th class="num">After</th>
+            <th>Retested by</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Review queue loaded the whole programme</td>
+            <td class="num">71.3s</td>
+            <td class="num">2.0s</td>
+            <td>Timed run at 1,000 learners; figures compared against the old version</td>
+          </tr>
+          <tr>
+            <td>Batches screen fetched data it never displayed</td>
+            <td class="num">68s</td>
+            <td class="num">1.3s</td>
+            <td>Timed run at 1,000 learners</td>
+          </tr>
+          <tr>
+            <td>CX home recalculated totals in the browser</td>
+            <td class="num">69.6s</td>
+            <td class="num">5.9s</td>
+            <td>Both versions run against one database; every figure identical</td>
+          </tr>
+          <tr>
+            <td>Review queue drew 8,000 rows at once</td>
+            <td class="num">50,134 elements</td>
+            <td class="num">487</td>
+            <td>Element count measured in the browser</td>
+          </tr>
+          <tr>
+            <td>Admin could not browse past 500 accounts</td>
+            <td class="num">500 max</td>
+            <td class="num">No limit</td>
+            <td>Paged through 1,200 accounts</td>
+          </tr>
+          <tr>
+            <td>Desktop was the phone layout stretched</td>
+            <td class="num">~200 characters per line</td>
+            <td class="num">~68</td>
+            <td>Layout re-measured at five widths on every change</td>
+          </tr>
+          <tr>
+            <td>Pending-task tile always read zero</td>
+            <td class="num">Always 0</td>
+            <td class="num">Real count</td>
+            <td>Counted from the same source the programme pages use</td>
+          </tr>
+          <tr>
+            <td>Admin search could not find some accounts</td>
+            <td class="num">Missed accounts</td>
+            <td class="num">Reaches all</td>
+            <td>Search no longer depends on a field some records lack</td>
+          </tr>
+          <tr>
+            <td>Text too faint to read against its background</td>
+            <td class="num">3.45 : 1</td>
+            <td class="num">5.93 : 1</td>
+            <td>Automated contrast scan of all 21 pages, every change</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      <b>Two of these were found only because a fix was checked rather than trusted.</b> The CX home
+      figures were compared against the old version on the same database and initially disagreed —
+      32% against 16% — which turned out to be a fault in the test data rather than the product, but
+      would have shipped a wrong number had nobody looked. And an early version of the review-queue
+      fix crashed the page, which the timing test recorded as an excellent result until it was taught
+      that a crashed screen loads very fast indeed.
+    </p>
+  </section>
+
   <!-- Scorecard ------------------------------------------------------------->
   <section>
     <h2>Quality scorecard</h2>
@@ -2085,6 +2401,14 @@
   <!-- Formal QA table ------------------------------------------------------->
   <section>
     <h2>Open findings — QA detail</h2>
+    <p>
+      Severity here means consequence, not effort:
+      <b>Critical</b> — work or data can be lost.
+      <b>High</b> — someone cannot do their job.
+      <b>Medium</b> — a real cost, worked around today.
+      <b>Low</b> — noticeable, not obstructive.
+      <b>No Critical or High defects remain open</b> other than the analytics screen.
+    </p>
     <p>
       Everything found during this programme is fixed except the items below, which are improvements
       rather than defects. Severity follows standard practice: Critical blocks a release, High
