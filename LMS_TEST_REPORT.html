@@ -410,6 +410,32 @@
   .callout--open {
     border-left-color: var(--risk);
   }
+
+  /* Reasoning kept available for whoever wants it, out of the way of whoever does not. */
+  .detail {
+    margin-top: 0.4rem;
+    border-top: 1px solid var(--rule);
+    padding-top: 0.8rem;
+  }
+  .detail > summary {
+    cursor: pointer;
+    font-size: var(--step--1);
+    font-weight: 650;
+    color: var(--ink-muted);
+    list-style-position: outside;
+  }
+  .detail > summary:hover {
+    color: var(--ink);
+  }
+  .detail > summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  .detail > p {
+    margin-top: 0.7rem;
+    font-size: 0.95rem;
+  }
   .callout__head {
     display: flex;
     align-items: baseline;
@@ -2160,99 +2186,57 @@
         completed-work figure is one count per active task. <b class="mono">69.6s → 5.9s</b>.
       </p>
       <p>
-        <b>This was the item previously flagged as needing a business decision, and it turned out not
-        to.</b> The concern was that "completed learner-task pairs, limited to current learners and
-        active tasks" could not be counted by the database without shifting the number. It can be,
-        one count per active task. Rather than argue it, the old and new versions were run against
-        the same database: <strong>every figure came back identical</strong> — 1,000 participants,
-        6,000 needing attention, 16% complete, 8 preview rows. No decision required after all.
-      </p>
-      <p>
-        <b>An earlier attempt at this was wrong, and nearly shipped.</b> A first comparison showed 32%
-        against 16% and looked like proof the figure had to move. The cause was the test data: it
-        wrote every learner's work into the MBW collection including learners in other programmes,
-        which is not how the product writes it, and doubled anything counted from it. Worse, the test
-        data had no task catalogue, so the percentage divided by zero and read 0% on both sides —
-        concealing the discrepancy entirely. Both were fixed before the comparison was trusted.
+        This had been flagged as needing a business decision, on the grounds that the completion
+        percentage could not be counted without shifting it. It could. Both versions were run against
+        the same database and <strong>every figure came back identical</strong> — 1,000 participants,
+        6,000 needing attention, 16% complete. No decision was required after all.
       </p>
     </div>
 
     <div class="callout callout--open">
       <div class="callout__head">
-        <h3>OPS-02 — the analytics screen still loads the whole programme</h3>
+        <h3>OPS-02 — the analytics screen</h3>
         <span class="pill pill--high">Open</span>
       </div>
       <p>
-        One screen remains. Analytics still downloads every learner and every submission, and it is
-        the only outright <b>failure</b> in the results above: <b class="mono">56.7s</b> on average
-        and <b class="mono">101.4s</b> at worst, against a ten-second limit. Its best run was 19.5s,
-        so it is not merely slow but unpredictable.
+        One screen remains, and it is the only outright failure in the results above:
+        <b class="mono">57s</b> on average, <b class="mono">101s</b> at worst, against a ten-second
+        limit. Its best run was 19.5s, so it is unpredictable as well as slow.
       </p>
       <p>
-        <b>Why this one is harder than the others.</b> The screens already fixed needed totals and a
-        page of rows, both of which a database can answer directly. Analytics draws charts of how far
-        each learner has progressed through each module, which genuinely requires the underlying
-        records rather than a count of them. It cannot simply be converted the same way.
+        <b>What it costs.</b> This is how progress across batches is seen, so at that speed it gets
+        avoided rather than used — decisions get made without it. Nothing else on the product is
+        affected: the daily CX screens are between 3.1s and 3.6s at 1,000 learners, and the learner
+        site is untouched throughout.
       </p>
       <p>
-        <b>Two cheaper fixes were tried and rejected, which is how the right one was found.</b> The
-        first was to load the full history only when the deeper views are opened. That fails because
-        the default view also draws two charts needing per-learner detail, and they would have gone
-        silently blank. The second was to replace the fetch with database counts, as was done
-        successfully on the home page and the review queue. That fails for a subtler reason worth
-        stating, because it is what determines the real fix.
+        <b>What it needs.</b> <b>1&ndash;2 days.</b> The groundwork is already built and live; what
+        remains is the last step, and the design is settled rather than open.
       </p>
-      <p>
-        <b>Why counting does not work here.</b> The charts do not ask "how many tasks are complete".
-        They ask <em>"how is each learner doing"</em> — a learner is shown as needing attention if
-        <em>any</em> of their tasks was sent back, and as finished only if <em>every</em> one is done.
-        That is a judgement about each person across all 29 tasks at once, and no count can produce
-        it. Counting answers questions about totals; this screen asks questions about individuals.
-      </p>
-      <p>
-        <b>So the fix is to stop asking the question at the wrong moment.</b> Working out "how is this
-        learner doing" the instant someone opens a dashboard means re-reading their entire history —
-        for every learner, every time. The answer instead belongs on the learner's own record, kept
-        current as they submit work: a small summary of how many tasks they have finished and whether
-        anything is waiting on them.
-      </p>
-      <p>
-        The product already does exactly this elsewhere. A learner's record carries their streak and
-        the date they were last active — both maintained as they go, rather than recalculated by
-        reading their history. This applies the same established pattern to programme progress.
-      </p>
-      <p>
-        <b>What that changes.</b> The analytics screen already loads every learner, and does so in
-        about a second. With the summary on each record it would have everything it needs from that
-        one load: no submission history, no per-task queries, and a cost that stops depending on how
-        much work has been submitted. It would join the other screens at a few seconds instead of one
-        to two minutes.
-      </p>
-      <p>
-        <b>Most of it is now built.</b> Each learner's record carries the summary, it is kept
-        current as they submit, three of the four calculations behind this screen read it instead of
-        the submission history, and a script exists to fill it in for learners who already have work
-        in the system. That is all live and tested, and none of it changes anything on screen yet.
-      </p>
-      <p>
-        <b>The last step was built, measured, and withdrawn.</b> With the remaining calculation
-        converted the screen opens in seconds. But it draws before the fallback data arrives, so the
-        completion figure read <b>0%</b> for around fifty seconds before correcting itself to the
-        right value. A wrong number that quietly fixes itself is worse than a slow correct one —
-        somebody reads it, acts on it, and never learns it was wrong. It was reverted rather than
-        shipped, and found only by running the old and new versions against the same database and
-        comparing every figure.
-      </p>
-      <p>
-        <b>What remains</b> is to re-apply that step with every affected figure showing as
-        unavailable until its data has arrived, rather than as zero — the same treatment already in
-        place on the CX home page and the participant list. <b>1–2 days</b>, with the design settled
-        rather than open.
-      </p>
-      <p>
-        <b>Until then.</b> Nothing else is broken. The daily CX screens are between 3.1s and 3.6s at
-        1,000 learners, and the learner site is unaffected throughout.
-      </p>
+
+      <details class="detail">
+        <summary>Why this one took longer than the others</summary>
+        <p>
+          The screens already fixed needed totals, which a database answers directly. These charts do
+          not ask how many tasks are complete — they ask <em>how each learner is doing</em>. A
+          learner counts as needing attention if any one task was sent back, and as finished only if
+          every task is done. That is a judgement about a person across all 29 of their tasks, and no
+          total produces it.
+        </p>
+        <p>
+          So the answer now lives on the learner's own record, kept current as they submit — the same
+          pattern the product already uses for streaks and last-active dates. That is built, tested
+          and live, along with a script to fill it in for learners who already have work. None of it
+          changes anything on screen yet.
+        </p>
+        <p>
+          The final step was built and withdrawn: the screen drew before its fallback data arrived,
+          so the completion figure read <b>0%</b> for about fifty seconds before correcting itself. A
+          wrong number that quietly fixes itself is worse than a slow correct one. It was caught by
+          running the old and new versions against the same database and comparing every figure, and
+          re-applying it means making each figure read as unavailable until its data is there.
+        </p>
+      </details>
     </div>
 
     <p class="muted">
