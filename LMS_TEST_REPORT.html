@@ -968,37 +968,56 @@
       can reach a learner.
     </p>
 
+    <div class="suites">
+      <div class="suite">
+        <span class="suite__n">371<span class="suite__of">/371</span></span>
+        <span class="suite__label">Business rules</span>
+        <span class="suite__meta">all 28 modules</span>
+      </div>
+      <div class="suite">
+        <span class="suite__n">65<span class="suite__of">/65</span></span>
+        <span class="suite__label">Database &amp; writes</span>
+        <span class="suite__meta">real database</span>
+      </div>
+      <div class="suite">
+        <span class="suite__n">21<span class="suite__of">/21</span></span>
+        <span class="suite__label">Accessibility</span>
+        <span class="suite__meta">every page</span>
+      </div>
+      <div class="suite">
+        <span class="suite__n">9<span class="suite__of">/9</span></span>
+        <span class="suite__label">Responsive &amp; sign-in</span>
+        <span class="suite__meta">375px → 1920px</span>
+      </div>
+    </div>
+
     <div class="scroll">
       <table>
         <thead>
           <tr>
-            <th>What is checked</th>
-            <th class="num">Checks</th>
+            <th>What that covers</th>
             <th>Why it matters</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>The rules of the programmes</td>
-            <td class="num">371</td>
+            <td><b>The rules of the programmes</b></td>
             <td>
               Who can open what, when a task counts as done, how progress and streaks are worked out
             </td>
           </tr>
           <tr>
-            <td>Who can see whose data</td>
-            <td class="num">65</td>
+            <td><b>Who can see whose data</b></td>
             <td>
               Run against a real database. No learner can reach another's work; no staff member can
               reach a batch they do not run
             </td>
           </tr>
           <tr>
-            <td>Usable for everyone, on any screen</td>
-            <td class="num">30</td>
+            <td><b>Usable for everyone, on any screen</b></td>
             <td>
-              Every page checked against the international accessibility standard, and on phone,
-              tablet and desktop sizes
+              Every page against the international accessibility standard, and every layout from
+              phone to desktop
             </td>
           </tr>
         </tbody>
@@ -1012,57 +1031,8 @@
     </p>
   </section>
 
-<section class="ceo-brief">
-    <h2>What we need from you</h2>
-    <p class="muted">Only these items need a yes / no. Everything else can wait.</p>
 
-    <ol class="ceo-decisions">
-      <li>
-        <span class="who">Ask engineering · 1–2 days</span>
-        <strong>1. Fix the slow analytics screen before a large intake</strong>
-        <span class="why">
-          Managers’ reports can take up to a minute or more when many learners are enrolled. Learners
-          are unaffected. Fix when you plan a big new batch.
-        </span>
-      </li>
-      <li>
-        <span class="who">Ask finance / ops · business decision</span>
-        <strong>2. Approve a small paid “practice” cloud account for safe testing</strong>
-        <span class="why">
-          A separate practice environment — never the live learner system — to prove the platform
-          handles many people submitting at once, like a deadline evening. Google enables that
-          practice database only once a company billing account is linked, so the approval sits with
-          <b>business / finance</b> rather than engineering.
-          <br /><br />
-          <b>Two things worth knowing before deciding.</b> The account bills only for what is used
-          and keeps the same free monthly allowance, so tests of this size typically cost a few
-          pounds or nothing at all — worth confirming current terms, but this is not a budget item.
-          And the fault that would make a deadline evening <em>certain</em> to struggle has already
-          been ruled out by reading the code: nothing in the product funnels submissions through a
-          single shared record, which is how systems of this kind normally fail under a rush.
-          <br /><br />
-          So this is worth doing before a large intake, and is not urgent this week.
-        </span>
-      </li>
-      <li>
-        <span class="who">Commercial · when you choose</span>
-        <strong>3. Later: certificates and in-app cohort discussion</strong>
-        <span class="why">
-          Nice for marketing and community; not required for the product to work. Certificates mean
-          something shareable on LinkedIn; discussion today still lives on WhatsApp.
-        </span>
-      </li>
-    </ol>
 
-  </section>
-
-  <div class="tech-divider" id="technical-detail">
-    <p class="eyebrow">Technical detail</p>
-    <h2>Evidence pack (for the team)</h2>
-    <p class="muted">
-      Same conclusions as the brief above, with numbers and test coverage for engineering and ops.
-    </p>
-  </div>
 
 
 
@@ -1150,6 +1120,57 @@
       </table>
     </div>
   </section>
+<section class="ceo-brief">
+    <h2>What we need from you</h2>
+    <p class="muted">Only these items need a yes / no. Everything else can wait.</p>
+
+    <ol class="ceo-decisions">
+      <li>
+        <span class="who">Ask engineering · 1–2 days</span>
+        <strong>1. Fix the slow analytics screen before a large intake</strong>
+        <span class="why">
+          Managers’ reports can take up to a minute or more when many learners are enrolled. Learners
+          are unaffected. Fix when you plan a big new batch.
+        </span>
+      </li>
+      <li>
+        <span class="who">Ask finance / ops · business decision</span>
+        <strong>2. Approve a small paid “practice” cloud account for safe testing</strong>
+        <span class="why">
+          A separate practice environment — never the live learner system — to prove the platform
+          handles many people submitting at once, like a deadline evening. Google enables that
+          practice database only once a company billing account is linked, so the approval sits with
+          <b>business / finance</b> rather than engineering.
+          <br /><br />
+          <b>Two things worth knowing before deciding.</b> The account bills only for what is used
+          and keeps the same free monthly allowance, so tests of this size typically cost a few
+          pounds or nothing at all — worth confirming current terms, but this is not a budget item.
+          And the fault that would make a deadline evening <em>certain</em> to struggle has already
+          been ruled out by reading the code: nothing in the product funnels submissions through a
+          single shared record, which is how systems of this kind normally fail under a rush.
+          <br /><br />
+          So this is worth doing before a large intake, and is not urgent this week.
+        </span>
+      </li>
+      <li>
+        <span class="who">Commercial · when you choose</span>
+        <strong>3. Later: certificates and in-app cohort discussion</strong>
+        <span class="why">
+          Nice for marketing and community; not required for the product to work. Certificates mean
+          something shareable on LinkedIn; discussion today still lives on WhatsApp.
+        </span>
+      </li>
+    </ol>
+
+  </section>
+
+  <div class="tech-divider" id="technical-detail">
+    <p class="eyebrow">Technical detail</p>
+    <h2>Evidence pack (for the team)</h2>
+    <p class="muted">
+      Same conclusions as the brief above, with numbers and test coverage for engineering and ops.
+    </p>
+  </div>
 
 
   <!-- Scope and coverage ------------------------------------------------------>
@@ -2886,28 +2907,7 @@
       the build rather than reaching a learner.
     </p>
 
-    <div class="suites">
-      <div class="suite">
-        <span class="suite__n">371<span class="suite__of">/371</span></span>
-        <span class="suite__label">Business rules</span>
-        <span class="suite__meta">all 28 modules</span>
-      </div>
-      <div class="suite">
-        <span class="suite__n">65<span class="suite__of">/65</span></span>
-        <span class="suite__label">Database &amp; writes</span>
-        <span class="suite__meta">real database</span>
-      </div>
-      <div class="suite">
-        <span class="suite__n">21<span class="suite__of">/21</span></span>
-        <span class="suite__label">Accessibility</span>
-        <span class="suite__meta">every page</span>
-      </div>
-      <div class="suite">
-        <span class="suite__n">9<span class="suite__of">/9</span></span>
-        <span class="suite__label">Responsive &amp; sign-in</span>
-        <span class="suite__meta">375px → 1920px</span>
-      </div>
-    </div>
+    
 
     <div class="scroll">
       <table>
