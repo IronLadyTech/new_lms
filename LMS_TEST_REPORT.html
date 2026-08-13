@@ -860,49 +860,62 @@
       Neither condition blocks release today. Both concern the next intake rather than this one.
     </p>
   </section>
-<section class="ceo-brief">
-    <h2>What we need from you</h2>
-    <p class="muted">Only these items need a yes / no. Everything else can wait.</p>
 
-    <ol class="ceo-decisions">
-      <li>
-        <span class="who">Ask engineering · 1–2 days</span>
-        <strong>1. Fix the slow analytics screen before a large intake</strong>
-        <span class="why">
-          Managers’ reports can take up to a minute or more when many learners are enrolled. Learners
-          are unaffected. Fix when you plan a big new batch.
-        </span>
-      </li>
-      <li>
-        <span class="who">Ask finance / ops · business decision</span>
-        <strong>2. Approve a small paid “practice” cloud account for safe testing</strong>
-        <span class="why">
-          A separate practice environment — never the live learner system — to prove the platform
-          handles many people submitting at once, like a deadline evening. Google enables that
-          practice database only once a company billing account is linked, so the approval sits with
-          <b>business / finance</b> rather than engineering.
-          <br /><br />
-          <b>Two things worth knowing before deciding.</b> The account bills only for what is used
-          and keeps the same free monthly allowance, so tests of this size typically cost a few
-          pounds or nothing at all — worth confirming current terms, but this is not a budget item.
-          And the fault that would make a deadline evening <em>certain</em> to struggle has already
-          been ruled out by reading the code: nothing in the product funnels submissions through a
-          single shared record, which is how systems of this kind normally fail under a rush.
-          <br /><br />
-          So this is worth doing before a large intake, and is not urgent this week.
-        </span>
-      </li>
-      <li>
-        <span class="who">Commercial · when you choose</span>
-        <strong>3. Later: certificates and in-app cohort discussion</strong>
-        <span class="why">
-          Nice for marketing and community; not required for the product to work. Certificates mean
-          something shareable on LinkedIn; discussion today still lives on WhatsApp.
-        </span>
-      </li>
-    </ol>
 
+
+
+  <!-- Learner screens ---------------------------------------------------------->
+  <section>
+    <h2>Learner screen times (1,000 learners)</h2>
+    <figure>
+      <svg
+        viewBox="0 0 720 268"
+        role="img"
+        aria-label="With 1,000 learners enrolled, every day-to-day learner screen opens in 0.7 to 1.4 seconds. A learner's first ever visit on a phone was 8.3 seconds and is now 4.4 after the images were resized."
+      >
+        <text x="0" y="20" class="fig-title">What a learner waits, with 1,000 enrolled</text>
+        <text x="0" y="40" class="fig-label">
+          Every screen they use day to day, plus their very first visit
+        </text>
+
+        <line x1="364.0" y1="44" x2="364.0" y2="234" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4" />
+        <text x="370.0" y="44" class="fig-label">3s target</text>
+
+        <text x="238" y="68" text-anchor="end" class="fig-label">Programme page (100BM)</text>
+        <rect x="250" y="58" width="26.6" height="13" rx="2" fill="var(--pass)" />
+        <text x="284.6" y="69" class="fig-value" fill="var(--pass)">0.7s</text>
+        <text x="238" y="98" text-anchor="end" class="fig-label">Programme page (MBW)</text>
+        <rect x="250" y="88" width="30.4" height="13" rx="2" fill="var(--pass)" />
+        <text x="288.4" y="99" class="fig-value" fill="var(--pass)">0.8s</text>
+        <text x="238" y="128" text-anchor="end" class="fig-label">Home / dashboard</text>
+        <rect x="250" y="118" width="41.8" height="13" rx="2" fill="var(--pass)" />
+        <text x="299.8" y="129" class="fig-value" fill="var(--pass)">1.1s</text>
+        <text x="238" y="158" text-anchor="end" class="fig-label">Calendar</text>
+        <rect x="250" y="148" width="45.6" height="13" rx="2" fill="var(--pass)" />
+        <text x="303.6" y="159" class="fig-value" fill="var(--pass)">1.2s</text>
+        <text x="238" y="188" text-anchor="end" class="fig-label">Progress</text>
+        <rect x="250" y="178" width="53.2" height="13" rx="2" fill="var(--pass)" />
+        <text x="311.2" y="189" class="fig-value" fill="var(--pass)">1.4s</text>
+        <text x="238" y="218" text-anchor="end" class="fig-label">First ever visit, on a phone</text>
+        <rect x="250" y="208" width="167.2" height="13" rx="2" fill="var(--gap)" />
+        <text x="425.2" y="219" class="fig-value" fill="var(--gap)">4.4s</text>
+
+        <line x1="250" y1="240" x2="630" y2="240" stroke="var(--rule)" stroke-width="1" />
+        <text x="250" y="256" class="fig-label">0s</text>
+        <text x="630" y="256" text-anchor="end" class="fig-label">10s</text>
+      </svg>
+      <figcaption>
+        <b>The people the product exists for are not affected by its size.</b> Every screen a learner
+        uses opens in about a second with a thousand enrolled — the same as with a hundred, because
+        their pages only ask about them. Their <em>first</em> visit, before anything is stored on the
+        device, was the one weak spot at 8.3 seconds on a phone; resizing the pictures to the space
+        they are actually shown in brought that to <b>4.4</b> — still over the three-second target and
+        still worth closing, but never a scaling problem: it is the same on day one with ten
+        learners.
+      </figcaption>
+    </figure>
   </section>
+
 <section>
     <h2>Staff screen times (1,000 learners)</h2>
     <figure>
@@ -947,7 +960,101 @@
       </figcaption>
     </figure>
   </section>
+  <!-- Tests run ---------------------------------------------------------------->
+  <section>
+    <h2>What we test, every time anything changes</h2>
+    <p class="muted">
+      466 checks run automatically on every change. A change that breaks one of them fails before it
+      can reach a learner.
+    </p>
 
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>What is checked</th>
+            <th class="num">Checks</th>
+            <th>Why it matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>The rules of the programmes</td>
+            <td class="num">371</td>
+            <td>
+              Who can open what, when a task counts as done, how progress and streaks are worked out
+            </td>
+          </tr>
+          <tr>
+            <td>Who can see whose data</td>
+            <td class="num">65</td>
+            <td>
+              Run against a real database. No learner can reach another's work; no staff member can
+              reach a batch they do not run
+            </td>
+          </tr>
+          <tr>
+            <td>Usable for everyone, on any screen</td>
+            <td class="num">30</td>
+            <td>
+              Every page checked against the international accessibility standard, and on phone,
+              tablet and desktop sizes
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      <b>Separately, the platform was loaded with 1,000 learners and 8,000 pieces of submitted
+      work</b>, and every screen was opened five times and timed. That is where the figures above
+      come from — measured, not estimated.
+    </p>
+  </section>
+
+<section class="ceo-brief">
+    <h2>What we need from you</h2>
+    <p class="muted">Only these items need a yes / no. Everything else can wait.</p>
+
+    <ol class="ceo-decisions">
+      <li>
+        <span class="who">Ask engineering · 1–2 days</span>
+        <strong>1. Fix the slow analytics screen before a large intake</strong>
+        <span class="why">
+          Managers’ reports can take up to a minute or more when many learners are enrolled. Learners
+          are unaffected. Fix when you plan a big new batch.
+        </span>
+      </li>
+      <li>
+        <span class="who">Ask finance / ops · business decision</span>
+        <strong>2. Approve a small paid “practice” cloud account for safe testing</strong>
+        <span class="why">
+          A separate practice environment — never the live learner system — to prove the platform
+          handles many people submitting at once, like a deadline evening. Google enables that
+          practice database only once a company billing account is linked, so the approval sits with
+          <b>business / finance</b> rather than engineering.
+          <br /><br />
+          <b>Two things worth knowing before deciding.</b> The account bills only for what is used
+          and keeps the same free monthly allowance, so tests of this size typically cost a few
+          pounds or nothing at all — worth confirming current terms, but this is not a budget item.
+          And the fault that would make a deadline evening <em>certain</em> to struggle has already
+          been ruled out by reading the code: nothing in the product funnels submissions through a
+          single shared record, which is how systems of this kind normally fail under a rush.
+          <br /><br />
+          So this is worth doing before a large intake, and is not urgent this week.
+        </span>
+      </li>
+      <li>
+        <span class="who">Commercial · when you choose</span>
+        <strong>3. Later: certificates and in-app cohort discussion</strong>
+        <span class="why">
+          Nice for marketing and community; not required for the product to work. Certificates mean
+          something shareable on LinkedIn; discussion today still lives on WhatsApp.
+        </span>
+      </li>
+    </ol>
+
+  </section>
 
   <div class="tech-divider" id="technical-detail">
     <p class="eyebrow">Technical detail</p>
@@ -1594,53 +1701,6 @@
       100 and then 1,000.
     </p>
 
-    <figure>
-      <svg
-        viewBox="0 0 720 268"
-        role="img"
-        aria-label="With 1,000 learners enrolled, every day-to-day learner screen opens in 0.7 to 1.4 seconds. A learner's first ever visit on a phone was 8.3 seconds and is now 4.4 after the images were resized."
-      >
-        <text x="0" y="20" class="fig-title">What a learner waits, with 1,000 enrolled</text>
-        <text x="0" y="40" class="fig-label">
-          Every screen they use day to day, plus their very first visit
-        </text>
-
-        <line x1="364.0" y1="44" x2="364.0" y2="234" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4" />
-        <text x="370.0" y="44" class="fig-label">3s target</text>
-
-        <text x="238" y="68" text-anchor="end" class="fig-label">Programme page (100BM)</text>
-        <rect x="250" y="58" width="26.6" height="13" rx="2" fill="var(--pass)" />
-        <text x="284.6" y="69" class="fig-value" fill="var(--pass)">0.7s</text>
-        <text x="238" y="98" text-anchor="end" class="fig-label">Programme page (MBW)</text>
-        <rect x="250" y="88" width="30.4" height="13" rx="2" fill="var(--pass)" />
-        <text x="288.4" y="99" class="fig-value" fill="var(--pass)">0.8s</text>
-        <text x="238" y="128" text-anchor="end" class="fig-label">Home / dashboard</text>
-        <rect x="250" y="118" width="41.8" height="13" rx="2" fill="var(--pass)" />
-        <text x="299.8" y="129" class="fig-value" fill="var(--pass)">1.1s</text>
-        <text x="238" y="158" text-anchor="end" class="fig-label">Calendar</text>
-        <rect x="250" y="148" width="45.6" height="13" rx="2" fill="var(--pass)" />
-        <text x="303.6" y="159" class="fig-value" fill="var(--pass)">1.2s</text>
-        <text x="238" y="188" text-anchor="end" class="fig-label">Progress</text>
-        <rect x="250" y="178" width="53.2" height="13" rx="2" fill="var(--pass)" />
-        <text x="311.2" y="189" class="fig-value" fill="var(--pass)">1.4s</text>
-        <text x="238" y="218" text-anchor="end" class="fig-label">First ever visit, on a phone</text>
-        <rect x="250" y="208" width="167.2" height="13" rx="2" fill="var(--gap)" />
-        <text x="425.2" y="219" class="fig-value" fill="var(--gap)">4.4s</text>
-
-        <line x1="250" y1="240" x2="630" y2="240" stroke="var(--rule)" stroke-width="1" />
-        <text x="250" y="256" class="fig-label">0s</text>
-        <text x="630" y="256" text-anchor="end" class="fig-label">10s</text>
-      </svg>
-      <figcaption>
-        <b>The people the product exists for are not affected by its size.</b> Every screen a learner
-        uses opens in about a second with a thousand enrolled — the same as with a hundred, because
-        their pages only ask about them. Their <em>first</em> visit, before anything is stored on the
-        device, was the one weak spot at 8.3 seconds on a phone; resizing the pictures to the space
-        they are actually shown in brought that to <b>4.4</b> — still over the three-second target and
-        still worth closing, but never a scaling problem: it is the same on day one with ten
-        learners.
-      </figcaption>
-    </figure>
 
     <div class="scroll">
       <table>
