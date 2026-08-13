@@ -452,6 +452,18 @@
   }
 
   /* Callout */
+  /* A prose box should end where its text ends. Left full-width, a third of it
+     reads as missing content rather than as margin. Data tables and figures are
+     exempt: they genuinely use the width. */
+  .result,
+  .callout,
+  .evidence,
+  .detail,
+  .tech-divider,
+  .ceo-decisions {
+    max-width: calc(var(--prose) + 3rem);
+  }
+
   .callout {
     background: var(--surface);
     border: 1px solid var(--rule);
