@@ -15576,6 +15576,7 @@ textarea:focus-visible,
 .profile-identity {
   display: flex;
   align-items: flex-start;
+  flex-wrap: wrap;
   gap: var(--space-lg);
 }
 
@@ -15588,7 +15589,13 @@ textarea:focus-visible,
   flex: 1;
   min-width: 0;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /*
+   * As many columns as genuinely fit, rather than always two. Inside a card that
+   * is a third of the page — which is what happens above 1240px — two columns
+   * beside an 80px avatar left each field about ninety pixels wide, enough to
+   * show "Gr" of a name and "ya" of an email address.
+   */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
   gap: var(--space-md);
 }
 
