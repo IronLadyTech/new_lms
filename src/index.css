@@ -3016,9 +3016,7 @@ html:has(.student-layout--mbw) #root {
 
 .profile-admin-btn {
   display: flex;
-  width: 100%;
   gap: var(--space-sm);
-  margin-top: 0.85rem;
 }
 
 .profile-admin-btn:hover {
@@ -16639,14 +16637,13 @@ body.notification-sheet-open .bottom-nav {
   }
 
   /*
-   * Identity carries an avatar, four fields and a consent line; Account carries
-   * one button. Equal columns sized the biggest card to the smallest, which is
-   * what squeezed the form. It takes the full row instead.
+   * Two columns, paired by weight: the two forms share a row, the two small
+   * preference cards share the next. Cards that are a sentence and a button
+   * become full-width rows instead — a third of a page of white space around
+   * one button is worse than a wide row containing it.
    */
-  .profile-page .profile-section--identity {
-    grid-column: span 2;
-  }
-  .profile-page > .page-header {
+  .profile-page > .page-header,
+  .profile-page .profile-section--wide {
     grid-column: 1 / -1;
   }
 
@@ -16690,13 +16687,6 @@ body.notification-sheet-open .bottom-nav {
   .admin-list .user-row__controls,
   .admin-list__actions {
     justify-content: flex-end;
-  }
-}
-
-@media (min-width: 1240px) {
-  /* Three across once there is genuinely room, rather than two very wide cards. */
-  .profile-page {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
