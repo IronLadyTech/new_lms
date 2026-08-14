@@ -51,7 +51,6 @@
    * the desktop from being "the mobile layout, wider".
    */
   --content: 1280px;
-  --content-narrow: 880px;
   --prose: 68ch;
   /* Radius scale (--radius kept as the 12px default) */
   --radius-sm: 8px;
@@ -781,10 +780,14 @@ img.logo-mark {
   scroll-padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + var(--space-md));
 }
 
-/* Reading-led pages stay narrower — a settings form gains nothing from 1280px. */
-.student-main--narrow {
-  max-width: var(--content-narrow);
-}
+/*
+ * Profile and Support used to be capped at --content-narrow, from when each was
+ * a single tall column of fields. They are card grids now, and the cap fought
+ * them: the column rules ask the viewport, but the cards lived in an 880px box,
+ * so a 1440px screen drew three 245px cards with 480px of empty page beside
+ * them. Readable measure belongs on the running text — which --prose already
+ * handles per element — not on a container full of cards.
+ */
 
 .student-layout--mbw {
   background: var(--bg);
@@ -851,10 +854,6 @@ html:has(.student-layout--mbw) #root {
      content stretched to fill a 1920px monitor. */
   max-width: var(--content);
   margin-inline: auto;
-}
-
-.student-layout--course .student-main--narrow {
-  max-width: var(--content-narrow);
 }
 
 .student-layout--course .student-main--mbw {
@@ -15111,6 +15110,16 @@ textarea:focus-visible,
     gap: var(--space-sm);
   }
 
+  /*
+   * The header is a column at this width, so .section-card__heading's
+   * `flex: 1 1 14rem` basis was being read as a *height*: every card on every
+   * phone carried 224px of empty space between its title and its content.
+   * The basis only ever meant "do not shrink below 14rem wide".
+   */
+  .section-card__heading {
+    flex: 0 0 auto;
+  }
+
   .section-card__actions {
     width: 100%;
     flex-shrink: 1;
@@ -15626,6 +15635,52 @@ textarea:focus-visible,
   flex-wrap: wrap;
 }
 
+/*
+ * The description has to be allowed to shrink. Without this it claims its full
+ * measure, the row wraps, and the control drops onto its own line below the
+ * text — which read as a stray checkbox floating in the card.
+ */
+.profile-setting-row__text {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.profile-setting-row > :not(.profile-setting-row__text) {
+  flex: 0 0 auto;
+}
+
+/* Consecutive settings need a line between them, or two toggles read as one
+   block of text with two checkboxes loose beside it. */
+.profile-setting-row + .profile-setting-row {
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border);
+}
+
+/*
+ * Inside a settings row the theme control is already labelled by the row, so
+ * its own "Appearance" heading printed the word twice and its border drew a
+ * card inside a card. The label stays for screen readers, which do not have
+ * the visual grouping to go on.
+ */
+.profile-setting-row .theme-toggle-group {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.profile-setting-row .theme-toggle-group__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .profile-setting-row__text strong {
   display: block;
   color: var(--text);
@@ -15977,6 +16032,9 @@ textarea:focus-visible,
   .profile-form-grid {
     grid-template-columns: 1fr;
     width: 100%;
+    /* The centring above is for the avatar. Labels belong over the left edge of
+       their input, not floating above its middle. */
+    text-align: left;
   }
 
   .profile-form-actions {
