@@ -5761,6 +5761,9 @@ body.notification-sheet-open .mbw-lesson-nav--sticky {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  /* Keep the wrapped lines together. When the box is stretched to match the
+     column beside it, the default spread strands the button at the bottom. */
+  align-content: center;
   gap: var(--space-md);
   padding: 1.1rem 1.2rem;
   border-radius: var(--radius);
@@ -16627,13 +16630,24 @@ body.notification-sheet-open .bottom-nav {
   max-width: var(--prose);
 }
 
-@media (min-width: 1024px) {
-  /* Settings-style pages: cards side by side instead of a single tall column. */
+@media (min-width: 1200px) {
+  /*
+   * Settings-style pages: cards side by side instead of a single tall column.
+   * Two columns start at 1200 rather than 1024 — below that a half-page card is
+   * too narrow to pair the identity fields, so Identity ran to twice the height
+   * of the Password card beside it and the row filled with empty white.
+   */
   .profile-page {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-lg);
-    align-items: start;
+    /*
+     * Cards paired in a row share its height. With `start` the shorter card
+     * stopped early and the page background showed through beneath it, which
+     * read as a hole punched in the row rather than as a card that happened to
+     * have less in it.
+     */
+    align-items: stretch;
   }
 
   /*
@@ -16645,6 +16659,24 @@ body.notification-sheet-open .bottom-nav {
   .profile-page > .page-header,
   .profile-page .profile-section--wide {
     grid-column: 1 / -1;
+  }
+
+  /*
+   * Half-page card: the avatar sits above the fields rather than beside them.
+   * Beside them it took 104px off a 532px card and left the form too narrow
+   * for two columns, so Identity ran half again as tall as the Password card
+   * next to it — which is where the empty half of that row came from.
+   */
+  .profile-page .profile-identity {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .profile-page .profile-form-grid {
+    width: 100%;
+    /* 13rem, not the 16rem used at full width: two columns have to fit inside
+       half a page at 1200, which is where this layout is tightest. */
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
   }
 
   /* Support: raise-a-ticket beside the ticket list rather than above it. */
@@ -16749,7 +16781,13 @@ body.notification-sheet-open .bottom-nav {
      * list sat in white space. Weighted so each gets the width it needs.
      */
     grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
-    align-items: start;
+    /*
+     * Both columns end together. Before a learner has any streak the left
+     * column is a short prompt box beside a full activity list, and `start`
+     * left a band of white under it. The box already centres its own contents,
+     * so filling the row reads as deliberate rather than padded.
+     */
+    align-items: stretch;
     gap: var(--space-lg);
   }
 
