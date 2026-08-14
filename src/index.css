@@ -11801,6 +11801,40 @@ button.streak-heatmap__cell:focus-visible {
   margin: 0;
 }
 
+/* Who will actually receive a reminder, said before it is sent. */
+.reach-note {
+  margin-bottom: var(--space-sm);
+  padding: var(--space-2sm);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--success);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: var(--text-sm);
+}
+
+.reach-note--partial {
+  border-left-color: var(--warning);
+}
+
+.reach-note__head {
+  margin: 0;
+}
+
+.reach-note__list {
+  margin: var(--space-2xs) 0 0;
+  padding-left: 1.1rem;
+}
+
+.reach-note__list li {
+  margin-top: 0.15rem;
+}
+
+.reach-note__foot {
+  margin: var(--space-2xs) 0 0;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
 /* Consent, asked plainly: what it is for, and that it can be undone. */
 .consent-field {
   padding: var(--space-2sm);

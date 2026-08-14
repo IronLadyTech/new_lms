@@ -17,6 +17,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useProgramAdapter } from '../../hooks/useProgramAdapter';
 import { useCxData } from '../../hooks/useCxData';
 import { useCxAttention } from '../../hooks/useCxAttention';
+import { summariseReachability } from '../../utils/contactDetails';
+import { studentsInBatch } from '../../utils/batchScope';
 import { isLearnerActionRequired, getSubmissionReviewDisplay } from '../../utils/submissionReview';
 import { sendTaskReminder, sendSessionReminder } from '../../services/notificationService';
 import CxKpiStrip from '../../components/cx/CxKpiStrip';
@@ -41,10 +43,17 @@ function learnerInitial(name, email) {
   return source.charAt(0).toUpperCase();
 }
 
-function SessionReminderModal({ batch, onClose }) {
+function SessionReminderModal({ batch, learners = [], onClose }) {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null);
+
+  /*
+   * Who will actually receive this, worked out before it is sent rather than
+   * discovered afterwards. A reminder that reaches half a batch looks identical
+   * to one that reaches all of it unless somebody says so here.
+   */
+  const reach = useMemo(() => summariseReachability(learners), [learners]);
   const panelRef = useRef(null);
   const titleId = 'cx-session-reminder-title';
 
@@ -95,6 +104,32 @@ function SessionReminderModal({ batch, onClose }) {
         </div>
 
         <div className="cx-modal__body">
+          {!result && reach.total > 0 && (
+            <div
+              className={`reach-note${reach.reachable < reach.total ? ' reach-note--partial' : ''}`}
+            >
+              <p className="reach-note__head">
+                <b>
+                  {reach.reachable} of {reach.total}
+                </b>{' '}
+                will receive this on WhatsApp
+              </p>
+              {reach.reachable < reach.total && (
+                <ul className="reach-note__list">
+                  {Object.entries(reach.byReason).map(([reason, n]) => (
+                    <li key={reason}>
+                      <b>{n}</b> —{' '}
+                      {reason === 'no consent' ? 'has not agreed to be messaged' : reason}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="reach-note__foot muted">
+                Everyone still gets the in-app reminder. The rest need a number or a yes before
+                WhatsApp can reach them.
+              </p>
+            </div>
+          )}
           {result ? (
             result.error ? (
               <div className="cx-modal-result cx-modal-result--error" role="alert">
@@ -341,7 +376,11 @@ export default function CXHome() {
       )}
 
       {sessionBatch && (
-        <SessionReminderModal batch={sessionBatch} onClose={() => setSessionBatch(null)} />
+        <SessionReminderModal
+          batch={sessionBatch}
+          learners={studentsInBatch(sessionBatch, students)}
+          onClose={() => setSessionBatch(null)}
+        />
       )}
 
       <div className="cx-home-grid">
