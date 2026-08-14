@@ -1,0 +1,577 @@
+<title>Session Reminders — How It Works</title>
+<style>
+  :root {
+    --bg: #f7f6e4;
+    --surface: #ffffff;
+    --surface-sunk: #faf9ee;
+    --ink: #231f20;
+    --ink-muted: #55504e;
+    --ink-faint: #7a7472;
+    --rule: #e3e0cd;
+    --accent: #b3261e;
+    --pass: #15803d;
+    --pass-wash: #e8f5ec;
+    --gap: #9a6700;
+    --gap-wash: #fdf3e0;
+    --risk: #b3261e;
+    --risk-wash: #fdeceb;
+    --measure: 1080px;
+    --prose: 68ch;
+    --step--1: 0.86rem;
+    --step-1: 1.35rem;
+    --step-2: 1.9rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --bg: #141012;
+      --surface: #1e181a;
+      --surface-sunk: #191416;
+      --ink: #f2eee9;
+      --ink-muted: #c3bbb6;
+      --ink-faint: #948b87;
+      --rule: #332b2d;
+      --accent: #ff8a8a;
+      --pass: #5cc98a;
+      --pass-wash: #16281d;
+      --gap: #e6b45c;
+      --gap-wash: #2b2216;
+      --risk: #f19b95;
+      --risk-wash: #2e1a19;
+    }
+  }
+
+  :root[data-theme='dark'] {
+    --bg: #141012;
+    --surface: #1e181a;
+    --surface-sunk: #191416;
+    --ink: #f2eee9;
+    --ink-muted: #c3bbb6;
+    --ink-faint: #948b87;
+    --rule: #332b2d;
+    --accent: #ff8a8a;
+    --pass: #5cc98a;
+    --pass-wash: #16281d;
+    --gap: #e6b45c;
+    --gap-wash: #2b2216;
+    --risk: #f19b95;
+    --risk-wash: #2e1a19;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Fira Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: var(--measure);
+    margin: 0 auto;
+    padding: 3rem 1.5rem 4rem;
+  }
+
+  .eyebrow {
+    font-size: var(--step--1);
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 0 0 0.4rem;
+  }
+
+  h1 {
+    font-size: var(--step-2);
+    line-height: 1.15;
+    margin: 0 0 0.6rem;
+    max-width: 22ch;
+  }
+
+  h2 {
+    font-size: var(--step-1);
+    margin: 2.6rem 0 0.8rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  h3 {
+    font-size: 1.05rem;
+    margin: 1.6rem 0 0.5rem;
+  }
+
+  p,
+  li {
+    max-width: var(--prose);
+    color: var(--ink-muted);
+  }
+
+  b,
+  strong {
+    color: var(--ink);
+  }
+
+  .lede {
+    font-size: 1.05rem;
+    color: var(--ink-muted);
+  }
+
+  figure {
+    margin: 1.6rem 0;
+    padding: 1.2rem 1.2rem 1rem;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--surface);
+  }
+  figure svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    color: var(--ink);
+  }
+  figcaption {
+    margin-top: 0.9rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--rule);
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+    max-width: none;
+  }
+  .fig-label {
+    font-size: 12px;
+    fill: var(--ink-muted);
+  }
+  .fig-title {
+    font-size: 13px;
+    font-weight: 700;
+    fill: var(--ink);
+  }
+  .fig-value {
+    font-size: 13px;
+    font-weight: 700;
+    fill: var(--ink);
+  }
+
+  .scroll {
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--surface);
+    margin: 1.2rem 0;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 560px;
+    font-size: 0.95rem;
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+    color: var(--ink-muted);
+  }
+  th {
+    font-size: var(--step--1);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    background: var(--surface-sunk);
+  }
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  td b {
+    color: var(--ink);
+  }
+
+  .note {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--gap);
+    border-radius: 4px;
+    padding: 1.1rem 1.2rem;
+    margin: 1.4rem 0;
+    max-width: calc(var(--prose) + 3rem);
+  }
+  .note--good {
+    border-left-color: var(--pass);
+  }
+  .note p:last-child {
+    margin-bottom: 0;
+  }
+  .note p:first-child {
+    margin-top: 0;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.22rem 0.5rem;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .pill--pass {
+    background: var(--pass-wash);
+    color: var(--pass);
+  }
+  .pill--gap {
+    background: var(--gap-wash);
+    color: var(--gap);
+  }
+  .pill--risk {
+    background: var(--risk-wash);
+    color: var(--risk);
+  }
+
+  @media print {
+    :root {
+      --bg: #fff;
+      --surface: #fff;
+    }
+    body {
+      background: #fff;
+      font-size: 10pt;
+    }
+    .wrap {
+      max-width: none;
+      padding: 0;
+    }
+    figure,
+    .note,
+    tr {
+      break-inside: avoid;
+    }
+  }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Iron Lady LMS</p>
+  <h1>Session reminders: how they are sent, and how we know they arrived.</h1>
+  <p class="lede">
+    Written for anyone who needs to understand the flow — no technical background assumed. The short
+    version: the LMS decides who needs reminding, WhatsApp delivers it, and WhatsApp tells us back
+    whether it arrived and whether it was read.
+  </p>
+
+  <h2>The whole flow, in one picture</h2>
+
+  <figure>
+    <svg
+      viewBox="0 0 900 430"
+      role="img"
+      aria-label="The LMS checks the schedule and who has not submitted, sends a personalised reminder through the official WhatsApp gateway to the learner's phone, and WhatsApp reports back whether the message was delivered and read, which the LMS records for the CX team to see."
+    >
+      <defs>
+        <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" />
+        </marker>
+        <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--pass)" />
+        </marker>
+      </defs>
+
+      <text x="0" y="18" class="fig-title">Going out — the reminder</text>
+
+      <rect x="0" y="34" width="176" height="92" rx="5" fill="none" stroke="currentColor" stroke-width="1.5" />
+      <text x="88" y="58" text-anchor="middle" class="fig-value">The LMS</text>
+      <text x="88" y="78" text-anchor="middle" class="fig-label">knows the schedule,</text>
+      <text x="88" y="95" text-anchor="middle" class="fig-label">who is enrolled, and</text>
+      <text x="88" y="112" text-anchor="middle" class="fig-label">who has not submitted</text>
+
+      <line x1="180" y1="80" x2="252" y2="80" stroke="currentColor" stroke-width="1.5" marker-end="url(#a)" />
+
+      <rect x="258" y="34" width="176" height="92" rx="5" fill="none" stroke="currentColor" stroke-width="1.5" />
+      <text x="346" y="58" text-anchor="middle" class="fig-value">Wati</text>
+      <text x="346" y="78" text-anchor="middle" class="fig-label">Meta's approved</text>
+      <text x="346" y="95" text-anchor="middle" class="fig-label">gateway — the official</text>
+      <text x="346" y="112" text-anchor="middle" class="fig-label">way in to WhatsApp</text>
+
+      <line x1="438" y1="80" x2="510" y2="80" stroke="currentColor" stroke-width="1.5" marker-end="url(#a)" />
+
+      <rect x="516" y="34" width="176" height="92" rx="5" fill="none" stroke="currentColor" stroke-width="1.5" />
+      <text x="604" y="58" text-anchor="middle" class="fig-value">WhatsApp</text>
+      <text x="604" y="78" text-anchor="middle" class="fig-label">on the learner's</text>
+      <text x="604" y="95" text-anchor="middle" class="fig-label">own phone</text>
+
+      <line x1="696" y1="80" x2="768" y2="80" stroke="currentColor" stroke-width="1.5" marker-end="url(#a)" />
+      <rect x="774" y="34" width="126" height="92" rx="5" fill="none" stroke="currentColor" stroke-width="1.5" />
+      <text x="837" y="70" text-anchor="middle" class="fig-value">The learner</text>
+      <text x="837" y="90" text-anchor="middle" class="fig-label">reads it</text>
+
+      <line x1="0" y1="168" x2="900" y2="168" stroke="var(--rule)" stroke-width="1" />
+
+      <text x="0" y="200" class="fig-title" fill="var(--pass)">Coming back — the proof</text>
+
+      <rect x="774" y="216" width="126" height="74" rx="5" fill="none" stroke="var(--pass)" stroke-width="1.5" />
+      <text x="837" y="248" text-anchor="middle" class="fig-value" fill="var(--pass)">Their phone</text>
+      <text x="837" y="268" text-anchor="middle" class="fig-label">confirms</text>
+
+      <line x1="770" y1="253" x2="698" y2="253" stroke="var(--pass)" stroke-width="2" marker-end="url(#ab)" />
+
+      <rect x="516" y="216" width="176" height="74" rx="5" fill="none" stroke="var(--pass)" stroke-width="1.5" />
+      <text x="604" y="242" text-anchor="middle" class="fig-value" fill="var(--pass)">Delivered? Read?</text>
+      <text x="604" y="264" text-anchor="middle" class="fig-label">WhatsApp reports both</text>
+
+      <line x1="512" y1="253" x2="440" y2="253" stroke="var(--pass)" stroke-width="2" marker-end="url(#ab)" />
+
+      <rect x="258" y="216" width="176" height="74" rx="5" fill="none" stroke="var(--pass)" stroke-width="1.5" />
+      <text x="346" y="242" text-anchor="middle" class="fig-value" fill="var(--pass)">The LMS records it</text>
+      <text x="346" y="264" text-anchor="middle" class="fig-label">against that learner</text>
+
+      <line x1="254" y1="253" x2="182" y2="253" stroke="var(--pass)" stroke-width="2" marker-end="url(#ab)" />
+
+      <rect x="0" y="216" width="176" height="74" rx="5" fill="none" stroke="var(--pass)" stroke-width="1.5" />
+      <text x="88" y="242" text-anchor="middle" class="fig-value" fill="var(--pass)">CX can see</text>
+      <text x="88" y="264" text-anchor="middle" class="fig-label">who to chase</text>
+
+      <text x="0" y="340" class="fig-label">
+        Nobody ticks a box. The messaging platform reports what happened, and the LMS keeps the record.
+      </text>
+      <text x="0" y="362" class="fig-label">
+        The only manual step in the whole flow is a learner agreeing, once, to be contacted.
+      </text>
+    </svg>
+    <figcaption>
+      <b>The important half is the bottom row.</b> Anyone can send a message; the question a manager
+      actually has is whether it arrived and whether it was read. WhatsApp answers both automatically,
+      and the LMS files the answer against the learner — so "did she get the reminder?" stops being a
+      guess.
+    </figcaption>
+  </figure>
+
+  <h2>What gets tracked, and where it comes from</h2>
+
+  <p>
+    Five things are recorded for every reminder. The first four arrive on their own; only the last
+    needs anybody to do anything.
+  </p>
+
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>What we know</th>
+          <th>Where it comes from</th>
+          <th>What it tells you</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>Sent</b></td>
+          <td>The LMS, when it hands the message over</td>
+          <td>We tried. If this is missing, the learner has no number or has not agreed to be
+            contacted.</td>
+        </tr>
+        <tr>
+          <td><b>Delivered</b></td>
+          <td>WhatsApp, automatically</td>
+          <td>It reached her phone. If this never arrives, the number is wrong or the phone has been
+            off for days.</td>
+        </tr>
+        <tr>
+          <td><b>Read</b></td>
+          <td>WhatsApp, automatically</td>
+          <td>She opened it. The blue ticks, reported back to us.</td>
+        </tr>
+        <tr>
+          <td><b>Replied</b></td>
+          <td>WhatsApp, if she answers</td>
+          <td>A reply opens a 24-hour window in which CX can talk to her freely, at no per-message
+            cost.</td>
+        </tr>
+        <tr>
+          <td><b>Attended / submitted</b></td>
+          <td>The LMS already knows this</td>
+          <td>The outcome the reminder existed for.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note note--good">
+    <p>
+      <b>Why this is better than a tick box.</b> A tick box records that somebody <em>pressed send</em>.
+      It cannot tell you the number was wrong, the phone was off, or the message was never opened. The
+      messaging platform reports all three without anyone being asked to keep a list up to date — and a
+      record nobody has to maintain is the only kind that stays true.
+    </p>
+  </div>
+
+  <h2>The number that actually matters</h2>
+
+  <p>
+    Delivery is not the goal — attendance and submitted work are. Recording all five steps lets you see
+    exactly where a cohort falls away, and each drop has a different fix.
+  </p>
+
+  <figure>
+    <svg
+      viewBox="0 0 820 300"
+      role="img"
+      aria-label="An illustrative funnel: of 100 learners due a reminder, 92 can be contacted, 89 are delivered to, 68 read it, 54 attend the session and 41 submit the deliverable. Each drop has a different cause and a different fix."
+    >
+      <text x="0" y="18" class="fig-title">Where a cohort falls away — illustrative shape, not measured</text>
+
+      <rect x="150" y="38" width="600" height="26" rx="3" fill="var(--pass)" opacity="0.92" />
+      <text x="142" y="56" text-anchor="end" class="fig-label">Due a reminder</text>
+      <text x="758" y="56" class="fig-value">100</text>
+
+      <rect x="150" y="76" width="552" height="26" rx="3" fill="var(--pass)" opacity="0.8" />
+      <text x="142" y="94" text-anchor="end" class="fig-label">Can be contacted</text>
+      <text x="710" y="94" class="fig-value">92</text>
+
+      <rect x="150" y="114" width="534" height="26" rx="3" fill="var(--pass)" opacity="0.68" />
+      <text x="142" y="132" text-anchor="end" class="fig-label">Delivered</text>
+      <text x="692" y="132" class="fig-value">89</text>
+
+      <rect x="150" y="152" width="408" height="26" rx="3" fill="var(--gap)" opacity="0.85" />
+      <text x="142" y="170" text-anchor="end" class="fig-label">Read it</text>
+      <text x="566" y="170" class="fig-value">68</text>
+
+      <rect x="150" y="190" width="324" height="26" rx="3" fill="var(--gap)" opacity="0.7" />
+      <text x="142" y="208" text-anchor="end" class="fig-label">Attended</text>
+      <text x="482" y="208" class="fig-value">54</text>
+
+      <rect x="150" y="228" width="246" height="26" rx="3" fill="var(--risk)" opacity="0.8" />
+      <text x="142" y="246" text-anchor="end" class="fig-label">Submitted the work</text>
+      <text x="404" y="246" class="fig-value">41</text>
+
+      <text x="150" y="282" class="fig-label">
+        Each step down is a different problem: missing numbers, wrong numbers, ignored messages, timing, difficulty.
+      </text>
+    </svg>
+    <figcaption>
+      <b>The shape is the point, not these numbers</b> — they are made up to show what the report will
+      look like. Once it is running, the real figures tell you which problem you actually have. A big
+      drop at "can be contacted" is a data problem CX can fix in an afternoon. A big drop at "read it"
+      means the wording or the timing is wrong. A big drop at "submitted" means the reminder worked and
+      the task is too hard — which is a coaching question, not a messaging one.
+    </figcaption>
+  </figure>
+
+  <h2>What has to be true before any of it works</h2>
+
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Requirement</th>
+          <th>Where we stand</th>
+          <th>Who</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>A phone number for each learner</b></td>
+          <td>
+            Already flowing in from Zoho. Needs checking: how many learners have one, and how many
+            are in the right format.
+            <span class="pill pill--gap">Audit needed</span>
+          </td>
+          <td>Engineering</td>
+        </tr>
+        <tr>
+          <td><b>Her agreement to be contacted</b></td>
+          <td>
+            Not recorded anywhere today. Meta requires it. Needs a tick at enrolment, and a one-time
+            ask of the current cohort.
+            <span class="pill pill--risk">Blocker</span>
+          </td>
+          <td>Engineering + CX</td>
+        </tr>
+        <tr>
+          <td><b>Approved message templates</b></td>
+          <td>
+            Meta approves the wording once, then it can be reused with names and times filled in.
+            Register them as “utility”, not marketing.
+            <span class="pill pill--gap">Not started</span>
+          </td>
+          <td>Ops</td>
+        </tr>
+        <tr>
+          <td><b>A Wati account</b></td>
+          <td>
+            The gateway. Charges a small amount per message.
+            <span class="pill pill--gap">Not started</span>
+          </td>
+          <td>Ops / Finance</td>
+        </tr>
+        <tr>
+          <td><b>The LMS able to send</b></td>
+          <td>
+            Most of it exists — the LMS already sends reminders, just to the app rather than to
+            WhatsApp. About a day's work to redirect.
+            <span class="pill pill--pass">Nearly there</span>
+          </td>
+          <td>Engineering</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <p>
+      <b>The one that is genuinely blocking is consent.</b> Everything else is either already working
+      or a form to fill in. Without a recorded agreement from each learner, Meta can restrict the
+      number later — which is the outcome the official route exists to avoid.
+    </p>
+    <p>
+      It is also the easiest to start: a tick box at enrolment, and one message to the current 100BM
+      cohort asking them to confirm.
+    </p>
+  </div>
+
+  <h2>When reminders would go out</h2>
+
+  <p>
+    Your schedule pairs every session with something to hand in, so a reminder can carry both. Three
+    moments do most of the work:
+  </p>
+
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>Who gets it</th>
+          <th>Roughly what it says</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>Evening before</b></td>
+          <td>Everyone in the batch</td>
+          <td>
+            “Tomorrow 9:00am — Session 3, Capability Matrix. Bring your top three superpowers.”
+          </td>
+        </tr>
+        <tr>
+          <td><b>One hour before</b></td>
+          <td>Everyone in the batch</td>
+          <td>A short nudge with the joining link.</td>
+        </tr>
+        <tr>
+          <td><b>Two hours after</b></td>
+          <td>
+            <b>Only those who did not attend or have not submitted</b>
+          </td>
+          <td>The recording, and what is still outstanding.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    The third is where the value is, and it is the one only the LMS can send — it is the only system
+    that knows who was missing and what is still owed.
+  </p>
+</div>
