@@ -26,7 +26,8 @@
     "loadtest:staff:staging": "playwright test --config playwright.staging-load.config.js",
     "images": "node scripts/optimizeImages.mjs",
     "report:pdf": "node scripts/makeReportPdf.mjs",
-    "report:brief": "node scripts/makeReportPdf.mjs --brief"
+    "report:brief": "node scripts/makeReportPdf.mjs --brief",
+    "audit:reach": "node load-test/reachabilityAudit.js"
   },
   "dependencies": {
     "@fontsource/fira-sans": "^5.3.0",
