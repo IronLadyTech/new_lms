@@ -15597,6 +15597,9 @@ textarea:focus-visible,
    */
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
   gap: var(--space-md);
+  /* A form does not improve past two columns; the rest is just distance
+     between a label and the box it belongs to. */
+  max-width: 46rem;
 }
 
 .profile-form-actions {
@@ -16568,6 +16571,15 @@ body.notification-sheet-open .bottom-nav {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-lg);
     align-items: start;
+  }
+
+  /*
+   * Identity carries an avatar, four fields and a consent line; Account carries
+   * one button. Equal columns sized the biggest card to the smallest, which is
+   * what squeezed the form. It takes the full row instead.
+   */
+  .profile-page .profile-section--identity {
+    grid-column: 1 / -1;
   }
   .profile-page > .page-header {
     grid-column: 1 / -1;

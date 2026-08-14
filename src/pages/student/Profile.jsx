@@ -166,7 +166,11 @@ export default function Profile() {
         subtitle="Manage your identity, preferences, and account."
       />
 
-      <SectionCard title="Your identity" icon={UserCircle} className="profile-section">
+      <SectionCard
+        title="Your identity"
+        icon={UserCircle}
+        className="profile-section profile-section--identity"
+      >
         <div className="profile-identity">
           <div className="profile-avatar" aria-hidden="true">
             {initial}
