@@ -207,7 +207,7 @@ export default function Profile() {
             </label>
 
             {!isGuest && (
-              <div className="field field--full consent-field">
+              <div className="consent-field">
                 <label className="consent-field__row">
                   <input
                     type="checkbox"

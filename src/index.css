@@ -11837,6 +11837,9 @@ button.streak-heatmap__cell:focus-visible {
 
 /* Consent, asked plainly: what it is for, and that it can be undone. */
 .consent-field {
+  /* Spans the form, and deliberately not a .field: that class makes everything
+     inside a label bold and dark, which is wrong for an explanatory line. */
+  grid-column: 1 / -1;
   padding: var(--space-2sm);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -11864,11 +11867,15 @@ button.streak-heatmap__cell:focus-visible {
   display: flex;
   flex-direction: column;
   gap: var(--space-3xs, 0.15rem);
+  font-size: var(--text-sm);
+  color: var(--text);
 }
 
 .consent-field__hint {
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
+  font-weight: 400;
   line-height: 1.5;
+  color: var(--muted);
 }
 
 /* Truncation disclosure — the queue previews N of M, never silently. */
@@ -16579,7 +16586,7 @@ body.notification-sheet-open .bottom-nav {
    * what squeezed the form. It takes the full row instead.
    */
   .profile-page .profile-section--identity {
-    grid-column: 1 / -1;
+    grid-column: span 2;
   }
   .profile-page > .page-header {
     grid-column: 1 / -1;
