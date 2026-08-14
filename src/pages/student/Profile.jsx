@@ -4,6 +4,7 @@ import { UserCircle, Palette, LifeBuoy, LogOut, KeyRound, Bell } from 'lucide-re
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 import { useAuth } from '../../context/AuthContext';
 import { updateUserProfile } from '../../services/userService';
+import { toE164, CONSENT_SOURCES } from '../../utils/contactDetails';
 import { getRoleLabel } from '../../utils/roles';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
 import ThemeToggle from '../../components/ThemeToggle';
@@ -40,6 +41,8 @@ export default function Profile() {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState(null);
   const [notifyPrefs, setNotifyPrefs] = useState(loadNotifyPrefs);
+  const [phone, setPhone] = useState(profile?.phone || '');
+  const [whatsappOk, setWhatsappOk] = useState(profile?.messagingConsent?.granted === true);
 
   const initial = (profile?.displayName || user?.email || '?')[0].toUpperCase();
   const canChangePassword = useMemo(() => {
@@ -53,7 +56,36 @@ export default function Profile() {
     setSaving(true);
     setMessage(null);
     try {
-      await updateUserProfile(user.uid, { displayName });
+      const trimmed = phone.trim();
+      const parsed = toE164(trimmed);
+      if (trimmed && !parsed.ok) {
+        setMessage({ text: `That mobile number looks ${parsed.reason}.`, ok: false });
+        setSaving(false);
+        return;
+      }
+      if (whatsappOk && !parsed.ok) {
+        setMessage({ text: 'Add your mobile number to get reminders on WhatsApp.', ok: false });
+        setSaving(false);
+        return;
+      }
+
+      const update = { displayName, phone: trimmed };
+
+      /*
+       * Consent is recorded with when and how it was given, because that is what
+       * has to be shown if it is ever questioned. Withdrawal keeps the record
+       * rather than deleting it — "she said no on this date" is also evidence.
+       */
+      const alreadyGranted = profile?.messagingConsent?.granted === true;
+      if (whatsappOk !== alreadyGranted) {
+        update.messagingConsent = {
+          granted: whatsappOk,
+          at: new Date().toISOString(),
+          source: CONSENT_SOURCES.PROFILE,
+        };
+      }
+
+      await updateUserProfile(user.uid, update);
       await refreshProfile();
       setMessage({ text: 'Profile updated.', ok: true });
     } catch {
@@ -153,10 +185,41 @@ export default function Profile() {
               <span>Email</span>
               <input value={user?.email || (isGuest ? 'Guest session' : '')} disabled />
             </label>
-            <label className="field field--full">
+            <label className="field">
+              <span>Mobile number</span>
+              <input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                disabled={isGuest}
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="+91 98765 43210"
+              />
+            </label>
+            <label className="field">
               <span>Role</span>
               <input value={getRoleLabel(role)} disabled />
             </label>
+
+            {!isGuest && (
+              <div className="field field--full consent-field">
+                <label className="consent-field__row">
+                  <input
+                    type="checkbox"
+                    checked={whatsappOk}
+                    onChange={(e) => setWhatsappOk(e.target.checked)}
+                  />
+                  <span>
+                    <b>Send me session and assignment reminders on WhatsApp</b>
+                    <span className="consent-field__hint muted">
+                      Reminders about your sessions and what is due. No marketing. You can turn this
+                      off here at any time.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            )}
             {message && (
               <p
                 className={`alert ${message.ok ? 'alert-success' : 'alert-error'} field--full`}

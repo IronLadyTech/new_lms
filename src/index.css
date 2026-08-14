@@ -11801,6 +11801,42 @@ button.streak-heatmap__cell:focus-visible {
   margin: 0;
 }
 
+/* Consent, asked plainly: what it is for, and that it can be undone. */
+.consent-field {
+  padding: var(--space-2sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.consent-field__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2sm);
+  cursor: pointer;
+  margin: 0;
+}
+
+.consent-field__row input {
+  margin-top: 0.2rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.consent-field__row > span {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs, 0.15rem);
+}
+
+.consent-field__hint {
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
 /* Truncation disclosure — the queue previews N of M, never silently. */
 .cx-panel__more {
   margin: var(--space-2sm) 0 0;
