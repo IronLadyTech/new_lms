@@ -13,11 +13,36 @@ const ACCESS_TIERS = {
 
 function normalizePaymentStatus(value) {
   const v = (value || '').toString().toLowerCase().trim();
-  if (['paid', 'full', 'complete', 'full_payment'].includes(v)) return PAYMENT_STATUS.PAID;
+  // 'completed' is what Zoho writes on a full payment — 'complete' alone missed
+  // it. Registration-only learners are marked 'register', a separate value, so
+  // this cannot swallow a part payment. Unranked values also stored raw here,
+  // which is how 'completed' reached 157 profiles instead of 'paid'.
+  if (['paid', 'full', 'complete', 'completed', 'full_payment', 'paid_full'].includes(v)) {
+    return PAYMENT_STATUS.PAID;
+  }
   if (['register', 'registration', 'reg', 'partial', 'registration_fee'].includes(v)) {
     return PAYMENT_STATUS.REGISTER;
   }
-  if (['unpaid', 'not paid', 'pending', 'none', ''].includes(v)) return PAYMENT_STATUS.UNPAID;
+  // A payment that did not succeed is not a payment.
+  if (
+    [
+      'unpaid',
+      'not paid',
+      'pending',
+      'none',
+      '',
+      'failed',
+      'declined',
+      'rejected',
+      'cancelled',
+      'canceled',
+      'refunded',
+      'expired',
+      'chargeback',
+    ].includes(v)
+  ) {
+    return PAYMENT_STATUS.UNPAID;
+  }
   return v || PAYMENT_STATUS.UNPAID;
 }
 
