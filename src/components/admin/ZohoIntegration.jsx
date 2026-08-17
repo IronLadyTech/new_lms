@@ -86,6 +86,32 @@ export default function ZohoIntegration({ users = [] }) {
     endDate: '16/01/2027',
   });
 
+  /*
+   * Built from the form, not written out by hand. This line used to be a fixed
+   * string matching the initial dates, so it kept naming 11/07/2026 whatever
+   * was typed — directly above the Apply button, where it reads as
+   * confirmation of what is about to be written. Mirrors dateKey() and
+   * buildLeadsWhereClause() on the server.
+   */
+  const leadApplyQueryPreview = (() => {
+    const FIELDS = {
+      '100bm': ['BM_Reg_Date1', 'BM_End_Date'],
+      lep: ['LEP_Reg_Date', 'LEP_End_Date'],
+      mbw: ['MBW_Reg_Date', 'MBW_End_Date'],
+    };
+    const iso = (v) => {
+      const m = String(v || '')
+        .trim()
+        .match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      return m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : null;
+    };
+    const [startField, endField] = FIELDS[leadApplyForm.program] || FIELDS['100bm'];
+    const s = iso(leadApplyForm.startDate);
+    const e = iso(leadApplyForm.endDate);
+    if (!s || !e) return `${startField} is not null and ${endField} is not null`;
+    return `${startField} = '${s}' and ${endField} = '${e}'`;
+  })();
+
   const configured = isZohoConfigured();
   const syncedCount = users.filter((u) => u.zohoLeadId || u.zohoContactId).length;
   const lmsEmailMap = useMemo(() => lmsUserByEmail(users), [users]);
@@ -654,11 +680,8 @@ export default function ZohoIntegration({ users = [] }) {
           </button>
         </div>
         <p className="muted" style={{ marginTop: '-0.25rem', fontSize: '0.85rem' }}>
-          COQL filter:{' '}
-          <code>
-            BM_Reg_Date1 = &apos;2026-07-11&apos; and BM_End_Date = &apos;2027-01-16&apos;
-          </code>{' '}
-          (dates converted to ISO). Same as your Zoho Leads filter — not the IL_Users Batch string.
+          COQL filter: <code>{leadApplyQueryPreview}</code> (dates converted to ISO). Same as your
+          Zoho Leads filter — not the IL_Users Batch string.
         </p>
 
         {batchApplyResult && (
