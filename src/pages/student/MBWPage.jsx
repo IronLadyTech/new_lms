@@ -29,6 +29,14 @@ import { PROGRAMS } from '../../data/programTypes';
 import LessonSearchDialog from '../../components/ui/LessonSearchDialog';
 import { useLessonSearchShortcut } from '../../hooks/useLessonSearchShortcut';
 
+/*
+ * The dialog hands its callback a taskState, not a task. Passing getModuleLabel
+ * straight in read .order and .title off the wrapper, so every row rendered as
+ * "Module 1 — undefined" — and since the same label is what the query filters
+ * on, the search matched nothing.
+ */
+const lessonSearchLabel = (ts) => getModuleLabel(ts?.task ?? ts);
+
 export default function MBWPage() {
   const { user, profile, isGuest } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -373,7 +381,7 @@ export default function MBWPage() {
         onClose={() => setSearchOpen(false)}
         taskStates={mergedTaskStates}
         programLabel="MBW"
-        getTaskLabel={getModuleLabel}
+        getTaskLabel={lessonSearchLabel}
         onSelect={openTask}
       />
     </div>

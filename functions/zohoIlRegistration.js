@@ -196,37 +196,60 @@ async function fetchRegistrationViaCoql({ offset = 0, limit = 200 }, deps) {
   const token = await deps.getAccessToken();
   if (!token) throw new Error('Unable to obtain Zoho access token');
 
-  const module = getIlRegistrationModule();
   const f = getRegistrationFieldNames();
   const selectFields = registrationCoqlSelectFields();
-  const selectQuery =
-    `select ${selectFields} from ${module} ` +
-    `where ${f.batch} is not null limit ${limit} offset ${offset}`;
 
+  /*
+   * The by-id lookup tries every module candidate; this scan used to query only
+   * the configured name. Zoho answers an unknown module or field with the same
+   * opaque "column given seems to be invalid", so a single attempt could not
+   * tell the two apart — and the caller reported 0 records, which reads as
+   * "this org has no registrations" rather than "the query never ran".
+   */
   let lastError = null;
-  for (const version of ['v7', 'v6', 'v2']) {
-    const res = await fetch(`${deps.getApiDomain()}/crm/${version}/coql`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Zoho-oauthtoken ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ select_query: selectQuery }),
-    });
+  for (const module of getRegistrationModuleCandidates()) {
+    const selectQuery =
+      `select ${selectFields} from ${module} ` +
+      `where ${f.batch} is not null limit ${limit} offset ${offset}`;
 
-    if (res.status === 204) return { rows: [], more: false };
+    for (const version of ['v7', 'v6', 'v2']) {
+      const res = await fetch(`${deps.getApiDomain()}/crm/${version}/coql`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Zoho-oauthtoken ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ select_query: selectQuery }),
+      });
 
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      lastError = body?.message || `registration coql ${version} HTTP ${res.status}`;
-      continue;
+      if (res.status === 204) return { rows: [], more: false };
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        lastError = `${module}/${version}: ${body?.message || `HTTP ${res.status}`}`;
+        continue;
+      }
+
+      const body = await res.json();
+      return { rows: body?.data || [], more: Boolean(body?.info?.more_records) };
     }
-
-    const body = await res.json();
-    return { rows: body?.data || [], more: Boolean(body?.info?.more_records) };
   }
 
-  throw new Error(lastError || 'IL_Registration COQL query failed');
+  /*
+   * Name what was tried. Zoho's own message identifies neither the module nor
+   * the offending column, and every one of these is overridable by environment
+   * variable — so the fix is almost always a config change, and this is the
+   * only place that knows which values were used.
+   */
+  throw new Error(
+    `IL_Registration COQL failed for every module tried ` +
+      `(${getRegistrationModuleCandidates().join(', ')}). ` +
+      `Last response — ${lastError || 'no response'}. ` +
+      `Query used: select ${selectFields} where ${f.batch} is not null. ` +
+      `Set ZOHO_IL_REGISTRATION_MODULE, ZOHO_IL_REG_BATCH_FIELD, ` +
+      `ZOHO_IL_REG_EMAIL_FIELD or ZOHO_IL_REG_ILUSER_LOOKUP_FIELD to the API ` +
+      `names in your Zoho (Setup > Developer Space > APIs > API Names).`
+  );
 }
 
 async function fetchRegistrationViaList({ page = 1, perPage = 200 }, deps) {
