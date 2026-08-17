@@ -51,6 +51,7 @@
    * the desktop from being "the mobile layout, wider".
    */
   --content: 1280px;
+  --content-narrow: 880px;
   --prose: 68ch;
   /* Radius scale (--radius kept as the 12px default) */
   --radius-sm: 8px;
@@ -780,14 +781,10 @@ img.logo-mark {
   scroll-padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + var(--space-md));
 }
 
-/*
- * Profile and Support used to be capped at --content-narrow, from when each was
- * a single tall column of fields. They are card grids now, and the cap fought
- * them: the column rules ask the viewport, but the cards lived in an 880px box,
- * so a 1440px screen drew three 245px cards with 480px of empty page beside
- * them. Readable measure belongs on the running text — which --prose already
- * handles per element — not on a container full of cards.
- */
+/* Reading-led pages stay narrower — a settings form gains nothing from 1280px. */
+.student-main--narrow {
+  max-width: var(--content-narrow);
+}
 
 .student-layout--mbw {
   background: var(--bg);
@@ -854,6 +851,10 @@ html:has(.student-layout--mbw) #root {
      content stretched to fill a 1920px monitor. */
   max-width: var(--content);
   margin-inline: auto;
+}
+
+.student-layout--course .student-main--narrow {
+  max-width: var(--content-narrow);
 }
 
 .student-layout--course .student-main--mbw {
@@ -3016,7 +3017,9 @@ html:has(.student-layout--mbw) #root {
 
 .profile-admin-btn {
   display: flex;
+  width: 100%;
   gap: var(--space-sm);
+  margin-top: 0.85rem;
 }
 
 .profile-admin-btn:hover {
@@ -5761,9 +5764,6 @@ body.notification-sheet-open .mbw-lesson-nav--sticky {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  /* Keep the wrapped lines together. When the box is stretched to match the
-     column beside it, the default spread strands the button at the bottom. */
-  align-content: center;
   gap: var(--space-md);
   padding: 1.1rem 1.2rem;
   border-radius: var(--radius);
@@ -8323,7 +8323,7 @@ button.streak-heatmap__cell:focus-visible {
   box-sizing: border-box;
   margin: 0 0 0;
   padding: clamp(1rem, 2.5vw, 1.25rem) var(--mbw-lesson-pad-x) clamp(1rem, 2.5vw, 1.15rem);
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  background: linear-gradient(135deg, var(--il-red-hover) 0%, var(--il-red-deep) 100%);
   color: #fff;
   box-shadow: 0 8px 24px rgba(245, 41, 41, 0.22);
   border-bottom: 3px solid var(--mbw-red);
@@ -9128,7 +9128,7 @@ button.streak-heatmap__cell:focus-visible {
 }
 
 .mbw-program-hero {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  background: linear-gradient(135deg, var(--il-red-hover) 0%, var(--il-red-deep) 100%);
   color: #fff;
   border-radius: 14px;
   padding: clamp(1.25rem, 3vw, 1.75rem) clamp(1.25rem, 4vw, 2rem);
@@ -10458,6 +10458,43 @@ button.streak-heatmap__cell:focus-visible {
 
   .mbw-lesson-nav--sticky .mbw-lesson-nav__prev-label {
     font-size: var(--text-sm);
+  }
+
+  /*
+   * Phone: the saved-confirmation and the two lesson buttons were sharing one
+   * flex row, so all three squeezed into a third of the width each. The
+   * confirmation takes its own line and the buttons split the width below it,
+   * which keeps both above the 44px touch target with a real gap between them.
+   */
+  .mbw-lesson-nav {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mbw-lesson-nav .mbw-lesson-complete {
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  .mbw-lesson-nav__actions {
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+
+  .mbw-lesson-nav__actions .btn {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  /* The current crumb ellipsised mid-word at 16rem. Wrapping keeps the lesson
+     name readable; two lines is the cap before it starts pushing the title. */
+  .mbw-lesson-topbar__crumbs .breadcrumbs__current {
+    max-width: 100%;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .notification-bell__head-actions .btn {
@@ -11837,9 +11874,6 @@ button.streak-heatmap__cell:focus-visible {
 
 /* Consent, asked plainly: what it is for, and that it can be undone. */
 .consent-field {
-  /* Spans the form, and deliberately not a .field: that class makes everything
-     inside a label bold and dark, which is wrong for an explanatory line. */
-  grid-column: 1 / -1;
   padding: var(--space-2sm);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -11867,15 +11901,11 @@ button.streak-heatmap__cell:focus-visible {
   display: flex;
   flex-direction: column;
   gap: var(--space-3xs, 0.15rem);
-  font-size: var(--text-sm);
-  color: var(--text);
 }
 
 .consent-field__hint {
-  font-size: var(--text-xs);
-  font-weight: 400;
+  font-size: var(--text-sm);
   line-height: 1.5;
-  color: var(--muted);
 }
 
 /* Truncation disclosure — the queue previews N of M, never silently. */
@@ -15111,16 +15141,6 @@ textarea:focus-visible,
     gap: var(--space-sm);
   }
 
-  /*
-   * The header is a column at this width, so .section-card__heading's
-   * `flex: 1 1 14rem` basis was being read as a *height*: every card on every
-   * phone carried 224px of empty space between its title and its content.
-   * The basis only ever meant "do not shrink below 14rem wide".
-   */
-  .section-card__heading {
-    flex: 0 0 auto;
-  }
-
   .section-card__actions {
     width: 100%;
     flex-shrink: 1;
@@ -15593,7 +15613,6 @@ textarea:focus-visible,
 .profile-identity {
   display: flex;
   align-items: flex-start;
-  flex-wrap: wrap;
   gap: var(--space-lg);
 }
 
@@ -15606,17 +15625,8 @@ textarea:focus-visible,
   flex: 1;
   min-width: 0;
   display: grid;
-  /*
-   * As many columns as genuinely fit, rather than always two. Inside a card that
-   * is a third of the page — which is what happens above 1240px — two columns
-   * beside an 80px avatar left each field about ninety pixels wide, enough to
-   * show "Gr" of a name and "ya" of an email address.
-   */
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-md);
-  /* A form does not improve past two columns; the rest is just distance
-     between a label and the box it belongs to. */
-  max-width: 46rem;
 }
 
 .profile-form-actions {
@@ -15634,52 +15644,6 @@ textarea:focus-visible,
   justify-content: space-between;
   gap: var(--space-md);
   flex-wrap: wrap;
-}
-
-/*
- * The description has to be allowed to shrink. Without this it claims its full
- * measure, the row wraps, and the control drops onto its own line below the
- * text — which read as a stray checkbox floating in the card.
- */
-.profile-setting-row__text {
-  flex: 1 1 12rem;
-  min-width: 0;
-}
-
-.profile-setting-row > :not(.profile-setting-row__text) {
-  flex: 0 0 auto;
-}
-
-/* Consecutive settings need a line between them, or two toggles read as one
-   block of text with two checkboxes loose beside it. */
-.profile-setting-row + .profile-setting-row {
-  margin-top: var(--space-sm);
-  padding-top: var(--space-sm);
-  border-top: 1px solid var(--border);
-}
-
-/*
- * Inside a settings row the theme control is already labelled by the row, so
- * its own "Appearance" heading printed the word twice and its border drew a
- * card inside a card. The label stays for screen readers, which do not have
- * the visual grouping to go on.
- */
-.profile-setting-row .theme-toggle-group {
-  padding: 0;
-  border: 0;
-  background: none;
-}
-
-.profile-setting-row .theme-toggle-group__label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  white-space: nowrap;
 }
 
 .profile-setting-row__text strong {
@@ -16033,9 +15997,6 @@ textarea:focus-visible,
   .profile-form-grid {
     grid-template-columns: 1fr;
     width: 100%;
-    /* The centring above is for the avatar. Labels belong over the left edge of
-       their input, not floating above its middle. */
-    text-align: left;
   }
 
   .profile-form-actions {
@@ -16215,6 +16176,29 @@ body.notification-sheet-open .bottom-nav {
 
 [data-theme='dark'] .breadcrumbs__link {
   color: var(--primary-on-dark);
+}
+
+/*
+ * Breadcrumbs sitting on the red programme hero.
+ *
+ * The defaults are built for a light page: the link uses --primary-text and the
+ * current crumb uses --muted. On the hero those measured 1.47:1 and 1.81:1 —
+ * red on red, which is why the trail read as blank space on a phone. Both
+ * heroes are red in either theme, so the override is not theme-scoped, and it
+ * is placed after the dark rule above so it wins on source order.
+ */
+.mbw-program-hero .breadcrumbs__link,
+.mbw-lesson-topbar .breadcrumbs__link {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.mbw-program-hero .breadcrumbs__current,
+.mbw-lesson-topbar .breadcrumbs__current,
+.mbw-program-hero .breadcrumbs__sep,
+.mbw-lesson-topbar .breadcrumbs__sep {
+  color: #ffeaea;
 }
 
 .breadcrumbs__current {
@@ -16630,53 +16614,16 @@ body.notification-sheet-open .bottom-nav {
   max-width: var(--prose);
 }
 
-@media (min-width: 1200px) {
-  /*
-   * Settings-style pages: cards side by side instead of a single tall column.
-   * Two columns start at 1200 rather than 1024 — below that a half-page card is
-   * too narrow to pair the identity fields, so Identity ran to twice the height
-   * of the Password card beside it and the row filled with empty white.
-   */
+@media (min-width: 1024px) {
+  /* Settings-style pages: cards side by side instead of a single tall column. */
   .profile-page {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-lg);
-    /*
-     * Cards paired in a row share its height. With `start` the shorter card
-     * stopped early and the page background showed through beneath it, which
-     * read as a hole punched in the row rather than as a card that happened to
-     * have less in it.
-     */
-    align-items: stretch;
+    align-items: start;
   }
-
-  /*
-   * Two columns, paired by weight: the two forms share a row, the two small
-   * preference cards share the next. Cards that are a sentence and a button
-   * become full-width rows instead — a third of a page of white space around
-   * one button is worse than a wide row containing it.
-   */
-  .profile-page > .page-header,
-  .profile-page .profile-section--wide {
+  .profile-page > .page-header {
     grid-column: 1 / -1;
-  }
-
-  /*
-   * Half-page card: the avatar sits above the fields rather than beside them.
-   * Beside them it took 104px off a 532px card and left the form too narrow
-   * for two columns, so Identity ran half again as tall as the Password card
-   * next to it — which is where the empty half of that row came from.
-   */
-  .profile-page .profile-identity {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .profile-page .profile-form-grid {
-    width: 100%;
-    /* 13rem, not the 16rem used at full width: two columns have to fit inside
-       half a page at 1200, which is where this layout is tightest. */
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
   }
 
   /* Support: raise-a-ticket beside the ticket list rather than above it. */
@@ -16719,6 +16666,13 @@ body.notification-sheet-open .bottom-nav {
   .admin-list .user-row__controls,
   .admin-list__actions {
     justify-content: flex-end;
+  }
+}
+
+@media (min-width: 1240px) {
+  /* Three across once there is genuinely room, rather than two very wide cards. */
+  .profile-page {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -16781,13 +16735,7 @@ body.notification-sheet-open .bottom-nav {
      * list sat in white space. Weighted so each gets the width it needs.
      */
     grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
-    /*
-     * Both columns end together. Before a learner has any streak the left
-     * column is a short prompt box beside a full activity list, and `start`
-     * left a band of white under it. The box already centres its own contents,
-     * so filling the row reads as deliberate rather than padded.
-     */
-    align-items: stretch;
+    align-items: start;
     gap: var(--space-lg);
   }
 

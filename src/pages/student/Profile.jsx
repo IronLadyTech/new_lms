@@ -166,11 +166,7 @@ export default function Profile() {
         subtitle="Manage your identity, preferences, and account."
       />
 
-      <SectionCard
-        title="Your identity"
-        icon={UserCircle}
-        className="profile-section profile-section--identity"
-      >
+      <SectionCard title="Your identity" icon={UserCircle} className="profile-section">
         <div className="profile-identity">
           <div className="profile-avatar" aria-hidden="true">
             {initial}
@@ -207,7 +203,7 @@ export default function Profile() {
             </label>
 
             {!isGuest && (
-              <div className="consent-field">
+              <div className="field field--full consent-field">
                 <label className="consent-field__row">
                   <input
                     type="checkbox"
@@ -357,26 +353,21 @@ export default function Profile() {
         <SectionCard
           title="Help & support"
           icon={LifeBuoy}
-          className="profile-section profile-section--wide"
+          description="Report course, login, or payment issues to Super Admin."
+          className="profile-section"
         >
-          <div className="profile-setting-row">
-            <div className="profile-setting-row__text">
-              <strong>Need help?</strong>
-              <p className="muted">Report course, login, or payment issues to Super Admin.</p>
-            </div>
-            <button
-              type="button"
-              className="btn btn-outline profile-admin-btn"
-              onClick={() => navigate('/app/support')}
-            >
-              <LifeBuoy size={18} strokeWidth={2} />
-              Open support tickets
-            </button>
-          </div>
+          <button
+            type="button"
+            className="btn btn-outline btn-block profile-admin-btn"
+            onClick={() => navigate('/app/support')}
+          >
+            <LifeBuoy size={18} strokeWidth={2} />
+            Open support tickets
+          </button>
         </SectionCard>
       )}
 
-      <SectionCard title="Account" icon={LogOut} className="profile-section profile-section--wide">
+      <SectionCard title="Account" icon={LogOut} className="profile-section">
         <div className="profile-setting-row">
           <div className="profile-setting-row__text">
             <strong>Sign out</strong>
