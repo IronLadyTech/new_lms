@@ -48,11 +48,13 @@ export default function MBWLessonTopbar({
         )}
       </div>
 
-      <p className="mbw-program-hero__label">
-        {cohortLabel ? `${cohortLabel} · ` : ''}
-        {sectionTitle || MBW_PROGRAM_META.title}
-      </p>
-      <h1 className="mbw-program-hero__title mbw-program-hero__title--lesson">{lessonTitle}</h1>
+      {/* Cohort only — the section is already the third crumb above. */}
+      <p className="mbw-program-hero__label">{cohortLabel || MBW_PROGRAM_META.title}</p>
+      {/*
+        No heading here. The lesson name is the last crumb above and the card
+        below carries it as the page's h1 — two h1s on one page is also wrong
+        for screen readers. The hero's job is context and progress.
+      */}
       <MBWProgramProgressBand
         completedMilestones={completedMilestones}
         totalMilestones={totalMilestones}

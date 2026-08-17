@@ -10486,6 +10486,27 @@ button.streak-heatmap__cell:focus-visible {
     min-width: 0;
   }
 
+  /*
+   * Phone: show only the last two levels — section and lesson. The full trail
+   * wrapped to three lines, which was most of the hero. The leading levels are
+   * clipped rather than display:none, so a screen reader still reads the whole
+   * trail; sighted users have "Back to program" immediately below.
+   */
+  .mbw-lesson-topbar__crumbs .breadcrumbs__item:not(:nth-last-child(-n + 2)) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .mbw-lesson-topbar__crumbs .breadcrumbs__item:nth-last-child(2) .breadcrumbs__sep {
+    display: none;
+  }
+
   /* The current crumb ellipsised mid-word at 16rem. Wrapping keeps the lesson
      name readable; two lines is the cap before it starts pushing the title. */
   .mbw-lesson-topbar__crumbs .breadcrumbs__current {

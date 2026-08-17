@@ -1,5 +1,4 @@
 import { ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import WatchGatedVideo from './WatchGatedVideo';
 import TextSubmission from './submissions/TextSubmission';
 import LinkSubmission from './submissions/LinkSubmission';
@@ -10,15 +9,10 @@ import WatchOnly from './submissions/WatchOnly';
 import RecurringPost from './submissions/RecurringPost';
 import ChecklistSubmission from './submissions/ChecklistSubmission';
 import { TASK_TYPES, SUBMISSION_STATUS } from '../../services/mbwService';
-import { getModuleLabel, getWeekCode, getPrimaryStatus } from '../../utils/mbwDisplay';
+import { getWeekCode, getPrimaryStatus } from '../../utils/mbwDisplay';
 import { getTaskDurationHint } from '../../utils/mbwProgramUtils';
-import { MBW_PROGRAM_SECTIONS } from '../../data/mbwProgramStructure';
 import LearnerReviewFeedback from '../submissions/LearnerReviewFeedback';
 import LearnerSubmissionPreview from '../submissions/LearnerSubmissionPreview';
-
-function getSectionTitle(phase) {
-  return MBW_PROGRAM_SECTIONS.find((s) => s.id === phase)?.title ?? 'MBW';
-}
 
 export default function TaskContent({
   taskState,
@@ -77,16 +71,14 @@ export default function TaskContent({
           </div>
         ) : (
           <>
-            <nav className="mbw-task__crumbs" aria-label="Breadcrumb">
-              <Link to="/app/mbw">MBW</Link>
-              <span aria-hidden="true">/</span>
-              <Link to="/app/mbw">{getSectionTitle(task.phase)}</Link>
-              <span aria-hidden="true">/</span>
-              <span aria-current="page">{getModuleLabel(task)}</span>
-            </nav>
+            {/*
+              No breadcrumb and no module label here: the programme hero directly
+              above already carries a fuller trail (Programs / MBW / section /
+              module) and the module label repeated the heading word for word.
+              This heading is the lesson name, once.
+            */}
             <h1>{task.title}</h1>
             <div className="mbw-task__meta">
-              <span className="mbw-task__module-label">{getModuleLabel(task)}</span>
               {getWeekCode(task) && (
                 <span className="mbw-task__week-code">{getWeekCode(task)}</span>
               )}
