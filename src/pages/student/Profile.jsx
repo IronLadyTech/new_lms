@@ -5,6 +5,7 @@ import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 
 import { useAuth } from '../../context/AuthContext';
 import { updateUserProfile } from '../../services/userService';
 import { toE164, CONSENT_SOURCES } from '../../utils/contactDetails';
+import { syncPasswordResetToZoho } from '../../services/zohoService';
 import { getRoleLabel } from '../../utils/roles';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
 import ThemeToggle from '../../components/ThemeToggle';
@@ -114,6 +115,21 @@ export default function Profile() {
       const credential = EmailAuthProvider.credential(user.email, passwordForm.current);
       await reauthenticateWithCredential(user, credential);
       await updatePassword(user, passwordForm.next);
+
+      /*
+       * Zoho holds LMS_Password, and provisioning reads it when a learner signs
+       * in for the first time on another device. Sign-up, sign-in and the
+       * forgot-password reset all pushed the new credential; changing it here
+       * did not, so Zoho kept the old one indefinitely.
+       *
+       * Deliberately not awaited. The password is already changed in Firebase
+       * by this point, and a Zoho outage must not turn a successful change into
+       * an error the learner cannot act on.
+       */
+      syncPasswordResetToZoho(passwordForm.next, { phase: 'after_reset' }).catch((err) => {
+        console.warn('Zoho credential sync after password change:', err?.message || err);
+      });
+
       setPasswordForm({ current: '', next: '', confirm: '' });
       setPasswordMessage({ text: 'Password updated.', ok: true });
     } catch (err) {

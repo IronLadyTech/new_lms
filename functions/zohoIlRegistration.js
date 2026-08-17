@@ -390,20 +390,41 @@ async function listIlRegistrationPage({ page = 1, perPage = 50 } = {}, deps) {
   const token = await deps.getAccessToken();
   if (!token) throw new Error('Unable to obtain Zoho access token');
 
-  const module = getIlRegistrationModule();
   const params = new URLSearchParams({
     page: String(page),
     per_page: String(Math.min(Math.max(perPage, 1), 200)),
     fields: registrationListFields(),
   });
 
-  const res = await fetch(`${deps.getApiDomain()}/crm/v2/${module}?${params}`, {
-    headers: { Authorization: `Zoho-oauthtoken ${token}` },
-  });
+  /*
+   * Try each module candidate, as the by-id lookup and the COQL scan already
+   * do. A stray ZOHO_IL_REGISTRATION_MODULE pointing at a module that does not
+   * exist made this fail outright with Zoho's "the module name given seems to
+   * be invalid", which surfaced in the admin UI as a bare "INTERNAL".
+   */
+  let module = null;
+  let body = null;
+  let lastError = null;
+  for (const candidate of getRegistrationModuleCandidates()) {
+    const res = await fetch(`${deps.getApiDomain()}/crm/v2/${candidate}?${params}`, {
+      headers: { Authorization: `Zoho-oauthtoken ${token}` },
+    });
+    if (res.status === 204) return { ok: true, module: candidate, rows: [], page, perPage, count: 0, moreRecords: false };
+    const parsed = await res.json().catch(() => ({}));
+    if (res.ok) {
+      module = candidate;
+      body = parsed;
+      break;
+    }
+    lastError = `${candidate}: ${parsed?.message || `HTTP ${res.status}`}`;
+  }
 
-  const body = await res.json();
-  if (!res.ok) {
-    throw new Error(body?.message || JSON.stringify(body));
+  if (!body) {
+    throw new Error(
+      `IL_Registration list failed for every module tried ` +
+        `(${getRegistrationModuleCandidates().join(', ')}). Last response — ${lastError}. ` +
+        `Set ZOHO_IL_REGISTRATION_MODULE to the module's API name.`
+    );
   }
 
   const rows = (body?.data || []).map(registrationToSummaryRow).filter(Boolean);
