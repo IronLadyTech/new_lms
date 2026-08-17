@@ -462,6 +462,7 @@ async function previewBatchSync({ maxPages = 10, perPage = 200 } = {}, deps) {
     registrationMethod: registrationFetch.method,
     coqlError: ilUsersFetch.coqlError,
     registrationCoqlError: registrationFetch.coqlError,
+    registrationSkipped: registrationFetch.skippedReason || null,
     pagesFetched: ilUsersFetch.pagesFetched,
     registrationPagesFetched: registrationFetch.pagesFetched,
     scannedRecords: ilUsersFetch.rows.length,
@@ -559,6 +560,7 @@ async function fetchMergedBatchRecords({ maxPages = 10, perPage = 200 } = {}, de
     registrationMethod: registrationFetch.method,
     coqlError: ilUsersFetch.coqlError,
     registrationCoqlError: registrationFetch.coqlError,
+    registrationSkipped: registrationFetch.skippedReason || null,
     truncated: ilUsersFetch.truncated || registrationFetch.truncated,
     sources: {
       ilUsersWithBatch: ilUsersFetch.rows.length,

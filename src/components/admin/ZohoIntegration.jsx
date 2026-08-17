@@ -801,6 +801,12 @@ export default function ZohoIntegration({ users = [] }) {
               {batchPreview.truncated ? ' More records exist beyond this scan.' : ''}
             </p>
 
+            {batchPreview.registrationSkipped && (
+              <p className="alert" role="status">
+                IL_Registration not scanned for batches — {batchPreview.registrationSkipped}
+              </p>
+            )}
+
             {batchPreview.registrationCoqlError && (
               <p className="alert alert-warning" role="alert">
                 IL_Registration scan failed — batch counts may be IL_Users only.{' '}

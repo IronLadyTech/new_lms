@@ -277,6 +277,14 @@ async function fetchRegistrationViaList({ page = 1, perPage = 200 }, deps) {
 
 /**
  * Paginated fetch of IL_Registration rows that carry a Batch value.
+ *
+ * Only runs when ZOHO_IL_REG_BATCH_FIELD names a real field. Cohorts live on
+ * Leads (BM_Reg_Date1 / BM_End_Date) and, for legacy records, on IL_Users;
+ * IL_Registration holds credentials and registration amount, not batches. With
+ * no batch field there, `where Batch is not null` was rejected by Zoho as an
+ * invalid column, the list-scan fallback then filtered every row away, and the
+ * caller reported "0 scanned" — indistinguishable from a module that simply had
+ * nothing in it. Skipping says so plainly instead.
  */
 async function fetchIlRegistrationWithBatch({ maxPages = 50, perPage = 200 } = {}, deps) {
   const rows = [];
@@ -284,6 +292,20 @@ async function fetchIlRegistrationWithBatch({ maxPages = 50, perPage = 200 } = {
   let coqlError = null;
   let more = true;
   let pages = 0;
+
+  if (!process.env.ZOHO_IL_REG_BATCH_FIELD?.trim()) {
+    return {
+      module: getIlRegistrationModule(),
+      rows: [],
+      method: 'skipped',
+      skippedReason:
+        'No ZOHO_IL_REG_BATCH_FIELD configured — batches are read from Leads and IL_Users. ' +
+        'Set it only if your IL_Registration module really carries a batch field.',
+      coqlError: null,
+      pagesFetched: 0,
+      truncated: false,
+    };
+  }
 
   try {
     while (more && pages < maxPages) {
