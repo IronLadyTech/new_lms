@@ -165,9 +165,15 @@ export default function Home() {
   const quickStats = [
     {
       id: 'programs',
-      label: 'Open',
+      /*
+       * "Open" beside "Pending tasks" read as open items, or as a verb. This
+       * counts programmes the learner can enter, and "unlocked" is the word the
+       * page already uses a line above and the word the lock icons imply. The
+       * hint names the noun, as the other three tiles do.
+       */
+      label: 'Unlocked',
       value: accessibleCourses.length,
-      hint: `of ${courses.length}`,
+      hint: `of ${courses.length} program${courses.length === 1 ? '' : 's'}`,
     },
     {
       id: 'pending',
