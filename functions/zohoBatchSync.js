@@ -99,7 +99,17 @@ function dmyToUtc(d, m, y) {
 function classifyBatchValue(raw) {
   const value = String(raw || '').trim();
   if (!value) return { ok: false, reason: 'empty' };
-  if (value === '#batch' || value.includes('$')) return { ok: false, reason: 'placeholder-value' };
+  /*
+   * Junk that reached Zoho from some writer, not a batch anyone typed. '$'
+   * catches an unreplaced ${...} template; the words are what JavaScript and
+   * spreadsheets leave behind when a value was missing at the point of write.
+   * Classified as a placeholder rather than a bad format, because there is no
+   * format here to correct — the record simply has no batch.
+   */
+  const PLACEHOLDERS = new Set(['#batch', 'undefined', 'null', 'nan', 'n/a', '-', '--']);
+  if (PLACEHOLDERS.has(value.toLowerCase()) || value.includes('$')) {
+    return { ok: false, reason: 'placeholder-value', value };
+  }
 
   if (MONTH_BATCH_RE.test(value)) return { ok: true, kind: 'month', value };
 

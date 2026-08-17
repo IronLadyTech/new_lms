@@ -41,7 +41,13 @@ export default defineConfig({
     // `@vitest-environment jsdom` docblock, so pure logic keeps the fast path.
     environment: 'node',
     // rules-test/ needs the Firestore emulator; it runs via `npm run test:rules`.
-    include: ['src/**/*.{test,spec}.{js,jsx}'],
+    include: [
+      'src/**/*.{test,spec}.{js,jsx}',
+      'load-test/**/*.test.js',
+      // Cloud Functions helpers are plain, pure modules — worth covering here
+      // rather than leaving the only Zoho parsing logic untested.
+      'functions/**/*.test.js',
+    ],
     exclude: ['**/node_modules/**', 'rules-test/**'],
     globals: false,
     /*
