@@ -52,6 +52,38 @@ function inferFromLeadStatus(statusRaw) {
   else if (/\blep\b|leadership essentials/.test(s)) program = 'lep';
   else if (/100\s*bm|100bm|100 board/.test(s)) program = '100bm';
 
+  /*
+   * Refunds, from the Current Lead Status field. The old LMS removed the
+   * programme on Refund Completed and restored it on Refund Cancelled, and
+   * nothing in this one revoked access at all — a refunded learner kept the
+   * content indefinitely.
+   *
+   * Checked before the enrol and start tests below, because the status still
+   * names the programme: "100 BM Refund Completed" contains both "refund" and
+   * the programme, and whichever test runs first wins.
+   *
+   * Initiated is deliberately not a revocation. It records an intent, and the
+   * old system only wrote it to IL Registration; taking content away while a
+   * refund is merely being considered would be wrong.
+   */
+  if (/refund/.test(s)) {
+    if (/cancel/.test(s)) {
+      // Refund called off — the entitlement stands. Say nothing about payment
+      // so the ratchet leaves whatever they had in place.
+      return { program, paymentStatus: null, accessTier: null, leadStatus: statusRaw, refund: 'cancelled' };
+    }
+    if (/complete/.test(s)) {
+      return {
+        program,
+        paymentStatus: PAYMENT_STATUS.UNPAID,
+        accessTier: null,
+        leadStatus: statusRaw,
+        refund: 'completed',
+      };
+    }
+    return { program, paymentStatus: null, accessTier: null, leadStatus: statusRaw, refund: 'initiated' };
+  }
+
   if (/follow\s*up/.test(s)) {
     return {
       program: null,
@@ -179,6 +211,10 @@ function parseLeadEntitlements(lead) {
     );
 
   return {
+    // Carried through so applyEntitlements can revoke: a refund has to bypass
+    // the never-downgrade ratchet, which exists to stop webhook replays
+    // lowering somebody's tier by accident.
+    refund: fromStatus?.refund || null,
     email: resolveLoginEmail(lead, lmsUsername),
     displayName: lead?.Last_Name || lead?.Full_Name || lead?.First_Name || '',
     program: inferProgramFromLead(lead, fromStatus),

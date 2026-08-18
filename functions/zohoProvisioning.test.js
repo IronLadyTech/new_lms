@@ -157,3 +157,74 @@ describe('syncEntitlementsFromZoho — a CX status change', () => {
     expect(result.ok).toBe(true);
   });
 });
+
+/*
+ * Refunds. Nothing in the new LMS ever removed access, so a refunded learner
+ * kept the content for good. The old LMS stripped the programme name from
+ * Program Registration Details on Refund Completed and restored it on Refund
+ * Cancelled.
+ */
+describe('applyEntitlements — refunds', () => {
+  const runStatus = async (leadStatus, profile) => {
+    const written = [];
+    const db = {
+      collection: () => ({
+        doc: () => ({
+          get: async () => ({ data: () => profile }),
+          update: async (u) => written.push(u),
+          set: async (u) => written.push(u),
+        }),
+        where: () => ({ limit: () => ({ get: async () => ({ empty: true, docs: [] }) }) }),
+        get: async () => ({ empty: true, docs: [] }),
+      }),
+    };
+    await provisioning.applyEntitlements(
+      db,
+      'u1',
+      { Email: 'a@b.com', Lead_Status: leadStatus },
+      profile
+    );
+    return written[0] || {};
+  };
+
+  const twoProgrammes = {
+    paymentStatus: 'paid',
+    program: '100bm',
+    programs: ['lep', '100bm'],
+    programAccess: { lep: { paymentStatus: 'paid' }, '100bm': { paymentStatus: 'paid' } },
+  };
+
+  it('revokes the refunded programme and leaves the other alone', async () => {
+    const u = await runStatus('100 BM Refund Completed', twoProgrammes);
+    expect(u['programAccess.100bm.paymentStatus']).toBe('unpaid');
+    expect(u['programAccess.100bm.fullPaidAt']).toBeNull();
+    expect(u.programs).toEqual(['lep']);
+    expect(u['programAccess.lep.paymentStatus']).toBeUndefined();
+  });
+
+  it('drops the flat status to what the remaining programmes justify', async () => {
+    // The ratchet cannot fall, so without this the profile still reads "paid".
+    const u = await runStatus('100 BM Refund Completed', {
+      ...twoProgrammes,
+      programs: ['100bm'],
+      programAccess: { '100bm': { paymentStatus: 'paid' } },
+    });
+    expect(u.paymentStatus).toBe('unpaid');
+  });
+
+  it('keeps the flat status when another paid programme survives', async () => {
+    const u = await runStatus('100 BM Refund Completed', twoProgrammes);
+    expect(u.paymentStatus).toBe('paid');
+  });
+
+  it('takes nothing away while a refund is only initiated', async () => {
+    const u = await runStatus('100 BM Refund Initiated', twoProgrammes);
+    expect(u.programs).toBeUndefined();
+    expect(u['programAccess.100bm.paymentStatus']).not.toBe('unpaid');
+  });
+
+  it('takes nothing away when the refund is cancelled', async () => {
+    const u = await runStatus('100 BM Refund Cancelled', twoProgrammes);
+    expect(u.programs).toBeUndefined();
+  });
+});

@@ -147,7 +147,58 @@ async function applyEntitlements(db, uid, record, profile = {}) {
    * restart somebody's clock. Stored per programme because a learner can be
    * fully paid for LEP while only registered for 100BM.
    */
-  if (ent.paymentStatus && ent.program) {
+  /*
+   * A completed refund is the one thing that must lower a tier. Everything else
+   * ratchets upward so a webhook replay cannot demote anybody, and that same
+   * guard is why nothing could revoke access: maxPaymentStatus would keep the
+   * old paid value forever.
+   *
+   * The programme is removed from the enrolment lists too, matching the old
+   * LMS, which stripped the name from Program Registration Details. The account
+   * itself stays — the old system deleted the user when it was their only
+   * programme, and losing submissions and history to a refund is not worth it.
+   */
+  const refundedProgram = ent.refund === 'completed' && ent.program ? ent.program : null;
+  if (refundedProgram) {
+    updates[`programAccess.${refundedProgram}.paymentStatus`] = PAYMENT_STATUS.UNPAID;
+    updates[`programAccess.${refundedProgram}.refundedAt`] = new Date();
+    updates[`programAccess.${refundedProgram}.fullPaidAt`] = null;
+
+    const keptPrograms = (profile.programs || []).filter((p) => p !== refundedProgram);
+    if (keptPrograms.length !== (profile.programs || []).length) {
+      updates.programs = keptPrograms;
+    }
+    if (profile.program === refundedProgram) {
+      updates.program = keptPrograms[0] || null;
+    }
+
+    // enrolledCourses holds course document ids, not codes, so the id has to be
+    // looked up before anything can be removed from the list.
+    const code = PROGRAM_COURSE_CODE[refundedProgram];
+    const courseId = code ? await getCourseIdByCode(db, code) : null;
+    if (courseId) {
+      const keptCourses = (profile.enrolledCourses || []).filter((id) => id !== courseId);
+      if (keptCourses.length !== (profile.enrolledCourses || []).length) {
+        updates.enrolledCourses = keptCourses;
+      }
+    }
+
+    /*
+     * The flat field is set above by the ratchet, which cannot fall. Left alone
+     * it would still read "paid" after a refund and mislead every CX screen
+     * that shows it. Recomputed from whatever programmes remain.
+     */
+    const remaining = { ...(profile.programAccess || {}) };
+    delete remaining[refundedProgram];
+    const highest = Object.values(remaining)
+      .map((entry) => entry?.paymentStatus)
+      .filter(Boolean)
+      .reduce((best, next) => maxPaymentStatus(best, next), PAYMENT_STATUS.UNPAID);
+    updates.paymentStatus = highest;
+    updates.accessTier = accessTierFromPaymentStatus(highest);
+  }
+
+  if (!refundedProgram && ent.paymentStatus && ent.program) {
     /*
      * Recorded against the programme it was paid for. Zoho already tracks these
      * separately — lepPaymentStatus, hundredBMPaymentStatus, MBWPaymentStatus —
@@ -163,7 +214,9 @@ async function applyEntitlements(db, uid, record, profile = {}) {
     );
   }
 
-  if (updates.paymentStatus === PAYMENT_STATUS.PAID && ent.program) {
+  // Not for a programme just refunded: the flat status may still be paid
+  // because another programme survives, which would re-stamp the refunded one.
+  if (!refundedProgram && updates.paymentStatus === PAYMENT_STATUS.PAID && ent.program) {
     const alreadyStamped = profile.programAccess?.[ent.program]?.fullPaidAt;
     if (!alreadyStamped) {
       updates[`programAccess.${ent.program}.fullPaidAt`] = new Date();
