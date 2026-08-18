@@ -17,10 +17,19 @@ export function normalizePaymentStatus(value) {
   // 'completed' is what Zoho writes on a full payment — 'complete' alone missed
   // it, and 157 profiles carried the longer word. Registration-only learners are
   // marked 'register', so this cannot swallow a part payment.
-  if (['paid', 'full', 'complete', 'completed', 'full_payment', 'paid_full'].includes(v)) {
+  if (['paid', 'full', 'complete', 'full_payment', 'paid_full'].includes(v)) {
     return PAYMENT_STATUS.PAID;
   }
-  if (['register', 'registration', 'reg', 'partial', 'registration_fee'].includes(v)) {
+  /*
+   * 'completed' is the *registration* transaction completing, not the programme
+   * fee. The Deluge that converts Pre-IL Registration posts
+   * paymentstatus:"Completed" for the registration payment, and the enrolment
+   * Deluge deliberately omits it — its own comment reads "Do NOT send
+   * paymentstatus Completed here, LMS treats that as registration (partial)
+   * only". paymentStatusFromRegistrationPayload already maps it that way; this
+   * agrees with it rather than contradicting it.
+   */
+  if (['register', 'registration', 'reg', 'partial', 'registration_fee', 'completed'].includes(v)) {
     return PAYMENT_STATUS.REGISTER;
   }
   // A payment that did not succeed is not a payment. These previously fell

@@ -18,11 +18,16 @@ import {
  * itself was never broken; it was simply never asked about them.
  */
 describe('normalizePaymentStatus — the words Zoho actually sends', () => {
-  it('treats a completed payment as paid', () => {
-    // Registration-only learners are marked "register", which is a separate
-    // value with its own 60 profiles — so "completed" means the full fee.
-    expect(normalizePaymentStatus('completed')).toBe(PAYMENT_STATUS.PAID);
-    expect(normalizePaymentStatus('Completed')).toBe(PAYMENT_STATUS.PAID);
+  it('treats a completed registration transaction as the registration tier', () => {
+    /*
+     * "Completed" is the registration payment finishing, not the programme fee.
+     * The enrolment Deluge deliberately omits paymentstatus for exactly this
+     * reason, and paymentStatusFromRegistrationPayload maps it the same way.
+     */
+    expect(normalizePaymentStatus('completed')).toBe(PAYMENT_STATUS.REGISTER);
+    expect(normalizePaymentStatus('Completed')).toBe(PAYMENT_STATUS.REGISTER);
+    // 'complete' remains a full payment; only the past-tense form is the
+    // registration transaction.
     expect(normalizePaymentStatus('complete')).toBe(PAYMENT_STATUS.PAID);
   });
 
@@ -41,13 +46,13 @@ describe('normalizePaymentStatus — the words Zoho actually sends', () => {
 });
 
 describe('hasFullProgramAccess — who reaches paid content', () => {
-  it('opens paid content only for a completed or full payment', () => {
+  it('opens paid content only for a full programme payment', () => {
     expect(hasFullProgramAccess({ paymentStatus: 'paid' })).toBe(true);
-    expect(hasFullProgramAccess({ paymentStatus: 'completed' })).toBe(true);
   });
 
   it('withholds paid content from registration-only and unpaid learners', () => {
     expect(hasFullProgramAccess({ paymentStatus: 'register' })).toBe(false);
+    expect(hasFullProgramAccess({ paymentStatus: 'completed' })).toBe(false);
     expect(hasFullProgramAccess({ paymentStatus: 'unpaid' })).toBe(false);
   });
 

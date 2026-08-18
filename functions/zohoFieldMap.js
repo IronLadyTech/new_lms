@@ -61,7 +61,14 @@ function inferFromLeadStatus(statusRaw) {
     };
   }
 
-  if (/\bstart\b/.test(s) && program) {
+  /*
+   * No trailing word boundary. The statuses in Zoho read "100 BM started" and
+   * "MBW started", and \bstart\b matches only the bare word — so every learner
+   * who had begun a programme fell through to unpaid and was locked out of
+   * content they had paid for in full. The enrol test above already uses the
+   * loose form, and the Deluge matches with contains().
+   */
+  if (/\bstart/.test(s) && program) {
     return {
       program,
       paymentStatus: PAYMENT_STATUS.PAID,
