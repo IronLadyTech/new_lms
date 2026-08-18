@@ -45,11 +45,17 @@ export default function BM100ProgramSection({
   const paymentLocked = isRegistrationPaymentLocked(section, sectionProgress, profile);
   // Any locked section shows the icon now, not just payment ones — a bare
   // "Locked" with no symbol read as available.
-  const showLock = !progress.unlocked;
-  // The badge says why, rather than always claiming a payment problem.
-  const lockReason = paymentLocked
-    ? REGISTRATION_PAYMENT_LOCK_TOOLTIP
-    : lockDisplay?.message || 'This section is locked.';
+  /*
+   * The padlock means money, not progress. A learner who has paid in full sees
+   * every section without a padlock, even the ones they cannot open yet —
+   * those are waiting on tasks, and saying so in words is honest where a
+   * padlock reads as "buy something". An expired window keeps the padlock,
+   * because that is access ending rather than work outstanding.
+   */
+  const accessLocked = paymentLocked || Boolean(lockDisplay?.expired);
+  const lockReason = lockDisplay?.expired
+    ? lockDisplay.message
+    : REGISTRATION_PAYMENT_LOCK_TOOLTIP;
   const panelId = `bm100-section-${section.id}`;
 
   const moduleStats = !progress.unlocked
@@ -81,7 +87,7 @@ export default function BM100ProgramSection({
           <span className="mbw-section-card__mini">
             {progress.done}/{progress.total}
           </span>
-          {showLock && (
+          {accessLocked && (
             <span
               className="mbw-section-card__pay-lock"
               title={lockReason}
@@ -101,7 +107,7 @@ export default function BM100ProgramSection({
             <LockMessage
               message={lockDisplay.message}
               cta={lockDisplay.cta}
-              showLockIcon={showLock}
+              showLockIcon={accessLocked}
               tooltip={paymentLocked ? REGISTRATION_PAYMENT_LOCK_TOOLTIP : lockDisplay?.message}
             />
           </div>

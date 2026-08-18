@@ -79,11 +79,17 @@ export default function MBWProgramSection({
   const paymentLocked = isRegistrationPaymentLocked(section, sectionProgress, profile);
   // Any locked section shows the icon now, not just payment ones — a bare
   // "Locked" with no symbol read as available.
-  const showLock = !progress.unlocked;
-  // The badge says why, rather than a bare 'Locked' that explains nothing.
-  const lockReason = paymentLocked
-    ? REGISTRATION_PAYMENT_LOCK_TOOLTIP
-    : lockDisplay?.message || 'This section is locked.';
+  /*
+   * The padlock means money, not progress. A learner who has paid in full sees
+   * every section without a padlock, even the ones they cannot open yet —
+   * those are waiting on tasks, and saying so in words is honest where a
+   * padlock reads as "buy something". An expired window keeps the padlock,
+   * because that is access ending rather than work outstanding.
+   */
+  const accessLocked = paymentLocked || Boolean(lockDisplay?.expired);
+  const lockReason = lockDisplay?.expired
+    ? lockDisplay.message
+    : REGISTRATION_PAYMENT_LOCK_TOOLTIP;
   const panelId = `mbw-section-${section.id}`;
 
   const usesEngine = section.usesTaskEngine && Array.isArray(taskStates) && taskStates.length > 0;
@@ -138,9 +144,11 @@ export default function MBWProgramSection({
               type="button"
               className="btn btn-sm mbw-section-card__cta mbw-section-card__cta--locked"
               disabled
-              aria-label={lockReason}
+              aria-label={lockDisplay?.message || 'Locked'}
             >
-              <Lock size={14} strokeWidth={2.25} aria-hidden />
+              {/* Padlock only when access is the barrier. A section waiting on
+                  tasks is disabled and explained in words, not padlocked. */}
+              {accessLocked && <Lock size={14} strokeWidth={2.25} aria-hidden />}
               Start
             </button>
           ) : (
@@ -173,7 +181,7 @@ export default function MBWProgramSection({
             <LockMessage
               message={lockDisplay.message}
               cta={lockDisplay.cta}
-              showLockIcon={showLock}
+              showLockIcon={accessLocked}
               tooltip={paymentLocked ? REGISTRATION_PAYMENT_LOCK_TOOLTIP : lockDisplay?.message}
             />
           </div>
