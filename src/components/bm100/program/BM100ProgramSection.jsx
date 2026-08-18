@@ -43,6 +43,13 @@ export default function BM100ProgramSection({
   };
   const lockDisplay = getSectionLockDisplay(section, sectionProgress, profile);
   const paymentLocked = isRegistrationPaymentLocked(section, sectionProgress, profile);
+  // Any locked section shows the icon now, not just payment ones — a bare
+  // "Locked" with no symbol read as available.
+  const showLock = !progress.unlocked;
+  // The badge says why, rather than always claiming a payment problem.
+  const lockReason = paymentLocked
+    ? REGISTRATION_PAYMENT_LOCK_TOOLTIP
+    : lockDisplay?.message || 'This section is locked.';
   const panelId = `bm100-section-${section.id}`;
 
   const moduleStats = !progress.unlocked
@@ -74,11 +81,11 @@ export default function BM100ProgramSection({
           <span className="mbw-section-card__mini">
             {progress.done}/{progress.total}
           </span>
-          {paymentLocked && (
+          {showLock && (
             <span
               className="mbw-section-card__pay-lock"
-              title={REGISTRATION_PAYMENT_LOCK_TOOLTIP}
-              aria-label={REGISTRATION_PAYMENT_LOCK_TOOLTIP}
+              title={lockReason}
+              aria-label={lockReason}
               role="img"
             >
               <Lock size={16} strokeWidth={2.25} aria-hidden />
@@ -94,8 +101,8 @@ export default function BM100ProgramSection({
             <LockMessage
               message={lockDisplay.message}
               cta={lockDisplay.cta}
-              showLockIcon={paymentLocked}
-              tooltip={paymentLocked ? REGISTRATION_PAYMENT_LOCK_TOOLTIP : undefined}
+              showLockIcon={showLock}
+              tooltip={paymentLocked ? REGISTRATION_PAYMENT_LOCK_TOOLTIP : lockDisplay?.message}
             />
           </div>
         ) : section.usesTaskEngine && taskStates?.length ? (

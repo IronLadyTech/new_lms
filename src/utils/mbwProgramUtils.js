@@ -14,6 +14,9 @@ import {
 import { isProgramAccessExpired } from '../data/programAccessWindow';
 import { PROGRAMS } from '../data/programTypes';
 
+export const MBW_ACCESS_EXPIRED_MESSAGE =
+  'Your access to Master of Business Warfare has ended. Contact support to renew it.';
+
 export const REGISTRATION_PAYMENT_LOCK_TOOLTIP =
   'You have paid only the registration amount. Complete full program payment to unlock this section.';
 
@@ -244,6 +247,19 @@ export function isRegistrationPaymentLocked(section, sectionProgress, profile = 
   return !hasFullProgramAccess(profile, PROGRAMS.MBW);
 }
 
+/**
+ * Locked because the access window closed, not because of what was paid.
+ * Distinct from the payment lock: telling somebody who paid in full a year ago
+ * that they "only paid the registration amount" is simply wrong.
+ */
+export function isAccessWindowExpired(section, sectionProgress, profile = null) {
+  const p = sectionProgress[section.id];
+  if (p?.unlocked) return false;
+  if (!section.gate?.requiresPaid) return false;
+  if (!hasFullProgramAccess(profile, PROGRAMS.MBW)) return false;
+  return isProgramAccessExpired(profile, PROGRAMS.MBW);
+}
+
 export function hasRegistrationTierOnly(profile) {
   // Scoped like the rest: registration-only for this programme, whatever the
   // learner has paid for another one.
@@ -280,6 +296,13 @@ function resolveProgressLockMessage(section, sectionProgress) {
 export function getSectionLockDisplay(section, sectionProgress, profile = null) {
   const p = sectionProgress[section.id];
   if (p?.unlocked) return null;
+  if (isAccessWindowExpired(section, sectionProgress, profile)) {
+    return {
+      message: MBW_ACCESS_EXPIRED_MESSAGE,
+      cta: { label: 'Renew access', href: '/app/support' },
+      expired: true,
+    };
+  }
   if (isRegistrationPaymentLocked(section, sectionProgress, profile)) {
     return {
       message: REGISTRATION_PAYMENT_LOCK_TOOLTIP,
