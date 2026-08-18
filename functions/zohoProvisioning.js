@@ -121,6 +121,23 @@ function isStaffProfile(profile) {
   return STAFF_ROLES.has((profile?.role || 'student').toLowerCase());
 }
 
+/**
+ * Programmes named on an IL_Users record.
+ *
+ * Program_Registration_Details is the list the old LMS maintained — it added a
+ * name when someone registered and stripped one out on a completed refund.
+ * Lead Status only ever names the programme the learner is currently moving
+ * through, so reading that alone loses every earlier enrolment: somebody at
+ * "100 BM Enrolled" who finished LEP last year looks like a 100BM learner and
+ * nothing else.
+ */
+function programmesNamedOnRecord(record) {
+  return [record?.Program_Registration_Details, record?.Program_Enrollment_Details]
+    .flatMap((v) => String(v || '').split(','))
+    .map((v) => normalizeProgram(v.trim()))
+    .filter(Boolean);
+}
+
 async function applyEntitlements(db, uid, record, profile = {}) {
   const ent = parseEntitlementsFromRecord(record);
   if (!ent.email) return { applied: false, reason: 'No email on record' };
@@ -158,14 +175,28 @@ async function applyEntitlements(db, uid, record, profile = {}) {
    * itself stays — the old system deleted the user when it was their only
    * programme, and losing submissions and history to a refund is not worth it.
    */
+  /*
+   * Union rather than replace: the record names what Zoho knows about, and a
+   * learner may hold a programme granted in the LMS that Zoho has not caught up
+   * with. Nothing is dropped here — only a refund removes a programme, below.
+   */
+  const namedProgrammes = programmesNamedOnRecord(record);
+  if (namedProgrammes.length) {
+    const merged = Array.from(new Set([...(profile.programs || []), ...namedProgrammes]));
+    if (merged.length !== (profile.programs || []).length) {
+      updates.programs = merged;
+    }
+  }
+
   const refundedProgram = ent.refund === 'completed' && ent.program ? ent.program : null;
   if (refundedProgram) {
     updates[`programAccess.${refundedProgram}.paymentStatus`] = PAYMENT_STATUS.UNPAID;
     updates[`programAccess.${refundedProgram}.refundedAt`] = new Date();
     updates[`programAccess.${refundedProgram}.fullPaidAt`] = null;
 
-    const keptPrograms = (profile.programs || []).filter((p) => p !== refundedProgram);
-    if (keptPrograms.length !== (profile.programs || []).length) {
+    const before = updates.programs || profile.programs || [];
+    const keptPrograms = before.filter((p) => p !== refundedProgram);
+    if (keptPrograms.length !== before.length) {
       updates.programs = keptPrograms;
     }
     if (profile.program === refundedProgram) {

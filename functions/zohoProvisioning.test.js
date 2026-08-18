@@ -228,3 +228,61 @@ describe('applyEntitlements — refunds', () => {
     expect(u.programs).toBeUndefined();
   });
 });
+
+/*
+ * Minakshi's root cause. Her IL_Users record lists both LEP and 100 Board
+ * Members, but the LMS read only Lead Status — which named 100BM — so she
+ * showed as LEP-only and the 100BM card offered "View program".
+ */
+describe('applyEntitlements — programmes named on IL_Users', () => {
+  const apply = async (record, profile = {}) => {
+    const written = [];
+    const db = {
+      collection: () => ({
+        doc: () => ({
+          get: async () => ({ data: () => profile }),
+          update: async (u) => written.push(u),
+          set: async (u) => written.push(u),
+        }),
+        where: () => ({ limit: () => ({ get: async () => ({ empty: true, docs: [] }) }) }),
+        get: async () => ({ empty: true, docs: [] }),
+      }),
+    };
+    await provisioning.applyEntitlements(db, 'u1', record, profile);
+    return written[0] || {};
+  };
+
+  it('enrols every programme the record names, not just the current one', async () => {
+    const u = await apply({
+      Email: 'a@b.com',
+      Lead_Status: '100 BM Enrolled',
+      Program_Registration_Details: 'Leadership Essentials Program, 100 Board Members Program',
+    });
+    expect(u.programs.sort()).toEqual(['100bm', 'lep']);
+  });
+
+  it('keeps a programme the LMS already granted that Zoho has not caught up with', async () => {
+    const u = await apply(
+      { Email: 'a@b.com', Program_Registration_Details: '100 Board Members Program' },
+      { programs: ['mbw'] }
+    );
+    expect(u.programs.sort()).toEqual(['100bm', 'mbw']);
+  });
+
+  it('writes nothing when the record names no programme', async () => {
+    const u = await apply({ Email: 'a@b.com', Lead_Status: 'Follow up' }, { programs: ['lep'] });
+    expect(u.programs).toBeUndefined();
+  });
+
+  it('still removes a refunded programme it has just added', async () => {
+    const u = await apply(
+      {
+        Email: 'a@b.com',
+        Lead_Status: '100 BM Refund Completed',
+        Program_Registration_Details: 'Leadership Essentials Program, 100 Board Members Program',
+      },
+      { programs: [] }
+    );
+    expect(u.programs).toEqual(['lep']);
+  });
+});
