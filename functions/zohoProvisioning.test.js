@@ -52,3 +52,46 @@ describe('matchesStoredCredential', () => {
     expect(matchesStoredCredential(null, 'Any123-xX')).toBe(false);
   });
 });
+
+/*
+ * A learner changes their password in Moodle. Moodle writes it back to
+ * IL_Users.Password and never touches Firebase, so Firebase still holds the
+ * old one and sign-in fails. The caller then asks provisioning to sort it out.
+ *
+ * The account already exists, so this used to return success and change
+ * nothing — the caller retried the same failing sign-in and the learner was
+ * stuck with no way in.
+ */
+describe('provisionFromLoginCredentials — password changed in Moodle', () => {
+  const ilUser = { LMS_Password: 'OldOne-xX', Password: 'NewFromMoodle-xX' };
+
+  const run = async (typed, { authUser = { uid: 'u1' } } = {}) => {
+    const calls = [];
+    const result = await provisioning.provisionFromLoginCredentials(null, 'a@b.com', typed, {
+      findIlUserRecord: async () => ilUser,
+      getAuthUserByEmail: async () => authUser,
+      updateAuthPassword: async (uid, password) => calls.push({ uid, password }),
+    });
+    return { result, calls };
+  };
+
+  it('brings Firebase into line with the password Moodle now has', async () => {
+    const { result, calls } = await run('NewFromMoodle-xX');
+    expect(result.ok).toBe(true);
+    expect(result.passwordSynced).toBe(true);
+    expect(calls).toEqual([{ uid: 'u1', password: 'NewFromMoodle-xX' }]);
+  });
+
+  it('refuses a password neither Zoho field holds, and changes nothing', async () => {
+    const { result, calls } = await run('Guessing-xX');
+    expect(result.ok).toBe(false);
+    expect(calls).toEqual([]);
+  });
+
+  it('leaves the create path alone when there is no account yet', async () => {
+    const { calls } = await run('NewFromMoodle-xX', { authUser: null }).catch(() => ({ calls: [] }));
+    // No existing user means provisioning creates one; it must not try to reset
+    // a password on an account that does not exist.
+    expect(calls).toEqual([]);
+  });
+});

@@ -24,6 +24,10 @@ async function getAuthUserByEmail(email) {
   }
 }
 
+async function defaultUpdateAuthPassword(uid, password) {
+  await admin.auth().updateUser(uid, { password });
+}
+
 async function getCourseIdByCode(db, code) {
   if (!code) return null;
   const snap = await db.collection('courses').where('code', '==', code).limit(1).get();
@@ -356,8 +360,27 @@ async function provisionFromLoginCredentials(db, email, password, deps) {
     return { ok: false, reason: 'Password does not match Zoho IL_Users record' };
   }
 
-  const existing = await getAuthUserByEmail(trimmedEmail);
-  if (existing) return { ok: true, alreadyExists: true, uid: existing.uid };
+  const lookupAuthUser = deps?.getAuthUserByEmail || getAuthUserByEmail;
+  const existing = await lookupAuthUser(trimmedEmail);
+  if (existing) {
+    /*
+     * The learner has proved they know the credential Zoho holds, but Firebase
+     * is still on an older one. That is what a password change in Moodle looks
+     * like from here: Moodle writes it back to IL_Users and never touches
+     * Firebase, so the two drift apart and sign-in keeps failing.
+     *
+     * Returning success without reconciling them left the learner with no way
+     * in at all — the caller retries the sign-in, Firebase rejects the same
+     * password again, and nothing else in the system ever closes the gap.
+     *
+     * Safe because the password was matched against Zoho a few lines above, so
+     * whoever is asking already knows it. While Moodle is live and the two
+     * systems share one credential, Zoho is the record of truth.
+     */
+    const setPassword = deps?.updateAuthPassword || defaultUpdateAuthPassword;
+    await setPassword(existing.uid, trimmedPassword);
+    return { ok: true, alreadyExists: true, uid: existing.uid, passwordSynced: true };
+  }
 
   const record = mergeProvisioningRecord(null, ilUser, {
     email: trimmedEmail,
