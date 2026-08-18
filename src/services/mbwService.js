@@ -83,7 +83,7 @@ export const PRE_SESSION_TASKS = [
     title: '27 Principles Video',
     type: TASK_TYPES.TEXT,
     requiresWatch: true,
-    videoUrl: 'https://www.youtube.com/watch?v=uo9xA5xiRWY',
+    videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
     description: 'Watch the video, then submit 3 key learnings.',
@@ -111,8 +111,7 @@ export const PRE_SESSION_TASKS = [
     title: 'ERRC Framework',
     type: TASK_TYPES.EDITABLE_TEMPLATE,
     requiresWatch: true,
-    videoUrl:
-      'https://d3jv3ztk062m9h.cloudfront.net/videos/ERRC%20edited/output/ERRC%20edited.m3u8',
+    videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
     description: 'Watch the ERRC video, then fill your activity grid (editable anytime).',

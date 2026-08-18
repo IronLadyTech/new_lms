@@ -13,6 +13,7 @@ import { getWeekCode, getPrimaryStatus } from '../../utils/mbwDisplay';
 import { getTaskDurationHint } from '../../utils/mbwProgramUtils';
 import LearnerReviewFeedback from '../submissions/LearnerReviewFeedback';
 import LearnerSubmissionPreview from '../submissions/LearnerSubmissionPreview';
+import { useLessonAsset } from '../../hooks/useLessonAsset';
 
 export default function TaskContent({
   taskState,
@@ -30,6 +31,10 @@ export default function TaskContent({
   showInlineSuccess = true,
 }) {
   const { task, submission, status, watched, canSubmit, isComplete, prevTaskId } = taskState;
+  // Lesson media is fetched rather than bundled: shipping URLs to every
+  // browser meant an unpaid learner could read them out of the page.
+  const lessonAsset = useLessonAsset(taskState?.task?.id);
+
   const locked = status === SUBMISSION_STATUS.LOCKED;
   const showVideo = task.requiresWatch || task.type === TASK_TYPES.WATCH_ONLY;
   const primary = getPrimaryStatus(status, isComplete);
@@ -114,7 +119,7 @@ export default function TaskContent({
       {!locked && showVideo && (
         <WatchGatedVideo
           taskId={task.id}
-          videoUrl={task.videoUrl}
+          videoUrl={lessonAsset.url || ''}
           title={task.title}
           watchPercent={taskState.watchPercent}
           threshold={threshold}

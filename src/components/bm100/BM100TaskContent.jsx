@@ -17,6 +17,7 @@ import { getBm100TaskTemplates } from '../../data/bm100TaskTemplates';
 import TaskTemplateDownloads from '../submissions/TaskTemplateDownloads';
 import LearnerReviewFeedback from '../submissions/LearnerReviewFeedback';
 import LearnerSubmissionPreview from '../submissions/LearnerSubmissionPreview';
+import { useLessonAsset } from '../../hooks/useLessonAsset';
 
 function getSectionTitle(phase) {
   return BM100_PROGRAM_SECTIONS.find((s) => s.id === phase)?.title ?? '100BM';
@@ -39,6 +40,10 @@ export default function BM100TaskContent({
 }) {
   const { task, submission, status, watched, canSubmit, isComplete, prevTaskId, phaseLocked } =
     taskState;
+  // Lesson media is fetched rather than bundled: shipping URLs to every
+  // browser meant an unpaid learner could read them out of the page.
+  const lessonAsset = useLessonAsset(taskState?.task?.id);
+
   const locked = status === SUBMISSION_STATUS.LOCKED;
   const showVideo = Boolean(task.videoUrl);
   const resourceLinks = Array.isArray(task.resourceLinks)
@@ -138,7 +143,7 @@ export default function BM100TaskContent({
       {!locked && showVideo && (
         <WatchGatedVideo
           taskId={task.id}
-          videoUrl={task.videoUrl}
+          videoUrl={lessonAsset.url || ''}
           title={task.title}
           watchPercent={taskState.watchPercent}
           threshold={threshold}

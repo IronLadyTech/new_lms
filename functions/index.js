@@ -773,6 +773,47 @@ exports.zohoDiagnoseIlUser = onCall(async (request) => {
   return { ok: Boolean(result.found), ...result };
 });
 
+// ── Lesson media — the only route to a lesson URL ─────────────
+const lessonAssets = require('./lessonAssets');
+
+/**
+ * Hand back a lesson's media URL, but only to a learner entitled to it.
+ *
+ * The URLs used to ship inside the client bundle, so anyone who signed up could
+ * read them out of the page and watch paid content without paying. Padlocks in
+ * the UI cannot fix that — whatever the browser receives, the person holding
+ * the browser can read. The fix is to never send it.
+ *
+ * Denials carry a reason so the app can say something true — "payment
+ * required" and "your access has ended" are different situations and a learner
+ * can act on the difference.
+ */
+exports.getLessonAsset = onCall(async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', 'Sign in required');
+  }
+
+  const taskId = request.data?.taskId;
+  if (!taskId) {
+    throw new HttpsError('invalid-argument', 'taskId is required');
+  }
+
+  const snap = await db.collection('users').doc(request.auth.uid).get();
+  const result = lessonAssets.resolveLessonAsset(snap.data() || {}, taskId);
+
+  if (!result.ok) {
+    if (result.reason === 'not-found' || result.reason === 'missing-task-id') {
+      throw new HttpsError('not-found', 'No media for this lesson');
+    }
+    // Logged so a wrongly denied learner can be traced without them having to
+    // describe what they saw.
+    console.info(`Lesson asset denied: ${request.auth.uid} ${taskId} — ${result.reason}`);
+    throw new HttpsError('permission-denied', result.reason);
+  }
+
+  return { url: result.url, program: result.program };
+});
+
 exports.zohoLeadWebhook = onRequest({ cors: true }, async (req, res) => {
   if (req.method !== 'POST') {
     res.status(405).send('Method not allowed');

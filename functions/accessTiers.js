@@ -157,7 +157,86 @@ const PROGRAM_COURSE_CODE = {
   '100bm': '100BM',
 };
 
+
+/* ── Entitlement, server side ───────────────────────────────────────────────
+ * Mirrors src/data/accessTiers.js and src/data/programAccessWindow.js.
+ *
+ * The client copy decides what to draw; this one decides what to hand over.
+ * They must agree, but only this one is a control — anything the browser is
+ * given, the person holding the browser can read.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+/** Programme length in months, before the extra year of access. */
+const PROGRAM_LENGTH_MONTHS = { lep: 1, '100bm': 6, mbw: 12 };
+const GRACE_MONTHS = 12;
+
+/** What this learner has paid for this programme specifically. */
+function programPaymentStatus(profile, programId) {
+  const perProgram = profile?.programAccess?.[programId]?.paymentStatus;
+  if (perProgram) return normalizePaymentStatus(perProgram);
+  return normalizePaymentStatus(profile?.paymentStatus);
+}
+
+function toDate(value) {
+  if (!value) return null;
+  const d = typeof value?.toDate === 'function' ? value.toDate() : new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function addMonths(date, months) {
+  const d = new Date(date.getTime());
+  const day = d.getUTCDate();
+  d.setUTCDate(1);
+  d.setUTCMonth(d.getUTCMonth() + months);
+  const lastDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+  d.setUTCDate(Math.min(day, lastDay));
+  return d;
+}
+
+/** True only when a window is known and has closed. Unknown never expires. */
+function isProgramAccessExpired(profile, programId, now = new Date()) {
+  const length = PROGRAM_LENGTH_MONTHS[programId];
+  const start = toDate(profile?.programAccess?.[programId]?.fullPaidAt);
+  if (length == null || !start) return false;
+  return now.getTime() >= addMonths(start, length + GRACE_MONTHS).getTime();
+}
+
+/** Is this programme enrolled at all? Mirrors getEnrolledProgramIds. */
+function isEnrolledInProgram(profile, programId) {
+  if (!profile || !programId) return false;
+  const list = (v) => (Array.isArray(v) ? v : []);
+  if (normalizeProgram(profile.program) === programId) return true;
+  return list(profile.programs).some((v) => normalizeProgram(v) === programId);
+}
+
+/**
+ * The single question the asset gate asks: may this learner have the paid
+ * content of this programme, right now?
+ *
+ * Returns a reason rather than a bare boolean so the caller can answer the
+ * learner honestly instead of a blanket denial.
+ */
+function paidContentDecision(profile, programId, now = new Date()) {
+  if (!profile) return { allowed: false, reason: 'no-profile' };
+  if (!isEnrolledInProgram(profile, programId)) {
+    return { allowed: false, reason: 'not-enrolled' };
+  }
+  if (programPaymentStatus(profile, programId) !== PAYMENT_STATUS.PAID) {
+    return { allowed: false, reason: 'payment-required' };
+  }
+  if (isProgramAccessExpired(profile, programId, now)) {
+    return { allowed: false, reason: 'access-expired' };
+  }
+  return { allowed: true, reason: null };
+}
+
 module.exports = {
+  PROGRAM_LENGTH_MONTHS,
+  GRACE_MONTHS,
+  programPaymentStatus,
+  isProgramAccessExpired,
+  isEnrolledInProgram,
+  paidContentDecision,
   PAYMENT_STATUS,
   ACCESS_TIERS,
   normalizePaymentStatus,
