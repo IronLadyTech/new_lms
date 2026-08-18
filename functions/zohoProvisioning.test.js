@@ -95,3 +95,65 @@ describe('provisionFromLoginCredentials — password changed in Moodle', () => {
     expect(calls).toEqual([]);
   });
 });
+
+/*
+ * A CX edit to Lead Status must reach the learner in seconds, and must apply
+ * whatever the new status says — including a correction that lowers their tier.
+ * Full provisioning refuses anything resolving to unpaid, so it would silently
+ * apply nothing; this path exists to avoid that.
+ */
+describe('syncEntitlementsFromZoho — a CX status change', () => {
+  const run = async ({ authUser = { uid: 'u1' }, lead = null, body = null } = {}) => {
+    const applied = [];
+    // ensureCourseEnrollment queries the courses collection after the write,
+    // so the stub has to answer that too or the update is never reached.
+    const db = {
+      collection: (name) => ({
+        doc: () => ({
+          get: async () => ({ data: () => ({ paymentStatus: 'register' }) }),
+          update: async (u) => applied.push(u),
+          set: async (u) => applied.push(u),
+        }),
+        where: () => ({ limit: () => ({ get: async () => ({ empty: true, docs: [] }) }) }),
+        get: async () => ({ empty: true, docs: [] }),
+        __name: name,
+      }),
+    };
+    const result = await provisioning.syncEntitlementsFromZoho(
+      db,
+      async () => lead,
+      async () => null,
+      'a@b.com',
+      body,
+      { getAuthUserByEmail: async () => authUser }
+    );
+    return { result, applied };
+  };
+
+  it('applies a move from enrolled to started', async () => {
+    const { result, applied } = await run({ lead: { Email: 'a@b.com', Lead_Status: '100 BM started' } });
+    expect(result.ok).toBe(true);
+    expect(result.mode).toBe('entitlements');
+    // Full payment for 100BM, recorded against that programme.
+    expect(applied[0]['programAccess.100bm.paymentStatus']).toBe('paid');
+  });
+
+  it('applies a status that resolves to unpaid, which provisioning would refuse', async () => {
+    const { result } = await run({ lead: { Email: 'a@b.com', Lead_Status: 'Follow up' } });
+    expect(result.ok).toBe(true);
+  });
+
+  it('refuses when there is no LMS account, rather than creating one', async () => {
+    const { result, applied } = await run({ authUser: null, lead: { Email: 'a@b.com', Lead_Status: '100 BM started' } });
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(/no lms account/i);
+    expect(applied).toEqual([]);
+  });
+
+  it('refuses without an email', async () => {
+    const { result } = await run({ body: {} });
+    const blank = await provisioning.syncEntitlementsFromZoho(null, async () => null, async () => null, '  ', null, {});
+    expect(blank.ok).toBe(false);
+    expect(result.ok).toBe(true);
+  });
+});

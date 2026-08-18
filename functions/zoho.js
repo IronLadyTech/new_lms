@@ -785,6 +785,9 @@ module.exports = {
   provisionUserFromLead: (db, lead, opts) => provisioning.provisionFromRecord(db, lead, opts),
   provisionUserFromEmail: (db, email) =>
     provisioning.provisionUserFromEmail(db, getLeadByEmail, searchIlUserByEmail, email),
+  /** Lead Status changed in Zoho — refresh entitlements, create nothing. */
+  syncEntitlementsFromZoho: (db, email, body) =>
+    provisioning.syncEntitlementsFromZoho(db, getLeadByEmail, searchIlUserByEmail, email, body),
   provisionFromRegistrationWebhook: async (db, body) => {
     const result = await provisioning.provisionFromRegistrationWebhook(db, body, {
       getLeadByEmail,

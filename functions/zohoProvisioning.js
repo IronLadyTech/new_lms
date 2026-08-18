@@ -330,6 +330,44 @@ async function provisionUserFromEmail(
   return provisionFromRecord(db, record);
 }
 
+/**
+ * Refresh an existing learner's entitlements from Zoho — nothing else.
+ *
+ * For a CX edit to Lead Status, full provisioning is the wrong tool: it
+ * refuses anything that resolves to unpaid, so a correction or a move back to
+ * Follow up would apply nothing at all; it creates an account for a lead who
+ * is not a learner yet; and it runs the password logic on what is only a
+ * status change.
+ *
+ * This applies the entitlements and stops. No account creation, no password,
+ * no unpaid gate — that gate exists to stop unpaid leads becoming accounts,
+ * and someone who already has one should follow their status wherever it goes,
+ * downgrades included.
+ */
+async function syncEntitlementsFromZoho(db, getLeadByEmail, searchIlUserByEmail, email, body, deps) {
+  const trimmed = email?.trim();
+  if (!trimmed) return { ok: false, reason: 'Email is required' };
+
+  const lookupAuthUser = deps?.getAuthUserByEmail || getAuthUserByEmail;
+  const existing = await lookupAuthUser(trimmed);
+  if (!existing) {
+    return { ok: false, reason: 'No LMS account for this email — nothing to refresh' };
+  }
+
+  const [lead, ilUser] = await Promise.all([
+    getLeadByEmail(trimmed).catch(() => null),
+    searchIlUserByEmail(trimmed).catch(() => null),
+  ]);
+  if (!lead && !ilUser && !body) {
+    return { ok: false, reason: 'No Zoho Lead or IL_Users record found for this email' };
+  }
+
+  const record = mergeProvisioningRecord(lead, ilUser, body);
+  const snap = await db.collection('users').doc(existing.uid).get();
+  const applied = await applyEntitlements(db, existing.uid, record, snap.data() || {});
+  return { ok: true, uid: existing.uid, mode: 'entitlements', ...applied };
+}
+
 async function provisionFromRegistrationWebhook(db, body, deps) {
   const email = (body?.email || body?.Email || '').trim();
   if (!email) return { ok: false, reason: 'email is required in webhook body' };
@@ -419,6 +457,7 @@ module.exports = {
   provisionFromRecord,
   provisionUserFromLead,
   provisionUserFromEmail,
+  syncEntitlementsFromZoho,
   provisionFromRegistrationWebhook,
   provisionFromLoginCredentials,
   matchesStoredCredential,

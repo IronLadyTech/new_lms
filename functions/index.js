@@ -811,7 +811,16 @@ exports.zohoLeadWebhook = onRequest({ cors: true }, async (req, res) => {
       return;
     }
 
-    const result = await zoho.provisionFromRegistrationWebhook(db, body);
+    /*
+     * A Lead Status change posts mode=entitlements: refresh what the learner is
+     * entitled to and nothing more. Full provisioning would refuse any status
+     * that resolves to unpaid, so corrections and downgrades would apply
+     * nothing, and it would create an account for a lead who is not a learner.
+     */
+    const entitlementsOnly = String(body.mode || '').toLowerCase() === 'entitlements';
+    const result = entitlementsOnly
+      ? await zoho.syncEntitlementsFromZoho(db, email, body)
+      : await zoho.provisionFromRegistrationWebhook(db, body);
     res.status(result.ok ? 200 : 400).json(result);
   } catch (err) {
     console.error('Zoho webhook provision failed:', err.message);
