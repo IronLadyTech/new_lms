@@ -317,6 +317,30 @@ async function provisionFromRegistrationWebhook(db, body, deps) {
   return provisionUserFromEmail(db, deps.getLeadByEmail, deps.searchIlUserByEmail, email, body);
 }
 
+/**
+ * Does this password match what Zoho holds for the learner?
+ *
+ * Both fields are checked rather than preferring one. IL_Users carries the
+ * credential twice while old Moodle is live: this LMS writes LMS_Password (and
+ * Password alongside it), and a change made in Moodle comes back into Password
+ * alone. Reading `LMS_Password || Password` meant a stale LMS_Password won on
+ * truthiness, so anyone who had changed their password in Moodle was told it
+ * did not match and could not sign in here at all.
+ *
+ * The cost is that a superseded value keeps working until both fields agree.
+ * That is the right trade while two systems share one credential — a learner
+ * locked out of the new LMS has no way forward, and the fields converge on the
+ * next sync either way.
+ */
+function matchesStoredCredential(ilUser, password) {
+  const candidate = String(password || '').trim();
+  if (!candidate) return false;
+  return [ilUser?.LMS_Password, ilUser?.Password]
+    .map((v) => String(v || '').trim())
+    .filter(Boolean)
+    .includes(candidate);
+}
+
 /** First login — create Firebase user when Zoho IL_Users credentials match. */
 async function provisionFromLoginCredentials(db, email, password, deps) {
   const trimmedEmail = email?.trim();
@@ -328,8 +352,7 @@ async function provisionFromLoginCredentials(db, email, password, deps) {
   const ilUser = await deps.findIlUserRecord(trimmedEmail, trimmedEmail, deps, {});
   if (!ilUser) return { ok: false, reason: 'No IL_Users record for this email' };
 
-  const zohoPassword = (ilUser.LMS_Password || ilUser.Password || '').trim();
-  if (!zohoPassword || zohoPassword !== trimmedPassword) {
+  if (!matchesStoredCredential(ilUser, trimmedPassword)) {
     return { ok: false, reason: 'Password does not match Zoho IL_Users record' };
   }
 
@@ -359,6 +382,7 @@ module.exports = {
   provisionUserFromEmail,
   provisionFromRegistrationWebhook,
   provisionFromLoginCredentials,
+  matchesStoredCredential,
   ensureCourseEnrollment,
   shouldApplyProvisioningPassword,
   isValidBatchName,
