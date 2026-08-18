@@ -276,6 +276,22 @@ service cloud.firestore {
       allow delete: if hasStaffAccess();
     }
 
+    /*
+     * Lesson media — the video links themselves.
+     *
+     * Learners must never read this collection. The links used to ship inside
+     * the client bundle, so anyone who signed up could read them out of the
+     * page and watch paid content; putting them in a learner-readable
+     * collection would recreate exactly that. getLessonAsset reads them with
+     * admin privileges after checking entitlement, and is the only route out.
+     *
+     * Staff read so the team can manage links for their batches.
+     */
+    match /lesson_media/{lessonId} {
+      allow read: if hasStaffAccess();
+      allow write: if hasStaffAccess();
+    }
+
     match /mbw_tasks/{taskId} {
       allow read: if canUseApp();
       allow write: if hasAdminAccess();

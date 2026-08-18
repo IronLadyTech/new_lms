@@ -147,3 +147,106 @@ describe('asset gate · the catalogue itself', () => {
     expect(resolveLessonAsset(p, PAID_ASSET_ID).ok).toBe(false);
   });
 });
+
+/*
+ * Batch-wise uploads.
+ *
+ * Two or three videos per programme are the same for every cohort; the rest are
+ * recorded per batch and uploaded by the team, so one lesson id has a different
+ * video depending on which batch the learner is in. Without this, every cohort
+ * would see whichever recording happened to be in the code.
+ */
+describe('asset gate · permanent links and per-batch uploads together', () => {
+  const AUG = '08/08/2026 - 08/02/2027';
+  const JUL = '11/07/2026 - 16/01/2027';
+
+  const inBatch = (batchName, tier = 'paid') => ({
+    ...learner({ tier }),
+    batchName,
+  });
+
+  const media = {
+    program: 'mbw',
+    requiresPaid: true,
+    defaultUrl: 'https://example.test/permanent.mp4',
+    byBatch: {
+      [AUG]: 'https://example.test/august.mp4',
+      [JUL]: 'https://example.test/july.mp4',
+    },
+  };
+
+  it('gives each batch its own recording', () => {
+    expect(resolveLessonAsset(inBatch(AUG), PAID_ASSET_ID, new Date(), media).url).toBe(
+      'https://example.test/august.mp4'
+    );
+    expect(resolveLessonAsset(inBatch(JUL), PAID_ASSET_ID, new Date(), media).url).toBe(
+      'https://example.test/july.mp4'
+    );
+  });
+
+  it('falls back to the permanent link for a batch with nothing uploaded', () => {
+    // The case that keeps a half-filled programme working: a new cohort sees
+    // the permanent videos until their own recordings arrive.
+    const r = resolveLessonAsset(inBatch('01/01/2027 - 01/07/2027'), PAID_ASSET_ID, new Date(), media);
+    expect(r.ok).toBe(true);
+    expect(r.url).toBe('https://example.test/permanent.mp4');
+    expect(r.source).toBe('default-stored');
+  });
+
+  it('falls back to the code map when nothing is stored at all', () => {
+    const r = resolveLessonAsset(inBatch(AUG), PAID_ASSET_ID, new Date(), null);
+    expect(r.ok).toBe(true);
+    expect(r.source).toBe('permanent');
+  });
+
+  it('tells an entitled learner to wait when their recording is missing', () => {
+    /*
+     * Distinct from a payment refusal on purpose. A learner who has paid and is
+     * simply waiting for the team to upload must not be told to pay again.
+     */
+    const noUrls = { program: 'mbw', requiresPaid: true, byBatch: {} };
+    const r = resolveLessonAsset(inBatch(AUG), 'mbw-not-in-code-map', new Date(), noUrls);
+    expect(r.ok).toBe(false);
+    expect(r.reason).toBe('not-uploaded');
+  });
+
+  it('still refuses an unentitled learner even when their batch has a video', () => {
+    const r = resolveLessonAsset(inBatch(AUG, 'register'), PAID_ASSET_ID, new Date(), media);
+    expect(r.ok).toBe(false);
+    expect(r.reason).toBe('payment-required');
+    expect(JSON.stringify(r)).not.toContain('august');
+  });
+
+  it('serves a lesson that exists only as a stored document', () => {
+    // Lessons the team adds later will not be in the code map at all.
+    const r = resolveLessonAsset(inBatch(AUG), 'mbw-added-later', new Date(), media);
+    expect(r.ok).toBe(true);
+    expect(r.url).toBe('https://example.test/august.mp4');
+  });
+
+  it('lets a stored document raise the requirement but never lower it', () => {
+    const freeId = knownAssetIds().find((id) => LESSON_ASSETS[id].requiresPaid === false);
+    // Raising: a free lesson marked paid in the document is now gated.
+    const raised = resolveLessonAsset({}, freeId, new Date(), { program: 'mbw', requiresPaid: true });
+    expect(raised.ok).toBe(false);
+    // Lowering must not work: the code map is the floor.
+    const lowered = resolveLessonAsset(
+      learner({ tier: 'register' }),
+      PAID_ASSET_ID,
+      new Date(),
+      { program: 'mbw', requiresPaid: false, byBatch: {} }
+    );
+    expect(lowered.ok).toBe(false);
+  });
+
+  it('ignores a batch name with stray whitespace rather than missing the match', () => {
+    const r = resolveLessonAsset(inBatch(`  ${AUG}  `), PAID_ASSET_ID, new Date(), media);
+    expect(r.url).toBe('https://example.test/august.mp4');
+  });
+
+  it('works for a learner with no batch recorded yet', () => {
+    const r = resolveLessonAsset(learner(), PAID_ASSET_ID, new Date(), media);
+    expect(r.ok).toBe(true);
+    expect(r.source).toBe('default-stored');
+  });
+});

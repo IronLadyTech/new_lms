@@ -799,7 +799,27 @@ exports.getLessonAsset = onCall(async (request) => {
   }
 
   const snap = await db.collection('users').doc(request.auth.uid).get();
-  const result = lessonAssets.resolveLessonAsset(snap.data() || {}, taskId);
+  const profile = snap.data() || {};
+
+  /*
+   * Two or three videos per programme are permanent and live in code; the rest
+   * are recorded per batch and uploaded by the team, so the stored document is
+   * consulted for this learner's cohort. Read with admin privileges on purpose:
+   * the collection is closed to learners, because a readable list of URLs would
+   * put us straight back where we started.
+   */
+  let media = null;
+  for (const program of ['mbw', '100bm', 'lep']) {
+    const docId = lessonAssets.lessonMediaDocId(program, taskId);
+    // eslint-disable-next-line no-await-in-loop
+    const mediaSnap = await db.collection(lessonAssets.LESSON_MEDIA).doc(docId).get();
+    if (mediaSnap.exists) {
+      media = mediaSnap.data();
+      break;
+    }
+  }
+
+  const result = lessonAssets.resolveLessonAsset(profile, taskId, new Date(), media);
 
   if (!result.ok) {
     if (result.reason === 'not-found' || result.reason === 'missing-task-id') {
