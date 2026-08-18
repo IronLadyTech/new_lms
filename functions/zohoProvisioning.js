@@ -72,9 +72,21 @@ function mergeProvisioningRecord(lead, ilUser, webhookBody) {
   if (webhookBody?.phone) merged.Phone = webhookBody.phone;
   if (webhookBody?.batch) merged.batch = webhookBody.batch;
 
+  /*
+   * A caller that states the status explicitly is telling us something the
+   * fetched lead may not carry — the Lead Status rule posts it, and if the lead
+   * lookup returns nothing (deleted, renamed, a Zoho hiccup) this was the only
+   * copy. It was dropped, so the sync silently applied an unpaid record instead
+   * of the status it had been handed.
+   */
+  if (webhookBody?.Lead_Status) merged.Lead_Status = webhookBody.Lead_Status;
+
   const fromWebhookPayment = paymentStatusFromRegistrationPayload(webhookBody ?? {});
   if (fromWebhookPayment) {
+    // The per-programme fields are more specific than a flat status, so they win.
     merged.LMS_Payment_Status = fromWebhookPayment;
+  } else if (webhookBody?.LMS_Payment_Status) {
+    merged.LMS_Payment_Status = webhookBody.LMS_Payment_Status;
   }
 
   return merged;
@@ -101,8 +113,10 @@ function parseEntitlementsFromRecord(record) {
 }
 
 function isValidBatchName(batch) {
+  // Returns a boolean, not the trimmed string: a predicate whose false value is
+  // '' reads as valid to anything comparing against false.
   const b = (batch || '').toString().trim();
-  return b && b !== '#batch' && !b.includes('$');
+  return Boolean(b) && b !== '#batch' && !b.includes('$');
 }
 
 /** Don't overwrite LMS password when student already changed it (webhook re-run safe). */
