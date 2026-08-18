@@ -4,7 +4,12 @@ import {
   BM100_SECTION_STATUS,
   BM100_GATE_TYPES,
 } from '../data/bm100ProgramStructure';
-import { hasFullProgramAccess, normalizePaymentStatus, PAYMENT_STATUS } from '../data/accessTiers';
+import {
+  hasFullProgramAccess,
+  normalizePaymentStatus,
+  programPaymentStatus,
+  PAYMENT_STATUS,
+} from '../data/accessTiers';
 import { isProgramAccessExpired } from '../data/programAccessWindow';
 import { PROGRAMS } from '../data/programTypes';
 import { submissionUnlocksNext } from './submissionReview';
@@ -45,7 +50,9 @@ function sectionComplete(sectionId, sectionProgress) {
  * payment date has no known window and is left alone.
  */
 function hasActiveAccess(profile) {
-  if (!hasFullProgramAccess(profile)) return false;
+  // Asked about this programme specifically: paying for another one must not
+  // unlock this content.
+  if (!hasFullProgramAccess(profile, PROGRAMS.BM100)) return false;
   return !isProgramAccessExpired(profile, PROGRAMS.BM100);
 }
 
@@ -205,11 +212,13 @@ export function isRegistrationPaymentLocked(section, sectionProgress, profile = 
   const p = sectionProgress[section.id];
   if (p?.unlocked) return false;
   if (!section.gate?.requiresPaid) return false;
-  return !hasFullProgramAccess(profile);
+  return !hasFullProgramAccess(profile, PROGRAMS.BM100);
 }
 
 export function hasRegistrationTierOnly(profile) {
-  return normalizePaymentStatus(profile?.paymentStatus) === PAYMENT_STATUS.REGISTER;
+  // Scoped like the rest: registration-only for this programme, whatever the
+  // learner has paid for another one.
+  return programPaymentStatus(profile, PROGRAMS.BM100) === PAYMENT_STATUS.REGISTER;
 }
 
 function sectionTitleById(sectionId) {
@@ -243,7 +252,7 @@ export function getSectionLockDisplay(section, sectionProgress, profile = null) 
       cta: section.unlockCta || { label: 'Payment support', href: '/app/support' },
     };
   }
-  if (hasFullProgramAccess(profile)) {
+  if (hasFullProgramAccess(profile, PROGRAMS.BM100)) {
     return {
       message: resolveProgressLockMessage(section, sectionProgress),
       cta: section.unlockCta || null,

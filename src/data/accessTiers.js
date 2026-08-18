@@ -82,8 +82,33 @@ export function resolveAccessTier(profile) {
   return normalizeAccessTier(profile?.accessTier);
 }
 
-export function hasFullProgramAccess(profile) {
-  const ps = normalizePaymentStatus(profile?.paymentStatus);
+/**
+ * What this learner has paid for *this* programme.
+ *
+ * A learner can be fully paid for LEP while only registered for 100BM, and
+ * Zoho tracks that separately — the Deluge posts lepPaymentStatus,
+ * hundredBMPaymentStatus and MBWPaymentStatus as distinct fields. The profile
+ * used to flatten them into one value, and because payment never downgrades,
+ * the highest one leaked across every programme: paying for LEP handed over
+ * the whole of 100BM.
+ *
+ * Falls back to the flat field for learners provisioned before this was
+ * recorded, so nobody loses access while the per-programme entries fill in.
+ */
+export function programPaymentStatus(profile, programId) {
+  const perProgram = profile?.programAccess?.[programId]?.paymentStatus;
+  if (perProgram) return normalizePaymentStatus(perProgram);
+  return normalizePaymentStatus(profile?.paymentStatus);
+}
+
+/**
+ * Pass a programme id to ask about that programme. Without one this answers
+ * from the flat field, which is what the older callers expect.
+ */
+export function hasFullProgramAccess(profile, programId = null) {
+  const ps = programId
+    ? programPaymentStatus(profile, programId)
+    : normalizePaymentStatus(profile?.paymentStatus);
   if (ps === PAYMENT_STATUS.PAID) return true;
   if (ps === PAYMENT_STATUS.REGISTER || ps === PAYMENT_STATUS.UNPAID) return false;
 

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   normalizePaymentStatus,
   hasFullProgramAccess,
+  programPaymentStatus,
   PAYMENT_STATUS,
 } from './accessTiers';
 
@@ -77,5 +78,43 @@ describe('hasFullProgramAccess — who reaches paid content', () => {
 
   it('still honours an explicit full access tier', () => {
     expect(hasFullProgramAccess({ paymentStatus: 'paid', accessTier: 'full' })).toBe(true);
+  });
+});
+
+/*
+ * Minakshi's case, which is what exposed this: Zoho has her LEP payment
+ * Completed and her 100BM only Enrolled. One paymentStatus on the profile
+ * could not hold both, and because payment never downgrades the higher value
+ * won — so paying for LEP handed her the whole of 100BM.
+ */
+describe('payment per programme', () => {
+  const twoProgrammes = {
+    paymentStatus: 'paid', // the flat field, still holding the highest
+    programAccess: {
+      lep: { paymentStatus: 'paid' },
+      '100bm': { paymentStatus: 'register' },
+    },
+  };
+
+  it('answers for the programme asked about, not the highest one held', () => {
+    expect(programPaymentStatus(twoProgrammes, 'lep')).toBe(PAYMENT_STATUS.PAID);
+    expect(programPaymentStatus(twoProgrammes, '100bm')).toBe(PAYMENT_STATUS.REGISTER);
+  });
+
+  it('opens paid content for the programme paid for, and not the other', () => {
+    expect(hasFullProgramAccess(twoProgrammes, 'lep')).toBe(true);
+    expect(hasFullProgramAccess(twoProgrammes, '100bm')).toBe(false);
+  });
+
+  it('falls back to the flat field for a programme with no entry yet', () => {
+    // Every learner provisioned before this existed. They must keep the access
+    // they already had rather than losing it the day this ships.
+    expect(programPaymentStatus(twoProgrammes, 'mbw')).toBe(PAYMENT_STATUS.PAID);
+    expect(hasFullProgramAccess({ paymentStatus: 'paid' }, '100bm')).toBe(true);
+    expect(hasFullProgramAccess({ paymentStatus: 'register' }, '100bm')).toBe(false);
+  });
+
+  it('still answers from the flat field when no programme is named', () => {
+    expect(hasFullProgramAccess(twoProgrammes)).toBe(true);
   });
 });

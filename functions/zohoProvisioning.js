@@ -147,6 +147,22 @@ async function applyEntitlements(db, uid, record, profile = {}) {
    * restart somebody's clock. Stored per programme because a learner can be
    * fully paid for LEP while only registered for 100BM.
    */
+  if (ent.paymentStatus && ent.program) {
+    /*
+     * Recorded against the programme it was paid for. Zoho already tracks these
+     * separately — lepPaymentStatus, hundredBMPaymentStatus, MBWPaymentStatus —
+     * and flattening them into one profile field meant the highest tier leaked
+     * everywhere, so paying for LEP unlocked the whole of 100BM.
+     *
+     * Still ratchets upward, but only within this programme.
+     */
+    const previous = profile.programAccess?.[ent.program]?.paymentStatus;
+    updates[`programAccess.${ent.program}.paymentStatus`] = maxPaymentStatus(
+      previous,
+      ent.paymentStatus
+    );
+  }
+
   if (updates.paymentStatus === PAYMENT_STATUS.PAID && ent.program) {
     const alreadyStamped = profile.programAccess?.[ent.program]?.fullPaidAt;
     if (!alreadyStamped) {
