@@ -102,15 +102,42 @@ export default function BM100ProgramSection({
       </h3>
 
       <div id={panelId} className="mbw-section-card__panel" hidden={!expanded}>
-        {!progress.unlocked && lockDisplay ? (
+        {accessLocked && lockDisplay ? (
+          /* Payment outstanding or the window closed: the reason, and nothing
+             else. There is no point previewing work they have not bought. */
           <div className="mbw-section-card__locked-panel">
             <LockMessage
               message={lockDisplay.message}
               cta={lockDisplay.cta}
-              showLockIcon={accessLocked}
-              tooltip={paymentLocked ? REGISTRATION_PAYMENT_LOCK_TOOLTIP : lockDisplay?.message}
+              showLockIcon
+              tooltip={paymentLocked ? REGISTRATION_PAYMENT_LOCK_TOOLTIP : lockDisplay.message}
             />
           </div>
+        ) : !progress.unlocked && lockDisplay ? (
+          /*
+           * Paid, but waiting on earlier tasks. They own this, so they can see
+           * what is in it — every lesson listed, none of them startable. The
+           * message above says what to finish first.
+           */
+          <>
+            <div className="mbw-section-card__locked-panel">
+              <LockMessage message={lockDisplay.message} cta={lockDisplay.cta} />
+            </div>
+            {section.usesTaskEngine && taskStates?.length ? (
+              <ProgramLessonList
+                taskStates={taskStates}
+                activeTaskId={activeTaskId}
+                getRowState={(ts) => ({
+                  ...getLessonRowState(ts, activeTaskId, nextTaskId),
+                  clickable: false,
+                })}
+                getTypeIcon={getTaskTypeIcon}
+                getDurationHint={getTaskDurationHint}
+                getKindLabel={getTaskKindLabel}
+                onSelectLesson={() => {}}
+              />
+            ) : null}
+          </>
         ) : section.usesTaskEngine && taskStates?.length ? (
           <ProgramLessonList
             taskStates={taskStates}
