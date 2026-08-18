@@ -136,6 +136,20 @@ async function applyEntitlements(db, uid, record, profile = {}) {
     updates.accessTier = ent.accessTier;
   }
 
+  /*
+   * The day the full course amount cleared for this programme. Access runs from
+   * here — the programme's own length plus a year — so it is written once and
+   * never moved: a re-sync, a webhook replay or a later batch apply must not
+   * restart somebody's clock. Stored per programme because a learner can be
+   * fully paid for LEP while only registered for 100BM.
+   */
+  if (updates.paymentStatus === PAYMENT_STATUS.PAID && ent.program) {
+    const alreadyStamped = profile.programAccess?.[ent.program]?.fullPaidAt;
+    if (!alreadyStamped) {
+      updates[`programAccess.${ent.program}.fullPaidAt`] = new Date();
+    }
+  }
+
   if (ent.leadStatus) updates.zohoLeadStatus = ent.leadStatus;
   if (ent.lmsUsername) updates.lmsUsername = ent.lmsUsername.toLowerCase();
   if (ent.zohoLeadId) updates.zohoLeadId = ent.zohoLeadId;

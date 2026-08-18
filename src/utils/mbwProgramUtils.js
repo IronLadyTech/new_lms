@@ -6,6 +6,8 @@ import {
   MBW_GATE_TYPES,
 } from '../data/mbwProgramStructure';
 import { hasFullProgramAccess, normalizePaymentStatus, PAYMENT_STATUS } from '../data/accessTiers';
+import { isProgramAccessExpired } from '../data/programAccessWindow';
+import { PROGRAMS } from '../data/programTypes';
 
 export const REGISTRATION_PAYMENT_LOCK_TOOLTIP =
   'You have paid only the registration amount. Complete full program payment to unlock this section.';
@@ -51,9 +53,19 @@ function sectionComplete(sectionId, sectionProgress) {
   return p?.status === MBW_SECTION_STATUS.DONE;
 }
 
+/*
+ * Paid, and still inside the window. Access runs for the programme's own length
+ * plus a year from the day the full amount cleared; a learner with no recorded
+ * payment date has no known window and is left alone.
+ */
+function hasActiveAccess(profile) {
+  if (!hasFullProgramAccess(profile)) return false;
+  return !isProgramAccessExpired(profile, PROGRAMS.MBW);
+}
+
 function resolveGate(gate, sectionProgress, taskStates, profile) {
   if (!gate) return true;
-  if (gate.requiresPaid && !hasFullProgramAccess(profile)) return false;
+  if (gate.requiresPaid && !hasActiveAccess(profile)) return false;
   if (gate.type === MBW_GATE_TYPES.PREPARATION) return isPreparationComplete(taskStates);
   if (
     gate.type === MBW_GATE_TYPES.SEQUENCE ||
@@ -62,7 +74,7 @@ function resolveGate(gate, sectionProgress, taskStates, profile) {
   ) {
     return sectionComplete(gate.requiresSectionId, sectionProgress);
   }
-  if (gate.type === MBW_GATE_TYPES.PAID) return hasFullProgramAccess(profile);
+  if (gate.type === MBW_GATE_TYPES.PAID) return hasActiveAccess(profile);
   return true;
 }
 
