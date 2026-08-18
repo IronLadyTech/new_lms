@@ -149,8 +149,14 @@ export function getLessonRowState(taskState, activeTaskId, nextTaskId) {
   if (status === SUBMISSION_STATUS.LOCKED) {
     return {
       visual: 'locked',
+      /*
+       * phaseLocked only says the section is shut, never why. Claiming payment
+       * told a learner who had paid in full that they still owed money, on the
+       * lessons of a section merely waiting on earlier work. The section header
+       * carries the real reason; this stays neutral.
+       */
       reason: phaseLocked
-        ? 'Full program payment required to unlock this section'
+        ? 'This section is not open yet'
         : 'Complete the previous lesson first',
       clickable: false,
     };

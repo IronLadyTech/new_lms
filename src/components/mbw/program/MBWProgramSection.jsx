@@ -202,6 +202,9 @@ export default function MBWProgramSection({
                 activeTaskId={activeTaskId}
                 getRowState={(ts) => ({
                   ...getLessonRowState(ts, activeTaskId, nextTaskId),
+                  // The section's own message is the accurate one; a row must
+                  // not invent a different reason for the same lock.
+                  reason: lockDisplay.message,
                   clickable: false,
                 })}
                 getTypeIcon={getTaskTypeIcon}
