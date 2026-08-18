@@ -65,8 +65,18 @@ export function getEnrolledProgramIds(profile, courses = []) {
   const ids = new Set();
   if (!profile) return ids;
 
-  const courseById = new Map((courses || []).map((c) => [c.id, c]));
-  (profile.enrolledCourses || []).forEach((courseId) => {
+  /*
+   * Both list fields are read defensively. They come from Firestore, which
+   * happily stores whatever was written — an import, a manual console edit or
+   * an older schema can leave a bare string where an array belongs, and
+   * `'lep'.forEach` throws. This runs on every render of the learner's home
+   * page and the programme cards, so one malformed profile would take the whole
+   * page down rather than showing that learner one programme fewer.
+   */
+  const list = (value) => (Array.isArray(value) ? value : []);
+
+  const courseById = new Map(list(courses).map((c) => [c?.id, c]));
+  list(profile.enrolledCourses).forEach((courseId) => {
     const course = courseById.get(courseId);
     const programId = courseCodeToProgramId(course?.code);
     if (programId) ids.add(programId);
@@ -75,7 +85,7 @@ export function getEnrolledProgramIds(profile, courses = []) {
   const primary = getJourneyEntry(profile.program);
   if (primary) ids.add(primary.id);
 
-  (profile.programs || []).forEach((value) => {
+  list(profile.programs).forEach((value) => {
     const entry = getJourneyEntry(value);
     if (entry) ids.add(entry.id);
   });
