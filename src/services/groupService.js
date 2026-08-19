@@ -84,6 +84,85 @@ export async function deleteGroup(groupId) {
   await deleteDoc(doc(db, GROUPS, groupId));
 }
 
+/* ── Session recordings ─────────────────────────────────────────────────────
+ * Held in a `recordings` subcollection, not on the batch document.
+ *
+ * They were an array on the group doc, and batch members can read that doc, so
+ * a learner who had paid only the registration fee could read the links to
+ * every paid session in their cohort. Firestore cannot withhold one field from
+ * a readable document, so the links had to move somewhere learners cannot read.
+ *
+ * Staff read and write here; learners never do. getLessonAsset serves a URL
+ * server-side once it has checked the learner paid for that programme.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+const RECORDINGS = 'recordings';
+
+function recordingsRef(groupId) {
+  return collection(db, GROUPS, groupId, RECORDINGS);
+}
+
+/** Every recording on a batch. Staff only — rules enforce it. */
+export async function getBatchRecordings(groupId) {
+  if (!db || !groupId) return [];
+  const snap = await getDocs(recordingsRef(groupId));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/**
+ * One recording per session. Saving the same session again replaces the link
+ * rather than leaving two, which is what CX means by re-uploading a session.
+ */
+export async function saveBatchRecording(groupId, recording) {
+  if (!db) throw new Error('Firebase is not configured');
+  const sessionId = recording.sessionId || '';
+  // Keyed on the session so a re-upload overwrites in place; recordings with no
+  // session keep a generated id, as they did before.
+  const id =
+    recording.id ||
+    (sessionId ? `session_${sessionId}` : `rec_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
+
+  const entry = {
+    title: recording.title || '',
+    url: recording.url || '',
+    date: recording.date || '',
+    phaseId: recording.phaseId || '',
+    sessionId,
+    addedBy: recording.addedBy || null,
+    updatedAt: serverTimestamp(),
+  };
+
+  await setDoc(doc(db, GROUPS, groupId, RECORDINGS, id), entry, { merge: true });
+  await updateDoc(doc(db, GROUPS, groupId), { updatedAt: serverTimestamp() });
+  return { id, ...entry };
+}
+
+export async function deleteBatchRecordingDoc(groupId, recordingId) {
+  if (!db) throw new Error('Firebase is not configured');
+  await deleteDoc(doc(db, GROUPS, groupId, RECORDINGS, recordingId));
+  await updateDoc(doc(db, GROUPS, groupId), { updatedAt: serverTimestamp() });
+}
+
+/**
+ * Move a batch's legacy `recordings` array into the subcollection.
+ *
+ * Safe to run more than once: entries are keyed by session, so a second run
+ * overwrites with the same values. The array is cleared only after every entry
+ * has been written, so an interruption leaves the originals in place.
+ */
+export async function migrateBatchRecordings(groupId) {
+  const group = await getGroup(groupId);
+  const legacy = Array.isArray(group?.recordings) ? group.recordings : [];
+  if (!legacy.length) return { moved: 0 };
+
+  for (const rec of legacy) {
+    // eslint-disable-next-line no-await-in-loop
+    await saveBatchRecording(groupId, rec);
+  }
+  await updateDoc(doc(db, GROUPS, groupId), { recordings: [], updatedAt: serverTimestamp() });
+  return { moved: legacy.length };
+}
+
 /**
  * Session recordings live on the batch (group) doc as a `recordings` array.
  * CX moderators can write groups, and batch members can read them — so no

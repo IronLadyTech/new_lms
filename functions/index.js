@@ -819,6 +819,33 @@ exports.getLessonAsset = onCall(async (request) => {
     }
   }
 
+  /*
+   * A batch's own session recording, filed by CX against this lesson. It lives
+   * in a subcollection learners cannot read — it used to be an array on the
+   * batch document, which batch members can read, so an unpaid learner in the
+   * cohort could take the links to every paid session in it.
+   */
+  if (!media || !media.byBatch?.[profile.batchName]) {
+    const batchName = String(profile.batchName || '').trim();
+    if (batchName) {
+      const groups = await db
+        .collection('groups')
+        .where('name', '==', batchName)
+        .limit(1)
+        .get();
+      if (!groups.empty) {
+        const recSnap = await groups.docs[0].ref
+          .collection('recordings')
+          .doc(`session_${taskId}`)
+          .get();
+        const url = recSnap.exists ? recSnap.data()?.url : '';
+        if (url) {
+          media = { ...(media || {}), byBatch: { ...(media?.byBatch || {}), [batchName]: url } };
+        }
+      }
+    }
+  }
+
   const result = lessonAssets.resolveLessonAsset(profile, taskId, new Date(), media);
 
   if (!result.ok) {

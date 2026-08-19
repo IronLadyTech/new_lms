@@ -129,6 +129,22 @@ service cloud.firestore {
       // CX moderators create/update batches; only admins delete cohorts.
       allow create, update: if hasStaffAccess();
       allow delete: if hasAdminAccess();
+
+      /*
+       * Session recordings — the video links themselves.
+       *
+       * These used to live in a `recordings` array on the batch document, and
+       * batch members can read that document, so a learner who had paid only
+       * the registration fee could read the links to every paid session in
+       * their cohort. Firestore cannot withhold a single field, so the links
+       * had to move somewhere learners cannot read at all.
+       *
+       * getLessonAsset reads this with admin privileges after checking that the
+       * learner has paid for the programme, and is the only route to a URL.
+       */
+      match /recordings/{recordingId} {
+        allow read, write: if hasStaffAccess();
+      }
     }
 
     match /events/{eventId} {

@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Video, ExternalLink, Trash2, Pencil, Plus, ChevronDown } from 'lucide-react';
 import {
-  addBatchRecording,
-  updateBatchRecording,
-  removeBatchRecording,
-  upsertBatchRecordingForSession,
+  getBatchRecordings,
+  saveBatchRecording,
+  deleteBatchRecordingDoc,
+  migrateBatchRecordings,
 } from '../../services/groupService';
 import { normalizeEventLink } from '../../utils/eventLinks';
 import { getBatchRecordingPhases, RECORDING_PHASE_OTHER } from '../../data/batchRecordingPhases';
@@ -37,12 +37,37 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  /*
+   * Fetched rather than read off the batch document. The links used to live in
+   * an array on that document, which batch members can read — so a learner who
+   * had paid only the registration fee could take the links to every paid
+   * session in their cohort. They now sit in a subcollection only staff can
+   * read, and the server hands a URL to a learner after checking they paid.
+   */
+  const [rows, setRows] = useState([]);
+  const [loadingRecordings, setLoadingRecordings] = useState(true);
+
+  const reload = useCallback(async () => {
+    if (!batch?.id) return;
+    setLoadingRecordings(true);
+    try {
+      // Anything still in the legacy array is moved across on first open, so
+      // CX never sees a batch lose its recordings.
+      await migrateBatchRecordings(batch.id).catch(() => null);
+      setRows(await getBatchRecordings(batch.id));
+    } finally {
+      setLoadingRecordings(false);
+    }
+  }, [batch?.id]);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
   const recordings = useMemo(
     () =>
-      [...(batch.recordings || [])].sort((a, b) =>
-        (b.date || b.addedAt || '').localeCompare(a.date || a.addedAt || '')
-      ),
-    [batch.recordings]
+      [...rows].sort((a, b) => (b.date || b.addedAt || '').localeCompare(a.date || a.addedAt || '')),
+    [rows]
   );
 
   const byPhase = useMemo(() => {
@@ -137,7 +162,7 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
     setError('');
     try {
       if (form.sessionId) {
-        await upsertBatchRecordingForSession(batch.id, {
+        await saveBatchRecording(batch.id, {
           title,
           url: normalizeEventLink(form.url.trim()),
           date: form.date,
@@ -146,7 +171,7 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
           addedBy: userId,
         });
       } else {
-        await addBatchRecording(batch.id, {
+        await saveBatchRecording(batch.id, {
           title,
           url: normalizeEventLink(form.url.trim()),
           date: form.date,
@@ -156,6 +181,7 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
         });
       }
       resetForm();
+      await reload();
       onChange?.();
     } catch (err) {
       setError(err.message || 'Could not save the recording.');
@@ -186,15 +212,17 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
         setSaving(true);
         setError('');
         try {
-          await updateBatchRecording(batch.id, existing.id, {
+          await saveBatchRecording(batch.id, {
+            id: existing.id,
             title,
             url: normalizeEventLink(form.url.trim()),
             date: form.date,
             sessionId: form.sessionId,
           });
-          await removeBatchRecording(batch.id, rec);
+          await deleteBatchRecordingDoc(batch.id, rec.id || rec);
           resetForm();
-          onChange?.();
+          await reload();
+      onChange?.();
         } catch (err) {
           setError(err.message || 'Could not replace the recording.');
         } finally {
@@ -208,7 +236,7 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
     setError('');
     try {
       if (form.sessionId) {
-        await upsertBatchRecordingForSession(batch.id, {
+        await saveBatchRecording(batch.id, {
           title,
           url: normalizeEventLink(form.url.trim()),
           date: form.date,
@@ -217,7 +245,8 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
           addedBy: userId,
         });
       } else {
-        await updateBatchRecording(batch.id, editingId, {
+        await saveBatchRecording(batch.id, {
+            id: editingId,
           title,
           url: normalizeEventLink(form.url.trim()),
           date: form.date,
@@ -225,6 +254,7 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
         });
       }
       resetForm();
+      await reload();
       onChange?.();
     } catch (err) {
       setError(err.message || 'Could not update the recording.');
@@ -245,8 +275,9 @@ export default function BatchRecordingsPanel({ batch, program, userId, onChange 
     if (!ok) return;
     setError('');
     try {
-      await removeBatchRecording(batch.id, rec);
+      await deleteBatchRecordingDoc(batch.id, rec.id || rec);
       if (editingId === rec.id) resetForm();
+      await reload();
       onChange?.();
     } catch (err) {
       setError(err.message || 'Could not remove the recording.');
