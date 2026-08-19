@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import DashboardSkeleton from './components/ui/DashboardSkeleton';
+import RouteLoader from './components/ui/RouteLoader';
 import { ROLES } from './utils/roles';
 import { isAdminRole, isModeratorOnly } from './utils/roles';
 
@@ -30,22 +30,13 @@ const CXReviews = lazy(() => import('./pages/cx/CXReviews'));
 const CXTaskReview = lazy(() => import('./pages/cx/CXTaskReview'));
 
 function RouteFallback() {
-  return (
-    <div className="loading-screen" role="status" aria-busy="true" aria-label="Loading page">
-      <DashboardSkeleton />
-    </div>
-  );
+  return <RouteLoader label="Loading page" />;
 }
 
 function RoleRedirect() {
   const { user, loading, role } = useAuth();
   if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="spinner" />
-        <p>Loading…</p>
-      </div>
-    );
+    return <RouteLoader label="Signing you in" />;
   }
   if (!user) return <Navigate to="/auth/login" replace />;
   if (isModeratorOnly(role)) return <Navigate to="/cx/home" replace />;

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import ConfirmDialog from '../ConfirmDialog';
 import { useConfirm } from '../../hooks/useConfirm';
 import {
@@ -26,8 +27,18 @@ export default function BatchMembersPanel({
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(batch?.name || '');
   const [editDesc, setEditDesc] = useState(batch?.description || '');
+  /*
+   * null until somebody clicks: the default depends on how many learners the
+   * batch has, and members arrive after the first render, so a useState
+   * initialiser would decide against an empty list every time.
+   */
+  const [listOpen, setListOpen] = useState(null);
 
   const members = useMemo(() => studentsInBatch(batch, users), [batch, users]);
+
+  // A short roster is more useful open; a full cohort buries the controls below
+  // it, which is what made the page hard to get past.
+  const rosterOpen = listOpen ?? members.length <= 8;
 
   const memberIdSet = useMemo(() => new Set(batch?.memberIds || []), [batch]);
 
@@ -147,7 +158,27 @@ export default function BatchMembersPanel({
       {members.length === 0 ? (
         <p className="muted">No learners in this batch yet. Add learners above.</p>
       ) : (
-        <ul className="cx-batch-members__list">
+        <>
+          <button
+            type="button"
+            className="cx-batch-members__toggle"
+            aria-expanded={rosterOpen}
+            aria-controls="cx-batch-members-list"
+            onClick={() => setListOpen(!rosterOpen)}
+          >
+            <ChevronDown
+              size={18}
+              aria-hidden="true"
+              className={`cx-batch-members__chevron${rosterOpen ? ' is-open' : ''}`}
+            />
+            <span>Learners</span>
+            <span className="cx-batch-members__count">{members.length}</span>
+          </button>
+          <ul
+            id="cx-batch-members-list"
+            className="cx-batch-members__list"
+            hidden={!rosterOpen}
+          >
           {members.map((m) => (
             <li key={m.id} className="cx-batch-members__row">
               <div>
@@ -185,9 +216,10 @@ export default function BatchMembersPanel({
                   Remove
                 </button>
               </div>
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
 
       {isFullAdmin(role) && (

@@ -12746,6 +12746,76 @@ a.cx-batch-row:hover {
   min-width: 0;
 }
 
+/*
+ * Roster disclosure. A full cohort runs to dozens of rows, which pushed the
+ * batch controls far below the fold; collapsing it puts them back in reach.
+ */
+.cx-batch-members__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  /* Comfortably past the 44px touch target on the tablets CX works from. */
+  min-height: 44px;
+  padding: var(--space-sm) var(--space-2sm);
+  margin-bottom: var(--space-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 180ms ease-out, box-shadow 180ms ease-out;
+}
+
+.cx-batch-members__toggle:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.cx-batch-members__toggle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.cx-batch-members__chevron {
+  flex: 0 0 auto;
+  color: var(--primary);
+  transition: transform 200ms ease-out;
+}
+
+.cx-batch-members__chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.cx-batch-members__count {
+  margin-left: auto;
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cx-batch-members__chevron {
+    transition: none;
+  }
+}
+
+/*
+ * The `hidden` attribute is a UA `display: none`, which an author `display:
+ * flex` on the class silently overrides — the list would stay on screen with
+ * aria-expanded="false" telling screen readers the opposite.
+ */
+.cx-batch-members__list[hidden] {
+  display: none;
+}
+
 .cx-batch-members__list {
   list-style: none;
   margin: 0;
@@ -14929,6 +14999,135 @@ textarea:focus-visible,
   100% {
     background-position: -200% 0;
   }
+}
+
+/* ── Route loader ───────────────────────────────────────────────────────────
+ * Shown while a lazily-loaded route arrives. Replaces a bare skeleton, which
+ * said only "something is slow"; this narrates the wait in the language of the
+ * programmes. No percentage and no step count: we cannot know how long a chunk
+ * takes, and a made-up number is the fake progress we refuse everywhere else.
+ *
+ * Two things move — the badge/line on change, and the indeterminate bar — which
+ * is the per-view animation budget, not a decoration on every element.
+ */
+.route-loader {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-lg);
+  padding: var(--space-2xl) var(--space-md);
+  text-align: center;
+}
+
+.route-loader__stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.route-loader__badge {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: var(--radius-pill);
+  /* Deep red clears 5:1 against the light tint; plain red only manages 3.4:1. */
+  color: var(--il-red-deep);
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 7%, transparent);
+  animation: route-loader-pop 260ms ease-out both;
+}
+
+/* On the dark ground the deep red goes muddy; the brand red reads better. */
+[data-theme='dark'] .route-loader__badge {
+  color: var(--primary);
+}
+
+.route-loader__line {
+  margin: 0;
+  /* Held under the 65-75 character line-length guidance at every width. */
+  max-width: 22rem;
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  line-height: 1.4;
+  color: var(--text);
+  animation: route-loader-fade 260ms ease-out both;
+}
+
+.route-loader__track {
+  width: min(18rem, 70vw);
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.route-loader__bar {
+  display: block;
+  width: 40%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  animation: route-loader-sweep 1.25s ease-in-out infinite;
+}
+
+@keyframes route-loader-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes route-loader-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes route-loader-sweep {
+  from {
+    transform: translateX(-110%);
+  }
+  to {
+    transform: translateX(360%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-loader__badge,
+  .route-loader__line {
+    animation: none;
+  }
+
+  /* A still bar rather than a hidden one: the wait must still look like a wait. */
+  .route-loader__bar {
+    width: 100%;
+    opacity: 0.5;
+    animation: none;
+  }
+}
+
+/*
+ * The skeleton is a full-width block, so it cannot be a child of a centring
+ * flex column: align-items: center shrink-wraps it and its grids collapse into
+ * narrow vertical bars. This is what the admin route rendered before.
+ */
+.loading-screen > .dashboard-skeleton {
+  align-self: stretch;
+  width: 100%;
+  max-width: var(--content);
+  margin-inline: auto;
+  padding-inline: var(--space-md);
 }
 
 .cx-batch-remind-btn {
