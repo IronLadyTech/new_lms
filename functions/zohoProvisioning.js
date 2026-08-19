@@ -12,7 +12,7 @@ const {
   maxPaymentStatus,
   paymentStatusFromRegistrationPayload,
 } = require('./accessTiers');
-const { parseLeadEntitlements } = require('./zohoFieldMap');
+const { parseLeadEntitlements, inferFromLeadStatus } = require('./zohoFieldMap');
 const { ilUserToCredentialFields } = require('./zohoIlUsers');
 
 async function getAuthUserByEmail(email) {
@@ -449,6 +449,26 @@ async function syncEntitlementsFromZoho(db, getLeadByEmail, searchIlUserByEmail,
   const lookupAuthUser = deps?.getAuthUserByEmail || getAuthUserByEmail;
   const existing = await lookupAuthUser(trimmed);
   if (!existing) {
+    /*
+     * Not every Lead Status change is about a learner. The MC stages are the
+     * masterclass funnel: they name no programme and grant no access, so there
+     * is nothing to apply and no LMS account is expected. Reporting that as a
+     * failure sent CX an alert mail for every masterclass lead whose status
+     * moved, which buries the failures that matter.
+     *
+     * A status that does name a programme is the opposite case — somebody
+     * enrolled with no LMS account is a real gap — so that still reports.
+     * An absent status reports too: unknown is not the same as harmless.
+     */
+    const status = body?.Lead_Status || body?.leadStatus || null;
+    if (status && !inferFromLeadStatus(status)?.program) {
+      return {
+        ok: true,
+        skipped: 'no-account-and-none-expected',
+        leadStatus: status,
+        reason: `${status} grants no programme access — nothing to apply`,
+      };
+    }
     return { ok: false, reason: 'No LMS account for this email — nothing to refresh' };
   }
 
