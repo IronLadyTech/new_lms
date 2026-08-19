@@ -111,12 +111,35 @@ function profileToLeadFields(uid, profile) {
   });
 }
 
+/**
+ * A timestamp in the shape Zoho's DateTime fields accept.
+ *
+ * Date.toISOString() is not it. Zoho wants an explicit UTC offset and no
+ * milliseconds — `2026-08-19T07:32:00+00:00`, never `...:00.123Z` — and rejects
+ * the whole upsert when it gets the latter:
+ *
+ *   invalid data ({"expected_data_type":"datetime",
+ *                  "api_name":"LMS_Password_Updated_At"})
+ *
+ * Callers pass Dates, ISO strings and epoch milliseconds, so all three are
+ * normalised here rather than at each call site. Anything unparseable becomes
+ * null, which omits the field: a bad timestamp must not take the rest of the
+ * record down with it.
+ */
+function toZohoDateTime(value) {
+  if (value == null || value === '') return null;
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return `${d.toISOString().slice(0, 19)}+00:00`;
+}
+
 function leadPasswordPayload(baseFields, password, options = {}) {
-  const { status = 'Password updated via LMS', updatedAt = new Date().toISOString() } = options;
+  const { status = 'Password updated via LMS', updatedAt = new Date() } = options;
+  const stamp = toZohoDateTime(updatedAt);
   return {
     ...baseFields,
     LMS_Password: password,
-    LMS_Password_Updated_At: updatedAt,
+    ...(stamp ? { LMS_Password_Updated_At: stamp } : {}),
     LMS_Credential_Status: status,
   };
 }
@@ -643,7 +666,8 @@ async function syncPasswordCredentialToZoho(db, uid, profile, newPassword, optio
       profile,
       {
         ...fields,
-        LMS_Password_Updated_At: fields.LMS_Password_Updated_At || now.toISOString(),
+        LMS_Password_Updated_At:
+          toZohoDateTime(fields.LMS_Password_Updated_At) || toZohoDateTime(now),
       },
       status
     );
@@ -778,6 +802,8 @@ async function runUserBatchSync(db, email, opts = {}) {
 module.exports = {
   /** Exported for the outbound-payload test — see zohoOutbound.test.js. */
   profileToLeadFields,
+  toZohoDateTime,
+  leadPasswordPayload,
   isConfigured,
   getAccessToken,
   getLeadByEmail,
