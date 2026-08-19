@@ -13,7 +13,7 @@ const batchSync = require('./zohoBatchSync');
 const batchApply = require('./zohoBatchApply');
 const ilRegistration = require('./zohoIlRegistration');
 const leadsCohort = require('./zohoLeadsCohort');
-const { entitlementsToLeadFields, readPasswordFromLead } = require('./zohoFieldMap');
+const { readPasswordFromLead } = require('./zohoFieldMap');
 
 const DEFAULT_API_DOMAIN = 'https://www.zohoapis.in';
 const DEFAULT_MODULE = 'Leads';
@@ -75,31 +75,29 @@ async function getAccessToken() {
   return cachedAccessToken;
 }
 
-function leadPayload({
-  uid,
-  email,
-  displayName,
-  enrolledCourses = [],
-  role,
-  blocked,
-  program,
-  accessTier,
-  paymentStatus,
-}) {
+function leadPayload({ uid, email, displayName, enrolledCourses = [], role, blocked }) {
   const courses = Array.isArray(enrolledCourses) ? enrolledCourses : [];
-  const payload = {
+  /*
+   * Description is deliberately not written. It used to carry the Firebase UID,
+   * from before Firebase_UID existed as a field — but Description is where the
+   * CRM keeps the brief CX actually reads, and overwriting it destroyed that on
+   * every sync. The UID has its own field now.
+   *
+   * Entitlements are deliberately not written either. Zoho owns them: Lead
+   * Status is where CX records what somebody paid for, and the LMS derives its
+   * access from that. Sending a flat payment status back the other way meant
+   * the LMS's own value would be read on the next pull and beat Lead Status —
+   * so a stale "paid" in a profile could overwrite the CRM's correct answer and
+   * could never be corrected by re-syncing.
+   */
+  return {
     Email: email,
     Last_Name: displayName || email?.split('@')[0] || 'User',
-    Description: `Firebase UID: ${uid}`,
     Enrolled_Courses: courses.join(', '),
     LMS_Role: role || 'student',
     LMS_Blocked: blocked ? 'Yes' : 'No',
     Firebase_UID: uid,
   };
-
-  Object.assign(payload, entitlementsToLeadFields({ program, accessTier, paymentStatus }));
-
-  return payload;
 }
 
 function profileToLeadFields(uid, profile) {
@@ -110,9 +108,6 @@ function profileToLeadFields(uid, profile) {
     enrolledCourses: profile.enrolledCourses,
     role: profile.role,
     blocked: profile.blocked,
-    program: profile.program,
-    accessTier: profile.accessTier,
-    paymentStatus: profile.paymentStatus,
   });
 }
 
@@ -149,7 +144,14 @@ async function upsertLead(fields) {
 
   const row = body?.data?.[0];
   if (row?.status === 'error') {
-    throw new Error(row.message || 'Zoho upsert failed');
+    /*
+     * row.details names the field Zoho objected to. Dropping it turned every
+     * schema mismatch into the same unactionable "invalid data", which is how
+     * a payload aimed at fields that did not exist on the layout failed
+     * silently for weeks.
+     */
+    const detail = row.details ? ` (${JSON.stringify(row.details)})` : '';
+    throw new Error(`${row.message || 'Zoho upsert failed'}${detail}`);
   }
 
   return row?.details?.id || null;
@@ -774,6 +776,8 @@ async function runUserBatchSync(db, email, opts = {}) {
 }
 
 module.exports = {
+  /** Exported for the outbound-payload test — see zohoOutbound.test.js. */
+  profileToLeadFields,
   isConfigured,
   getAccessToken,
   getLeadByEmail,

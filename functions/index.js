@@ -22,6 +22,7 @@ const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
 const zoho = require('./zoho');
 const { parseWebhookBody, hasWebhookCredentials } = require('./webhookBody');
+const { needsEntitlementBackfill } = require('./accessTiers');
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -602,6 +603,77 @@ exports.zohoSyncAllUsers = onCall(ZOHO_BULK_SYNC_OPTS, async (request) => {
     if (err instanceof HttpsError) throw err;
     throw new HttpsError('internal', err.message || 'Bulk Zoho sync failed');
   }
+});
+
+/*
+ * Backfill: pull entitlements from Zoho for every profile still on the old flat
+ * shape.
+ *
+ * Before payment was tracked per programme, one flat paymentStatus covered a
+ * whole profile, and it still wins by fallback wherever a programme has no
+ * entry of its own — so a learner who paid a registration fee reads as fully
+ * paid for everything they are enrolled in, and the padlocks never appear.
+ * Provisioning one learner from the admin screen fixes one; this is the same
+ * call in a loop.
+ *
+ * Dry run by default. This writes to live learner access and costs two Zoho
+ * lookups per learner, so the caller has to ask for the write explicitly and
+ * choose how many to do — Zoho's daily API credits are the real ceiling, not
+ * the function timeout.
+ */
+exports.zohoBackfillEntitlements = onCall(ZOHO_BULK_SYNC_OPTS, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', 'Sign in required');
+  }
+  await zoho.assertAdmin(db, request.auth.uid);
+
+  if (!zoho.isConfigured()) {
+    return { ok: false, reason: 'Zoho secrets are not configured' };
+  }
+
+  const { dryRun = true, limit = 25 } = request.data || {};
+  const batchSize = Math.max(1, Math.min(Number(limit) || 25, 200));
+
+  const snap = await db.collection('users').get();
+  const stale = snap.docs.filter((d) => needsEntitlementBackfill(d.data()));
+
+  if (dryRun) {
+    return {
+      ok: true,
+      dryRun: true,
+      scanned: snap.size,
+      needing: stale.length,
+      // Enough to eyeball before committing, not the whole list.
+      sample: stale.slice(0, 20).map((d) => d.data().email),
+    };
+  }
+
+  const targets = stale.slice(0, batchSize);
+  const results = [];
+  // Serial on purpose: Zoho rate-limits, and a backfill that trips the limit
+  // leaves half the cohort in the broken state it started in.
+  for (const doc of targets) {
+    const email = doc.data().email;
+    try {
+      const r = await zoho.provisionUserFromEmail(db, email);
+      results.push({ email, ok: !!r?.ok, reason: r?.ok ? null : r?.reason || null });
+    } catch (err) {
+      results.push({ email, ok: false, reason: err.message || 'failed' });
+    }
+  }
+
+  const changed = results.filter((r) => r.ok).length;
+  return {
+    ok: true,
+    dryRun: false,
+    scanned: snap.size,
+    needing: stale.length,
+    processed: results.length,
+    changed,
+    failed: results.length - changed,
+    remaining: Math.max(0, stale.length - results.length),
+    errors: results.filter((r) => !r.ok).slice(0, 10),
+  };
 });
 
 // ── Zoho CRM — admin: sync one user ───────────────────────────

@@ -86,6 +86,15 @@ export async function provisionUserFromZoho(email) {
   return data;
 }
 
+/**
+ * Re-pull entitlements for every profile still on the old flat payment shape.
+ * Dry run reports who would change and writes nothing.
+ */
+export async function backfillEntitlements({ dryRun = true, limit = 25 } = {}) {
+  const { data } = await call('zohoBackfillEntitlements', { dryRun, limit });
+  return data;
+}
+
 /** First login — create Firebase account from Zoho IL_Users if credentials match. */
 export async function ensureZohoUserOnLogin(email, password) {
   const regional = getLoginFunctions();

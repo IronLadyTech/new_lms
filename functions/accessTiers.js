@@ -201,6 +201,45 @@ function isProgramAccessExpired(profile, programId, now = new Date()) {
   return now.getTime() >= addMonths(start, length + GRACE_MONTHS).getTime();
 }
 
+/**
+ * Every programme this profile is enrolled in, normalised and deduplicated.
+ *
+ * Restricted to the programmes we actually run. normalizeProgram lowercases
+ * whatever it is handed rather than rejecting an unknown name, so without this
+ * filter a stray value like "Executive Bootcamp" becomes a programme id that no
+ * programAccess entry can ever satisfy — and the backfill would reselect that
+ * profile on every run, forever.
+ */
+function enrolledProgramIds(profile) {
+  const known = new Set(Object.keys(PROGRAM_LENGTH_MONTHS));
+  const list = Array.isArray(profile?.programs) ? profile.programs : [];
+  const all = [profile?.program, ...list].map(normalizeProgram).filter((id) => known.has(id));
+  return Array.from(new Set(all));
+}
+
+/**
+ * Is this profile still on the pre-per-programme shape?
+ *
+ * Before payment was tracked per programme there was one flat paymentStatus,
+ * and "paid" meant "paid for something". programPaymentStatus still falls back
+ * to it when a programme has no entry of its own, so such a profile gets its
+ * highest tier applied to every programme it is enrolled in — somebody who paid
+ * a registration fee for one course reads as fully paid for all of them.
+ *
+ * Only profiles that stand to gain from the fallback are counted. A flat unpaid
+ * grants nothing, so there is nothing to correct and no reason to spend a Zoho
+ * lookup on it.
+ */
+function needsEntitlementBackfill(profile) {
+  if (!profile?.email) return false;
+  if (normalizePaymentStatus(profile.paymentStatus) === PAYMENT_STATUS.UNPAID) return false;
+
+  const programs = enrolledProgramIds(profile);
+  if (!programs.length) return false;
+
+  return programs.some((id) => !profile?.programAccess?.[id]?.paymentStatus);
+}
+
 /** Is this programme enrolled at all? Mirrors getEnrolledProgramIds. */
 function isEnrolledInProgram(profile, programId) {
   if (!profile || !programId) return false;
@@ -231,6 +270,8 @@ function paidContentDecision(profile, programId, now = new Date()) {
 }
 
 module.exports = {
+  enrolledProgramIds,
+  needsEntitlementBackfill,
   PROGRAM_LENGTH_MONTHS,
   GRACE_MONTHS,
   programPaymentStatus,

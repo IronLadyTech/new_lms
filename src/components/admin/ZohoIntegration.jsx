@@ -14,6 +14,7 @@ import {
   isZohoConfigured,
   testZohoConnection,
   syncAllUsersToZoho,
+  backfillEntitlements,
   syncUserToZohoById,
   provisionUserFromZoho,
   listZohoLeads,
@@ -223,6 +224,9 @@ export default function ZohoIntegration({ users = [] }) {
     }
   };
 
+  const [backfilling, setBackfilling] = useState(false);
+  const [backfillResult, setBackfillResult] = useState(null);
+
   const handleSyncAll = async () => {
     setSyncing(true);
     setError('');
@@ -234,6 +238,19 @@ export default function ZohoIntegration({ users = [] }) {
       setError(e.message || 'Bulk sync failed');
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const handleBackfill = async (dryRun) => {
+    setBackfilling(true);
+    setError('');
+    setBackfillResult(null);
+    try {
+      setBackfillResult(await backfillEntitlements({ dryRun, limit: 25 }));
+    } catch (e) {
+      setError(e.message || 'Backfill failed');
+    } finally {
+      setBackfilling(false);
     }
   };
 
@@ -539,6 +556,62 @@ export default function ZohoIntegration({ users = [] }) {
           <RefreshCw size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} />
           {syncing ? 'Pushing to Zoho…' : 'Push all LMS users to Zoho'}
         </button>
+      </div>
+
+      <div className="card card-pad" style={{ marginBottom: '1rem' }}>
+        <h3>Backfill per-programme access from Zoho</h3>
+        <p className="muted">
+          Finds profiles still carrying one flat payment status with no per-programme entry. Those
+          read as fully paid for every programme they are enrolled in, so paid content stays
+          unlocked whatever the learner actually paid. Check first — it writes live access and
+          costs two Zoho lookups per learner.
+        </p>
+        <div className="admin-actions-row" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={() => handleBackfill(true)}
+            disabled={backfilling || !configured}
+          >
+            {backfilling ? 'Working…' : 'Check who needs it'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => handleBackfill(false)}
+            disabled={backfilling || !configured || !backfillResult?.needing}
+          >
+            Fix next 25
+          </button>
+        </div>
+        {backfillResult && (
+          <div
+            className={backfillResult.failed ? 'alert alert-error' : 'alert alert-success'}
+            role="status"
+            style={{ marginTop: '0.75rem' }}
+          >
+            {backfillResult.dryRun ? (
+              <>
+                <strong>{backfillResult.needing}</strong> of {backfillResult.scanned} profiles need
+                it.
+                {backfillResult.sample?.length > 0 && (
+                  <span className="muted"> First few: {backfillResult.sample.join(', ')}</span>
+                )}
+              </>
+            ) : (
+              <>
+                Fixed <strong>{backfillResult.changed}</strong> of {backfillResult.processed}.{' '}
+                {backfillResult.remaining} still to go.
+                {backfillResult.errors?.length > 0 && (
+                  <span className="muted">
+                    {' '}
+                    Failed: {backfillResult.errors.map((e) => e.email).join(', ')}
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="card card-pad" style={{ marginBottom: '1rem' }}>
