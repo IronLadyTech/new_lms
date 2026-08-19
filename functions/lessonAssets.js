@@ -24,8 +24,9 @@ const { paidContentDecision } = require('./accessTiers');
  * express it.
  */
 const LESSON_ASSETS = {
-  // MBW — Pre-Preparation. Free tier: part of the onboarding sequence.
-  'mbw-pre-2': {
+  // MBW — "27 Principles Video", Pre-Preparation. Same recording for every
+  // cohort, so it stays here rather than being uploaded per batch.
+  'mbw-principles': {
     program: 'mbw',
     requiresPaid: false,
     url: 'https://www.youtube.com/watch?v=uo9xA5xiRWY',
