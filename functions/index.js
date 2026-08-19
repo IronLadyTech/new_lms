@@ -23,6 +23,7 @@ const nodemailer = require('nodemailer');
 const zoho = require('./zoho');
 const { parseWebhookBody, hasWebhookCredentials } = require('./webhookBody');
 const { needsEntitlementBackfill } = require('./accessTiers');
+const { FAILURES, buildFailureDigest } = require('./syncAlerts');
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -141,6 +142,63 @@ async function sendReminderEmail(transport, to, name) {
 }
 
 // ── Scheduled function — runs every Monday 8:00 AM IST ────────
+/**
+ * Hourly digest of Zoho sync failures.
+ *
+ * Failures used to go to the Cloud Function log and nowhere else, which is why
+ * the outbound sync could fail for every learner for weeks without anyone
+ * noticing — the log is where you look once you already suspect something.
+ *
+ * One mail per failure would be no better: a bulk sync fails for the whole
+ * cohort at once, and five hundred identical mails get filtered within a day.
+ * This groups by cause, so the subject line carries the actual problem.
+ */
+exports.zohoSyncFailureDigest = onSchedule(
+  {
+    schedule: '15 * * * *',
+    timeZone: 'Asia/Kolkata',
+    secrets: [SMTP_HOST, SMTP_USER, SMTP_PASS],
+  },
+  async () => {
+    const snap = await db
+      .collection(FAILURES)
+      .where('notified', '==', false)
+      .limit(500)
+      .get();
+
+    if (snap.empty) return;
+
+    const digest = buildFailureDigest(snap.docs.map((d) => d.data()));
+    if (!digest) return;
+
+    const transport = nodemailer.createTransport({
+      host: SMTP_HOST.value(),
+      port: 465,
+      secure: true,
+      auth: { user: SMTP_USER.value(), pass: SMTP_PASS.value() },
+    });
+
+    await transport.sendMail({
+      from: `"Iron Lady LMS" <${SMTP_USER.value()}>`,
+      to: digest.to,
+      subject: digest.subject,
+      text: digest.text,
+      html: digest.html,
+    });
+
+    /*
+     * Marked only after the mail is away. A send that throws leaves the records
+     * unnotified and the next run retries them — a repeated alert is a nuisance,
+     * a silently dropped one puts us back where we started.
+     */
+    const batch = db.batch();
+    snap.docs.forEach((d) => batch.update(d.ref, { notified: true, notifiedAt: new Date() }));
+    await batch.commit();
+
+    console.log(`Zoho failure digest sent: ${digest.total} failures, ${digest.groups.length} causes`);
+  }
+);
+
 exports.weeklyLinkedInReminder = onSchedule(
   {
     schedule: '30 2 * * 1', // Monday 02:30 UTC = 08:00 IST

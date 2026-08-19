@@ -14,6 +14,7 @@ const batchApply = require('./zohoBatchApply');
 const ilRegistration = require('./zohoIlRegistration');
 const leadsCohort = require('./zohoLeadsCohort');
 const { readPasswordFromLead } = require('./zohoFieldMap');
+const { FAILURES } = require('./syncAlerts');
 
 const DEFAULT_API_DOMAIN = 'https://www.zohoapis.in';
 const DEFAULT_MODULE = 'Leads';
@@ -411,6 +412,26 @@ async function reconcileCredentials(db, uid, profile) {
   return { passwordForZoho, credentialAction, zohoLeadId: lead?.id || getZohoLeadId(profile) };
 }
 
+/**
+ * Leave a durable trace of a failed sync.
+ *
+ * Deliberately swallows its own errors: this runs inside a catch block, and an
+ * alert that cannot be written must not replace the failure it was recording.
+ */
+async function recordSyncFailure(db, email, message) {
+  try {
+    await db.collection(FAILURES).add({
+      email: email || null,
+      message: message || 'Unknown error',
+      direction: 'lms-to-zoho',
+      notified: false,
+      at: new Date(),
+    });
+  } catch (err) {
+    console.warn('Could not record sync failure:', err.message);
+  }
+}
+
 async function syncUserToZoho(db, uid, profile, options = {}) {
   const { syncCredentials = true } = options;
   if (!isConfigured()) return { synced: false, reason: 'Zoho not configured' };
@@ -461,6 +482,7 @@ async function syncUserToZoho(db, uid, profile, options = {}) {
     zohoLeadId = (await upsertLead(fields)) || zohoLeadId;
   } catch (err) {
     console.warn(`Zoho upsert failed for ${profile.email}:`, err.message);
+    await recordSyncFailure(db, profile.email, err.message);
     if (!zohoLeadId) {
       zohoLeadId = await searchLeadByEmail(profile.email);
     }

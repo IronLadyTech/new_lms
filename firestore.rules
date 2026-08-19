@@ -308,6 +308,18 @@ service cloud.firestore {
       allow write: if hasStaffAccess();
     }
 
+    /*
+     * Zoho sync failures. Written by Cloud Functions, which use the admin SDK
+     * and bypass these rules, and read only by the digest job. Closed to every
+     * client on purpose: the records pair a learner's email with an error, and
+     * nothing in the app has any reason to read them. Stated rather than left
+     * to the default deny, so a future catch-all rule cannot open them by
+     * accident.
+     */
+    match /sync_failures/{failureId} {
+      allow read, write: if false;
+    }
+
     match /mbw_tasks/{taskId} {
       allow read: if canUseApp();
       allow write: if hasAdminAccess();
