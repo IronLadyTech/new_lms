@@ -75,8 +75,46 @@ async function getAccessToken() {
   return cachedAccessToken;
 }
 
-function leadPayload({ uid, email, displayName, enrolledCourses = [], role, blocked }) {
-  const courses = Array.isArray(enrolledCourses) ? enrolledCourses : [];
+/*
+ * Course id → title, cached.
+ *
+ * Enrolled_Courses used to arrive in Zoho as raw Firestore ids —
+ * "YLwsh7uCJJQy4yiBAQ2i, MycpoZ5DpvOxjqnDc3G6" — which is accurate and tells
+ * whoever opens the lead nothing. A bulk sync runs this for every learner, so
+ * the collection is read once per window rather than once per user.
+ */
+const COURSE_TITLE_TTL_MS = 5 * 60 * 1000;
+let courseTitleCache = null;
+let courseTitleCachedAt = 0;
+
+async function loadCourseTitles(db) {
+  const now = Date.now();
+  if (courseTitleCache && now - courseTitleCachedAt < COURSE_TITLE_TTL_MS) {
+    return courseTitleCache;
+  }
+  try {
+    const snap = await db.collection('courses').get();
+    const map = {};
+    snap.docs.forEach((d) => {
+      const title = d.data()?.title;
+      if (title) map[d.id] = title;
+    });
+    courseTitleCache = map;
+    courseTitleCachedAt = now;
+    return map;
+  } catch (err) {
+    // A lookup failure must not cost the whole sync. Falling back to ids keeps
+    // the record correct, just less readable.
+    console.warn('Course title lookup failed, syncing raw ids:', err.message);
+    return courseTitleCache || {};
+  }
+}
+
+function leadPayload({ uid, email, displayName, enrolledCourses = [], role, blocked, courseTitles }) {
+  const titles = courseTitles || {};
+  const courses = (Array.isArray(enrolledCourses) ? enrolledCourses : []).map(
+    (id) => titles[id] || id
+  );
   /*
    * Description is deliberately not written. It used to carry the Firebase UID,
    * from before Firebase_UID existed as a field — but Description is where the
@@ -100,8 +138,9 @@ function leadPayload({ uid, email, displayName, enrolledCourses = [], role, bloc
   };
 }
 
-function profileToLeadFields(uid, profile) {
+function profileToLeadFields(uid, profile, courseTitles = null) {
   return leadPayload({
+    courseTitles,
     uid,
     email: profile.email,
     displayName: profile.displayName,
@@ -407,7 +446,7 @@ async function syncUserToZoho(db, uid, profile, options = {}) {
     }
   }
 
-  const base = profileToLeadFields(uid, profile);
+  const base = profileToLeadFields(uid, profile, await loadCourseTitles(db));
   const fields = passwordForZoho
     ? leadPasswordPayload(base, passwordForZoho, {
         status: 'Active LMS credential (lead sync)',
@@ -614,7 +653,7 @@ async function pushCredentialSnapshotToZoho(db, uid, profile, password) {
   if (!profile?.email) return { synced: false, reason: 'No email on profile' };
   if (!isUsableZohoPassword(password)) return { synced: false, reason: 'No valid credential' };
 
-  const base = profileToLeadFields(uid, profile);
+  const base = profileToLeadFields(uid, profile, await loadCourseTitles(db));
   const updatedAt = profile.passwordUpdatedAt
     ? new Date(credentialTimeMs(profile.passwordUpdatedAt)).toISOString()
     : new Date().toISOString();
@@ -646,7 +685,7 @@ async function syncPasswordCredentialToZoho(db, uid, profile, newPassword, optio
   if (!profile?.email) return { synced: false, reason: 'No email on profile' };
 
   const { status = 'Password updated via LMS' } = options;
-  const base = profileToLeadFields(uid, profile);
+  const base = profileToLeadFields(uid, profile, await loadCourseTitles(db));
   const fields = leadPasswordPayload(base, newPassword, { status });
 
   let zohoLeadId = getZohoLeadId(profile);
@@ -830,7 +869,7 @@ module.exports = {
       const password = profile?.lmsCredentialPassword?.trim();
       if (isUsableZohoPassword(password)) {
         try {
-          const base = profileToLeadFields(result.uid, profile);
+          const base = profileToLeadFields(result.uid, profile, await loadCourseTitles(db));
           await upsertCredentialFields(
             db,
             result.uid,

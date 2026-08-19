@@ -146,3 +146,37 @@ describe('zoho datetime', () => {
     expect(payload.LMS_Password_Updated_At).toBe('2026-08-19T07:32:00+00:00');
   });
 });
+
+/**
+ * Readable course names.
+ *
+ * The first successful sync put "YLwsh7uCJJQy4yiBAQ2i, MycpoZ5DpvOxjqnDc3G6"
+ * into Enrolled_Courses — accurate, and no use at all to whoever opens the lead
+ * in Zoho.
+ */
+describe('outbound lead payload · course names', () => {
+  const TITLES = { abc123: '100BM Q1', def456: 'MBW Pre-Preparation' };
+  const enrolled = { ...PROFILE, enrolledCourses: ['abc123', 'def456'] };
+
+  it('writes titles when it has them', () => {
+    const payload = profileToLeadFields('uid-1', enrolled, TITLES);
+    expect(payload.Enrolled_Courses).toBe('100BM Q1, MBW Pre-Preparation');
+  });
+
+  it('falls back to the id for a course it cannot name', () => {
+    // A course added since the cache was filled must still appear, not vanish.
+    const payload = profileToLeadFields('uid-1', enrolled, { abc123: '100BM Q1' });
+    expect(payload.Enrolled_Courses).toBe('100BM Q1, def456');
+  });
+
+  it('still works with no lookup at all', () => {
+    // The lookup is allowed to fail; the sync is not.
+    expect(profileToLeadFields('uid-1', enrolled).Enrolled_Courses).toBe('abc123, def456');
+    expect(profileToLeadFields('uid-1', enrolled, null).Enrolled_Courses).toBe('abc123, def456');
+  });
+
+  it('handles a profile enrolled in nothing', () => {
+    const payload = profileToLeadFields('uid-1', { ...PROFILE, enrolledCourses: undefined }, TITLES);
+    expect(payload.Enrolled_Courses).toBe('');
+  });
+});
