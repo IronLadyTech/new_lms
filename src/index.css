@@ -3260,6 +3260,15 @@ html:has(.student-layout--mbw) #root {
 
 .guest-lock {
   position: relative;
+  /*
+   * Several pages become multi-column grids at desktop — Support puts
+   * raise-a-ticket beside the ticket list, Profile runs two columns — and each
+   * lists which children span the full width. The guest panel replaces the
+   * whole page body, so it was never on those lists and dropped into a 22rem
+   * sidebar column: at 1440 the card rendered 354px wide, which is why it read
+   * as the mobile layout. Ignored harmlessly wherever the parent is not a grid.
+   */
+  grid-column: 1 / -1;
   margin-top: 1.25rem;
   padding: 1.75rem var(--space-lg) var(--space-lg);
   overflow: hidden;
@@ -3446,6 +3455,61 @@ html:has(.student-layout--mbw) #root {
 
 .guest-lock__email + .guest-lock__actions {
   margin-top: 0.85rem;
+}
+
+/*
+ * Desktop layout for the guest panel.
+ *
+ * Everything above is mobile-first and never adapted, so on a wide screen the
+ * card stretched to the full 1280px content width while its contents stayed a
+ * narrow centred column — a two-column feature grid became two ~600px rows
+ * holding one word each, and the copy sat in a 26rem ribbon inside a very wide
+ * box. It read as the phone layout pulled sideways.
+ *
+ * The card is capped and centred rather than the grid being widened alone:
+ * stretching a mostly-textual panel across 1280px would break the 65-75
+ * character line-length guidance whatever the grid does.
+ */
+@media (min-width: 768px) {
+  /*
+   * width:100% matters here. On the grid pages the card is a grid item, and an
+   * auto inline margin makes a grid item shrink to its content instead of
+   * filling the track — so the width came out wherever the text happened to
+   * land rather than at the cap, and would move whenever the copy changed.
+   */
+  .guest-lock {
+    width: 100%;
+    max-width: 52rem;
+    margin-inline: auto;
+    padding: var(--space-2xl) var(--space-2xl) var(--space-xl);
+  }
+
+  /* Four across at this width: the labels are single words. */
+  .guest-lock__features {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  /* Side by side once there is room, rather than a stacked column of buttons. */
+  .guest-lock__actions {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  /*
+   * width:100% is the mobile rule; on a 928px card it makes one CTA a slab.
+   * Scoped through the parent because the base rule is declared later in this
+   * file, and a media query adds no specificity of its own.
+   */
+  .guest-lock .guest-lock__btn {
+    width: auto;
+    min-width: 16rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .guest-lock {
+    max-width: 58rem;
+  }
 }
 
 .guest-lock__btn {
@@ -10985,27 +11049,12 @@ button.streak-heatmap__cell:focus-visible {
   height: 10px;
 }
 
-.cx-program-enrollment__grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-sm);
-}
-
-.cx-program-enrollment__card {
-  padding: var(--space-2sm);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface-2);
-  text-align: center;
-}
-
-.cx-program-enrollment__label {
-  display: block;
-  font-size: var(--text-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--muted);
+.cx-program-enrollment__total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--space-2sm) 0;
 }
 
 .cx-program-enrollment__value {
@@ -11013,11 +11062,15 @@ button.streak-heatmap__cell:focus-visible {
   font-family: var(--font-heading);
   font-size: var(--text-2xl);
   font-weight: 800;
-  margin: var(--space-xs) 0;
+  line-height: 1.1;
+  margin: 0;
 }
 
-.cx-program-enrollment__hint {
+.cx-program-enrollment__metric-label {
+  display: block;
   font-size: var(--text-xs);
+  font-weight: 650;
+  color: var(--text);
 }
 
 .cx-activity-feed {
@@ -11105,10 +11158,6 @@ button.streak-heatmap__cell:focus-visible {
 
 @media (max-width: 767px) {
   .cx-analytics-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .cx-program-enrollment__grid {
     grid-template-columns: 1fr;
   }
 
