@@ -260,9 +260,6 @@ export default function Home() {
 
       <section id="home-courses" className="section dashboard-programs">
         <h2 className="home-section-title">Your programs</h2>
-        <p className="page-sub">
-          Journey order: LEP → 100BM → MBW — locked programs stay visible as upcoming
-        </p>
 
         {isGuest ? (
           <GuestHomePreview />
