@@ -469,6 +469,38 @@ async function syncEntitlementsFromZoho(db, getLeadByEmail, searchIlUserByEmail,
         reason: `${status} grants no programme access — nothing to apply`,
       };
     }
+
+    /*
+     * A status naming a programme says this person registered, so an account
+     * should exist. Refusing here made that permanent: the registration webhook
+     * is the only thing that ever creates one, and if it missed — a deploy, a
+     * timeout, a workflow that did not fire — nothing tried again. Learners sat
+     * unable to log in while CX received the same alert on every status edit.
+     *
+     * Provisioning reads IL_Registration, which is where the credentials
+     * actually live, so a status change can now heal the gap instead of only
+     * reporting it. Guarded so this runs once: if provisioning succeeds the
+     * account exists and the ordinary path below applies the entitlements.
+     */
+    if (deps?.provisionMissing && !deps.__healed) {
+      const created = await deps.provisionMissing(trimmed).catch((err) => ({
+        ok: false,
+        reason: err?.message || 'provisioning failed',
+      }));
+      if (created?.ok) {
+        return syncEntitlementsFromZoho(db, getLeadByEmail, searchIlUserByEmail, email, body, {
+          ...deps,
+          __healed: true,
+        });
+      }
+      return {
+        ok: false,
+        reason: `No LMS account for this email, and provisioning it failed: ${
+          created?.reason || 'unknown reason'
+        }`,
+      };
+    }
+
     return { ok: false, reason: 'No LMS account for this email — nothing to refresh' };
   }
 

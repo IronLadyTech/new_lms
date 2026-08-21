@@ -878,7 +878,11 @@ module.exports = {
     provisioning.provisionUserFromEmail(db, getLeadByEmail, searchIlUserByEmail, email),
   /** Lead Status changed in Zoho — refresh entitlements, create nothing. */
   syncEntitlementsFromZoho: (db, email, body) =>
-    provisioning.syncEntitlementsFromZoho(db, getLeadByEmail, searchIlUserByEmail, email, body),
+    provisioning.syncEntitlementsFromZoho(db, getLeadByEmail, searchIlUserByEmail, email, body, {
+      // Reads IL_Registration as well as Leads and IL_Users, so a status change
+      // can create the account the registration webhook never did.
+      provisionMissing: (addr) => provisionUserForBatchSync(db, addr),
+    }),
   provisionFromRegistrationWebhook: async (db, body) => {
     const result = await provisioning.provisionFromRegistrationWebhook(db, body, {
       getLeadByEmail,
