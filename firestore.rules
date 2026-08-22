@@ -320,6 +320,16 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    /*
+     * Sync state: the reconciler's watermark and the shared Zoho access token.
+     * Written by Cloud Functions through the admin SDK, which bypasses these
+     * rules. Closed to every client — the token grants CRM access, and nothing
+     * in the app has any reason to read either value.
+     */
+    match /sync_state/{docId} {
+      allow read, write: if false;
+    }
+
     match /mbw_tasks/{taskId} {
       allow read: if canUseApp();
       allow write: if hasAdminAccess();

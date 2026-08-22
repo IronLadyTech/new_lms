@@ -51,9 +51,52 @@ function getZohoLeadId(profile) {
   return profile?.zohoLeadId || profile?.zohoContactId || null;
 }
 
+/**
+ * Where the access token is shared between function instances.
+ *
+ * In-memory caching alone is per-container, and there are a lot of containers:
+ * the webhook scales out under load, the reconciler wakes every three minutes,
+ * the profile trigger fires on every write, and each cold start refreshed its
+ * own token. Zoho allows only a handful of refreshes a minute, so the fleet
+ * rate-limited itself — "You have made too many requests continuously" — and
+ * every Zoho call failed with an invalid token until it cleared.
+ *
+ * One shared record collapses that back to roughly one refresh an hour.
+ */
+const TOKEN_DOC = 'sync_state/zohoToken';
+
+async function readSharedToken() {
+  try {
+    const snap = await admin.firestore().doc(TOKEN_DOC).get();
+    if (!snap.exists) return null;
+    const { token, expiresAt } = snap.data() || {};
+    if (!token || !expiresAt) return null;
+    return Date.now() < expiresAt ? { token, expiresAt } : null;
+  } catch {
+    // A cache that cannot be read must not stop the call it was speeding up.
+    return null;
+  }
+}
+
+async function writeSharedToken(token, expiresAt) {
+  try {
+    await admin.firestore().doc(TOKEN_DOC).set({ token, expiresAt, at: new Date() });
+  } catch {
+    /* best effort */
+  }
+}
+
 async function getAccessToken() {
   if (!isConfigured()) return null;
   if (cachedAccessToken && Date.now() < tokenExpiry) return cachedAccessToken;
+
+  // Another instance may have refreshed seconds ago; reuse rather than ask again.
+  const shared = await readSharedToken();
+  if (shared) {
+    cachedAccessToken = shared.token;
+    tokenExpiry = shared.expiresAt;
+    return cachedAccessToken;
+  }
 
   const res = await fetch(`${getAccountsDomain()}/oauth/v2/token`, {
     method: 'POST',
@@ -72,8 +115,13 @@ async function getAccessToken() {
   }
 
   const data = await res.json();
+  if (!data?.access_token) {
+    console.warn('Zoho token refresh returned no token', JSON.stringify(data));
+    return null;
+  }
   cachedAccessToken = data.access_token;
   tokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
+  await writeSharedToken(cachedAccessToken, tokenExpiry);
   return cachedAccessToken;
 }
 
