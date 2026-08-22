@@ -15,6 +15,7 @@ const ilRegistration = require('./zohoIlRegistration');
 const leadsCohort = require('./zohoLeadsCohort');
 const { readPasswordFromLead } = require('./zohoFieldMap');
 const { FAILURES } = require('./syncAlerts');
+const reconciler = require('./zohoReconcile');
 
 const DEFAULT_API_DOMAIN = 'https://www.zohoapis.in';
 const DEFAULT_MODULE = 'Leads';
@@ -831,6 +832,68 @@ async function provisionUserForBatchSync(fs, email) {
   return provisioning.provisionFromRecord(fs, record, { skipUnpaidCheck: true });
 }
 
+/**
+ * Run one reconciler pass.
+ *
+ * Wires the pure loop in zohoReconcile.js to Zoho and Firestore. Provisioning
+ * reuses provisionUserForBatchSync because it already reads all three modules —
+ * Leads, IL_Users and IL_Registration — and IL_Registration is where the
+ * credentials actually live.
+ */
+async function runZohoReconcile(db, options = {}) {
+  const reconcileDeps = {
+    readWatermark: async () => {
+      const snap = await db.doc(reconciler.WATERMARK_DOC).get();
+      return snap.exists ? snap.data()?.ilUsersModifiedSince || null : null;
+    },
+    writeWatermark: async (value) => {
+      await db.doc(reconciler.WATERMARK_DOC).set(
+        { ilUsersModifiedSince: value, lastRunAt: new Date() },
+        { merge: true }
+      );
+    },
+    queryIlUsers: async (since, limit) => {
+      const token = await getAccessToken();
+      const query = reconciler.buildQuery(since, ilUsers.getIlUsersModule(), limit);
+      // Same version ladder the registration reader uses: Zoho answers an
+      // unsupported endpoint and an invalid column with the same opaque error,
+      // so a single attempt cannot tell "no records" from "never ran".
+      let lastError = null;
+      for (const version of ['v7', 'v6', 'v2']) {
+        const res = await fetch(`${getApiDomain()}/crm/${version}/coql`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Zoho-oauthtoken ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ select_query: query }),
+        });
+        if (res.status === 204) return [];
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          lastError = `${version}: ${body?.message || `HTTP ${res.status}`}`;
+          continue;
+        }
+        const body = await res.json();
+        return body?.data || [];
+      }
+      throw new Error(`IL_Users COQL failed — ${lastError || 'no version accepted the query'}`);
+    },
+    hasAccount: async (email) => {
+      const found = await provisioning.getAuthUserByEmail(email);
+      return Boolean(found);
+    },
+    provision: (email) => provisionUserForBatchSync(db, email),
+    applyEntitlements: (email) =>
+      provisioning.syncEntitlementsFromZoho(db, getLeadByEmail, searchIlUserByEmail, email, null, {
+        provisionMissing: (addr) => provisionUserForBatchSync(db, addr),
+      }),
+    recordFailure: (email, message) => recordSyncFailure(db, email, message),
+  };
+
+  return reconciler.runReconcile(reconcileDeps, options);
+}
+
 function buildBatchSyncDeps(db) {
   return {
     db,
@@ -861,6 +924,7 @@ async function runUserBatchSync(db, email, opts = {}) {
 }
 
 module.exports = {
+  runZohoReconcile: (db, options) => runZohoReconcile(db, options),
   /** Exported for the outbound-payload test — see zohoOutbound.test.js. */
   profileToLeadFields,
   toZohoDateTime,

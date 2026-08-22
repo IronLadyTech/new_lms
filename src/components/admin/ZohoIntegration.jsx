@@ -15,6 +15,7 @@ import {
   testZohoConnection,
   syncAllUsersToZoho,
   backfillEntitlements,
+  previewReconcile,
   syncUserToZohoById,
   provisionUserFromZoho,
   listZohoLeads,
@@ -224,6 +225,8 @@ export default function ZohoIntegration({ users = [] }) {
     }
   };
 
+  const [reconciling, setReconciling] = useState(false);
+  const [reconcileResult, setReconcileResult] = useState(null);
   const [backfilling, setBackfilling] = useState(false);
   const [backfillResult, setBackfillResult] = useState(null);
 
@@ -238,6 +241,19 @@ export default function ZohoIntegration({ users = [] }) {
       setError(e.message || 'Bulk sync failed');
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const handleReconcilePreview = async () => {
+    setReconciling(true);
+    setError('');
+    setReconcileResult(null);
+    try {
+      setReconcileResult(await previewReconcile(50));
+    } catch (e) {
+      setError(e.message || 'Reconcile preview failed');
+    } finally {
+      setReconciling(false);
     }
   };
 
@@ -556,6 +572,51 @@ export default function ZohoIntegration({ users = [] }) {
           <RefreshCw size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} />
           {syncing ? 'Pushing to Zoho…' : 'Push all LMS users to Zoho'}
         </button>
+      </div>
+
+      <div className="card card-pad" style={{ marginBottom: '1rem' }}>
+        <h3>Reconciler</h3>
+        <p className="muted">
+          Runs every 3 minutes on its own, asking Zoho what changed in IL Users and provisioning or
+          refreshing anything the webhooks missed. This button shows what the next pass would do
+          without doing any of it.
+        </p>
+        <div className="admin-actions-row">
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={handleReconcilePreview}
+            disabled={reconciling || !configured}
+          >
+            {reconciling ? 'Checking…' : 'Preview next pass'}
+          </button>
+        </div>
+        {reconcileResult && (
+          <div
+            className={reconcileResult.ok === false ? 'alert alert-error' : 'alert alert-success'}
+            role="status"
+            style={{ marginTop: '0.75rem' }}
+          >
+            {reconcileResult.ok === false ? (
+              reconcileResult.reason
+            ) : (
+              <>
+                Since <code>{reconcileResult.since}</code> — {reconcileResult.scanned} changed
+                record{reconcileResult.scanned === 1 ? '' : 's'}.{' '}
+                <strong>{reconcileResult.sample?.filter((s) => s.action === 'provision').length || 0}</strong>{' '}
+                would be provisioned,{' '}
+                <strong>{reconcileResult.sample?.filter((s) => s.action === 'entitlements').length || 0}</strong>{' '}
+                refreshed, {reconcileResult.skipped} skipped.
+                {reconcileResult.sample?.length > 0 && (
+                  <span className="muted">
+                    {' '}
+                    e.g. {reconcileResult.sample.slice(0, 5).map((s) => s.email).join(', ')}
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="card card-pad" style={{ marginBottom: '1rem' }}>

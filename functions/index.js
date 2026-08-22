@@ -734,6 +734,72 @@ exports.zohoBackfillEntitlements = onCall(ZOHO_BULK_SYNC_OPTS, async (request) =
   };
 });
 
+/**
+ * The reconciler, on a timer.
+ *
+ * Every other route into the LMS is Zoho choosing to push — the conversion
+ * functions on payment, the status rule on a Lead Status edit. Both are the
+ * same mechanism, so when Zoho does not fire they fail together and nothing
+ * ever tries again. This asks the opposite question every three minutes: what
+ * changed in IL Users, and have I handled it?
+ *
+ * Three minutes because a learner who has just been emailed their credentials
+ * tries to use them immediately. The instant path still exists — a first login
+ * provisions on the spot — so this is the backstop for everyone who does not
+ * try straight away, or whose credential does not match.
+ */
+exports.zohoReconcileLearners = onSchedule(
+  {
+    schedule: '*/3 * * * *',
+    timeZone: 'Asia/Kolkata',
+    timeoutSeconds: 300,
+    memory: '512MiB',
+    // One pass at a time. Two overlapping runs would read the same watermark
+    // and do the same work twice.
+    maxInstances: 1,
+  },
+  async () => {
+    if (!zoho.isConfigured()) return;
+    try {
+      const result = await zoho.runZohoReconcile(db, {});
+      if (result.provisioned || result.refreshed || result.failed) {
+        console.log(
+          `Reconcile: scanned ${result.scanned}, provisioned ${result.provisioned}, ` +
+            `refreshed ${result.refreshed}, failed ${result.failed}`
+        );
+      }
+    } catch (err) {
+      // Recorded rather than thrown: a schedule that crashes is retried by the
+      // platform with no watermark protection, and the digest is where a human
+      // will actually see this.
+      console.error('Reconcile pass failed:', err.message);
+      await db
+        .collection(FAILURES)
+        .add({
+          email: null,
+          message: `Reconciler pass failed: ${err.message}`,
+          direction: 'zoho-to-lms',
+          notified: false,
+          at: new Date(),
+        })
+        .catch(() => {});
+    }
+  }
+);
+
+/** Admin: see what the reconciler would do, without it doing anything. */
+exports.zohoReconcilePreview = onCall(ZOHO_BULK_SYNC_OPTS, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', 'Sign in required');
+  }
+  await zoho.assertAdmin(db, request.auth.uid);
+  if (!zoho.isConfigured()) {
+    return { ok: false, reason: 'Zoho secrets are not configured' };
+  }
+  const limit = Math.max(1, Math.min(Number(request.data?.limit) || 50, 200));
+  return zoho.runZohoReconcile(db, { dryRun: true, limit });
+});
+
 // ── Zoho CRM — admin: sync one user ───────────────────────────
 exports.zohoSyncUser = onCall(async (request) => {
   if (!request.auth?.uid) {

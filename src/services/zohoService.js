@@ -86,6 +86,12 @@ export async function provisionUserFromZoho(email) {
   return data;
 }
 
+/** See what the reconciler would do on its next pass, without it doing anything. */
+export async function previewReconcile(limit = 50) {
+  const { data } = await call('zohoReconcilePreview', { limit });
+  return data;
+}
+
 /**
  * Re-pull entitlements for every profile still on the old flat payment shape.
  * Dry run reports who would change and writes nothing.

@@ -599,6 +599,8 @@ async function provisionFromLoginCredentials(db, email, password, deps) {
 }
 
 module.exports = {
+  /** Used by the reconciler to tell a missing account from an existing one. */
+  getAuthUserByEmail,
   mergeProvisioningRecord,
   parseEntitlementsFromRecord,
   applyEntitlements,
