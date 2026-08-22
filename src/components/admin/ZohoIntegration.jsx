@@ -261,7 +261,9 @@ export default function ZohoIntegration({ users = [] }) {
     try {
       const res = await catchUpFrom(catchUpDate, { dryRun, limit: 200, offset });
       setCatchUpResult(res);
-      setCatchUpOffset(res?.more ? offset + (res.scanned || 0) : 0);
+      // The server pages through the window itself; an offset only comes back
+      // when a bound stopped it early.
+      setCatchUpOffset(res?.more ? res.nextOffset || 0 : 0);
     } catch (e) {
       setError(e.message || 'Catch-up failed');
     } finally {
@@ -642,7 +644,8 @@ export default function ZohoIntegration({ users = [] }) {
             style={{ marginTop: '0.75rem' }}
           >
             {catchUpResult.scanned} changed record{catchUpResult.scanned === 1 ? '' : 's'} since{' '}
-            <code>{catchUpDate}</code>.{' '}
+            <code>{catchUpDate}</code>
+            {catchUpResult.pages > 1 ? ` across ${catchUpResult.pages} pages` : ''}.{' '}
             {catchUpResult.dryRun ? (
               <>
                 <strong>
@@ -658,7 +661,7 @@ export default function ZohoIntegration({ users = [] }) {
             )}
             {catchUpResult.more && (
               <>
-                <span className="muted"> More remain.</span>{' '}
+                <span className="muted"> Stopped early — more remain.</span>{' '}
                 <button
                   type="button"
                   className="btn btn-outline btn-sm"

@@ -847,13 +847,64 @@ exports.zohoCatchUp = onCall(ZOHO_BULK_SYNC_OPTS, async (request) => {
     throw new HttpsError('invalid-argument', 'Start date is in the future');
   }
 
-  return zoho.runZohoReconcile(db, {
-    since: from.toISOString(),
-    dryRun: dryRun !== false,
-    limit: Math.max(1, Math.min(Number(limit) || 100, 200)),
-    offset: Math.max(0, Number(offset) || 0),
-    stopOnFailure: false,
-  });
+  const pageSize = Math.max(1, Math.min(Number(limit) || 200, 200));
+  const isDry = dryRun !== false;
+
+  /*
+   * Page through the whole window here rather than making a human click once
+   * per two hundred records. Bounded three ways: a page cap, a wall-clock
+   * budget short of the function timeout, and stopping the moment Zoho says
+   * there is nothing more.
+   */
+  const MAX_PAGES = 12;
+  const BUDGET_MS = 6 * 60 * 1000;
+  const startedAt = Date.now();
+
+  const total = {
+    ok: true,
+    dryRun: isDry,
+    scanned: 0,
+    provisioned: 0,
+    refreshed: 0,
+    skipped: 0,
+    failed: 0,
+    pages: 0,
+    sample: [],
+  };
+
+  let cursor = Math.max(0, Number(offset) || 0);
+
+  for (let page = 0; page < MAX_PAGES; page += 1) {
+    const res = await zoho.runZohoReconcile(db, {
+      since: from.toISOString(),
+      dryRun: isDry,
+      limit: pageSize,
+      offset: cursor,
+      stopOnFailure: false,
+    });
+
+    total.scanned += res.scanned || 0;
+    total.provisioned += res.provisioned || 0;
+    total.refreshed += res.refreshed || 0;
+    total.skipped += res.skipped || 0;
+    total.failed += res.failed || 0;
+    total.pages += 1;
+    if (total.sample.length < 20 && res.sample?.length) {
+      total.sample.push(...res.sample.slice(0, 20 - total.sample.length));
+    }
+
+    cursor += res.scanned || 0;
+    if (!res.more) {
+      total.more = false;
+      break;
+    }
+    total.more = true;
+    // Leave the caller somewhere to resume from if a bound stopped us early.
+    total.nextOffset = cursor;
+    if (Date.now() - startedAt > BUDGET_MS) break;
+  }
+
+  return total;
 });
 
 /** Admin: see what the reconciler would do, without it doing anything. */
