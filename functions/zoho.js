@@ -864,28 +864,41 @@ async function runZohoReconcile(db, options = {}) {
     },
     queryIlUsers: async (since, limit, offset = 0) => {
       const token = await getAccessToken();
-      const query = reconciler.buildQuery(since, ilUsers.getIlUsersModule(), limit, offset);
+      /*
+       * Filtered first, unfiltered as a fallback. The filter cuts out the ~97%
+       * of IL Users edits that touch nothing to do with access, but if this
+       * Zoho org rejects the compound condition the reconciler must keep
+       * working rather than stop on a refinement.
+       */
+      let query = reconciler.buildQuery(since, ilUsers.getIlUsersModule(), limit, offset, true);
+      let usedFallback = false;
       // Same version ladder the registration reader uses: Zoho answers an
       // unsupported endpoint and an invalid column with the same opaque error,
       // so a single attempt cannot tell "no records" from "never ran".
       let lastError = null;
-      for (const version of ['v7', 'v6', 'v2']) {
-        const res = await fetch(`${getApiDomain()}/crm/${version}/coql`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Zoho-oauthtoken ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ select_query: query }),
-        });
-        if (res.status === 204) return [];
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          lastError = `${version}: ${body?.message || `HTTP ${res.status}`}`;
-          continue;
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        for (const version of ['v7', 'v6', 'v2']) {
+          const res = await fetch(`${getApiDomain()}/crm/${version}/coql`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Zoho-oauthtoken ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ select_query: query }),
+          });
+          if (res.status === 204) return [];
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            lastError = `${version}: ${body?.message || `HTTP ${res.status}`}`;
+            continue;
+          }
+          const body = await res.json();
+          return body?.data || [];
         }
-        const body = await res.json();
-        return body?.data || [];
+        if (usedFallback) break;
+        console.warn(`IL_Users filtered query rejected (${lastError}); retrying unfiltered`);
+        query = reconciler.buildQuery(since, ilUsers.getIlUsersModule(), limit, offset, false);
+        usedFallback = true;
       }
       throw new Error(`IL_Users COQL failed — ${lastError || 'no version accepted the query'}`);
     },

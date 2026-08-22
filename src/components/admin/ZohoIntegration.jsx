@@ -227,6 +227,7 @@ export default function ZohoIntegration({ users = [] }) {
   };
 
   const [catchUpDate, setCatchUpDate] = useState('2026-08-01');
+  const [catchUpOffset, setCatchUpOffset] = useState(0);
   const [catchingUp, setCatchingUp] = useState(false);
   const [catchUpResult, setCatchUpResult] = useState(null);
   const [reconciling, setReconciling] = useState(false);
@@ -248,12 +249,19 @@ export default function ZohoIntegration({ users = [] }) {
     }
   };
 
-  const handleCatchUp = async (dryRun) => {
+  /*
+   * `continueFrom` matters: without it every "run it again" re-read the same
+   * first page, so a window larger than one batch could never be worked
+   * through. A fresh check always restarts at the beginning.
+   */
+  const handleCatchUp = async (dryRun, continueFrom = false) => {
+    const offset = continueFrom ? catchUpOffset : 0;
     setCatchingUp(true);
     setError('');
-    setCatchUpResult(null);
     try {
-      setCatchUpResult(await catchUpFrom(catchUpDate, { dryRun, limit: 200 }));
+      const res = await catchUpFrom(catchUpDate, { dryRun, limit: 200, offset });
+      setCatchUpResult(res);
+      setCatchUpOffset(res?.more ? offset + (res.scanned || 0) : 0);
     } catch (e) {
       setError(e.message || 'Catch-up failed');
     } finally {
@@ -648,7 +656,19 @@ export default function ZohoIntegration({ users = [] }) {
                 {catchUpResult.refreshed}, failed {catchUpResult.failed}.
               </>
             )}
-            {catchUpResult.more && <span className="muted"> More remain — run it again.</span>}
+            {catchUpResult.more && (
+              <>
+                <span className="muted"> More remain.</span>{' '}
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => handleCatchUp(catchUpResult.dryRun, true)}
+                  disabled={catchingUp}
+                >
+                  Continue from {catchUpOffset}
+                </button>
+              </>
+            )}
             {catchUpResult.sample?.length > 0 && (
               <span className="muted">
                 {' '}

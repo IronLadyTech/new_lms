@@ -72,10 +72,27 @@ function toCoqlTime(iso) {
   return `${new Date(iso).toISOString().slice(0, 19)}+00:00`;
 }
 
-function buildQuery(sinceIso, module, limit, offset = 0) {
+/**
+ * Ask only for records that could possibly need something.
+ *
+ * IL Users is edited constantly for names, phone numbers and group membership,
+ * none of which touches access — in practice about 97% of what changes in any
+ * window is noise. Filtering to records naming a programme turns a sweep of
+ * thousands into a sweep of dozens, which is the difference between a catch-up
+ * that pages for an hour and one that finishes in a pass.
+ *
+ * `withFilter: false` produces the unfiltered form, which the caller falls back
+ * to if Zoho rejects the compound condition. A reconciler that stops working
+ * because of a query refinement would be a bad trade.
+ */
+function buildQuery(sinceIso, module, limit, offset = 0, withFilter = true) {
+  const since = `(Modified_Time > '${toCoqlTime(sinceIso)}')`;
+  const named =
+    '((Program_Registration_Details is not null) or (Program_Enrollment_Details is not null))';
+  const where = withFilter ? `(${since} and ${named})` : since;
   return (
     `select ${IL_USERS_FIELDS.join(',')} from ${module} ` +
-    `where Modified_Time > '${toCoqlTime(sinceIso)}' ` +
+    `where ${where} ` +
     `order by Modified_Time asc limit ${limit} offset ${offset}`
   );
 }
