@@ -2,6 +2,7 @@ import { ChevronDown, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { BM100_SECTION_STATUS } from '../../../data/bm100ProgramStructure';
 import ProgramLessonList from '../../mbw/program/ProgramLessonList';
+import RefreshAccessButton from '../../ui/RefreshAccessButton';
 import {
   getLessonRowState,
   getTaskTypeIcon,
@@ -161,6 +162,9 @@ export default function BM100ProgramSection({
                 {section.unlockCta.label}
               </Link>
             )}
+            {/* Only where payment is the reason. A sequence lock will not lift
+                however many times Zoho is asked. */}
+            {paymentLocked && <RefreshAccessButton />}
           </div>
         )}
       </div>

@@ -907,6 +907,53 @@ exports.zohoCatchUp = onCall(ZOHO_BULK_SYNC_OPTS, async (request) => {
   return total;
 });
 
+/**
+ * "I just paid — why is this still locked?"
+ *
+ * The webhook normally unlocks within a second and the reconciler catches
+ * anything it drops, but the reconciler runs on a timer, and the worst moment
+ * to wait three minutes is right after paying. This lets the learner — or their
+ * sign-in — pull their own entitlements immediately.
+ *
+ * Called by learners, not staff, so it is deliberately narrow: it reads
+ * request.auth.uid and nothing else, so nobody can refresh, inspect, or
+ * influence another account with it.
+ *
+ * Throttled hard. Every call costs Zoho lookups, and this fleet rate-limited
+ * itself out of Zoho once already today by asking too often. Inside the window
+ * it returns the cached answer without touching Zoho at all, so a learner
+ * leaning on the button costs nothing.
+ */
+const SELF_REFRESH_THROTTLE_MS = 60 * 1000;
+
+exports.refreshMyAccess = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError('unauthenticated', 'Sign in required');
+  if (!zoho.isConfigured()) return { ok: false, reason: 'not-configured' };
+
+  const snap = await db.collection('users').doc(uid).get();
+  if (!snap.exists) return { ok: false, reason: 'no-profile' };
+
+  const profile = snap.data() || {};
+  const email = (profile.email || '').trim();
+  if (!email) return { ok: false, reason: 'no-email' };
+
+  const lastSynced = profile.zohoEntitlementsSyncedAt?.toMillis?.()
+    ?? (profile.zohoEntitlementsSyncedAt ? new Date(profile.zohoEntitlementsSyncedAt).getTime() : 0);
+  if (lastSynced && Date.now() - lastSynced < SELF_REFRESH_THROTTLE_MS) {
+    return { ok: true, throttled: true, syncedAt: lastSynced };
+  }
+
+  try {
+    const result = await zoho.syncEntitlementsFromZoho(db, email, null);
+    return { ok: result?.ok !== false, throttled: false, reason: result?.reason || null };
+  } catch (err) {
+    // A refresh that cannot reach Zoho must not look like a refused payment.
+    console.warn('refreshMyAccess failed for', email, err.message);
+    return { ok: false, reason: 'zoho-unreachable' };
+  }
+});
+
 /** Admin: see what the reconciler would do, without it doing anything. */
 exports.zohoReconcilePreview = onCall(ZOHO_BULK_SYNC_OPTS, async (request) => {
   if (!request.auth?.uid) {

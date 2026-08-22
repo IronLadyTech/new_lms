@@ -1,6 +1,7 @@
 import { ChevronDown, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { MBW_SECTION_STATUS } from '../../../data/mbwProgramStructure';
+import RefreshAccessButton from '../../ui/RefreshAccessButton';
 import ProgramLessonList from './ProgramLessonList';
 import {
   getLessonRowState,
@@ -186,6 +187,9 @@ export default function MBWProgramSection({
               showLockIcon
               tooltip={paymentLocked ? REGISTRATION_PAYMENT_LOCK_TOOLTIP : lockDisplay.message}
             />
+            {/* Only where payment is the reason. A sequence lock will not lift
+                however many times Zoho is asked. */}
+            {paymentLocked && <RefreshAccessButton />}
           </div>
         ) : !progress.unlocked && lockDisplay ? (
           /*

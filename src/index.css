@@ -15050,6 +15050,34 @@ textarea:focus-visible,
   }
 }
 
+/*
+ * "Just paid? Refresh access" — shown only where payment is the reason a
+ * section is locked. Sits under the lock message as a quiet secondary action:
+ * the padlock is the message, this is just a way to re-ask.
+ */
+.refresh-access {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  margin-top: var(--space-sm);
+}
+
+.refresh-access__spin {
+  animation: refresh-access-turn 900ms linear infinite;
+}
+
+@keyframes refresh-access-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .refresh-access__spin {
+    animation: none;
+  }
+}
+
 /* ── Route loader ───────────────────────────────────────────────────────────
  * Shown while a lazily-loaded route arrives. Replaces a bare skeleton, which
  * said only "something is slow"; this narrates the wait in the language of the

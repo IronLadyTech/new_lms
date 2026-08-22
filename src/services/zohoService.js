@@ -86,6 +86,22 @@ export async function provisionUserFromZoho(email) {
   return data;
 }
 
+/**
+ * Pull this learner's own entitlements from Zoho, now.
+ *
+ * Throttled server-side, so calling it repeatedly is free after the first.
+ * Resolves to null rather than throwing: a failed refresh should leave the page
+ * exactly as it was, never break it.
+ */
+export async function refreshMyAccess() {
+  try {
+    const { data } = await call('refreshMyAccess', {});
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 /** Run the reconciler over a window that has already passed. Dry run by default. */
 export async function catchUpFrom(since, { dryRun = true, limit = 100, offset = 0 } = {}) {
   const { data } = await call('zohoCatchUp', { since, dryRun, limit, offset });

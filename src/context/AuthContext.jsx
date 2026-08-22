@@ -18,6 +18,7 @@ import {
 } from '../services/userService';
 import { initNotifications } from '../services/notificationService';
 import {
+  refreshMyAccess,
   syncPasswordResetToZoho,
   syncCredentialBeforeReset,
   ensureZohoUserOnLogin,
@@ -40,6 +41,18 @@ function deferZohoCredentialSync(password, options = {}) {
   syncPasswordResetToZoho(password, options).catch((err) => {
     console.warn('Zoho credential sync (background):', err?.message || err);
   });
+}
+
+/**
+ * Pull entitlements on the way in.
+ *
+ * Somebody who has just paid signs in to see what they bought, and that is the
+ * worst possible moment to be waiting on the next reconciler pass. Fired and
+ * forgotten so it never delays the sign-in itself, and throttled on the server
+ * so repeated logins cost nothing.
+ */
+function deferEntitlementRefresh() {
+  refreshMyAccess().catch(() => {});
 }
 
 function applyGuestSession(setUser, setProfile) {
@@ -136,6 +149,7 @@ export function AuthProvider({ children }) {
     await createUserProfile(cred.user.uid, { email, displayName, role: ROLES.STUDENT });
     await loadProfile(cred.user);
     deferZohoCredentialSync(password, { phase: 'login' });
+    deferEntitlementRefresh();
     return cred.user;
   };
 
@@ -158,6 +172,7 @@ export function AuthProvider({ children }) {
       }
       await loadProfile(cred.user);
       deferZohoCredentialSync(password, { phase: 'login' });
+    deferEntitlementRefresh();
       return cred.user;
     } catch (err) {
       if (err?.code !== 'auth/invalid-credential' && err?.code !== 'auth/user-not-found') {
@@ -219,6 +234,7 @@ export function AuthProvider({ children }) {
     }
     await loadProfile(cred.user);
     deferZohoCredentialSync(password, { phase: 'login' });
+    deferEntitlementRefresh();
     return cred.user;
   };
 
