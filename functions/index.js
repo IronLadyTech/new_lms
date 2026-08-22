@@ -814,6 +814,48 @@ exports.zohoReconcileLearners = onSchedule(
   }
 );
 
+/**
+ * Catch-up: run the reconciler over a window that has already passed.
+ *
+ * The scheduled pass only ever looks forward from its watermark, so learners
+ * lost before it existed are invisible to it — the registrations dropped
+ * between the ninth and the seventeenth of August among them. This points the
+ * same logic at a date the caller chooses.
+ *
+ * The live watermark is untouched: a sweep of last month has no business
+ * rewinding what the scheduled pass is tracking now.
+ *
+ * Unlike the scheduled pass it does not stop at the first failure. There is no
+ * watermark to protect here, and the point is to rescue as many of a known list
+ * as possible rather than to halt on one bad record.
+ */
+exports.zohoCatchUp = onCall(ZOHO_BULK_SYNC_OPTS, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', 'Sign in required');
+  }
+  await zoho.assertAdmin(db, request.auth.uid);
+  if (!zoho.isConfigured()) {
+    return { ok: false, reason: 'Zoho secrets are not configured' };
+  }
+
+  const { since, dryRun = true, limit = 100, offset = 0 } = request.data || {};
+  const from = new Date(since);
+  if (!since || Number.isNaN(from.getTime())) {
+    throw new HttpsError('invalid-argument', 'A valid start date is required');
+  }
+  if (from.getTime() > Date.now()) {
+    throw new HttpsError('invalid-argument', 'Start date is in the future');
+  }
+
+  return zoho.runZohoReconcile(db, {
+    since: from.toISOString(),
+    dryRun: dryRun !== false,
+    limit: Math.max(1, Math.min(Number(limit) || 100, 200)),
+    offset: Math.max(0, Number(offset) || 0),
+    stopOnFailure: false,
+  });
+});
+
 /** Admin: see what the reconciler would do, without it doing anything. */
 exports.zohoReconcilePreview = onCall(ZOHO_BULK_SYNC_OPTS, async (request) => {
   if (!request.auth?.uid) {

@@ -86,6 +86,12 @@ export async function provisionUserFromZoho(email) {
   return data;
 }
 
+/** Run the reconciler over a window that has already passed. Dry run by default. */
+export async function catchUpFrom(since, { dryRun = true, limit = 100, offset = 0 } = {}) {
+  const { data } = await call('zohoCatchUp', { since, dryRun, limit, offset });
+  return data;
+}
+
 /** See what the reconciler would do on its next pass, without it doing anything. */
 export async function previewReconcile(limit = 50) {
   const { data } = await call('zohoReconcilePreview', { limit });

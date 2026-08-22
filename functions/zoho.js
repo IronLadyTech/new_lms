@@ -841,20 +841,30 @@ async function provisionUserForBatchSync(fs, email) {
  * credentials actually live.
  */
 async function runZohoReconcile(db, options = {}) {
+  /*
+   * A catch-up names its own start date and must not touch the live watermark.
+   * The scheduled pass is tracking the present; a sweep of last month has no
+   * business rewinding it, and writing a month-old timestamp back would make
+   * the next scheduled pass re-read everything since.
+   */
+  const catchUpFrom = options.since || null;
+
   const reconcileDeps = {
     readWatermark: async () => {
+      if (catchUpFrom) return catchUpFrom;
       const snap = await db.doc(reconciler.WATERMARK_DOC).get();
       return snap.exists ? snap.data()?.ilUsersModifiedSince || null : null;
     },
     writeWatermark: async (value) => {
+      if (catchUpFrom) return;
       await db.doc(reconciler.WATERMARK_DOC).set(
         { ilUsersModifiedSince: value, lastRunAt: new Date() },
         { merge: true }
       );
     },
-    queryIlUsers: async (since, limit) => {
+    queryIlUsers: async (since, limit, offset = 0) => {
       const token = await getAccessToken();
-      const query = reconciler.buildQuery(since, ilUsers.getIlUsersModule(), limit);
+      const query = reconciler.buildQuery(since, ilUsers.getIlUsersModule(), limit, offset);
       // Same version ladder the registration reader uses: Zoho answers an
       // unsupported endpoint and an invalid column with the same opaque error,
       // so a single attempt cannot tell "no records" from "never ran".

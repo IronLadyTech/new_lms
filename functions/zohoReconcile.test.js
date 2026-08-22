@@ -257,3 +257,64 @@ describe('a run · quiet periods', () => {
     expect(calls.watermarks).toEqual([]);
   });
 });
+
+/**
+ * Catch-up mode.
+ *
+ * The scheduled pass only looks forward from its watermark, so learners lost
+ * before it existed are invisible to it. Catch-up points the same logic at a
+ * chosen date — which means two behaviours have to change, and both are easy to
+ * get wrong in a way that only shows up in production.
+ */
+describe('catch-up', () => {
+  it('keeps going past a failure instead of stopping', async () => {
+    /*
+     * The scheduled pass stops so the watermark cannot advance past a failed
+     * record. Catch-up has no watermark to protect and is trying to rescue a
+     * known list, so halting on the first bad record would strand the rest.
+     */
+    const rows = [
+      row({ id: '1', Email: 'boom@example.com' }),
+      row({ id: '2', Email: 'fine@example.com' }),
+    ];
+    const { deps, calls } = harness(rows, { provisionResult: { ok: false, reason: 'x' } });
+    const r = await runReconcile(deps, { now: NOW, stopOnFailure: false });
+
+    expect(calls.provisioned).toEqual(['boom@example.com', 'fine@example.com']);
+    expect(r.failed).toBe(2);
+  });
+
+  it('still stops by default, so the scheduled pass is unaffected', async () => {
+    const rows = [
+      row({ id: '1', Email: 'boom@example.com' }),
+      row({ id: '2', Email: 'later@example.com' }),
+    ];
+    const { deps, calls } = harness(rows, { provisionResult: { ok: false, reason: 'x' } });
+    await runReconcile(deps, { now: NOW });
+    expect(calls.provisioned).toEqual(['boom@example.com']);
+  });
+
+  it('reports when a full page came back, so the caller can ask for the next', async () => {
+    const rows = [row({ id: '1' }), row({ id: '2', Email: 'b@example.com' })];
+    const { deps } = harness(rows);
+    const r = await runReconcile(deps, { now: NOW, limit: 2 });
+    expect(r.more).toBe(true);
+  });
+
+  it('does not claim more when the page came back short', async () => {
+    const { deps } = harness([row()]);
+    const r = await runReconcile(deps, { now: NOW, limit: 50 });
+    expect(r.more).toBe(false);
+  });
+
+  it('passes the offset through so pages do not repeat', async () => {
+    let seen = null;
+    const { deps } = harness([]);
+    deps.queryIlUsers = async (since, limit, offset) => {
+      seen = { limit, offset };
+      return [];
+    };
+    await runReconcile(deps, { now: NOW, limit: 25, offset: 50 });
+    expect(seen).toEqual({ limit: 25, offset: 50 });
+  });
+});

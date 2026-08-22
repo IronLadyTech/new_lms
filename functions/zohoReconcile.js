@@ -121,12 +121,24 @@ function decideAction(row, hasAccount) {
  * the next live one.
  */
 async function runReconcile(deps, options = {}) {
-  const { dryRun = false, limit = DEFAULT_BATCH, now = new Date() } = options;
+  const {
+    dryRun = false,
+    limit = DEFAULT_BATCH,
+    now = new Date(),
+    offset = 0,
+    /*
+     * The scheduled pass stops at the first failure so the watermark cannot
+     * advance past it. A catch-up over a fixed window has no watermark to
+     * protect and is trying to rescue a known list of people, so one bad record
+     * must not halt the sweep — it is recorded and the run continues.
+     */
+    stopOnFailure = true,
+  } = options;
 
   const previous = await deps.readWatermark();
   const since = queryFloor(previous, now);
 
-  const rows = await deps.queryIlUsers(since, limit);
+  const rows = await deps.queryIlUsers(since, limit, offset);
 
   const results = [];
   let highWater = previous || null;
@@ -170,7 +182,7 @@ async function runReconcile(deps, options = {}) {
       if (!highWater || new Date(row.Modified_Time) > new Date(highWater)) {
         highWater = row.Modified_Time;
       }
-    } else if (decision.ok === false) {
+    } else if (decision.ok === false && stopOnFailure) {
       break;
     }
   }
@@ -191,6 +203,8 @@ async function runReconcile(deps, options = {}) {
     skipped: results.filter((r) => r.action === 'skip').length,
     failed,
     watermark: dryRun ? previous : highWater,
+    // A full page back usually means there is another page behind it.
+    more: rows.length >= limit,
     // Enough to eyeball a dry run without dumping a cohort into a log line.
     sample: results.filter((r) => r.action !== 'skip').slice(0, 20),
   };

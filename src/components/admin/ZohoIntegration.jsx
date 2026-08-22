@@ -16,6 +16,7 @@ import {
   syncAllUsersToZoho,
   backfillEntitlements,
   previewReconcile,
+  catchUpFrom,
   syncUserToZohoById,
   provisionUserFromZoho,
   listZohoLeads,
@@ -225,6 +226,9 @@ export default function ZohoIntegration({ users = [] }) {
     }
   };
 
+  const [catchUpDate, setCatchUpDate] = useState('2026-08-01');
+  const [catchingUp, setCatchingUp] = useState(false);
+  const [catchUpResult, setCatchUpResult] = useState(null);
   const [reconciling, setReconciling] = useState(false);
   const [reconcileResult, setReconcileResult] = useState(null);
   const [backfilling, setBackfilling] = useState(false);
@@ -241,6 +245,19 @@ export default function ZohoIntegration({ users = [] }) {
       setError(e.message || 'Bulk sync failed');
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const handleCatchUp = async (dryRun) => {
+    setCatchingUp(true);
+    setError('');
+    setCatchUpResult(null);
+    try {
+      setCatchUpResult(await catchUpFrom(catchUpDate, { dryRun, limit: 200 }));
+    } catch (e) {
+      setError(e.message || 'Catch-up failed');
+    } finally {
+      setCatchingUp(false);
     }
   };
 
@@ -572,6 +589,74 @@ export default function ZohoIntegration({ users = [] }) {
           <RefreshCw size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} />
           {syncing ? 'Pushing to Zoho…' : 'Push all LMS users to Zoho'}
         </button>
+      </div>
+
+      <div className="card card-pad" style={{ marginBottom: '1rem' }}>
+        <h3>Catch up on a past window</h3>
+        <p className="muted">
+          The reconciler only looks forward from when it started, so learners lost before that are
+          invisible to it. This runs the same checks over a window that has already passed — for the
+          registrations dropped in August, start from the 1st. Check first; it creates real accounts.
+        </p>
+        <div
+          className="admin-actions-row"
+          style={{ flexWrap: 'wrap', gap: '0.5rem', alignItems: 'flex-end' }}
+        >
+          <label className="field" style={{ margin: 0, flex: '0 1 12rem' }}>
+            <span className="field-label">Changed since</span>
+            <input
+              type="date"
+              value={catchUpDate}
+              onChange={(e) => setCatchUpDate(e.target.value)}
+            />
+          </label>
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={() => handleCatchUp(true)}
+            disabled={catchingUp || !configured || !catchUpDate}
+          >
+            {catchingUp ? 'Checking…' : 'Check that window'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => handleCatchUp(false)}
+            disabled={catchingUp || !configured || !catchUpResult?.dryRun}
+          >
+            Create the missing accounts
+          </button>
+        </div>
+        {catchUpResult && (
+          <div
+            className={catchUpResult.failed ? 'alert alert-error' : 'alert alert-success'}
+            role="status"
+            style={{ marginTop: '0.75rem' }}
+          >
+            {catchUpResult.scanned} changed record{catchUpResult.scanned === 1 ? '' : 's'} since{' '}
+            <code>{catchUpDate}</code>.{' '}
+            {catchUpResult.dryRun ? (
+              <>
+                <strong>
+                  {catchUpResult.sample?.filter((s) => s.action === 'provision').length || 0}
+                </strong>{' '}
+                would be created, {catchUpResult.skipped} skipped.
+              </>
+            ) : (
+              <>
+                Created <strong>{catchUpResult.provisioned}</strong>, refreshed{' '}
+                {catchUpResult.refreshed}, failed {catchUpResult.failed}.
+              </>
+            )}
+            {catchUpResult.more && <span className="muted"> More remain — run it again.</span>}
+            {catchUpResult.sample?.length > 0 && (
+              <span className="muted">
+                {' '}
+                e.g. {catchUpResult.sample.slice(0, 5).map((s) => s.email).join(', ')}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="card card-pad" style={{ marginBottom: '1rem' }}>
