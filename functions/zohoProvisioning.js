@@ -11,6 +11,7 @@ const {
   accessTierFromPaymentStatus,
   maxPaymentStatus,
   paymentStatusFromRegistrationPayload,
+  PROGRAM_LENGTH_MONTHS,
 } = require('./accessTiers');
 const { parseLeadEntitlements, inferFromLeadStatus } = require('./zohoFieldMap');
 const { ilUserToCredentialFields } = require('./zohoIlUsers');
@@ -152,6 +153,52 @@ function programmesNamedOnRecord(record) {
     .filter(Boolean);
 }
 
+/**
+ * Per-programme tiers, read rather than inferred.
+ *
+ * Zoho states this outright on IL Users and always has: a programme named in
+ * Program_Registration_Details has had its registration fee paid, and one named
+ * in Program_Enrollment_Details has been paid in full. Two fields, per
+ * programme, no ambiguity.
+ *
+ * The LMS was reconstructing the same answer by pattern-matching Lead Status
+ * text — from Leads, the one module that auto-creates a duplicate record on
+ * every conversion and is authoritative for nobody. That guessing is what let a
+ * learner registered for two programmes and enrolled in one read as a single
+ * flat tier applied to both.
+ *
+ * Enrolment wins where a programme appears in both lists: it is the later and
+ * larger payment, and the registration entry is never removed when someone goes
+ * on to pay in full.
+ *
+ * Returns null — not an empty object — when the record names neither list, so
+ * the caller can tell "Zoho says nothing here" from "Zoho says no programmes"
+ * and fall back to the Lead Status reading instead of revoking everything.
+ */
+function tiersFromProgrammeLists(record) {
+  /*
+   * Restricted to the programmes we actually run. normalizeProgram lowercases
+   * whatever it is handed rather than refusing an unknown name, so without this
+   * a stray "Executive Bootcamp" becomes a programme id that no access check
+   * can ever satisfy and no entry can ever match.
+   */
+  const known = new Set(Object.keys(PROGRAM_LENGTH_MONTHS));
+  const split = (v) =>
+    String(v || '')
+      .split(',')
+      .map((x) => normalizeProgram(String(x).trim()))
+      .filter((id) => known.has(id));
+
+  const registered = split(record?.Program_Registration_Details);
+  const enrolled = split(record?.Program_Enrollment_Details);
+  if (!registered.length && !enrolled.length) return null;
+
+  const tiers = {};
+  for (const id of registered) tiers[id] = PAYMENT_STATUS.REGISTER;
+  for (const id of enrolled) tiers[id] = PAYMENT_STATUS.PAID;
+  return tiers;
+}
+
 async function applyEntitlements(db, uid, record, profile = {}) {
   const ent = parseEntitlementsFromRecord(record);
   if (!ent.email) return { applied: false, reason: 'No email on record' };
@@ -241,6 +288,31 @@ async function applyEntitlements(db, uid, record, profile = {}) {
       .reduce((best, next) => maxPaymentStatus(best, next), PAYMENT_STATUS.UNPAID);
     updates.paymentStatus = highest;
     updates.accessTier = accessTierFromPaymentStatus(highest);
+  }
+
+  /*
+   * The authoritative reading, when Zoho gives us one. Every programme named on
+   * the record is written at its own tier, so a learner registered for two and
+   * enrolled in one ends up with exactly that — rather than one tier inferred
+   * from a status string and applied to whichever programme it mentioned.
+   *
+   * Still ratchets within each programme, so a replay cannot demote anybody,
+   * and a programme refunded in this same pass is left to the refund branch.
+   */
+  const listedTiers = tiersFromProgrammeLists(record);
+  if (listedTiers) {
+    for (const [programId, tier] of Object.entries(listedTiers)) {
+      if (programId === refundedProgram) continue;
+      const previous = profile.programAccess?.[programId]?.paymentStatus;
+      const resolved = maxPaymentStatus(previous, tier);
+      updates[`programAccess.${programId}.paymentStatus`] = resolved;
+      if (
+        resolved === PAYMENT_STATUS.PAID &&
+        !profile.programAccess?.[programId]?.fullPaidAt
+      ) {
+        updates[`programAccess.${programId}.fullPaidAt`] = new Date();
+      }
+    }
   }
 
   if (!refundedProgram && ent.paymentStatus && ent.program) {
@@ -599,6 +671,7 @@ async function provisionFromLoginCredentials(db, email, password, deps) {
 }
 
 module.exports = {
+  tiersFromProgrammeLists,
   /** Used by the reconciler to tell a missing account from an existing one. */
   getAuthUserByEmail,
   mergeProvisioningRecord,
