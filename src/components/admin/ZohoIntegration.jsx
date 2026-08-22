@@ -655,6 +655,14 @@ export default function ZohoIntegration({ users = [] }) {
               <>
                 <strong>{backfillResult.needing}</strong> of {backfillResult.scanned} profiles need
                 it.
+                {backfillResult.breakdown && (
+                  <span className="muted">
+                    {' '}
+                    ({backfillResult.breakdown.flatTierGrantsAccess} carry a paid or registered
+                    tier, {backfillResult.breakdown.alreadyPerProgramme} already have per-programme
+                    access, {backfillResult.breakdown.enrolledInNothing} are enrolled in nothing)
+                  </span>
+                )}
                 {backfillResult.sample?.length > 0 && (
                   <span className="muted"> First few: {backfillResult.sample.join(', ')}</span>
                 )}

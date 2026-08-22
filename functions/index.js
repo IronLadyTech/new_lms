@@ -22,7 +22,12 @@ const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
 const zoho = require('./zoho');
 const { parseWebhookBody, hasWebhookCredentials } = require('./webhookBody');
-const { needsEntitlementBackfill } = require('./accessTiers');
+const {
+  needsEntitlementBackfill,
+  enrolledProgramIds,
+  normalizePaymentStatus,
+  PAYMENT_STATUS,
+} = require('./accessTiers');
 const { FAILURES, buildFailureDigest } = require('./syncAlerts');
 
 admin.initializeApp();
@@ -696,11 +701,33 @@ exports.zohoBackfillEntitlements = onCall(ZOHO_BULK_SYNC_OPTS, async (request) =
   const stale = snap.docs.filter((d) => needsEntitlementBackfill(d.data()));
 
   if (dryRun) {
+    /*
+     * A bare "0 need it" is indistinguishable from a selector that matches
+     * nothing, and the second is far more likely to be true than the first.
+     * The breakdown says which: if almost every profile is flat-unpaid or
+     * enrolled in nothing, zero is real; if many carry a paid tier and no
+     * per-programme entry, the selector is wrong.
+     */
+    let flatGranting = 0;
+    let noProgramme = 0;
+    let hasPerProgramme = 0;
+    snap.docs.forEach((d) => {
+      const p = d.data() || {};
+      if (normalizePaymentStatus(p.paymentStatus) !== PAYMENT_STATUS.UNPAID) flatGranting += 1;
+      if (!enrolledProgramIds(p).length) noProgramme += 1;
+      if (p.programAccess && Object.keys(p.programAccess).length) hasPerProgramme += 1;
+    });
+
     return {
       ok: true,
       dryRun: true,
       scanned: snap.size,
       needing: stale.length,
+      breakdown: {
+        flatTierGrantsAccess: flatGranting,
+        enrolledInNothing: noProgramme,
+        alreadyPerProgramme: hasPerProgramme,
+      },
       // Enough to eyeball before committing, not the whole list.
       sample: stale.slice(0, 20).map((d) => d.data().email),
     };
