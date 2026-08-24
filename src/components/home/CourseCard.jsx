@@ -9,7 +9,11 @@ import {
 import { getProgramTasksPath } from '../../utils/programTaskRoutes';
 import { PROGRAM_ACCESS } from '../../utils/programAccess';
 
-export default function CourseCard({ course, access = null, progress = null }) {
+/**
+ * `demote` is opt-in and defaults to false, so the original homepage renders
+ * unchanged. Only the experimental clone passes it.
+ */
+export default function CourseCard({ course, access = null, progress = null, demote = false }) {
   const meta = getCourseProgramMeta(course.code);
   const codeKey = (course.code || '').toLowerCase();
   const tasksPath = getProgramTasksPath(course.code);
@@ -61,7 +65,16 @@ export default function CourseCard({ course, access = null, progress = null }) {
 
         <div className="course-card__actions">
           {canAccess ? (
-            <Link to={tasksPath || courseHref} className="btn btn-primary btn-sm">
+            /*
+             * Demoted when Continue already points here. Two buttons to one
+             * destination, differently labelled, implies they differ — and four
+             * primary buttons on a screen leave none of them primary. The
+             * destination is unchanged; only its weight is.
+             */
+            <Link
+              to={tasksPath || courseHref}
+              className={`btn btn-sm ${demote ? 'btn-outline' : 'btn-primary'}`}
+            >
               {tasksPath ? 'Open tasks' : 'Continue'}
             </Link>
           ) : marketingUrl ? (

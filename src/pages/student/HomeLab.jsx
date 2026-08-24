@@ -170,6 +170,34 @@ export default function HomeLab() {
       .trim()
       .split(/\s+/)[0] || '';
   const continueCourse = getContinueProgram(profile, courses) || accessibleCourses[0] || null;
+
+  /*
+   * P0 — name the task, not the programme.
+   *
+   * Continue said "Open MBW tasks", which is the container a learner already
+   * knows they are in. It answered "which programme?" and left "which task?" —
+   * the actual question — for a programme page and a section list. Two screens
+   * and two decisions between opening the app and doing any work.
+   *
+   * Both engines already expose the next unlocked, unsubmitted task; nothing
+   * new is computed here. Null when there is nothing to resume, in which case
+   * the card falls back to naming the programme rather than inventing a task.
+   */
+  const resumeTarget = useMemo(() => {
+    const pick = (code, state) => {
+      const task = state?.task;
+      if (!task?.id) return null;
+      return {
+        code,
+        taskId: task.id,
+        title: task.title || task.name || null,
+        section: task.sectionTitle || task.phase || null,
+      };
+    };
+    if (continueCourse?.code === 'MBW') return pick('MBW', engine.nextTaskState);
+    if (continueCourse?.code === '100BM') return pick('100BM', bm100Engine.nextTaskState);
+    return null;
+  }, [continueCourse?.code, engine.nextTaskState, bm100Engine.nextTaskState]);
   const mbwCourse = canOpenMbw ? courses.find((c) => c.code === 'MBW') || null : null;
 
   const heroSubline =
@@ -258,6 +286,7 @@ export default function HomeLab() {
           <div className="dashboard-main-row">
             <HomeContinueCard
               course={continueCourse}
+              resume={resumeTarget}
               nextLabel={
                 mbwCourse
                   ? 'Master of Business Warfare — quarterly leadership journey'
@@ -290,6 +319,20 @@ export default function HomeLab() {
               <CourseCard
                 key={course.id}
                 course={course}
+                /*
+                 * P0 — one primary action per screen.
+                 *
+                 * Four buttons in Iron Lady red were visible at once, and two of
+                 * them went to the same place under different names: "Open MBW
+                 * tasks" in Continue and "Open tasks" on the MBW card. A screen
+                 * with four equal calls to action has none.
+                 *
+                 * Once Continue names a task, every card is navigation rather
+                 * than the action, so all of them drop to quiet links. With
+                 * nothing to resume the cards *are* the action, and they keep
+                 * their weight. Nothing is removed either way.
+                 */
+                demote={Boolean(resumeTarget)}
                 access={getProgramAccessState(course.code, profile, courses)}
                 progress={course.code === 'MBW' && canOpenMbw ? mbwProgress : null}
               />

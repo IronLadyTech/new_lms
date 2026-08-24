@@ -1,7 +1,19 @@
 import { Link } from 'react-router-dom';
-import { getProgramTasksPath } from '../../utils/programTaskRoutes';
+import { getProgramTasksPath, getProgramLessonPath } from '../../utils/programTaskRoutes';
 
-export default function HomeContinueCard({ course, nextLabel, enrolledCount, progress = null }) {
+/**
+ * `resume` is opt-in and defaults to null, so the original homepage — which
+ * passes nothing — renders exactly as it did. Only the experimental clone opts
+ * in. Without that the "isolated clone" would leak into the control it exists
+ * to be measured against.
+ */
+export default function HomeContinueCard({
+  course,
+  nextLabel,
+  enrolledCount,
+  progress = null,
+  resume = null,
+}) {
   if (!course) {
     return (
       <article className="dashboard-continue dashboard-continue--empty">
@@ -16,9 +28,18 @@ export default function HomeContinueCard({ course, nextLabel, enrolledCount, pro
   }
 
   const tasksPath = getProgramTasksPath(course.code);
-  const href = tasksPath || `/app/course/${course.id}`;
-  const tasksLabel =
-    course.code === 'MBW'
+  /*
+   * Straight to the task when we know it. "Open MBW tasks" names the container
+   * the learner is already in and leaves them to find the work; the task's own
+   * name and a Start button remove a screen and a decision.
+   */
+  const resumeHref = resume?.taskId
+    ? getProgramLessonPath(course.code, resume.taskId)
+    : null;
+  const href = resumeHref || tasksPath || `/app/course/${course.id}`;
+  const tasksLabel = resume?.taskId
+    ? 'Start'
+    : course.code === 'MBW'
       ? 'Open MBW tasks'
       : course.code === '100BM'
         ? 'Open 100BM tasks'
@@ -27,8 +48,22 @@ export default function HomeContinueCard({ course, nextLabel, enrolledCount, pro
   return (
     <article className="dashboard-continue">
       <p className="dashboard-continue__eyebrow">Continue learning</p>
-      <h2 className="dashboard-continue__title">{course.title}</h2>
-      {nextLabel && <p className="dashboard-continue__next muted">{nextLabel}</p>}
+      <h2 className="dashboard-continue__title">
+        {resume?.title || course.title}
+      </h2>
+      {/*
+        * With a task named, the programme becomes the context line rather than
+        * the headline — the learner knows which programme they are in, and does
+        * not know which task is next.
+        */}
+      {resume?.title ? (
+        <p className="dashboard-continue__next muted">
+          {course.title}
+          {resume.section ? ` · ${resume.section}` : ''}
+        </p>
+      ) : (
+        nextLabel && <p className="dashboard-continue__next muted">{nextLabel}</p>
+      )}
       {progress && (
         <div
           className="dashboard-continue__progress"
