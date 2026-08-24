@@ -31,11 +31,6 @@ import {
   countPendingTasks,
 } from '../../utils/mbwProgramUtils';
 import {
-  computeSectionProgress as computeBm100SectionProgress,
-  getTotalMilestones as getBm100TotalMilestones,
-  getCompletedMilestones as getBm100CompletedMilestones,
-} from '../../utils/bm100ProgramUtils';
-import {
   canAccessProgram,
   getContinueProgram,
   getProgramAccessState,
@@ -154,27 +149,6 @@ export default function Home() {
       label: `${completed} of ${total} milestones`,
     };
   }, [canOpenMbw, engine.taskStates, profile]);
-
-  /*
-   * The same reading for 100BM. The card already accepts progress and simply
-   * was never given any, so a learner part-way through 100BM saw a card that
-   * looked identical to one they had not started — while MBW showed a bar
-   * right beside it.
-   *
-   * Null when there is nothing real to show. A zero-length bar on a programme
-   * with no milestones would be an invented fact, not an empty one.
-   */
-  const bm100Progress = useMemo(() => {
-    if (!canOpenBm100) return null;
-    const sp = computeBm100SectionProgress(bm100Engine.taskStates, profile);
-    const total = getBm100TotalMilestones(sp);
-    const completed = getBm100CompletedMilestones(sp);
-    if (!total) return null;
-    return {
-      pct: Math.round((completed / total) * 100),
-      label: `${completed} of ${total} milestones`,
-    };
-  }, [canOpenBm100, bm100Engine.taskStates, profile]);
 
   const firstName =
     String(profile?.displayName ?? '')
@@ -302,13 +276,7 @@ export default function Home() {
                 key={course.id}
                 course={course}
                 access={getProgramAccessState(course.code, profile, courses)}
-                progress={
-                  course.code === 'MBW' && canOpenMbw
-                    ? mbwProgress
-                    : course.code === '100BM' && canOpenBm100
-                      ? bm100Progress
-                      : null
-                }
+                progress={course.code === 'MBW' && canOpenMbw ? mbwProgress : null}
               />
             ))}
           </div>
