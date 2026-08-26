@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "lmsironlady"
+    "default": "lmsironlady",
+    "staging": "lmsironlady-staging"
   }
 }

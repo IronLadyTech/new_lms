@@ -1,6 +1,9 @@
 /**
  * Writing at scale — many learners submitting at the same moment.
  *
+ * Emulator target only. For real Firestore throughput use:
+ *   npm run loadtest:writes:staging
+ *
  * Everything else here drives a browser, which is honest about what a user
  * feels but useless for this question: eight headless Chromium instances on one
  * laptop saturate the machine long before the database notices. This talks to
@@ -19,6 +22,15 @@ import { buildProgressSummary } from '../src/utils/progressSummary.js';
 
 const concurrent = Number(process.argv[2] || 50);
 const each = Number(process.argv[3] || 3);
+
+console.log(`
+╔════════════════════════════════════════════════════════════════════╗
+║  WRITE LOAD — EMULATOR (not capacity)                              ║
+║  Local Firestore tops out ~0.2 writes/s regardless of concurrency. ║
+║  Do not quote these numbers as production or staging capacity.     ║
+║  For real throughput: npm run loadtest:writes:staging              ║
+╚════════════════════════════════════════════════════════════════════╝
+`);
 
 const testEnv = await initializeTestEnvironment({
   projectId: 'lmsironlady-rules-test',

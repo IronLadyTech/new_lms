@@ -31,7 +31,7 @@ export default defineConfig({
     },
     {
       name: 'mobile-chrome',
-      testIgnore: [/auth\.setup\.js/, /a11y-staff\.spec\.js/],
+      testIgnore: [/auth\.setup\.js/, /a11y-staff\.spec\.js/, /webkit-smoke\.spec\.js/],
       use: { ...MOBILE },
     },
     {
@@ -39,6 +39,15 @@ export default defineConfig({
       testMatch: /a11y-staff\.spec\.js/,
       dependencies: ['setup'],
       use: { ...MOBILE, storageState: STAFF_STATE_PATH },
+    },
+    // Safari engine — public pages only (no staff secrets required).
+    {
+      name: 'webkit-safari',
+      testMatch: /webkit-smoke\.spec\.js/,
+      use: {
+        browserName: 'webkit',
+        viewport: { width: 1280, height: 800 },
+      },
     },
   ],
   webServer: {

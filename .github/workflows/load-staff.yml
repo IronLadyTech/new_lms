@@ -1,0 +1,108 @@
+# Multi-machine staff concurrency against staging.
+# Manual only — never runs on push to main. Never targets production.
+name: Load — staff concurrency
+
+on:
+  workflow_dispatch:
+    inputs:
+      concurrency:
+        description: Number of parallel staff sessions (separate runners)
+        type: choice
+        options:
+          - '4'
+          - '8'
+        default: '4'
+      staging_base_url:
+        description: Staging app URL (hosting or preview with staging Firebase)
+        type: string
+        required: true
+
+jobs:
+  guard:
+    name: Refuse production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check staging project id secret
+        env:
+          STAGING_PROJECT_ID: ${{ secrets.STAGING_PROJECT_ID }}
+        run: |
+          if [ -z "$STAGING_PROJECT_ID" ]; then
+            echo "::error::Set repository secret STAGING_PROJECT_ID (must not be lmsironlady)."
+            exit 1
+          fi
+          if [ "$STAGING_PROJECT_ID" = "lmsironlady" ]; then
+            echo "::error::Refusing production project id lmsironlady."
+            exit 1
+          fi
+          echo "Staging project: $STAGING_PROJECT_ID"
+
+  staff:
+    name: Staff shard ${{ matrix.shard }}
+    needs: [guard]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        shard: ${{ fromJson(github.event.inputs.concurrency == '8' && '[0,1,2,3,4,5,6,7]' || '[0,1,2,3]') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run one staff session
+        env:
+          CI: true
+          STAGING_BASE_URL: ${{ github.event.inputs.staging_base_url }}
+          STAGING_PROJECT_ID: ${{ secrets.STAGING_PROJECT_ID }}
+          LOADTEST_PROJECT_ID: ${{ secrets.STAGING_PROJECT_ID }}
+          STAFF_EMAIL: ${{ secrets.STAGING_STAFF_EMAIL }}
+          STAFF_PASSWORD: ${{ secrets.STAGING_STAFF_PASSWORD }}
+          STAFF_SHARD_ID: ${{ matrix.shard }}
+        run: npx playwright test --config playwright.staging-load.config.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: staff-result-${{ matrix.shard }}
+          path: test-results/staff-result-*.json
+          if-no-files-found: warn
+
+  summarize:
+    name: Aggregate
+    needs: [staff]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: staff-result-*
+          merge-multiple: true
+      - name: Summarize shard results
+        run: |
+          echo "## Staff concurrency results" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Shard | OK | Sign-in (ms) | Reviews screen (ms) | Total (ms) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          ok=0
+          total=0
+          for f in artifacts/staff-result-*.json artifacts/**/staff-result-*.json; do
+            [ -f "$f" ] || continue
+            total=$((total + 1))
+            shard=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$f','utf8')).shard)")
+            isok=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$f','utf8')).ok)")
+            sign=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$f','utf8')).signInMs)")
+            screen=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$f','utf8')).screenMs)")
+            tot=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$f','utf8')).totalMs)")
+            echo "| $shard | $isok | $sign | $screen | $tot |" >> "$GITHUB_STEP_SUMMARY"
+            if [ "$isok" = "true" ]; then ok=$((ok + 1)); fi
+          done
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**$ok / $total** shards succeeded." >> "$GITHUB_STEP_SUMMARY"
+          if [ "$total" -eq 0 ] || [ "$ok" -ne "$total" ]; then
+            echo "::error::$ok/$total staff shards succeeded"
+            exit 1
+          fi
