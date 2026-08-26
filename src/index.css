@@ -17877,3 +17877,174 @@ body.notification-sheet-open .bottom-nav {
     height: 44px;
   }
 }
+
+/* ============================================================
+   Brand colour pass — dashboard content surfaces
+   ------------------------------------------------------------
+   The page frame was already on-brand (cream ground, pink-soft
+   Continue card, beige Schedule and Programs zones). What read
+   as "plain white" was every surface *inside* those zones: the
+   four stat cards, the three programme cards — the single
+   largest white area on the page — the activity rows and the
+   progress disclosure.
+
+   MASTER.md fixes Surface at #FFFFFF, so the programme cards
+   keep their white body and gain brand through a programme
+   accent instead. The smaller cards take a warm tint drawn from
+   the same beige the surrounding zones already use, so they
+   read as part of the zone rather than as boxes dropped on it.
+   ============================================================ */
+
+/*
+ * Four white boxes in a row, each lifted on --shadow-md, which is what made
+ * them read as floating rather than belonging to the cream page. The tint is
+ * the same beige mix the Schedule and Programs zones use.
+ */
+/*
+ * --surface-2, not --il-beige. The raw brand beige is a light-theme colour:
+ * mixing it into a dark surface lifted these cards to a mid grey (rgb 100,95,92)
+ * and dropped the hint text to 2.76:1. --surface-2 *is* beige under the light
+ * theme, so the warm tint is unchanged there, and resolves to #2a2224 in dark
+ * for a subtle lift instead of a wash.
+ */
+.dashboard-stat {
+  border-color: color-mix(in srgb, var(--surface-2) 70%, var(--border));
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--surface-2) 45%, var(--surface)),
+    var(--surface) 78%
+  );
+  box-shadow: var(--shadow-sm);
+}
+
+/*
+ * The value was already brand red. Underlining it in gold gives the row a
+ * second brand colour without tinting the numeral itself, which has to stay
+ * red to match every other figure on the dashboard.
+ */
+.dashboard-stat__value {
+  padding-bottom: var(--space-2xs);
+  border-bottom: 2px solid color-mix(in srgb, var(--il-gold) 55%, transparent);
+  /* Only as wide as the number, not the card. */
+  width: fit-content;
+}
+
+/*
+ * Programme identity. The root already carries `course-card--<code>`, and
+ * --program-mbw / --program-lep / --program-100bm were defined but never used
+ * on this view — the only thing telling the three cards apart was the cover
+ * art. A top rule in the programme's own colour brings crimson, gold and
+ * charcoal onto the page and does the telling apart at a glance.
+ *
+ * A border rather than an inset shadow: `.course-card` sets `overflow: hidden`
+ * and its media child starts at the top edge, so an inset shadow would paint
+ * behind the image and never be seen.
+ */
+.course-card--lep,
+.course-card--100bm,
+.course-card--mbw {
+  border-top-width: 3px;
+  border-top-style: solid;
+}
+
+.course-card--lep {
+  border-top-color: var(--program-lep);
+}
+
+.course-card--100bm {
+  border-top-color: var(--program-100bm);
+}
+
+.course-card--mbw {
+  border-top-color: var(--program-mbw);
+}
+
+/*
+ * `.course-card--rich:hover` sets `border-color` on all four sides at (0,2,0),
+ * so without these the programme colour was wiped off the top edge for exactly
+ * as long as the cursor was on the card. Restored at (0,3,0).
+ */
+.course-card--rich.course-card--lep:hover {
+  border-top-color: var(--program-lep);
+}
+
+.course-card--rich.course-card--100bm:hover {
+  border-top-color: var(--program-100bm);
+}
+
+.course-card--rich.course-card--mbw:hover {
+  border-top-color: var(--program-mbw);
+}
+
+/*
+ * 100BM's brand colour is black, which is invisible on a dark card — the other
+ * two stripes read and this one simply vanished. Cream is the dark-theme
+ * equivalent of ink here (it is what --text resolves to), so the stripe carries
+ * the same "this is the black one" meaning without disappearing.
+ *
+ * Scoped to the stripe rather than redefining --program-100bm: that token is
+ * also a badge background behind white text, which cream would destroy.
+ */
+[data-theme='dark'] .course-card--100bm {
+  border-top-color: var(--il-cream);
+}
+
+[data-theme='dark'] .course-card--rich.course-card--100bm:hover {
+  border-top-color: var(--il-cream);
+}
+
+/*
+ * The same black-on-dark failure, found while checking the stripe: these tags
+ * render on the course detail page. In dark, --program-100bm is charcoal text
+ * on a charcoal-tinted surface (~1.05:1) and the LEP tag is charcoal on dark
+ * gold (~2.10:1). Both were unreadable long before this pass; the tint keeps
+ * the programme's hue and the text flips to the theme's own ink.
+ */
+[data-theme='dark'] .course-card__tag--100bm {
+  background: color-mix(in srgb, var(--il-cream) 12%, var(--surface));
+  color: var(--il-cream);
+}
+
+[data-theme='dark'] .course-card__tag--lep {
+  color: var(--il-cream);
+}
+
+/*
+ * A locked programme keeps its stripe but muted — the colour is identity, and
+ * dropping it entirely would make locked cards look like a different product.
+ */
+.course-card--locked.course-card--lep,
+.course-card--locked.course-card--100bm,
+.course-card--locked.course-card--mbw {
+  border-top-color: color-mix(in srgb, var(--border) 70%, var(--surface-2));
+}
+
+/* The progress fill was grey against a red-and-gold page. */
+.course-card__progress-fill {
+  background: linear-gradient(90deg, var(--il-red), var(--il-gold));
+}
+
+/*
+ * "Your progress" sat as a full-width white bar closing the page. Beige ties
+ * it to the Programs zone directly above it.
+ */
+.dashboard-disclosure {
+  border-color: color-mix(in srgb, var(--surface-2) 65%, var(--border));
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--surface-2) 42%, var(--surface)),
+    var(--surface) 70%
+  );
+}
+
+/*
+ * Activity rows: a hairline of brand red on the left, so a stack of them reads
+ * as a list with a spine instead of a run of white slabs.
+ */
+.activity-list__item {
+  border-left: 3px solid color-mix(in srgb, var(--il-red) 30%, transparent);
+}
+
+.activity-list__item:hover {
+  border-left-color: var(--il-red);
+}
