@@ -10,8 +10,6 @@ const StudentLayout = lazy(() => import('./components/StudentLayout'));
 const AuthPage = lazy(() => import('./pages/auth/AuthPage'));
 const AuthActionPage = lazy(() => import('./pages/auth/AuthActionPage'));
 const Home = lazy(() => import('./pages/student/Home'));
-/* Experimental homepage clone — baseline copy of Home, redesigned in isolation. */
-const HomeLab = lazy(() => import('./pages/student/HomeLab'));
 const Progress = lazy(() => import('./pages/student/Progress'));
 const Profile = lazy(() => import('./pages/student/Profile'));
 const Support = lazy(() => import('./pages/student/Support'));
@@ -75,7 +73,6 @@ export default function App() {
         >
           <Route index element={<Navigate to="home" replace />} />
           <Route path="home" element={<Home />} />
-          <Route path="home-lab" element={<HomeLab />} />
           <Route path="dashboard" element={<Navigate to="/app/home" replace />} />
           <Route path="progress" element={<Progress />} />
           <Route path="calendar" element={<Calendar />} />
