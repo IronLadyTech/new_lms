@@ -13,6 +13,7 @@ const batchSync = require('./zohoBatchSync');
 const batchApply = require('./zohoBatchApply');
 const ilRegistration = require('./zohoIlRegistration');
 const leadsCohort = require('./zohoLeadsCohort');
+const rosterSync = require('./zohoRosterSync');
 const { readPasswordFromLead } = require('./zohoFieldMap');
 const { FAILURES } = require('./syncAlerts');
 const reconciler = require('./zohoReconcile');
@@ -1093,6 +1094,17 @@ module.exports = {
   /** Apply one Zoho cohort to Firestore (admin only). */
   applyBatchSync: (firestore, opts) =>
     batchApply.applyBatchSync(opts, buildBatchSyncDeps(firestore)),
+  /**
+   * Bulk sync IL Registration + Contacts → LMS accounts + paid status.
+   * Paginated; dry-run by default. Admin continues until moreRecords is false.
+   */
+  runRosterSync: (firestore, opts) =>
+    rosterSync.runRosterSync(opts, {
+      db: firestore,
+      getAccessToken,
+      getApiDomain,
+      provisionUserFromEmail: (fs, email) => provisionUserForBatchSync(fs, email),
+    }),
   /** Sync one learner's batch from Zoho into Firestore groups. */
   syncUserBatchFromZoho: (firestore, email, opts = {}) => runUserBatchSync(firestore, email, opts),
   userProfileChanged,

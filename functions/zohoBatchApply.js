@@ -23,6 +23,7 @@ const {
   fetchLeadsCohortMembers,
 } = require('./zohoLeadsCohort');
 const { mergeBatchSources, registrationToBatchRecord } = require('./zohoIlRegistration');
+const { mergeProvisioningRecord } = require('./zohoProvisioning');
 
 const BATCH_SYNC_RUNS = 'batch_sync_runs';
 const GROUPS = 'groups';
@@ -280,6 +281,7 @@ async function applyBatchSync(
     active: 0,
     excludedByStatus: 0,
     provisioned: 0,
+    entitlementsRefreshed: 0,
     assigned: 0,
     alreadyInBatch: 0,
     skipped: 0,
@@ -392,13 +394,37 @@ async function applyBatchSync(
           }
           uid = provision.uid;
           if (provision.created) stats.provisioned += 1;
-        } else if (member.record._source !== 'leads') {
+        } else {
+          /*
+           * Existing / “old” accounts must still get payment + programAccess.
+           * Leads cohort used to skip this (`_source === 'leads'`), so re-sync
+           * only set batchId and left partial/full paid out of date.
+           * Merge IL_Users when present so programme registration/enrollment
+           * lists drive register vs paid, not Lead Status alone.
+           */
+          let entitlementRecord = record;
+          if (deps.searchIlUserByEmail) {
+            try {
+              const ilUser = await deps.searchIlUserByEmail(email);
+              entitlementRecord = mergeProvisioningRecord(record, ilUser, null);
+            } catch (err) {
+              if (stats.errors.length < 25) {
+                stats.errors.push({
+                  email,
+                  stage: 'il-merge',
+                  reason: err.message || String(err),
+                });
+              }
+            }
+          }
+
           await deps.applyEntitlements(
             db,
             uid,
-            record,
+            entitlementRecord,
             (await db.collection('users').doc(uid).get()).data() || {}
           );
+          stats.entitlementsRefreshed += 1;
         }
 
         const userSnap = await db.collection('users').doc(uid).get();

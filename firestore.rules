@@ -147,9 +147,31 @@ service cloud.firestore {
       }
     }
 
+    function isBatchModerator(batchId) {
+      return hasStaffAccess()
+        && batchId is string
+        && batchId.size() > 0
+        && exists(/databases/$(database)/documents/groups/$(batchId))
+        && request.auth.uid in get(/databases/$(database)/documents/groups/$(batchId)).data.moderatorIds;
+    }
+
     match /events/{eventId} {
       allow read: if canUseApp();
-      allow write: if hasAdminAccess();
+
+      // Admins manage global calendar. CX moderators may create/update/delete
+      // sessions only for batches they moderate (batchId required).
+      allow create: if hasAdminAccess()
+        || (isBatchModerator(request.resource.data.batchId)
+          && request.resource.data.keys().hasAll(['title', 'date', 'batchId', 'audience'])
+          && request.resource.data.audience == 'batch');
+
+      allow update: if hasAdminAccess()
+        || (isBatchModerator(resource.data.batchId)
+          && request.resource.data.batchId == resource.data.batchId
+          && request.resource.data.audience == 'batch');
+
+      allow delete: if hasAdminAccess()
+        || isBatchModerator(resource.data.batchId);
     }
 
     match /announcements/{announcementId} {

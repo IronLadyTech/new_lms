@@ -568,6 +568,43 @@ exports.zohoBatchSyncApply = onCall(ZOHO_BULK_SYNC_OPTS, async (request) => {
   }
 });
 
+/**
+ * Sync one page of IL Registration + Contacts into LMS accounts / paid status.
+ * Dry-run by default. Continue with nextPage until moreRecords is false.
+ */
+exports.zohoRosterSync = onCall(ZOHO_BULK_SYNC_OPTS, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', 'Sign in required');
+  }
+  await zoho.assertAdmin(db, request.auth.uid);
+
+  if (!zoho.isConfigured()) {
+    return { ok: false, reason: 'Zoho secrets are not configured on Cloud Functions' };
+  }
+
+  const {
+    dryRun = true,
+    source = 'both',
+    page = 1,
+    perPage = 50,
+    createUnpaid = false,
+  } = request.data || {};
+
+  try {
+    return await zoho.runRosterSync(db, {
+      dryRun: dryRun !== false,
+      source: String(source || 'both'),
+      page: Math.max(1, Number(page) || 1),
+      perPage: Math.min(Math.max(Number(perPage) || 50, 1), 100),
+      createUnpaid: createUnpaid === true,
+      triggeredBy: request.auth.uid,
+    });
+  } catch (err) {
+    console.error('zohoRosterSync failed:', err);
+    return { ok: false, reason: err.message || String(err), code: err.code || null };
+  }
+});
+
 // ── Zoho → LMS: sync one learner's batch (admin callable) ─────
 exports.zohoSyncUserBatch = onCall(async (request) => {
   if (!request.auth?.uid) {

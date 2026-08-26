@@ -972,6 +972,10 @@ export default function ZohoIntegration({ users = [] }) {
               {batchApplyResult.dryRun === false && (
                 <>
                   <li>New accounts provisioned: {batchApplyResult.provisioned ?? 0}</li>
+                  <li>
+                    Existing accounts payment refreshed:{' '}
+                    {batchApplyResult.entitlementsRefreshed ?? 0}
+                  </li>
                   <li>Assigned to batch: {batchApplyResult.assigned ?? 0}</li>
                   <li>Already in batch: {batchApplyResult.alreadyInBatch ?? 0}</li>
                 </>

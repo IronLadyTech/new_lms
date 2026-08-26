@@ -108,6 +108,31 @@ export async function catchUpFrom(since, { dryRun = true, limit = 100, offset = 
   return data;
 }
 
+/**
+ * Sync one page of Zoho IL Registration + Contacts → LMS accounts + paid status.
+ * Dry-run by default. Pass nextPage while moreRecords is true to continue.
+ */
+export async function syncRosterFromZoho({
+  dryRun = true,
+  source = 'both',
+  page = 1,
+  perPage = 50,
+  createUnpaid = false,
+} = {}) {
+  try {
+    const { data } = await call('zohoRosterSync', {
+      dryRun,
+      source,
+      page,
+      perPage,
+      createUnpaid,
+    });
+    return data;
+  } catch (err) {
+    throw new Error(formatCallableError(err, 'Roster sync failed'));
+  }
+}
+
 /** See what the reconciler would do on its next pass, without it doing anything. */
 export async function previewReconcile(limit = 50) {
   const { data } = await call('zohoReconcilePreview', { limit });

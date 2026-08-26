@@ -193,6 +193,30 @@ function buildLeadsWhereClause({ programId = null, startDate = null, endDate = n
   return clauses.join(' or ');
 }
 
+/** Zoho daily / burst quotas — further retries only burn more credits. */
+function isZohoRateLimitMessage(message) {
+  const msg = String(message || '').toLowerCase();
+  return (
+    msg.includes('many requests') ||
+    msg.includes('too many requests') ||
+    msg.includes('rate limit') ||
+    msg.includes('api limit') ||
+    msg.includes('quota')
+  );
+}
+
+function throwZohoRateLimit(message, extra = {}) {
+  const err = new Error(
+    `${message || 'Zoho API rate limit exceeded'}. ` +
+      'Daily Zoho CRM API quota is exhausted — wait for reset (typically ~24h), ' +
+      'pause zohoReconcileLearners if needed, then retry once. ' +
+      'Do not re-click Dry run/Apply until then.'
+  );
+  err.code = 'ZOHO_RATE_LIMIT';
+  Object.assign(err, extra);
+  throw err;
+}
+
 async function runCoqlQuery(selectQuery, deps) {
   const token = await deps.getAccessToken();
   if (!token) throw new Error('Unable to obtain Zoho access token');
@@ -216,6 +240,10 @@ async function runCoqlQuery(selectQuery, deps) {
       const body = await res.json().catch(() => ({}));
       lastError = body?.message || `leads coql ${version} HTTP ${res.status}`;
       lastDetails = body?.details || body;
+      // Fail fast — trying v6/v2 after a daily quota error multiplies spend.
+      if (res.status === 429 || isZohoRateLimitMessage(lastError)) {
+        throwZohoRateLimit(lastError, { details: lastDetails, query: selectQuery });
+      }
       continue;
     }
 
@@ -329,6 +357,9 @@ async function fetchLeadsPageSearch(
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       lastError = body?.message || `leads search ${version} HTTP ${res.status}`;
+      if (res.status === 429 || isZohoRateLimitMessage(lastError)) {
+        throwZohoRateLimit(lastError, { query: queryLabel });
+      }
       continue;
     }
 
@@ -374,6 +405,11 @@ async function fetchAllLeads(
     }
     return { rows, pagesFetched: pages, truncated: more, query: lastQuery, method };
   } catch (coqlErr) {
+    // Search uses the same daily quota — falling back only burns more credits.
+    if (coqlErr?.code === 'ZOHO_RATE_LIMIT' || isZohoRateLimitMessage(coqlErr?.message)) {
+      throw coqlErr;
+    }
+
     const canSearch = Boolean(programId && startDate && endDate);
     if (!canSearch) throw coqlErr;
 
@@ -721,6 +757,7 @@ module.exports = {
   resolveLeadCohortFromLead,
   buildLeadsWhereClause,
   buildLeadCohortPlan,
+  isZohoRateLimitMessage,
   fetchLeadsCohortMembers,
   previewLeadCohorts,
 };
