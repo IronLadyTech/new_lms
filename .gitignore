@@ -37,3 +37,6 @@ LMS_TEST_REPORT.view.html
 Iron Lady LMS — Quality Assessment.pdf
 Iron Lady LMS — Quality Assessment (brief).pdf
 Iron Lady LMS — Quality Assessment (new).pdf
+
+# Playwright MCP scratch output (screenshots, console logs)
+.playwright-mcp/

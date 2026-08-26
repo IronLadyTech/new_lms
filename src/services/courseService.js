@@ -22,9 +22,42 @@ export const COURSE_CODES = {
   LEP: 'LEP',
 };
 
+/*
+ * The course list is small, changes rarely, and is read by several independent
+ * consumers on a single page load — Home, the MBW and 100BM enrolment hooks and
+ * the sidebar all ask for it. They used to issue one collection read each. The
+ * cache collapses those into one and is dropped the moment a course is written,
+ * so a admin never sees their own edit go missing.
+ */
+let coursesCache = null;
+let coursesInFlight = null;
+const COURSES_TTL_MS = 60 * 1000;
+
+export function invalidateCoursesCache() {
+  coursesCache = null;
+  coursesInFlight = null;
+}
+
 export async function getCourses() {
-  const snap = await getDocs(collection(db, COURSES));
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  if (coursesCache && Date.now() - coursesCache.at < COURSES_TTL_MS) {
+    return coursesCache.list;
+  }
+  /* A second caller arriving mid-flight waits on the first request rather than
+     opening its own. */
+  if (coursesInFlight) return coursesInFlight;
+
+  coursesInFlight = (async () => {
+    try {
+      const snap = await getDocs(collection(db, COURSES));
+      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      coursesCache = { list, at: Date.now() };
+      return list;
+    } finally {
+      coursesInFlight = null;
+    }
+  })();
+
+  return coursesInFlight;
 }
 
 export async function getCourse(courseId) {
@@ -45,15 +78,18 @@ export async function createCourse(data) {
     updatedAt: serverTimestamp(),
   };
   await setDoc(ref, course);
+  invalidateCoursesCache();
   return { id: ref.id, ...course };
 }
 
 export async function updateCourse(courseId, data) {
   await updateDoc(doc(db, COURSES, courseId), { ...data, updatedAt: serverTimestamp() });
+  invalidateCoursesCache();
 }
 
 export async function deleteCourse(courseId) {
   await deleteDoc(doc(db, COURSES, courseId));
+  invalidateCoursesCache();
 }
 
 export async function getResources(courseId) {

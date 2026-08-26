@@ -93,6 +93,12 @@ export function getEnrolledProgramIds(profile, courses = []) {
   return ids;
 }
 
+/** Enrolled programs in journey order (LEP → 100BM → MBW). */
+export function getEnrolledProgramEntries(profile, courses = []) {
+  const ids = getEnrolledProgramIds(profile, courses);
+  return PROGRAM_JOURNEY.filter((entry) => ids.has(entry.id));
+}
+
 /** Course records the learner is enrolled in (all enrollment sources). */
 export function getEnrolledCourses(profile, courses = []) {
   if (!profile) return [];

@@ -4,6 +4,7 @@ import {
   canAccessProgram,
   courseCodeToProgramId,
   getEnrolledProgramIds,
+  getEnrolledProgramEntries,
   getProgramAccessState,
 } from './programAccess.js';
 import { PROGRAMS } from '../data/programTypes.js';
@@ -38,6 +39,21 @@ describe('getEnrolledProgramIds', () => {
     expect(ids.has(PROGRAMS.BM100)).toBe(true);
     expect(ids.has(PROGRAMS.LEP)).toBe(true);
     expect(ids.has(PROGRAMS.MBW)).toBe(false);
+  });
+});
+
+describe('getEnrolledProgramEntries', () => {
+  it('returns journey-ordered short labels for all enrollments', () => {
+    const courses = [
+      { id: 'c1', code: 'MBW' },
+      { id: 'c2', code: 'LEP' },
+      { id: 'c3', code: '100BM' },
+    ];
+    const entries = getEnrolledProgramEntries(
+      { program: PROGRAMS.BM100, enrolledCourses: ['c1', 'c2', 'c3'] },
+      courses
+    );
+    expect(entries.map((e) => e.shortLabel)).toEqual(['LEP', '100BM', 'MBW']);
   });
 });
 
