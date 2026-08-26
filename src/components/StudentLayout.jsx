@@ -35,8 +35,10 @@ export default function StudentLayout() {
       <div className="student-layout student-layout--blocked">
         <header className="app-header">
           <div className="app-header__brand">
-            <img src="/logo.png" alt="Iron Lady" className="logo-mark" />
-            <span>LMS</span>
+            <span className="app-header__brand-row">
+              <img src="/logo.png" alt="Iron Lady" className="logo-mark" />
+              <span>LMS</span>
+            </span>
           </div>
           <div className="app-header__actions">
             <ThemeToggle compact />
@@ -59,8 +61,10 @@ export default function StudentLayout() {
         <SkipLink />
         <header className="app-header">
           <div className="app-header__brand">
-            <img src="/logo.png" alt="Iron Lady" className="logo-mark" />
-            <span>LMS</span>
+            <span className="app-header__brand-row">
+              <img src="/logo.png" alt="Iron Lady" className="logo-mark" />
+              <span>LMS</span>
+            </span>
           </div>
           <div className="app-header__actions">
             {isGuest && <span className="guest-badge">Guest</span>}

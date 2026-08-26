@@ -245,7 +245,6 @@ export default function Home() {
           <HomeDashboardHero
             greeting={timeGreeting()}
             firstName={firstName}
-            program={profile?.program}
             subline={heroSubline}
           />
 
