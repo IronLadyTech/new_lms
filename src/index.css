@@ -17375,3 +17375,111 @@ body.notification-sheet-open .bottom-nav {
   padding: var(--space-2xs) var(--space-sm) var(--space-sm);
   border-top: 1px solid var(--border);
 }
+
+/* ---- Calendar: one toolbar, one subject --------------------------------
+ * Month navigation, the event count and the view switch were three separate
+ * rows before the grid, so nothing on the page read as primary. They are one
+ * bar now: what you are looking at on the left, how you are looking at it on
+ * the right, and the grid immediately below as the subject.
+ * ----------------------------------------------------------------------- */
+
+.learner-calendar__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.learner-calendar__month-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+/* The month is what the page is about, so it carries the weight — previously
+   it was smaller than the "Calendar" heading above it. */
+.learner-calendar__month-title {
+  margin: 0 var(--space-2xs);
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.learner-calendar__step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.learner-calendar__step:hover {
+  background: var(--surface-2);
+}
+
+.learner-calendar__step:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* The count was a caption under the month name, competing with it. As a pill
+   beside it, it reads as an attribute of the month rather than a second title. */
+.learner-calendar__count {
+  margin-left: var(--space-2xs);
+  padding: 2px var(--space-2xs);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Legend now follows the grid it annotates. */
+.learner-calendar__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border);
+}
+
+/* With the day panel gone on days that have nothing, the grid takes the width
+   back rather than sitting beside an empty column. */
+.event-calendar__layout:not(:has(.event-calendar__sidebar)) .event-calendar__grid-wrap {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 767px) {
+  .learner-calendar__toolbar {
+    /* Navigation first, view switch beneath it — side by side they each get
+       too little width to stay tappable. */
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .learner-calendar__month-nav {
+    justify-content: space-between;
+  }
+
+  .learner-calendar__step {
+    width: 44px;
+    height: 44px;
+  }
+
+  .learner-calendar__view-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}

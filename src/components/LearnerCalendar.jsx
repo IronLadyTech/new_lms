@@ -87,6 +87,12 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
     [events, todayStr]
   );
 
+  /* Only the types actually on screen; a legend for absent categories is noise. */
+  const presentTypes = useMemo(() => {
+    const seen = new Set(monthEvents.map((e) => e.type || 'general'));
+    return EVENT_LEGEND.filter((l) => seen.has(l.type));
+  }, [monthEvents]);
+
   const agendaGroups = useMemo(() => {
     const sorted = [...monthEvents].sort((a, b) => {
       const dateCmp = a.date.localeCompare(b.date);
@@ -136,17 +142,6 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
 
   return (
     <div className="event-calendar learner-calendar">
-      <div className="learner-calendar__legend">
-        {EVENT_LEGEND.map(({ type, label }) => (
-          <span
-            key={type}
-            className={`learner-calendar__legend-item learner-calendar__legend-item--${type}`}
-          >
-            {label}
-          </span>
-        ))}
-      </div>
-
       {upcoming.length > 0 && viewMode === 'month' && (
         <section className="learner-calendar__upcoming">
           <h2>Next up</h2>
@@ -163,56 +158,56 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
 
       <div className="event-calendar__layout">
         <div className="event-calendar__grid-wrap">
-          <div className="event-calendar__nav learner-calendar__nav">
-            <button
-              type="button"
-              className="btn btn-outline btn-sm"
-              onClick={() => setViewDate(new Date(year, month - 1, 1))}
-              aria-label="Previous month"
-            >
-              <ChevronLeft size={16} aria-hidden="true" />
-            </button>
-            <div className="learner-calendar__month-head">
-              <strong>{monthLabel}</strong>
-              <span className="muted">
-                {monthEvents.length} event{monthEvents.length === 1 ? '' : 's'} this month
+          <div className="learner-calendar__toolbar">
+            <div className="learner-calendar__month-nav">
+              <button
+                type="button"
+                className="learner-calendar__step"
+                onClick={() => setViewDate(new Date(year, month - 1, 1))}
+                aria-label="Previous month"
+              >
+                <ChevronLeft size={18} aria-hidden="true" />
+              </button>
+              <h2 className="learner-calendar__month-title">{monthLabel}</h2>
+              <button
+                type="button"
+                className="learner-calendar__step"
+                onClick={() => setViewDate(new Date(year, month + 1, 1))}
+                aria-label="Next month"
+              >
+                <ChevronRight size={18} aria-hidden="true" />
+              </button>
+              <span className="learner-calendar__count">
+                {monthEvents.length} event{monthEvents.length === 1 ? '' : 's'}
               </span>
             </div>
-            <button
-              type="button"
-              className="btn btn-outline btn-sm"
-              onClick={() => setViewDate(new Date(year, month + 1, 1))}
-              aria-label="Next month"
-            >
-              <ChevronRight size={16} aria-hidden="true" />
-            </button>
-          </div>
 
-          <div
-            className="learner-calendar__view-toggle mobile-scroll-row"
-            role="tablist"
-            aria-label="Calendar view"
-          >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={viewMode === 'agenda'}
-              className={`learner-calendar__view-btn${viewMode === 'agenda' ? ' is-active' : ''}`}
-              onClick={() => setViewMode('agenda')}
+            <div
+              className="learner-calendar__view-toggle"
+              role="tablist"
+              aria-label="Calendar view"
             >
-              <List size={16} aria-hidden />
-              Agenda
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={viewMode === 'month'}
-              className={`learner-calendar__view-btn${viewMode === 'month' ? ' is-active' : ''}`}
-              onClick={() => setViewMode('month')}
-            >
-              <CalendarDays size={16} aria-hidden />
-              Month
-            </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={viewMode === 'agenda'}
+                className={`learner-calendar__view-btn${viewMode === 'agenda' ? ' is-active' : ''}`}
+                onClick={() => setViewMode('agenda')}
+              >
+                <List size={16} aria-hidden />
+                Agenda
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={viewMode === 'month'}
+                className={`learner-calendar__view-btn${viewMode === 'month' ? ' is-active' : ''}`}
+                onClick={() => setViewMode('month')}
+              >
+                <CalendarDays size={16} aria-hidden />
+                Month
+              </button>
+            </div>
           </div>
 
           {viewMode === 'agenda' ? (
@@ -305,87 +300,98 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
           )}
         </div>
 
-        {viewMode === 'month' && (
+        {viewMode === 'month' && selectedEvents.length > 0 && (
           <aside className="event-calendar__sidebar learner-calendar__sidebar">
             <h3>{formatDisplayDate(selectedDate)}</h3>
-            {selectedEvents.length === 0 ? (
-              <p className="muted">
-                No events on this day. Tap a highlighted date to see scheduled items.
-              </p>
-            ) : (
-              <>
-                <div className="learner-calendar__day-timeline" aria-label="Day schedule">
-                  {selectedEvents.map((ev) => {
-                    const startHour = ev.time ? Number(ev.time.slice(0, 2)) : 9;
-                    const endHour = ev.endTime
-                      ? Number(ev.endTime.slice(0, 2))
-                      : Math.min(startHour + 2, 23);
-                    const top = Math.max(0, (startHour - 8) * 44);
-                    const height = Math.max(44, (endHour - startHour) * 44);
-                    return (
-                      <div
-                        key={`tl-${ev.id}`}
-                        className={`learner-calendar__block learner-calendar__block--${ev.type || 'general'}`}
-                        style={{ top: `${top}px`, minHeight: `${height}px` }}
-                      >
-                        <strong>{ev.title}</strong>
-                        <span>
-                          {ev.time || 'All day'}
-                          {ev.endTime ? ` – ${ev.endTime}` : ''}
-                          {ev.batchName ? ` · ${ev.batchName}` : ''}
-                        </span>
-                      </div>
-                    );
-                  })}
-                  <div className="learner-calendar__hours" aria-hidden>
-                    {['8am', '10am', '12pm', '2pm', '4pm'].map((label) => (
-                      <span key={label}>{label}</span>
-                    ))}
+            <div className="learner-calendar__day-timeline" aria-label="Day schedule">
+              {selectedEvents.map((ev) => {
+                const startHour = ev.time ? Number(ev.time.slice(0, 2)) : 9;
+                const endHour = ev.endTime
+                  ? Number(ev.endTime.slice(0, 2))
+                  : Math.min(startHour + 2, 23);
+                const top = Math.max(0, (startHour - 8) * 44);
+                const height = Math.max(44, (endHour - startHour) * 44);
+                return (
+                  <div
+                    key={`tl-${ev.id}`}
+                    className={`learner-calendar__block learner-calendar__block--${ev.type || 'general'}`}
+                    style={{ top: `${top}px`, minHeight: `${height}px` }}
+                  >
+                    <strong>{ev.title}</strong>
+                    <span>
+                      {ev.time || 'All day'}
+                      {ev.endTime ? ` – ${ev.endTime}` : ''}
+                      {ev.batchName ? ` · ${ev.batchName}` : ''}
+                    </span>
                   </div>
-                </div>
-                <ul className="event-calendar__event-list">
-                  {selectedEvents.map((ev) => (
-                    <li
-                      key={ev.id}
-                      id={`learner-event-${ev.id}`}
-                      className={`event-calendar__event-card event-calendar__event-card--${ev.type || 'general'}${focusEventId === ev.id ? ' is-focused' : ''}`}
+                );
+              })}
+              <div className="learner-calendar__hours" aria-hidden>
+                {['8am', '10am', '12pm', '2pm', '4pm'].map((label) => (
+                  <span key={label}>{label}</span>
+                ))}
+              </div>
+            </div>
+            <ul className="event-calendar__event-list">
+              {selectedEvents.map((ev) => (
+                <li
+                  key={ev.id}
+                  id={`learner-event-${ev.id}`}
+                  className={`event-calendar__event-card event-calendar__event-card--${ev.type || 'general'}${focusEventId === ev.id ? ' is-focused' : ''}`}
+                >
+                  <EventImage src={ev.imageUrl} alt={ev.title} />
+                  <div className="event-calendar__event-card-head">
+                    <strong>{ev.title}</strong>
+                    <span className={`badge badge-event badge-event--${ev.type || 'general'}`}>
+                      {formatEventType(ev.type)}
+                    </span>
+                  </div>
+                  {ev.batchName && (
+                    <span className="learner-calendar__batch-tag">{ev.batchName}</span>
+                  )}
+                  {ev.time && (
+                    <span className="event-calendar__event-time">
+                      {ev.time}
+                      {ev.endTime ? ` – ${ev.endTime}` : ''}
+                    </span>
+                  )}
+                  {ev.description && <p className="muted">{ev.description}</p>}
+                  {ev.linkUrl && (
+                    <a
+                      href={normalizeEventLink(ev.linkUrl)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="link-inline"
                     >
-                      <EventImage src={ev.imageUrl} alt={ev.title} />
-                      <div className="event-calendar__event-card-head">
-                        <strong>{ev.title}</strong>
-                        <span className={`badge badge-event badge-event--${ev.type || 'general'}`}>
-                          {formatEventType(ev.type)}
-                        </span>
-                      </div>
-                      {ev.batchName && (
-                        <span className="learner-calendar__batch-tag">{ev.batchName}</span>
-                      )}
-                      {ev.time && (
-                        <span className="event-calendar__event-time">
-                          {ev.time}
-                          {ev.endTime ? ` – ${ev.endTime}` : ''}
-                        </span>
-                      )}
-                      {ev.description && <p className="muted">{ev.description}</p>}
-                      {ev.linkUrl && (
-                        <a
-                          href={normalizeEventLink(ev.linkUrl)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="link-inline"
-                        >
-                          Open event link
-                        </a>
-                      )}
-                      <EventDetailActions event={ev} compact />
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
+                      Open event link
+                    </a>
+                  )}
+                  <EventDetailActions event={ev} compact />
+                </li>
+              ))}
+            </ul>
           </aside>
         )}
       </div>
+
+      {/*
+       * The legend sat above everything, explaining four event types before a
+       * single one was on screen — and three of them were usually absent. It
+       * belongs after the thing it annotates, listing only what is actually in
+       * this month.
+       */}
+      {viewMode === 'month' && presentTypes.length > 0 && (
+        <div className="learner-calendar__legend">
+          {presentTypes.map(({ type, label }) => (
+            <span
+              key={type}
+              className={`learner-calendar__legend-item learner-calendar__legend-item--${type}`}
+            >
+              {label}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

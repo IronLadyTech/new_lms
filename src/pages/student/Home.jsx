@@ -88,7 +88,9 @@ export default function Home() {
          * put it on every learner's dashboard — other 100BM batches, MBW, LEP.
          */
         const visible = filterEventsForLearner(events, { batchId: profile?.batchId || '' });
-        setUpcomingEvents(visible.filter((e) => e.date >= today).slice(0, 5));
+        /* One. The panel is a nudge toward the next thing, not a calendar —
+           the calendar is a click away and holds the rest. */
+        setUpcomingEvents(visible.filter((e) => e.date >= today).slice(0, 1));
       } catch (e) {
         console.error(e);
         if (!cancelled) {
