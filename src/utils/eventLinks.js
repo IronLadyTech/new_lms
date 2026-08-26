@@ -30,7 +30,14 @@ export function buildGoogleCalendarUrl(event) {
     if (event.time) {
       const [hh, mm] = event.time.split(':').map(Number);
       const start = new Date(y, m - 1, d, hh || 0, mm || 0, 0);
-      const end = new Date(start.getTime() + 60 * 60 * 1000);
+      let end;
+      if (event.endTime) {
+        const [eh, em] = event.endTime.split(':').map(Number);
+        end = new Date(y, m - 1, d, eh || 0, em || 0, 0);
+        if (end <= start) end = new Date(start.getTime() + 60 * 60 * 1000);
+      } else {
+        end = new Date(start.getTime() + 60 * 60 * 1000);
+      }
       dates = `${formatGcalDateTime(start)}/${formatGcalDateTime(end)}`;
     } else {
       const end = new Date(y, m - 1, d + 1);

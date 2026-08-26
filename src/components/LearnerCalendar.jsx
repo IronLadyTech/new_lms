@@ -313,36 +313,75 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
                 No events on this day. Tap a highlighted date to see scheduled items.
               </p>
             ) : (
-              <ul className="event-calendar__event-list">
-                {selectedEvents.map((ev) => (
-                  <li
-                    key={ev.id}
-                    id={`learner-event-${ev.id}`}
-                    className={`event-calendar__event-card event-calendar__event-card--${ev.type || 'general'}${focusEventId === ev.id ? ' is-focused' : ''}`}
-                  >
-                    <EventImage src={ev.imageUrl} alt={ev.title} />
-                    <div className="event-calendar__event-card-head">
-                      <strong>{ev.title}</strong>
-                      <span className={`badge badge-event badge-event--${ev.type || 'general'}`}>
-                        {formatEventType(ev.type)}
-                      </span>
-                    </div>
-                    {ev.time && <span className="event-calendar__event-time">{ev.time}</span>}
-                    {ev.description && <p className="muted">{ev.description}</p>}
-                    {ev.linkUrl && (
-                      <a
-                        href={normalizeEventLink(ev.linkUrl)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="link-inline"
+              <>
+                <div className="learner-calendar__day-timeline" aria-label="Day schedule">
+                  {selectedEvents.map((ev) => {
+                    const startHour = ev.time ? Number(ev.time.slice(0, 2)) : 9;
+                    const endHour = ev.endTime
+                      ? Number(ev.endTime.slice(0, 2))
+                      : Math.min(startHour + 2, 23);
+                    const top = Math.max(0, (startHour - 8) * 44);
+                    const height = Math.max(44, (endHour - startHour) * 44);
+                    return (
+                      <div
+                        key={`tl-${ev.id}`}
+                        className={`learner-calendar__block learner-calendar__block--${ev.type || 'general'}`}
+                        style={{ top: `${top}px`, minHeight: `${height}px` }}
                       >
-                        Open event link
-                      </a>
-                    )}
-                    <EventDetailActions event={ev} compact />
-                  </li>
-                ))}
-              </ul>
+                        <strong>{ev.title}</strong>
+                        <span>
+                          {ev.time || 'All day'}
+                          {ev.endTime ? ` – ${ev.endTime}` : ''}
+                          {ev.batchName ? ` · ${ev.batchName}` : ''}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  <div className="learner-calendar__hours" aria-hidden>
+                    {['8am', '10am', '12pm', '2pm', '4pm'].map((label) => (
+                      <span key={label}>{label}</span>
+                    ))}
+                  </div>
+                </div>
+                <ul className="event-calendar__event-list">
+                  {selectedEvents.map((ev) => (
+                    <li
+                      key={ev.id}
+                      id={`learner-event-${ev.id}`}
+                      className={`event-calendar__event-card event-calendar__event-card--${ev.type || 'general'}${focusEventId === ev.id ? ' is-focused' : ''}`}
+                    >
+                      <EventImage src={ev.imageUrl} alt={ev.title} />
+                      <div className="event-calendar__event-card-head">
+                        <strong>{ev.title}</strong>
+                        <span className={`badge badge-event badge-event--${ev.type || 'general'}`}>
+                          {formatEventType(ev.type)}
+                        </span>
+                      </div>
+                      {ev.batchName && (
+                        <span className="learner-calendar__batch-tag">{ev.batchName}</span>
+                      )}
+                      {ev.time && (
+                        <span className="event-calendar__event-time">
+                          {ev.time}
+                          {ev.endTime ? ` – ${ev.endTime}` : ''}
+                        </span>
+                      )}
+                      {ev.description && <p className="muted">{ev.description}</p>}
+                      {ev.linkUrl && (
+                        <a
+                          href={normalizeEventLink(ev.linkUrl)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="link-inline"
+                        >
+                          Open event link
+                        </a>
+                      )}
+                      <EventDetailActions event={ev} compact />
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
           </aside>
         )}

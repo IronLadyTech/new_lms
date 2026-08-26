@@ -25,6 +25,7 @@ import { getTodayKey, addDaysToKey } from '../../utils/streakTimezone';
 import ParticipantListModal from '../../components/cx/ParticipantListModal';
 import BatchMembersPanel from '../../components/cx/BatchMembersPanel';
 import BatchRecordingsPanel from '../../components/cx/BatchRecordingsPanel';
+import BatchSessionsPanel from '../../components/cx/BatchSessionsPanel';
 import DashboardSkeleton from '../../components/ui/DashboardSkeleton';
 
 function StatCard({ value, label, variant, onClick }) {
@@ -227,6 +228,8 @@ export default function CXBatchAnalysis() {
         onUpdated={refresh}
         onDeleted={() => navigate('/cx/batches', { replace: true })}
       />
+
+      <BatchSessionsPanel batch={batch} userId={user?.uid} />
 
       <BatchRecordingsPanel
         batch={batch}

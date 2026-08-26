@@ -1,33 +1,60 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CalendarDays, CalendarX, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getEvents } from '../../services/eventService';
+import { getGroupsByProgram } from '../../services/groupService';
+import { filterEventsForLearner, filterEventsForStaff } from '../../utils/eventVisibility';
+import { PROGRAMS } from '../../data/programTypes';
 import LearnerCalendar from '../../components/LearnerCalendar';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
 import PageHeader from '../../components/ui/PageHeader';
 import EmptyState from '../../components/ui/EmptyState';
 
 export default function CalendarPage() {
-  const { isGuest } = useAuth();
+  const { user, profile, isGuest, role } = useAuth();
   const [searchParams] = useSearchParams();
   const [events, setEvents] = useState([]);
+  const [moderatedBatchIds, setModeratedBatchIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const initialDate = searchParams.get('date') || '';
   const focusEventId = searchParams.get('event') || '';
 
-  const load = useCallback(() => {
+  const isStaff = role === 'moderator' || role === 'admin' || role === 'superadmin';
+  const isFullAdmin = role === 'admin' || role === 'superadmin';
+
+  const load = useCallback(async () => {
     setLoading(true);
     setError(false);
-    getEvents()
-      .then(setEvents)
-      .catch((err) => {
-        console.error(err);
-        setError(true);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    try {
+      const list = await getEvents();
+      setEvents(list);
+
+      if (isStaff && user?.uid) {
+        const program = profile?.program || PROGRAMS.MBW;
+        const groups = await getGroupsByProgram(program);
+        if (isFullAdmin) {
+          setModeratedBatchIds(groups.map((g) => g.id));
+        } else {
+          setModeratedBatchIds(
+            groups
+              .filter(
+                (g) => (g.moderatorIds || []).includes(user.uid) || g.createdBy === user.uid
+              )
+              .map((g) => g.id)
+          );
+        }
+      } else {
+        setModeratedBatchIds([]);
+      }
+    } catch (err) {
+      console.error(err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [isStaff, isFullAdmin, user?.uid, profile?.program]);
 
   useEffect(() => {
     if (isGuest) {
@@ -37,12 +64,23 @@ export default function CalendarPage() {
     load();
   }, [isGuest, load]);
 
+  const visibleEvents = useMemo(() => {
+    if (isStaff) {
+      return filterEventsForStaff(events, { moderatedBatchIds });
+    }
+    return filterEventsForLearner(events, { batchId: profile?.batchId || '' });
+  }, [events, isStaff, moderatedBatchIds, profile?.batchId]);
+
   const header = (
     <PageHeader
       eyebrow="Schedule"
       icon={CalendarDays}
       title="Calendar"
-      subtitle="Classes, deadlines, and events from Iron Lady."
+      subtitle={
+        isStaff
+          ? 'Your batch sessions and Iron Lady events — add a session to Google Calendar to block your day.'
+          : 'Classes and deadlines for your cohort, plus Iron Lady events.'
+      }
     />
   );
 
@@ -75,7 +113,11 @@ export default function CalendarPage() {
           }
         />
       ) : (
-        <LearnerCalendar events={events} initialDate={initialDate} focusEventId={focusEventId} />
+        <LearnerCalendar
+          events={visibleEvents}
+          initialDate={initialDate}
+          focusEventId={focusEventId}
+        />
       )}
     </div>
   );

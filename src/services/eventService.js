@@ -30,9 +30,41 @@ function dateOffsetIso(days) {
   return d.toISOString().slice(0, 10);
 }
 
+function normalizeEventPayload(data = {}) {
+  const batchId = data.batchId ? String(data.batchId) : '';
+  const audience = batchId ? 'batch' : data.audience === 'batch' ? 'batch' : 'all';
+  return {
+    title: data.title,
+    description: data.description || '',
+    date: data.date,
+    time: data.time || '',
+    endTime: data.endTime || '',
+    type: data.type || 'general',
+    imageUrl: data.imageUrl || '',
+    linkUrl: data.linkUrl || '',
+    batchId: batchId || null,
+    batchName: data.batchName || '',
+    audience,
+    /** When true, session is meant to reserve staff calendars for this batch. */
+    blocksStaff: Boolean(data.blocksStaff ?? Boolean(batchId)),
+  };
+}
+
 export async function getEvents() {
   const snap = await getDocs(collection(db, EVENTS));
   return sortEventsByDateTime(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+}
+
+export async function getEventsForBatch(batchId) {
+  if (!batchId) return [];
+  try {
+    const q = query(collection(db, EVENTS), where('batchId', '==', batchId));
+    const snap = await getDocs(q);
+    return sortEventsByDateTime(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  } catch (e) {
+    const all = await getEvents();
+    return all.filter((ev) => ev.batchId === batchId);
+  }
 }
 
 /**
@@ -67,14 +99,9 @@ export async function getRecentEventsForNotifications({
 
 export async function createEvent(data) {
   const ref = doc(collection(db, EVENTS));
+  const normalized = normalizeEventPayload(data);
   const event = {
-    title: data.title,
-    description: data.description || '',
-    date: data.date,
-    time: data.time || '',
-    type: data.type || 'general',
-    imageUrl: data.imageUrl || '',
-    linkUrl: data.linkUrl || '',
+    ...normalized,
     createdBy: data.createdBy || null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -84,7 +111,31 @@ export async function createEvent(data) {
 }
 
 export async function updateEvent(eventId, data) {
-  await updateDoc(doc(db, EVENTS, eventId), { ...data, updatedAt: serverTimestamp() });
+  const patch = { updatedAt: serverTimestamp() };
+  const allowed = [
+    'title',
+    'description',
+    'date',
+    'time',
+    'endTime',
+    'type',
+    'imageUrl',
+    'linkUrl',
+    'batchId',
+    'batchName',
+    'audience',
+    'blocksStaff',
+  ];
+  allowed.forEach((key) => {
+    if (data[key] !== undefined) patch[key] = data[key];
+  });
+  if (patch.batchId !== undefined) {
+    const batchId = patch.batchId ? String(patch.batchId) : '';
+    patch.batchId = batchId || null;
+    patch.audience = batchId ? 'batch' : patch.audience === 'batch' ? 'batch' : 'all';
+    if (patch.blocksStaff === undefined) patch.blocksStaff = Boolean(batchId);
+  }
+  await updateDoc(doc(db, EVENTS, eventId), patch);
 }
 
 export async function deleteEvent(eventId) {
