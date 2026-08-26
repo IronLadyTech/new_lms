@@ -83,7 +83,7 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
   const eventsByDate = useMemo(() => groupByDate(monthEvents), [monthEvents]);
   const selectedEvents = useMemo(() => eventsForDate(events, selectedDate), [events, selectedDate]);
   const upcoming = useMemo(
-    () => events.filter((e) => e.date >= todayStr).slice(0, 6),
+    () => events.filter((e) => e.date >= todayStr).slice(0, 2),
     [events, todayStr]
   );
 
@@ -149,7 +149,7 @@ export default function LearnerCalendar({ events, initialDate = '', focusEventId
 
       {upcoming.length > 0 && viewMode === 'month' && (
         <section className="learner-calendar__upcoming">
-          <h2>Upcoming events</h2>
+          <h2>Next up</h2>
           <ul className="learner-calendar__upcoming-list">
             {upcoming.map((ev) => (
               <li key={ev.id} className="event-preview-list__item">

@@ -200,7 +200,15 @@ export function parseSchedule(text, opts = {}) {
       time,
       endTime: endTime || '',
       title,
-      description: [contentCell, deliverableCell ? `Deliverable: ${deliverableCell}` : '']
+      /*
+       * The Content cell opens with the session name, which is already the
+       * title — keeping it made every card print its own name twice. Store
+       * only the detail beneath it.
+       */
+      description: [
+        contentCell.slice(title.length).replace(/^[\s–—:.-]+/, '').trim(),
+        deliverableCell ? `Deliverable: ${deliverableCell}` : '',
+      ]
         .filter(Boolean)
         .join('\n\n'),
       type: 'class',

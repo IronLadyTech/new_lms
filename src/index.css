@@ -17251,3 +17251,127 @@ body.notification-sheet-open .bottom-nav {
     flex: 1;
   }
 }
+
+/* ---- Calendar readability ---------------------------------------------
+ * The month grid was hard to read for four reasons, all fixed here:
+ * chips were dark-theme colours shown on a light background, a selected day
+ * was a solid red block that dominated a page it carried no information on,
+ * rows were tall enough to push the grid off screen, and truncated chip text
+ * said "09:00 Session ..." — the time, then nothing.
+ * ------------------------------------------------------------------------ */
+
+/* Chip colours were only ever defined once, in dark-theme values. On the
+   light background that is pale green on pale grey. These are the same hues
+   at contrast that can actually be read. */
+.event-calendar__chip--class {
+  background: rgb(34 197 94 / 0.16);
+  color: #15803d;
+}
+
+.event-calendar__chip--deadline {
+  background: rgb(239 68 68 / 0.16);
+  color: #b91c1c;
+}
+
+.event-calendar__chip--meeting {
+  background: rgb(168 85 247 / 0.16);
+  color: #7e22ce;
+}
+
+.event-calendar__chip--general {
+  background: rgb(100 116 139 / 0.16);
+  color: #475569;
+}
+
+/* Two lines of title beats one line of ellipsis: "Session 3 - Leadership
+   Super Power" tells you what it is, "Session ..." does not. */
+.event-calendar__chip {
+  padding: 2px 5px;
+  line-height: 1.2;
+  font-size: 11px;
+}
+
+.event-calendar__chip-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+  overflow: hidden;
+}
+
+.event-calendar__chip-time {
+  display: block;
+  margin-right: 0;
+  font-size: 10px;
+  opacity: 0.85;
+}
+
+/* Rows sized to hold one chip comfortably rather than to fill the page. */
+.event-calendar__grid--rich {
+  gap: 4px;
+  grid-auto-rows: 4.75rem;
+}
+
+/* Selected was a solid red fill with white text — the loudest element on the
+   calendar, on a day that usually has nothing. A ring says the same thing
+   without shouting, and leaves the day's own content legible. */
+.event-calendar__day.is-selected {
+  background: rgb(245 41 41 / 0.07);
+  color: inherit;
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 2px var(--primary);
+}
+
+/* Today is a marker, not a state — a dotted edge distinguishes it from the
+   solid ring of whatever is selected. */
+.event-calendar__day.is-today:not(.is-selected) {
+  border-style: dashed;
+  border-color: var(--primary);
+}
+
+/* A day with events reads off its chips; the wash only has to separate it
+   from the empty days around it. */
+.event-calendar__day.has-events:not(.is-selected),
+.event-calendar__day.has-event:not(.is-selected) {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+
+.event-calendar__day--rich.has-events:not(.is-selected) {
+  box-shadow: none;
+}
+
+@media (max-width: 767px) {
+  .event-calendar__grid--rich {
+    grid-auto-rows: 3.5rem;
+  }
+
+  /* At this size a chip cannot hold a readable title, so the day shows that
+     something is on and the detail panel below carries the rest. */
+  .event-calendar__chip-title {
+    display: none;
+  }
+}
+
+/* The action sat outside the card it belongs to, reading as a stray button
+   between two sessions. Wrapping the pair in the card's own frame ties them
+   together; the card keeps its shape and loses its lower border so the two
+   read as one object. */
+.learner-calendar__upcoming-list .event-preview-list__item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+  gap: 0;
+}
+
+.learner-calendar__upcoming-list .event-preview-card {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.learner-calendar__upcoming-list .event-actions {
+  padding: var(--space-2xs) var(--space-sm) var(--space-sm);
+  border-top: 1px solid var(--border);
+}

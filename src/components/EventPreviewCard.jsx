@@ -18,6 +18,19 @@ export default function EventPreviewCard({ event, onClick }) {
     .filter(Boolean)
     .join(' · ');
 
+  /*
+   * Imported sessions carry the whole Content cell as their description, and
+   * that cell opens with the session name — so the card printed its own title
+   * twice. Drop the repeat and show what actually adds something.
+   */
+  const summary = (() => {
+    const d = String(event.description || '').trim();
+    if (!d) return '';
+    const title = String(event.title || '').trim();
+    const withoutTitle = title && d.startsWith(title) ? d.slice(title.length) : d;
+    return withoutTitle.replace(/^[\s–—:.-]+/, '').trim();
+  })();
+
   const className = `event-preview-card${onClick ? ' event-preview-card--button' : ''}`;
 
   const inner = (
@@ -40,8 +53,8 @@ export default function EventPreviewCard({ event, onClick }) {
       <div className="event-preview-card__body">
         <strong>{event.title}</strong>
         <span className="muted">{meta}</span>
-        {event.description && (
-          <span className="event-preview-card__desc muted">{event.description}</span>
+        {summary && (
+          <span className="event-preview-card__desc muted">{summary}</span>
         )}
       </div>
       {!onClick && (
