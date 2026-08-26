@@ -17509,3 +17509,371 @@ body.notification-sheet-open .bottom-nav {
   padding: var(--space-2xs) var(--space-sm) var(--space-sm);
   border-top: 1px solid var(--border);
 }
+
+/* ============================================================
+   CX — batch sessions panel
+   ------------------------------------------------------------
+   This component shipped with markup and no stylesheet, so it
+   rendered as a raw <ul>: visible bullets, orphaned icons and
+   one session spread over four stacked lines. A term is ~25
+   sessions, which made the panel a 2,000px wall.
+   ============================================================ */
+
+.batch-sessions__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+/*
+ * Size is left to `.cx-section h2` — that rule is (0,1,1) and would win over a
+ * bare class anyway, and every other panel on this page is that size. Only the
+ * icon alignment is this component's business.
+ */
+.batch-sessions__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  margin: 0;
+}
+
+.batch-sessions__sub {
+  margin: var(--space-2xs) 0 0;
+  font-size: var(--text-sm);
+  max-width: 62ch;
+}
+
+.batch-sessions__lists {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.batch-sessions__list-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  margin: 0 0 var(--space-sm);
+  font-size: var(--text-base);
+}
+
+.batch-sessions__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 var(--space-2xs);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.batch-sessions__month + .batch-sessions__month {
+  margin-top: var(--space-md);
+}
+
+/* The month is the only reliable landmark in a 25-row schedule. */
+.batch-sessions__month-title {
+  margin: 0 0 var(--space-2xs);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* The bullets. */
+.batch-sessions__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.batch-sessions__item {
+  border-bottom: 1px solid var(--border);
+}
+
+.batch-sessions__item:last-child {
+  border-bottom: 0;
+}
+
+/*
+ * Three columns, so date, name and actions line up down the list and the eye
+ * can run one column at a time instead of re-parsing every row.
+ */
+.batch-sessions__row-main {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-2xs) var(--space-2xs) var(--space-2xs) 0;
+  border-radius: var(--radius-md);
+}
+
+/*
+ * The row being edited is excluded rather than out-ranked: `:hover` counts as
+ * a class, so a plain `--editing` rule is a specificity step below this one and
+ * the red highlight vanished exactly when the cursor was on the row.
+ */
+.batch-sessions__item:not(.batch-sessions__item--editing):hover .batch-sessions__row-main {
+  background: var(--surface-2);
+}
+
+.batch-sessions__when {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2xs) 0;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  line-height: 1.1;
+}
+
+.batch-sessions__item:not(.batch-sessions__item--editing):hover .batch-sessions__when {
+  background: var(--surface);
+}
+
+.batch-sessions__dow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.batch-sessions__day {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.batch-sessions__mon {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.batch-sessions__body {
+  min-width: 0;
+}
+
+.batch-sessions__name {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.batch-sessions__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2xs);
+  margin: 2px 0 0;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.batch-sessions__time {
+  font-variant-numeric: tabular-nums;
+}
+
+.batch-sessions__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px var(--space-2xs);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.batch-sessions__row-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.batch-sessions__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.batch-sessions__icon-btn:hover {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.batch-sessions__icon-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.batch-sessions__icon-btn--danger:hover {
+  color: var(--danger-text);
+  border-color: var(--danger);
+}
+
+/* The row being edited stays marked while its form is open below it. */
+.batch-sessions__item--editing {
+  border-bottom-color: transparent;
+}
+
+.batch-sessions__item--editing .batch-sessions__row-main {
+  background: var(--primary-soft-bg);
+  box-shadow: inset 0 0 0 1px var(--primary-muted);
+}
+
+.batch-sessions__item--editing .batch-sessions__name {
+  color: var(--primary-text);
+}
+
+.batch-sessions__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: var(--space-2xs) 0 var(--space-md);
+  padding: var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+/* An inline edit belongs to the row above it, not to the panel. */
+.batch-sessions__item .batch-sessions__form {
+  margin-left: calc(52px + var(--space-sm));
+  border-color: var(--primary-muted);
+}
+
+.batch-sessions__form-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.batch-sessions__form-head h3 {
+  margin: 0;
+  font-size: var(--text-base);
+}
+
+.batch-sessions__row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-sm);
+}
+
+.batch-sessions__scope {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  margin: 0;
+  font-size: var(--text-xs);
+}
+
+.batch-sessions__form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2xs);
+}
+
+.batch-sessions__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xl) var(--space-md);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  text-align: center;
+}
+
+.batch-sessions__empty p {
+  margin: 0;
+}
+
+/* Past sessions are reference, not work. */
+.batch-sessions__list--past .batch-sessions__when,
+.batch-sessions__list--past .batch-sessions__name {
+  opacity: 0.72;
+}
+
+@media (max-width: 640px) {
+  .batch-sessions__head {
+    flex-direction: column;
+  }
+
+  .batch-sessions__actions {
+    width: 100%;
+  }
+
+  .batch-sessions__actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  /*
+   * Actions drop to their own line rather than squeezing the title into a
+   * two-word column. The date keeps its slot so the list still scans.
+   */
+  .batch-sessions__row-main {
+    grid-template-columns: 52px minmax(0, 1fr);
+    padding: var(--space-2xs) 0;
+  }
+
+  .batch-sessions__row-actions {
+    grid-column: 2;
+    justify-content: flex-start;
+    margin-left: -8px;
+  }
+
+  .batch-sessions__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .batch-sessions__item .batch-sessions__form {
+    margin-left: 0;
+  }
+
+  .batch-sessions__form-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* Touch gets the full 44px; a mouse does not need the row that tall. */
+@media (pointer: coarse) {
+  .batch-sessions__icon-btn {
+    width: 44px;
+    height: 44px;
+  }
+}

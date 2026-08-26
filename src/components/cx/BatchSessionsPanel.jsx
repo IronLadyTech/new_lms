@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   CalendarDays,
-  Clock,
-  Link2,
+  CalendarPlus,
+  ExternalLink,
   Pencil,
   Plus,
   Trash2,
   Upload,
   Users,
-  Video,
   X,
 } from 'lucide-react';
 import {
@@ -17,8 +16,7 @@ import {
   deleteEvent,
   getEventsForBatch,
 } from '../../services/eventService';
-import { normalizeEventLink } from '../../utils/eventLinks';
-import EventDetailActions from '../EventDetailActions';
+import { buildGoogleCalendarUrl, normalizeEventLink } from '../../utils/eventLinks';
 import ConfirmDialog from '../ConfirmDialog';
 import ScheduleImport from './ScheduleImport';
 import { useConfirm } from '../../hooks/useConfirm';
@@ -37,17 +35,48 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function formatWhen(ev) {
-  const date = ev.date
-    ? new Date(`${ev.date}T12:00:00`).toLocaleDateString(undefined, {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-      })
-    : '—';
-  const time = ev.time || '';
-  const end = ev.endTime ? `–${ev.endTime}` : '';
-  return `${date}${time ? ` · ${time}${end}` : ''}`;
+/**
+ * The date split into its own parts so a column of sessions lines up: weekday,
+ * day and month each get a fixed slot rather than one run-on string.
+ */
+function dateParts(iso) {
+  if (!iso) return { dow: '--', day: '', mon: '' };
+  const d = new Date(`${iso}T12:00:00`);
+  return {
+    dow: d.toLocaleDateString(undefined, { weekday: 'short' }),
+    day: d.toLocaleDateString(undefined, { day: '2-digit' }),
+    mon: d.toLocaleDateString(undefined, { month: 'short' }),
+  };
+}
+
+function timeRange(ev) {
+  if (!ev.time) return 'Time not set';
+  return ev.endTime ? `${ev.time} – ${ev.endTime}` : ev.time;
+}
+
+/** "2026-08" -> "August 2026", for the month headings in a long schedule. */
+function monthLabel(key) {
+  const [y, m] = key.split('-');
+  return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString(undefined, {
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+/*
+ * A term's schedule is twenty-odd sessions. As one unbroken list there is no
+ * way to find "the one in October" without reading every row, so the list is
+ * cut at each month boundary and each run gets a heading.
+ */
+function groupByMonth(list) {
+  const groups = [];
+  list.forEach((ev) => {
+    const key = String(ev.date || '').slice(0, 7);
+    const last = groups[groups.length - 1];
+    if (last && last.key === key) last.items.push(ev);
+    else groups.push({ key, items: [ev] });
+  });
+  return groups;
 }
 
 /**
@@ -114,10 +143,13 @@ export default function BatchSessionsPanel({ batch, userId }) {
       .reverse();
   }, [events]);
 
+  const upcomingMonths = useMemo(() => groupByMonth(upcoming), [upcoming]);
+
   const openCreate = () => {
     setEditingId(null);
     setForm({ ...EMPTY, date: todayIso(), title: `${batch?.name || 'Batch'} live session` });
     setMsg('');
+    setImportOpen(false);
     setFormOpen(true);
   };
 
@@ -133,6 +165,7 @@ export default function BatchSessionsPanel({ batch, userId }) {
       linkUrl: ev.linkUrl || '',
     });
     setMsg('');
+    setImportOpen(false);
     setFormOpen(true);
   };
 
@@ -205,20 +238,205 @@ export default function BatchSessionsPanel({ batch, userId }) {
     await load();
   };
 
-  const handleDelete = async (eventId) => {
+  const handleDelete = async (ev) => {
     const ok = await confirm({
       title: 'Delete session',
-      message: 'Remove this session from the batch calendar? This cannot be undone.',
-      confirmLabel: 'Delete',
+      /*
+       * Names the session. "Remove this session" left CX confirming a row they
+       * could no longer see behind the dialog.
+       */
+      message: `Remove “${ev.title}” from the ${
+        batch?.name || 'batch'
+      } calendar? Learners in this batch will no longer see it. This cannot be undone.`,
+      confirmLabel: 'Delete session',
       variant: 'danger',
     });
     if (!ok) return;
     try {
-      await deleteEvent(eventId);
+      await deleteEvent(ev.id);
       await load();
     } catch (err) {
       setError(err.message || 'Delete failed.');
     }
+  };
+
+  /*
+   * One form, rendered in one of two places: above the list when adding, and
+   * inside the row being changed when editing. It previously always opened at
+   * the top of the panel, so editing the last of twenty-three sessions scrolled
+   * CX away from the row and gave no sign of which one they had opened.
+   */
+  const sessionForm = (
+    <form className="batch-sessions__form" onSubmit={handleSubmit}>
+      <div className="batch-sessions__form-head">
+        <h3>{editingId ? 'Edit session' : 'New session'}</h3>
+        <button
+          type="button"
+          className="batch-sessions__icon-btn"
+          onClick={closeForm}
+          aria-label="Close without saving"
+        >
+          <X size={18} aria-hidden />
+        </button>
+      </div>
+
+      <label className="field">
+        <span className="field-label">Title</span>
+        <input
+          required
+          value={form.title}
+          onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+        />
+      </label>
+
+      <div className="batch-sessions__row">
+        <label className="field">
+          <span className="field-label">Date</span>
+          <input
+            type="date"
+            required
+            value={form.date}
+            onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+          />
+        </label>
+        <label className="field">
+          <span className="field-label">Start</span>
+          <input
+            type="time"
+            required
+            value={form.time}
+            onChange={(e) => setForm((f) => ({ ...f, time: e.target.value }))}
+          />
+        </label>
+        <label className="field">
+          <span className="field-label">End</span>
+          <input
+            type="time"
+            value={form.endTime}
+            onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
+          />
+        </label>
+      </div>
+
+      <label className="field">
+        <span className="field-label">Join link (Zoom / Meet)</span>
+        <input
+          type="url"
+          placeholder="https://"
+          value={form.linkUrl}
+          onChange={(e) => setForm((f) => ({ ...f, linkUrl: e.target.value }))}
+        />
+      </label>
+
+      <label className="field">
+        <span className="field-label">Notes</span>
+        <textarea
+          rows={3}
+          value={form.description}
+          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+        />
+      </label>
+
+      <p className="batch-sessions__scope muted">
+        <Users size={14} aria-hidden /> Scoped to <strong>{batch.name}</strong> only — other
+        batches will not see this session.
+      </p>
+
+      {msg && (
+        <div className="alert alert-error" role="alert">
+          {msg}
+        </div>
+      )}
+
+      <div className="batch-sessions__form-actions">
+        <button type="button" className="btn btn-outline btn-sm" onClick={closeForm}>
+          Cancel
+        </button>
+        <button type="submit" className="btn btn-primary btn-sm" disabled={saving}>
+          {saving ? 'Saving…' : editingId ? 'Save changes' : 'Add to calendar'}
+        </button>
+      </div>
+    </form>
+  );
+
+  const renderSession = (ev, { isPast = false } = {}) => {
+    const { dow, day, mon } = dateParts(ev.date);
+    const editing = formOpen && editingId === ev.id;
+    const link = normalizeEventLink(ev.linkUrl);
+
+    return (
+      <li
+        key={ev.id}
+        className={`batch-sessions__item${editing ? ' batch-sessions__item--editing' : ''}`}
+      >
+        <div className="batch-sessions__row-main">
+          {/*
+            The visible date is decoration for a screen reader — the row's
+            accessible names already carry the title, and the form beneath
+            repeats the date in a real input.
+          */}
+          <div className="batch-sessions__when" aria-hidden>
+            <span className="batch-sessions__dow">{dow}</span>
+            <span className="batch-sessions__day">{day}</span>
+            <span className="batch-sessions__mon">{mon}</span>
+          </div>
+
+          <div className="batch-sessions__body">
+            <p className="batch-sessions__name">{ev.title}</p>
+            <p className="batch-sessions__meta">
+              <span className="batch-sessions__time">{timeRange(ev)}</span>
+              {link && (
+                <span className="batch-sessions__tag">
+                  <ExternalLink size={12} aria-hidden />
+                  Join link set
+                </span>
+              )}
+            </p>
+          </div>
+
+          {/*
+            Three quiet actions of equal weight. "Add to Google Calendar" used
+            to be a full-width button on every row, which made the one action
+            CX rarely needs the loudest thing in a panel built for editing.
+          */}
+          <div className="batch-sessions__row-actions">
+            {!isPast && (
+              <a
+                className="batch-sessions__icon-btn"
+                href={buildGoogleCalendarUrl(ev)}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={`Add ${ev.title} to Google Calendar`}
+                title="Add to Google Calendar"
+              >
+                <CalendarPlus size={16} aria-hidden />
+              </a>
+            )}
+            <button
+              type="button"
+              className="batch-sessions__icon-btn"
+              onClick={() => (editing ? closeForm() : openEdit(ev))}
+              aria-expanded={editing}
+              aria-label={`Edit ${ev.title}`}
+              title="Edit"
+            >
+              <Pencil size={16} aria-hidden />
+            </button>
+            <button
+              type="button"
+              className="batch-sessions__icon-btn batch-sessions__icon-btn--danger"
+              onClick={() => handleDelete(ev)}
+              aria-label={`Delete ${ev.title}`}
+              title="Delete"
+            >
+              <Trash2 size={16} aria-hidden />
+            </button>
+          </div>
+        </div>
+
+        {editing && sessionForm}
+      </li>
+    );
   };
 
   if (!batch?.id) return null;
@@ -234,9 +452,8 @@ export default function BatchSessionsPanel({ batch, userId }) {
             Batch calendar sessions
           </h2>
           <p className="batch-sessions__sub muted">
-            Schedule live sessions for this cohort only ({participantCount} participants). CX
-            moderators on this batch see them on their calendars; learners in the batch see them
-            too. Use “Add to Google Calendar” on a session to block your external calendar.
+            Live sessions for this cohort only — {participantCount} participant
+            {participantCount === 1 ? '' : 's'} and the CX moderators on this batch see them.
           </p>
         </div>
         <div className="batch-sessions__actions">
@@ -245,8 +462,9 @@ export default function BatchSessionsPanel({ batch, userId }) {
             className="btn btn-outline btn-sm"
             onClick={() => {
               setImportOpen((v) => !v);
-              setFormOpen(false);
+              closeForm();
             }}
+            aria-expanded={importOpen}
           >
             <Upload size={16} aria-hidden />
             Import schedule
@@ -278,94 +496,8 @@ export default function BatchSessionsPanel({ batch, userId }) {
         />
       )}
 
-      {formOpen && (
-        <form className="batch-sessions__form" onSubmit={handleSubmit}>
-          <div className="batch-sessions__form-head">
-            <h3>{editingId ? 'Edit session' : 'New session'}</h3>
-            <button type="button" className="batch-sessions__icon-btn" onClick={closeForm}>
-              <X size={18} aria-hidden />
-              <span className="sr-only">Close</span>
-            </button>
-          </div>
-
-          <label className="field">
-            <span className="field-label">Title</span>
-            <input
-              required
-              value={form.title}
-              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-            />
-          </label>
-
-          <div className="batch-sessions__row">
-            <label className="field">
-              <span className="field-label">Date</span>
-              <input
-                type="date"
-                required
-                value={form.date}
-                onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-              />
-            </label>
-            <label className="field">
-              <span className="field-label">Start</span>
-              <input
-                type="time"
-                required
-                value={form.time}
-                onChange={(e) => setForm((f) => ({ ...f, time: e.target.value }))}
-              />
-            </label>
-            <label className="field">
-              <span className="field-label">End</span>
-              <input
-                type="time"
-                value={form.endTime}
-                onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
-              />
-            </label>
-          </div>
-
-          <label className="field">
-            <span className="field-label">Join link (Zoom / Meet)</span>
-            <input
-              type="url"
-              placeholder="https://"
-              value={form.linkUrl}
-              onChange={(e) => setForm((f) => ({ ...f, linkUrl: e.target.value }))}
-            />
-          </label>
-
-          <label className="field">
-            <span className="field-label">Notes</span>
-            <textarea
-              rows={3}
-              value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-            />
-          </label>
-
-          <p className="batch-sessions__scope muted">
-            <Users size={14} aria-hidden /> Scoped to <strong>{batch.name}</strong> only — other
-            batches will not see this session.
-          </p>
-
-          {msg && (
-            <div className="alert alert-error" role="alert">
-              {msg}
-            </div>
-          )}
-
-          <div className="batch-sessions__form-actions">
-            <button type="button" className="btn btn-outline btn-sm" onClick={closeForm}>
-              Cancel
-            </button>
-            <button type="submit" className="btn btn-primary btn-sm" disabled={saving}>
-              {saving ? 'Saving…' : editingId ? 'Save changes' : 'Add to calendar'}
-            </button>
-          </div>
-        </form>
-      )}
+      {/* Only a new session opens here; an edit opens inside its own row. */}
+      {formOpen && !editingId && sessionForm}
 
       {loading ? (
         <p className="muted">Loading sessions…</p>
@@ -379,83 +511,33 @@ export default function BatchSessionsPanel({ batch, userId }) {
         </div>
       ) : (
         <div className="batch-sessions__lists">
-          <div>
-            <h3 className="batch-sessions__list-title">Upcoming</h3>
+          <div className="batch-sessions__group">
+            <h3 className="batch-sessions__list-title">
+              Upcoming
+              <span className="batch-sessions__count">{upcoming.length}</span>
+            </h3>
             {upcoming.length === 0 ? (
               <p className="muted">Nothing upcoming.</p>
             ) : (
-              <ul className="batch-sessions__list">
-                {upcoming.map((ev) => (
-                  <li key={ev.id} className="batch-sessions__item">
-                    <div className="batch-sessions__item-main">
-                      <span className="batch-sessions__badge" aria-hidden>
-                        {ev.linkUrl ? <Video size={16} /> : <Clock size={16} />}
-                      </span>
-                      <div>
-                        <strong>{ev.title}</strong>
-                        <p className="muted">{formatWhen(ev)}</p>
-                      </div>
-                    </div>
-                    <div className="batch-sessions__item-actions">
-                      <EventDetailActions event={ev} />
-                      <button
-                        type="button"
-                        className="batch-sessions__icon-btn"
-                        onClick={() => openEdit(ev)}
-                        aria-label={`Edit ${ev.title}`}
-                      >
-                        <Pencil size={16} aria-hidden />
-                      </button>
-                      <button
-                        type="button"
-                        className="batch-sessions__icon-btn batch-sessions__icon-btn--danger"
-                        onClick={() => handleDelete(ev.id)}
-                        aria-label={`Delete ${ev.title}`}
-                      >
-                        <Trash2 size={16} aria-hidden />
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              upcomingMonths.map((group) => (
+                <div key={group.key} className="batch-sessions__month">
+                  <h4 className="batch-sessions__month-title">{monthLabel(group.key)}</h4>
+                  <ul className="batch-sessions__list">
+                    {group.items.map((ev) => renderSession(ev))}
+                  </ul>
+                </div>
+              ))
             )}
           </div>
 
           {past.length > 0 && (
-            <div>
-              <h3 className="batch-sessions__list-title">Recent past</h3>
+            <div className="batch-sessions__group">
+              <h3 className="batch-sessions__list-title">
+                Recent past
+                <span className="batch-sessions__count">{past.length}</span>
+              </h3>
               <ul className="batch-sessions__list batch-sessions__list--past">
-                {past.map((ev) => (
-                  <li key={ev.id} className="batch-sessions__item">
-                    <div className="batch-sessions__item-main">
-                      <span className="batch-sessions__badge" aria-hidden>
-                        <Link2 size={16} />
-                      </span>
-                      <div>
-                        <strong>{ev.title}</strong>
-                        <p className="muted">{formatWhen(ev)}</p>
-                      </div>
-                    </div>
-                    <div className="batch-sessions__item-actions">
-                      <button
-                        type="button"
-                        className="batch-sessions__icon-btn"
-                        onClick={() => openEdit(ev)}
-                        aria-label={`Edit ${ev.title}`}
-                      >
-                        <Pencil size={16} aria-hidden />
-                      </button>
-                      <button
-                        type="button"
-                        className="batch-sessions__icon-btn batch-sessions__icon-btn--danger"
-                        onClick={() => handleDelete(ev.id)}
-                        aria-label={`Delete ${ev.title}`}
-                      >
-                        <Trash2 size={16} aria-hidden />
-                      </button>
-                    </div>
-                  </li>
-                ))}
+                {past.map((ev) => renderSession(ev, { isPast: true }))}
               </ul>
             </div>
           )}
