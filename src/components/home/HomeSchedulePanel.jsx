@@ -1,15 +1,8 @@
 import { Link } from 'react-router-dom';
 import EventPreviewCard from '../EventPreviewCard';
 import EventDetailActions from '../EventDetailActions';
-import HomeMiniCalendar from './HomeMiniCalendar';
 
-/**
- * @param {object} props
- * @param {object[]} props.events — the next few sessions, listed
- * @param {object[]} [props.monthEvents] — every loaded event, for the month
- *   strip. Omit it and the strip is left out entirely rather than drawn empty.
- */
-export default function HomeSchedulePanel({ events, monthEvents }) {
+export default function HomeSchedulePanel({ events }) {
   return (
     <section className="dashboard-schedule" aria-labelledby="home-schedule-title">
       <div className="dashboard-panel__head">
@@ -20,9 +13,6 @@ export default function HomeSchedulePanel({ events, monthEvents }) {
           View calendar
         </Link>
       </div>
-
-      {monthEvents && <HomeMiniCalendar events={monthEvents} />}
-
       {events.length === 0 ? (
         <p className="muted dashboard-schedule__empty">
           No live sessions scheduled — check back soon.

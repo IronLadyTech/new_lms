@@ -53,7 +53,6 @@ export default function Home() {
   const [announcements, setAnnouncements] = useState([]);
   const [activities, setActivities] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
-  const [allEvents, setAllEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
@@ -83,7 +82,6 @@ export default function Home() {
 
         const today = new Date().toLocaleDateString('en-CA');
         setUpcomingEvents(events.filter((e) => e.date >= today).slice(0, 5));
-        setAllEvents(events);
       } catch (e) {
         console.error(e);
         if (!cancelled) {
@@ -206,10 +204,6 @@ export default function Home() {
     },
   ];
 
-  /* The rail carries live data, so it appears on exactly the same terms as
-     the rest of the loaded dashboard — never over a skeleton or an error. */
-  const showRail = !isGuest && !loading && !loadError;
-
   const retryLoad = () => {
     setLoadError('');
     setLoading(true);
@@ -251,110 +245,93 @@ export default function Home() {
           <HomeDashboardHero
             greeting={timeGreeting()}
             firstName={firstName}
-            programs={enrolledPrograms}
+            program={profile?.program}
             subline={heroSubline}
           />
+
+          <div className="dashboard-main-row">
+            <HomeContinueCard
+              course={continueCourse}
+              nextLabel={
+                mbwCourse
+                  ? 'Master of Business Warfare — quarterly leadership journey'
+                  : continueCourse?.description?.slice(0, 80)
+              }
+              enrolledCount={accessibleCourses.length}
+              progress={continueCourse?.code === 'MBW' ? mbwProgress : null}
+            />
+            <HomeSchedulePanel events={upcomingEvents} />
+          </div>
+
+          <HomeQuickStats stats={quickStats} />
         </div>
       )}
 
-      {/*
-       * Two columns from here down. The schedule used to sit in a single row
-       * beside the resume card and then scroll away, so the one time-critical
-       * thing on the page was gone before the learner reached their programmes.
-       * As a rail it stays put. Below 1100px there is no room for a column that
-       * narrow, so it stacks back under the main content.
-       */}
-      <div className={`dashboard-columns${showRail ? '' : ' dashboard-columns--single'}`}>
-        <div className="dashboard-columns__main">
-          {showRail && (
-            <>
-              <HomeContinueCard
-                course={continueCourse}
-                nextLabel={
-                  mbwCourse
-                    ? 'Master of Business Warfare — quarterly leadership journey'
-                    : continueCourse?.description?.slice(0, 80)
-                }
-                enrolledCount={accessibleCourses.length}
-                progress={continueCourse?.code === 'MBW' ? mbwProgress : null}
+      <section id="home-courses" className="section dashboard-programs">
+        <h2 className="home-section-title">Your programs</h2>
+
+        {isGuest ? (
+          <GuestHomePreview />
+        ) : loading ? (
+          <p className="muted">Loading courses…</p>
+        ) : courses.length === 0 ? (
+          <p className="muted">
+            No courses yet. Ask your admin to add courses from the admin panel.
+          </p>
+        ) : (
+          <div className="course-grid course-grid--rich">
+            {sortedCourses.map((course) => (
+              <CourseCard
+                key={course.id}
+                course={course}
+                access={getProgramAccessState(course.code, profile, courses)}
+                progress={course.code === 'MBW' && canOpenMbw ? mbwProgress : null}
               />
-              <HomeQuickStats stats={quickStats} />
-            </>
-          )}
-
-          <section id="home-courses" className="section dashboard-programs">
-            <h2 className="home-section-title">Your programs</h2>
-
-            {isGuest ? (
-              <GuestHomePreview />
-            ) : loading ? (
-              <p className="muted">Loading courses…</p>
-            ) : courses.length === 0 ? (
-              <p className="muted">
-                No courses yet. Ask your admin to add courses from the admin panel.
-              </p>
-            ) : (
-              <div className="course-grid course-grid--rich">
-                {sortedCourses.map((course) => (
-                  <CourseCard
-                    key={course.id}
-                    course={course}
-                    access={getProgramAccessState(course.code, profile, courses)}
-                    progress={course.code === 'MBW' && canOpenMbw ? mbwProgress : null}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-
-          {!isGuest && announcements.length > 0 && (
-            <section className="section dashboard-secondary">
-              <h2 className="home-section-title">Announcements</h2>
-              <AnnouncementFeed announcements={announcements} userId={user.uid} />
-            </section>
-          )}
-
-          {!isGuest && !loading && (
-            <>
-              {/*
-               * Reference material, not the reason a learner opened the page.
-               * Collapsed by default so the dashboard ends shortly after the
-               * programmes list; open state is remembered by the browser.
-               */}
-              <details className="dashboard-disclosure">
-                <summary>
-                  <span className="dashboard-disclosure__title">Your progress</span>
-                  <span className="dashboard-disclosure__hint muted">Streaks and activity</span>
-                </summary>
-                <div className="dashboard-disclosure__body">
-                  {user?.uid && (
-                    <StreakAnalyticsModule
-                      learnerId={user.uid}
-                      courses={accessibleCourses}
-                      showBrowseLink={false}
-                      homeVariant
-                    />
-                  )}
-                  <section className="section dashboard-secondary">
-                    <h3 className="home-section-title">Last activity</h3>
-                    {activities.length === 0 ? (
-                      <p className="muted">No activity yet. Open a program and start a lesson.</p>
-                    ) : (
-                      <ActivityLogList activities={activities} courseMap={courseMap} />
-                    )}
-                  </section>
-                </div>
-              </details>
-            </>
-          )}
-        </div>
-
-        {showRail && (
-          <aside className="dashboard-columns__rail" aria-label="Schedule">
-            <HomeSchedulePanel events={upcomingEvents} monthEvents={allEvents} />
-          </aside>
+            ))}
+          </div>
         )}
-      </div>
+      </section>
+
+      {!isGuest && announcements.length > 0 && (
+        <section className="section dashboard-secondary">
+          <h2 className="home-section-title">Announcements</h2>
+          <AnnouncementFeed announcements={announcements} userId={user.uid} />
+        </section>
+      )}
+
+      {!isGuest && !loading && (
+        <>
+          {/*
+           * Reference material, not the reason a learner opened the page.
+           * Collapsed by default so the dashboard ends shortly after the
+           * programmes list; open state is remembered by the browser.
+           */}
+          <details className="dashboard-disclosure">
+            <summary>
+              <span className="dashboard-disclosure__title">Your progress</span>
+              <span className="dashboard-disclosure__hint muted">Streaks and activity</span>
+            </summary>
+            <div className="dashboard-disclosure__body">
+              {user?.uid && (
+                <StreakAnalyticsModule
+                  learnerId={user.uid}
+                  courses={accessibleCourses}
+                  showBrowseLink={false}
+                  homeVariant
+                />
+              )}
+              <section className="section dashboard-secondary">
+                <h3 className="home-section-title">Last activity</h3>
+                {activities.length === 0 ? (
+                  <p className="muted">No activity yet. Open a program and start a lesson.</p>
+                ) : (
+                  <ActivityLogList activities={activities} courseMap={courseMap} />
+                )}
+              </section>
+            </div>
+          </details>
+        </>
+      )}
     </div>
   );
 }
