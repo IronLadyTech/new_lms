@@ -17153,3 +17153,101 @@ body.notification-sheet-open .bottom-nav {
     min-width: 0;
   }
 }
+
+/* ---- CX: schedule import ---------------------------------------------- */
+
+.batch-sessions__actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.schedule-import {
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.schedule-import__hint {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--text-sm);
+}
+
+.schedule-import textarea {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--text-xs);
+  /* Pasted rows are wide; wrapping them makes the columns unreadable. */
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.schedule-import__file {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  margin-top: var(--space-2xs);
+  cursor: pointer;
+}
+
+.schedule-import__preview {
+  margin-top: var(--space-md);
+}
+
+.schedule-import__count {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--text-sm);
+}
+
+/* A long schedule scrolls inside its own box rather than stretching the page. */
+.schedule-import__table-wrap {
+  max-height: 20rem;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.schedule-import__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-xs);
+}
+
+.schedule-import__table th,
+.schedule-import__table td {
+  padding: var(--space-2xs) var(--space-sm);
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.schedule-import__table th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  font-weight: 700;
+}
+
+/* Skipped rows are context, not the subject — muted, not hidden, so it is
+   clear why the count is lower than the number of rows pasted. */
+.schedule-import__table tr.is-skipped td {
+  color: var(--muted);
+}
+
+.schedule-import .alert ul {
+  margin: var(--space-2xs) 0 0;
+  padding-left: 1.1rem;
+  font-size: var(--text-xs);
+}
+
+@media (max-width: 767px) {
+  .batch-sessions__actions {
+    width: 100%;
+  }
+
+  .batch-sessions__actions .btn {
+    flex: 1;
+  }
+}

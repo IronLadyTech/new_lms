@@ -6,6 +6,7 @@ import {
   Pencil,
   Plus,
   Trash2,
+  Upload,
   Users,
   Video,
   X,
@@ -19,6 +20,7 @@ import {
 import { normalizeEventLink } from '../../utils/eventLinks';
 import EventDetailActions from '../EventDetailActions';
 import ConfirmDialog from '../ConfirmDialog';
+import ScheduleImport from './ScheduleImport';
 import { useConfirm } from '../../hooks/useConfirm';
 
 const EMPTY = {
@@ -63,8 +65,22 @@ export default function BatchSessionsPanel({ batch, userId }) {
   const [form, setForm] = useState({ ...EMPTY, date: todayIso() });
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [importOpen, setImportOpen] = useState(false);
 
   const participantCount = (batch?.memberIds || []).length;
+
+  /*
+   * The deck writes dates without a year. The batch's existing sessions are the
+   * best evidence of which year it is running in; with none yet, this year is
+   * the only sensible guess and CX can correct any row afterwards.
+   */
+  const importYear = useMemo(() => {
+    const dates = events
+      .map((e) => e.date)
+      .filter(Boolean)
+      .sort();
+    return dates.length ? Number(dates[0].slice(0, 4)) : new Date().getFullYear();
+  }, [events]);
 
   const load = useCallback(async () => {
     if (!batch?.id) return;
@@ -92,7 +108,10 @@ export default function BatchSessionsPanel({ batch, userId }) {
 
   const past = useMemo(() => {
     const today = todayIso();
-    return events.filter((e) => (e.date || '') < today).slice(-5).reverse();
+    return events
+      .filter((e) => (e.date || '') < today)
+      .slice(-5)
+      .reverse();
   }, [events]);
 
   const openCreate = () => {
@@ -160,6 +179,32 @@ export default function BatchSessionsPanel({ batch, userId }) {
     }
   };
 
+  /*
+   * Created one at a time on purpose. A batched write would be faster, but if
+   * the tenth of twenty-six failed there would be no way to tell CX which ones
+   * landed. Sequential means the error names the session it stopped on, and
+   * re-importing skips whatever already went in.
+   */
+  const handleImport = async (sessions) => {
+    for (const s of sessions) {
+      await createEvent({
+        title: s.title,
+        description: s.description,
+        date: s.date,
+        time: s.time,
+        endTime: s.endTime || '',
+        type: s.type || 'class',
+        linkUrl: '',
+        batchId: batch.id,
+        batchName: batch.name || '',
+        audience: 'batch',
+        blocksStaff: true,
+        createdBy: userId,
+      });
+    }
+    await load();
+  };
+
   const handleDelete = async (eventId) => {
     const ok = await confirm({
       title: 'Delete session',
@@ -194,10 +239,23 @@ export default function BatchSessionsPanel({ batch, userId }) {
             too. Use “Add to Google Calendar” on a session to block your external calendar.
           </p>
         </div>
-        <button type="button" className="btn btn-primary btn-sm" onClick={openCreate}>
-          <Plus size={16} aria-hidden />
-          Add session
-        </button>
+        <div className="batch-sessions__actions">
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={() => {
+              setImportOpen((v) => !v);
+              setFormOpen(false);
+            }}
+          >
+            <Upload size={16} aria-hidden />
+            Import schedule
+          </button>
+          <button type="button" className="btn btn-primary btn-sm" onClick={openCreate}>
+            <Plus size={16} aria-hidden />
+            Add session
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -209,6 +267,15 @@ export default function BatchSessionsPanel({ batch, userId }) {
         <div className="alert alert-success" role="status">
           {msg}
         </div>
+      )}
+
+      {importOpen && (
+        <ScheduleImport
+          startYear={importYear}
+          existingEvents={events}
+          onImport={handleImport}
+          onClose={() => setImportOpen(false)}
+        />
       )}
 
       {formOpen && (
