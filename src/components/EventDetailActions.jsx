@@ -13,8 +13,10 @@ export default function EventDetailActions({ event, compact = false }) {
         rel="noreferrer"
         className="btn btn-outline btn-sm event-actions__btn"
       >
+        {/* "Google Calendar" named a place, not an action — it read as a link
+            to Google rather than something that adds this session to it. */}
         <CalendarPlus size={14} strokeWidth={2} />
-        Google Calendar
+        Add to Google Calendar
       </a>
       {linkUrl && (
         <a
