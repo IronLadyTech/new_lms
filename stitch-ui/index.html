@@ -1,0 +1,233 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>WizeUp Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style data-purpose="custom-fonts">
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #F8F9FA;
+    }
+  </style>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              light: '#FCEBEB',
+              DEFAULT: '#ED1C24',
+              dark: '#B9151F',
+            },
+            stat: {
+              blue: '#D4E8F9',
+              green: '#D4F5E9',
+              red: '#FCE4E4',
+              orange: '#FCEFE4',
+            }
+          }
+        }
+      }
+    }
+  </script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"></head>
+<body class="bg-brand-light flex h-screen overflow-hidden">
+<!-- BEGIN: Sidebar -->
+<aside class="w-64 flex flex-col justify-between h-full relative z-10"><div class="p-8"><div class="flex items-center justify-between mb-8 px-4"><div class="flex items-center gap-2 shrink-0"><img alt="Iron Lady Logo" class="w-8 h-8 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcYFbpWtc1ZN_6HL2R9ekrby0c7ezU1IHo9Gn5WfVEr25P8KWZYTop1N164_YX3MGb8A7eoc2DhLespDU6UMPiOo1njwWRTMmk6LizSjTWacFL8AzWcmnioA0Y_1xCGOihmqgF1f4dyEU7ErJ-Zi0zJ2VTqqm2N3XRVqrqjCq8WrcVXIvxZn7aWZB0i6iyoRsIFqHIrSaXjpr-DTDODKQrVfV7QXDmIrzDe9aSEgVbcwW9-Qcs1oRAOdTPd4QLFh1nTCk"><span class="text-base font-bold text-black uppercase tracking-wider shrink-0">Iron Lady</span></div><button class="w-8 h-8 rounded-lg bg-brand-light/50 flex items-center justify-center text-gray-600 hover:bg-brand-light transition-colors shrink-0"><span class="material-symbols-outlined text-lg">side_navigation</span></button></div>
+<!-- Logo -->
+<!-- Navigation Links -->
+<nav class="space-y-2">
+<a class="flex items-center gap-3 bg-brand text-white px-6 py-3 font-semibold rounded-2xl" href="#">
+<i class="fa-solid fa-border-all w-5"></i> Dashboard
+    </a>
+<a class="flex items-center gap-3 text-gray-700 hover:bg-white/50 px-4 py-3 font-medium transition-colors rounded-md" href="#">
+<i class="fa-regular fa-comment-dots w-5"></i>
+      Inbox
+    </a>
+<div class="pt-4 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider px-4">Learning</div>
+<a class="flex items-center gap-3 text-gray-700 hover:bg-white/50 px-4 py-3 font-medium transition-colors rounded-md" href="#">
+<i class="fa-solid fa-book-open w-5"></i>
+      Browse Courses
+    </a>
+<a class="flex items-center justify-between text-gray-700 hover:bg-white/50 px-4 py-3 font-medium transition-colors rounded-md" href="#">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-folder w-5"></i>
+        My Courses
+      </div>
+<i class="fa-solid fa-chevron-down text-xs"></i>
+</a>
+<a class="flex items-center gap-3 text-gray-700 hover:bg-white/50 px-4 py-3 font-medium transition-colors rounded-md" href="#">
+<i class="fa-regular fa-clipboard w-5"></i>
+      Assignments
+    </a>
+<a class="flex items-center gap-3 text-gray-700 hover:bg-white/50 px-4 py-3 font-medium transition-colors rounded-md" href="#">
+<i class="fa-regular fa-calendar w-5"></i>
+      Schedule
+    </a>
+<a class="flex items-center justify-between text-gray-700 hover:bg-white/50 px-4 py-3 font-medium transition-colors rounded-md" href="#">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-chart-simple w-5"></i>
+        Track Progress
+      </div>
+<i class="fa-solid fa-chevron-down text-xs"></i>
+</a>
+</nav>
+</div>
+<div class="p-6 space-y-2">
+<a class="flex items-center gap-3 text-gray-700 hover:bg-white/50 px-4 py-2 font-medium transition-colors rounded-md" href="#">
+<i class="fa-solid fa-gear w-5"></i>
+    Settings
+  </a>
+<a class="flex items-center gap-3 text-gray-700 hover:bg-white/50 px-4 py-2 font-medium transition-colors rounded-md" href="#">
+<i class="fa-solid fa-headset w-5"></i>
+    Help &amp; Support
+  </a>
+<a class="flex items-center gap-3 text-gray-700 hover:bg-white/50 px-4 py-2 font-medium transition-colors mt-4 rounded-md" href="#">
+<i class="fa-solid fa-arrow-right-from-bracket w-5"></i>
+    Log Out
+  </a>
+</div></aside>
+<!-- END: Sidebar -->
+<!-- BEGIN: Main Content Area -->
+<div class="flex-1 flex flex-col h-full bg-white overflow-hidden rounded-l-[40px] relative mt-2 mb-2 mr-2 shadow-sm border border-gray-100/50">
+<!-- BEGIN: Header -->
+<header class="border-b border-gray-100 flex items-center justify-between px-8 shrink-0 py-4"><div class="flex flex-col"><h1 class="text-xl font-bold text-black">Welcome, Alex Antony 👋</h1><p class="text-xs text-gray-500 mt-1">Here's what happened with your learning system</p></div><div class="flex items-center gap-6 pr-4 ml-auto"><div class="flex items-center gap-3"><button class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 relative"><i class="fa-regular fa-bell"></i></button></div><div class="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-xl transition-colors">
+<img alt="User Avatar" class="w-10 h-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdsOLJzqBcUE7830eGIpSYbNCe9e00qMCivvzMXqAPTEs7kjj9qacqpv8HRPLeSDL0vOnOy3BQc2wI3qzG8XVgj9jpH6fboHsp2DoPmUmKV9v2By662t1p3VUbLtnAAIXxwVevIpIqkETdBV2HaUOW--otSg48K3aATOU4buvkPN_ZMgIcySHbEg8cxkakDeqLfExK5bHL4RxRwM1FmchlmguVofZ7Pq3tEvSIBCkI_XW6-C-jaal_Zg">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="text-sm font-bold text-black">Alex Antony</span>
+<i class="fa-solid fa-chevron-down text-[10px] text-gray-500"></i>
+</div>
+<span class="text-[10px] text-gray-500 leading-tight">Game Design Enthusiast, Learner</span>
+</div>
+</div></div></header>
+<!-- END: Header -->
+<!-- BEGIN: Scrollable Content Area -->
+<main class="flex-1 overflow-y-auto flex gap-8 px-8 py-6"><div class="flex-1 flex flex-col gap-8"><div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <!-- Course Card 1 -->
+
+
+  <!-- Course Card 2 -->
+
+
+  <!-- Course Card 3 -->
+
+</div></div>
+<!-- Left Column (Main Dashboard Stats & Courses) -->
+<!-- Right Column (Events Sidebar) -->
+<aside class="w-80 flex flex-col gap-6"><div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+<div class="flex items-center justify-between mb-6">
+<h2 class="text-lg font-bold text-black">Upcoming Events</h2>
+<a class="text-xs font-medium text-brand flex items-center gap-1 hover:underline" href="#">
+      View calendar <i class="fa-solid fa-chevron-right text-[10px]"></i>
+</a>
+</div>
+<!-- Calendar Placeholder Image -->
+<div class="flex flex-col gap-6">
+  <!-- Calendar Header -->
+  <div class="flex items-center justify-between px-2">
+    <button class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50">
+      <span class="material-symbols-outlined text-lg">chevron_left</span>
+    </button>
+    <h3 class="text-base font-bold text-black">June <span class="font-medium">2022</span></h3>
+    <button class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50">
+      <span class="material-symbols-outlined text-lg">chevron_right</span>
+    </button>
+  </div>
+
+  <!-- Calendar Grid -->
+  <div class="grid grid-cols-7 gap-y-4 text-center">
+    <!-- Days of Week -->
+    <div class="text-[10px] font-semibold text-gray-500 uppercase">Mon</div>
+    <div class="text-[10px] font-semibold text-gray-500 uppercase">Tue</div>
+    <div class="text-[10px] font-semibold text-gray-500 uppercase">Wed</div>
+    <div class="text-[10px] font-semibold text-gray-500 uppercase">Thu</div>
+    <div class="text-[10px] font-semibold text-gray-500 uppercase">Fri</div>
+    <div class="text-[10px] font-semibold text-gray-500 uppercase">Sat</div>
+    <div class="text-[10px] font-semibold text-gray-500 uppercase">Sun</div>
+
+    <!-- Empty slots for June 2022 (starts on Wednesday) -->
+    <div></div><div></div><div></div><div></div>
+
+    <!-- Calendar Days with Indicators -->
+    <div class="flex flex-col items-center gap-1">
+      <span class="text-xs font-medium">1</span>
+      <div class="flex gap-0.5"><div class="w-1 h-1 rounded-full bg-purple-500"></div><div class="w-1 h-1 rounded-full bg-teal-500"></div><div class="w-1 h-1 rounded-full bg-pink-500"></div></div>
+    </div>
+    <div class="text-xs font-medium">2</div>
+    <div class="text-xs font-medium">3</div>
+
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">4</span><div class="w-1 h-1 rounded-full bg-purple-500"></div></div>
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">5</span><div class="flex gap-0.5"><div class="w-1 h-1 rounded-full bg-teal-500"></div><div class="w-1 h-1 rounded-full bg-pink-500"></div></div></div>
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">6</span><div class="flex gap-0.5"><div class="w-1 h-1 rounded-full bg-purple-500"></div><div class="w-1 h-1 rounded-full bg-teal-500"></div><div class="w-1 h-1 rounded-full bg-pink-500"></div></div></div>
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">7</span><div class="flex gap-0.5"><div class="w-1 h-1 rounded-full bg-purple-500"></div><div class="w-1 h-1 rounded-full bg-teal-500"></div></div></div>
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">8</span><div class="flex gap-0.5"><div class="w-1 h-1 rounded-full bg-teal-500"></div><div class="w-1 h-1 rounded-full bg-purple-500"></div></div></div>
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">9</span><div class="w-1 h-1 rounded-full bg-pink-500"></div></div>
+    <div class="text-xs font-medium">10</div>
+
+    <!-- Row 3 -->
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">11</span><div class="flex gap-0.5"><div class="w-1 h-1 rounded-full bg-purple-500"></div><div class="w-1 h-1 rounded-full bg-teal-500"></div><div class="w-1 h-1 rounded-full bg-pink-500"></div></div></div>
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">12</span><div class="flex gap-0.5"><div class="w-1 h-1 rounded-full bg-purple-500"></div><div class="w-1 h-1 rounded-full bg-teal-500"></div><div class="w-1 h-1 rounded-full bg-pink-500"></div></div></div>
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">13</span><div class="w-1 h-1 rounded-full bg-purple-500"></div></div>
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">14</span><div class="flex gap-0.5"><div class="w-1 h-1 rounded-full bg-purple-500"></div><div class="w-1 h-1 rounded-full bg-teal-500"></div><div class="w-1 h-1 rounded-full bg-pink-500"></div></div></div>
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">15</span><div class="flex gap-0.5"><div class="w-1 h-1 rounded-full bg-teal-500"></div><div class="w-1 h-1 rounded-full bg-purple-500"></div></div></div>
+    <div class="text-xs font-medium">16</div>
+    <div class="text-xs font-medium">17</div>
+
+    <!-- Row 4 -->
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">18</span><div class="flex gap-0.5"><div class="w-1 h-1 rounded-full bg-purple-500"></div><div class="w-1 h-1 rounded-full bg-teal-500"></div><div class="w-1 h-1 rounded-full bg-pink-500"></div></div></div>
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">19</span><div class="flex gap-0.5"><div class="w-1 h-1 rounded-full bg-purple-500"></div><div class="w-1 h-1 rounded-full bg-pink-500"></div></div></div>
+    <div class="text-xs font-medium">20</div>
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">21</span><div class="w-1 h-1 rounded-full bg-pink-500"></div></div>
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">22</span><div class="flex gap-0.5"><div class="w-1 h-1 rounded-full bg-purple-500"></div><div class="w-1 h-1 rounded-full bg-teal-500"></div><div class="w-1 h-1 rounded-full bg-pink-500"></div></div></div>
+    <div class="text-xs font-medium">23</div>
+    <div class="text-xs font-medium">24</div>
+
+    <!-- Row 5 -->
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">25</span><div class="w-1 h-1 rounded-full bg-pink-500"></div></div>
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">26</span><div class="flex gap-0.5"><div class="w-1 h-1 rounded-full bg-teal-500"></div><div class="w-1 h-1 rounded-full bg-purple-500"></div></div></div>
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">27</span><div class="flex gap-0.5"><div class="w-1 h-1 rounded-full bg-purple-500"></div><div class="w-1 h-1 rounded-full bg-teal-500"></div><div class="w-1 h-1 rounded-full bg-pink-500"></div></div></div>
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">28</span><div class="flex gap-0.5"><div class="w-1 h-1 rounded-full bg-purple-500"></div><div class="w-1 h-1 rounded-full bg-teal-500"></div><div class="w-1 h-1 rounded-full bg-pink-500"></div></div></div>
+    <div class="flex flex-col items-center gap-1"><span class="text-xs font-medium">29</span><div class="flex gap-0.5"><div class="w-1 h-1 rounded-full bg-purple-500"></div><div class="w-1 h-1 rounded-full bg-pink-500"></div></div></div>
+    <div class="text-xs font-medium">30</div>
+    <div class="text-xs font-medium">31</div>
+  </div>
+
+  <!-- Event List -->
+  <div class="space-y-4 mt-2">
+    <div class="flex gap-3">
+      <div class="w-2 h-2 rounded-full bg-purple-500 mt-1.5 shrink-0"></div>
+      <div class="flex flex-col">
+        <span class="text-sm font-bold text-black">Grade 7 Tea Party</span>
+        <span class="text-[10px] text-gray-500">8th July, 2022</span>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <div class="w-2 h-2 rounded-full bg-teal-500 mt-1.5 shrink-0"></div>
+      <div class="flex flex-col">
+        <span class="text-sm font-bold text-black">Geography Test - Europe as a continent</span>
+        <span class="text-[10px] text-gray-500">8th July, 2022</span>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <div class="w-2 h-2 rounded-full bg-pink-500 mt-1.5 shrink-0"></div>
+      <div class="flex flex-col">
+        <span class="text-sm font-bold text-black">PTA Meeting</span>
+        <span class="text-[10px] text-gray-500">9th July, 2022</span>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Event List -->
+
+</div></aside></main>
+<!-- END: Scrollable Content Area -->
+</div>
+<!-- END: Main Content Area -->
+
+
+
+
+</body></html>

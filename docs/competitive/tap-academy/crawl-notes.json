@@ -1,0 +1,4441 @@
+{
+  "crawledAt": "2026-08-23T08:03:37.569Z",
+  "base": "https://tai.thetapacademy.com",
+  "pages": [
+    {
+      "url": "https://tai.thetapacademy.com/",
+      "finalUrl": "https://tai.thetapacademy.com/",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [],
+      "navLabels": [
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "99+",
+        "Scan QR code",
+        "Ask TAI",
+        "Profile",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out",
+        "Leaderboard",
+        "Placement",
+        "Streak"
+      ],
+      "uiStates": [
+        "empty",
+        "locked",
+        "completed",
+        "progress",
+        "loading-indicator"
+      ],
+      "bodySample": "99+ MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 G My Learning Pick up where you left off Courses 1% Assignments 58% Tests 73% COURSE 0% JDBC Introduction by Rohit Ravinder Start ASSIGNMENT 100% Core Java (FEB B1 2024 [BTM] ) Review Practice Streak 🔥 1 Current streak 1227 Longest streak 1227 Total Correct submissions 2026 2025 2024 Sep Oct Nov Dec Jan Feb Mar Apr May Jun Jul Aug Mon Wed Fri No practice yet today How we count Less More Placement Drives 790 Eligible drives 97 Applied 12% applied Skills Acquired Complete assignments and tests to unlock your skill ratings. Leaderboard Overall top performers D Darshan Patil 9783 pts 2 H Hemanth 10285 pts 1 G Gunavathi 9756 pts 3 4 A Ankita 9623 pts 5 A Ashwini K 9608 pts 6 F Fakkirappa S Sunagar 9507 pts 7 N Nagulapally 9505 pts 8 N N V S 9495 pts 9 S Sameeya 9401 pts 10 P Pasupathi M 9354 pts YOUR POSITION 2627 G G Yaswanth You 4113 pts ATTENDANCE Core Java Programming SQL Advanced Java Soft Skills HTML & CSS Python 56% attended 45 of 80 classes attended · 35 missed Present Absent Week off 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 Feb Mar Apr May Jun We use cookies to give you the best possible experience while you browse through our website. By pursuing the use of our website you implicitly agree to the usage of cookies on this site. Learn moreAccept All Preferences",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "home",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://tai.thetapacademy.com/courses",
+      "finalUrl": "https://tai.thetapacademy.com/courses",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Courses"
+        },
+        {
+          "tag": "h3",
+          "text": "Java"
+        },
+        {
+          "tag": "h3",
+          "text": "Hibernate"
+        },
+        {
+          "tag": "h3",
+          "text": "Springs"
+        },
+        {
+          "tag": "h3",
+          "text": "Advanced JAVA"
+        },
+        {
+          "tag": "h3",
+          "text": "Data Structures and Algorithm - Java"
+        },
+        {
+          "tag": "h3",
+          "text": "HTML and CSS"
+        },
+        {
+          "tag": "h3",
+          "text": "Python"
+        },
+        {
+          "tag": "h3",
+          "text": "Data Structures and Algorithm - Python"
+        },
+        {
+          "tag": "h3",
+          "text": "MySQL"
+        },
+        {
+          "tag": "h3",
+          "text": "Aptitude"
+        },
+        {
+          "tag": "h3",
+          "text": "Notes"
+        },
+        {
+          "tag": "h3",
+          "text": "Javascript"
+        },
+        {
+          "tag": "h3",
+          "text": "Live Class Recordings [JUN-B1-2024]"
+        },
+        {
+          "tag": "h3",
+          "text": "Projects"
+        },
+        {
+          "tag": "h3",
+          "text": "Programming Essentials"
+        }
+      ],
+      "navLabels": [
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "99+",
+        "Scan QR code",
+        "Ask TAI",
+        "Profile",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out"
+      ],
+      "uiStates": [
+        "completed",
+        "progress"
+      ],
+      "bodySample": "99+ MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 G Courses No live classes right now View schedule All 15 In progress 3 Completed 0 Java 23 modules 101 Hr 15.5 mins Ready to start Hibernate 6 modules 7 Hr 39 mins 4% complete Springs 8 modules 3 Hr 51 mins Ready to start Advanced JAVA 3 modules 20 Hr 34 mins Ready to start Data Structures and Algorithm - Java 14 modules 51 Hr 28 mins 6% complete HTML and CSS 2 modules 18 Hr 5 mins Ready to start Python 30 modules 52 Hr 54 mins 2% complete Data Structures and Algorithm - Python 14 modules 50 Hr 3 mins Ready to start MySQL 10 modules 28 Hr 3 mins Ready to start Aptitude 12 modules 23 Hr 35 mins Ready to start Notes 8 modules 0 mins Ready to start Javascript 41 modules 41 Hr 1 mins Ready to start Live Class Recordings [JUN-B1-2024] 9 modules 335 Hr 29 mins Ready to start Projects 3 modules 17 Hr 46 mins Ready to start Programming Essentials 9 modules 21 Hr 51 mins Ready to start We use cookies to give you the best possible experience while you browse through our website. By pursuing the use of our website you implicitly agree to the usage of cookies on this site. Learn moreAccept All Preferences",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        },
+        {
+          "href": "/courses/6547a220902b75831a41253a",
+          "label": "Java 23 modules 101 Hr 15.5 mins Ready to start"
+        },
+        {
+          "href": "/courses/65c49caf5c6956f2631ba75e",
+          "label": "Hibernate 6 modules 7 Hr 39 mins 4% complete"
+        },
+        {
+          "href": "/courses/65c4b53dc7fba0fee6602e2b",
+          "label": "Springs 8 modules 3 Hr 51 mins Ready to start"
+        },
+        {
+          "href": "/courses/65c6040cc7fba0fee6781e8b",
+          "label": "Advanced JAVA 3 modules 20 Hr 34 mins Ready to start"
+        },
+        {
+          "href": "/courses/65c72b155c6956f26342f804",
+          "label": "Data Structures and Algorithm - Java 14 modules 51 Hr 28 mins 6% complete"
+        },
+        {
+          "href": "/courses/65c72e53c7fba0fee684b4b2",
+          "label": "HTML and CSS 2 modules 18 Hr 5 mins Ready to start"
+        },
+        {
+          "href": "/courses/65c736945c6956f263448a0d",
+          "label": "Python 30 modules 52 Hr 54 mins 2% complete"
+        },
+        {
+          "href": "/courses/65c76ad3c7fba0fee68b770e",
+          "label": "Data Structures and Algorithm - Python 14 modules 50 Hr 3 mins Ready to start"
+        },
+        {
+          "href": "/courses/66e2754d6833c8e613b2fcf2",
+          "label": "MySQL 10 modules 28 Hr 3 mins Ready to start"
+        },
+        {
+          "href": "/courses/66fbd87e6ca8fe5f02c24da7",
+          "label": "Aptitude 12 modules 23 Hr 35 mins Ready to start"
+        },
+        {
+          "href": "/courses/674813f9288a02498523c583",
+          "label": "Notes 8 modules 0 mins Ready to start"
+        },
+        {
+          "href": "/courses/6787608d9ceeab182127d80a",
+          "label": "Javascript 41 modules 41 Hr 1 mins Ready to start"
+        },
+        {
+          "href": "/courses/679797ad619d1860de2c7587",
+          "label": "Live Class Recordings [JUN-B1-2024] 9 modules 335 Hr 29 mins Ready to start"
+        },
+        {
+          "href": "/courses/67b5da3297d15a0ec99454a8",
+          "label": "Projects 3 modules 17 Hr 46 mins Ready to start"
+        },
+        {
+          "href": "/courses/67c195c17b53022c0f1066f9",
+          "label": "Programming Essentials 9 modules 21 Hr 51 mins Ready to start"
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "courses",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://tai.thetapacademy.com/tests",
+      "finalUrl": "https://tai.thetapacademy.com/tests",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Tests"
+        },
+        {
+          "tag": "h3",
+          "text": "No tests scheduled right now"
+        },
+        {
+          "tag": "h2",
+          "text": "Practice on your own"
+        }
+      ],
+      "navLabels": [
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "99+",
+        "Scan QR code",
+        "Ask TAI",
+        "Profile",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out"
+      ],
+      "uiStates": [],
+      "bodySample": "99+ MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 G Tests Upcoming 0 Contests 0 History 32 No tests scheduled right now Keep moving with a self-paced practice test below. SELF-PACED PRACTICE Practice on your own Choose a subject and start a focused practice test anytime. 2 subjects Core Java (FEB B1 2024 [BTM] ) Programming (Feb-B1) [BTM] We use cookies to give you the best possible experience while you browse through our website. By pursuing the use of our website you implicitly agree to the usage of cookies on this site. Learn moreAccept All Preferences",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "tests",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://tai.thetapacademy.com/assignments",
+      "finalUrl": "https://tai.thetapacademy.com/assignments",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Assignments"
+        }
+      ],
+      "navLabels": [
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "99+",
+        "Scan QR code",
+        "Ask TAI",
+        "Profile",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out"
+      ],
+      "uiStates": [
+        "completed",
+        "progress"
+      ],
+      "bodySample": "99+ MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 G Assignments Overall progress 61% 1.13k of 1.84k questions solved Across 10 assignments Assignments done 4 / 10 Questions attempted 1.13k 62% of all questions Marks earned 4.11k / 7.95k 52% of available marks All 10 In progress 6 Completed 4 Core Java (FEB B1 2024 [BTM] ) Beginner Modules 19 Questions 310 Marks 429 / 448 Completed All questions solved Programming (Feb-B1) [BTM] Beginner Modules 15 Questions 260 Marks 2317 / 2611 Completed All questions solved Company Interview Questions Beginner Modules 18 Questions 89 Marks 613 / 910 Progress 80% 71 solved 18 remaining SQL [Feb B1 2024 | BTM ] Beginner Modules 9 Questions 182 Marks 175 / 183 Completed All questions solved Aptitude Beginner Modules 10 Questions 201 Marks 57 / 309 Progress 30% 60 solved 141 remaining Python Beginner Modules 12 Questions 236 Marks 98 / 309 Progress 36% 85 solved 151 remaining Java Coding Scenarios Intermediate Modules 13 Questions 125 Marks 305 / 1250 Progress 29% 36 solved 89 remaining HTML Beginner Modules 6 Questions 123 Marks 120 / 146 Completed All questions solved CSS Beginner Modules 8 Questions 160 Marks 0 / 160 Progress 0% 0 solved 160 remaining Data Structures & Algorithms (Java) Intermediate Modules 11 Questions 152 Marks 0 / 1625 Progress 0% 0 solved 152 remaining We use cookies to give you the best possible experience while you browse through our website. By pursuing the use of our website you implicitly agree to the usage of cookies on this site. Learn moreAccept All Preferences",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        },
+        {
+          "href": "/assignments/65c4dbef5c6956f263238d66?viewMode=tree-view",
+          "label": "Core Java (FEB B1 2024 [BTM] ) Beginner Modules 19 Questions 310 Marks 429 / 448"
+        },
+        {
+          "href": "/assignments/65d2f37d5c6956f263b4008e?viewMode=tree-view",
+          "label": "Programming (Feb-B1) [BTM] Beginner Modules 15 Questions 260 Marks 2317 / 2611 C"
+        },
+        {
+          "href": "/assignments/6635bc217adf493676073c81?viewMode=tree-view",
+          "label": "Company Interview Questions Beginner Modules 18 Questions 89 Marks 613 / 910 Pro"
+        },
+        {
+          "href": "/assignments/6641fe227adf49367639474d?viewMode=tree-view",
+          "label": "SQL [Feb B1 2024 | BTM ] Beginner Modules 9 Questions 182 Marks 175 / 183 Comple"
+        },
+        {
+          "href": "/assignments/66458b06bc427c696eaa969c?viewMode=tree-view",
+          "label": "Aptitude Beginner Modules 10 Questions 201 Marks 57 / 309 Progress 30% 60 solved"
+        },
+        {
+          "href": "/assignments/664af118bc427c696e6a7e6d?viewMode=tree-view",
+          "label": "Python Beginner Modules 12 Questions 236 Marks 98 / 309 Progress 36% 85 solved 1"
+        },
+        {
+          "href": "/assignments/66dedbe4470d26c8d2bb3306?viewMode=tree-view",
+          "label": "Java Coding Scenarios Intermediate Modules 13 Questions 125 Marks 305 / 1250 Pro"
+        },
+        {
+          "href": "/assignments/6651d9e17adf4936764144d1?viewMode=tree-view",
+          "label": "HTML Beginner Modules 6 Questions 123 Marks 120 / 146 Completed All questions so"
+        },
+        {
+          "href": "/assignments/6651df187adf49367642ea2d?viewMode=tree-view",
+          "label": "CSS Beginner Modules 8 Questions 160 Marks 0 / 160 Progress 0% 0 solved 160 rema"
+        },
+        {
+          "href": "/assignments/67e29e2149af40e79a9dc4ed?viewMode=tree-view",
+          "label": "Data Structures & Algorithms (Java) Intermediate Modules 11 Questions 152 Marks "
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "assignments",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://tai.thetapacademy.com/company-questions",
+      "finalUrl": "https://tai.thetapacademy.com/company-questions",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [],
+      "navLabels": [],
+      "uiStates": [
+        "error"
+      ],
+      "bodySample": "Page Not Found! Go Back Go Back",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": null,
+        "button": {
+          "color": "rgb(255, 255, 255)",
+          "background": "rgb(33, 96, 173)",
+          "fontFamily": "Inter, -apple-system, \"Segoe UI\", Roboto, sans-serif",
+          "fontSize": "14px"
+        },
+        "link": null,
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [],
+      "interactiveNav": [],
+      "error": null,
+      "slug": "company-questions",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://tai.thetapacademy.com/jobs",
+      "finalUrl": "https://tai.thetapacademy.com/jobs",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Jobs"
+        },
+        {
+          "tag": "h2",
+          "text": "AI/ML Engineer"
+        },
+        {
+          "tag": "h2",
+          "text": "Software Engineer"
+        },
+        {
+          "tag": "h2",
+          "text": "Intern – Software Engineer"
+        },
+        {
+          "tag": "h2",
+          "text": "Data Analyst"
+        },
+        {
+          "tag": "h2",
+          "text": "Python Developer"
+        },
+        {
+          "tag": "h2",
+          "text": "Software Engineer Trainee"
+        },
+        {
+          "tag": "h2",
+          "text": "AI Engineer - Intern"
+        },
+        {
+          "tag": "h2",
+          "text": "Trainee SAP BTP Consultant"
+        },
+        {
+          "tag": "h2",
+          "text": "Software Development Engineer (Intern)"
+        },
+        {
+          "tag": "h2",
+          "text": "Python Developer"
+        },
+        {
+          "tag": "h2",
+          "text": "JAVA Full Stack Developer"
+        },
+        {
+          "tag": "h2",
+          "text": "AI and Deep Learning"
+        },
+        {
+          "tag": "h2",
+          "text": "Full Stack Developer / Software Trainee Engineer"
+        },
+        {
+          "tag": "h2",
+          "text": "Software Developers"
+        },
+        {
+          "tag": "h2",
+          "text": "Trainee Software Engineer"
+        },
+        {
+          "tag": "h2",
+          "text": "Junior Python Developer"
+        },
+        {
+          "tag": "h2",
+          "text": "Full stack Developer"
+        },
+        {
+          "tag": "h2",
+          "text": "Forward Deployed Engineer"
+        },
+        {
+          "tag": "h2",
+          "text": "Junior Developer"
+        },
+        {
+          "tag": "h2",
+          "text": "SoftwareDeveloper"
+        }
+      ],
+      "navLabels": [
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "Technical",
+        "Non-technical",
+        "Internal",
+        "Applied drives",
+        "99+",
+        "Scan QR code",
+        "Ask TAI",
+        "Profile",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out"
+      ],
+      "uiStates": [],
+      "bodySample": "99+ MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 G Jobs Employability score 0 Technical Non-technical Internal Applied drives TAP-JOB-ID-2608 AI/ML Engineer OPEN LOCATION Bengaluru SALARY Up to 7 LPA QUALIFICATION BE/B.Tech, ME/M.Tech PASSING YEAR 2026, 2025 Ends in 20:25:43 Know more TAP-JOB-ID-2607 Software Engineer OPEN LOCATION Bengaluru SALARY Up to 7 LPA QUALIFICATION BE/B.Tech, ME/M.Tech PASSING YEAR 2025, 2026 Ends in 20:25:43 Know more TAP-JOB-ID-2610 Intern – Software Engineer CLOSED LOCATION Bengaluru SALARY Up to 8 LPA QUALIFICATION BE/B.Tech PASSING YEAR 2026 Expired 2 days ago Know more TAP-JOB-ID-2611 Data Analyst CLOSED LOCATION Noida SALARY Up to 3.84 LPA QUALIFICATION B.Com, Any Degree PASSING YEAR 2025, 2026 Expired 2 days ago Know more TAP-JOB-ID-2609 Python Developer CLOSED LOCATION Bengaluru SALARY Up to 4 LPA QUALIFICATION Any Degree PASSING YEAR 2025, 2026, 2027 Expired 3 days ago Know more TAP-JOB-ID-2606 Software Engineer Trainee CLOSED LOCATION Pune SALARY Up to 3.6 LPA QUALIFICATION B.Sc, BE/B.Tech, BCA, MCA, ME/M.Tech, M.Sc, MS PASSING YEAR 2023, 2022, 2021, 2020, 2019, 2018 Expired 4 days ago Know more TAP-JOB-ID-2605 AI Engineer - Intern CLOSED LOCATION Hyderabad SALARY Up to 4 LPA QUALIFICATION BE/B.Tech, ME/M.Tech, MCA, M.Sc, BCA, B.Sc PASSING YEAR 2026 Expired 5 days ago Know more TAP-JOB-ID-2603 Trainee SAP BTP Consultant CLOSED LOCATION Pune SALARY Up to 4.8 LPA QUALIFICATION BE/B.Tech, MCA, ME/M.Tech, M.Sc PASSING YEAR 2024, 2025, 2026 Expired 5 days ago Know more TAP-JOB-ID-2604 Software Development Engineer (Intern) CLOSED LOCATION Pune SALARY Up to 7 LPA QUALIFICATION B.Sc, B.Com, BCA, BE/B.Tech, MCA, ME/M.Tech, M.Sc, Diploma, MS, Any Degree PASSING YEAR 2026, 2025 Expired 5 days ago Know more TAP-JOB-ID-2599 Python Developer CLOSED LOCATION Chennai SALARY Up to 4 LPA QUALIFICATION ME/M.Tech, MCA, M.Sc PASSING YEAR 2022, 2023, 2024, 2025, 2026 Expired 9 days ago Know more TAP-JOB-",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "jobs",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://tai.thetapacademy.com/bookmarks",
+      "finalUrl": "https://tai.thetapacademy.com/bookmarks",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Bookmarks"
+        },
+        {
+          "tag": "h3",
+          "text": "No questions saved"
+        }
+      ],
+      "navLabels": [
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "99+",
+        "Scan QR code",
+        "Ask TAI",
+        "Profile",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out"
+      ],
+      "uiStates": [],
+      "bodySample": "99+ MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 G Bookmarks Questions Videos Notes No questions saved Tap the bookmark icon on any question, video or note and it will be waiting for you here. We use cookies to give you the best possible experience while you browse through our website. By pursuing the use of our website you implicitly agree to the usage of cookies on this site. Learn moreAccept All Preferences",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "bookmarks",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://tai.thetapacademy.com/ask-tai",
+      "finalUrl": "https://tai.thetapacademy.com/ask-tai",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [],
+      "navLabels": [],
+      "uiStates": [
+        "error"
+      ],
+      "bodySample": "Page Not Found! Go Back Go Back",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": null,
+        "button": {
+          "color": "rgb(255, 255, 255)",
+          "background": "rgb(33, 96, 173)",
+          "fontFamily": "Inter, -apple-system, \"Segoe UI\", Roboto, sans-serif",
+          "fontSize": "14px"
+        },
+        "link": null,
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [],
+      "interactiveNav": [],
+      "error": null,
+      "slug": "ask-tai",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://tai.thetapacademy.com/chat",
+      "finalUrl": "https://tai.thetapacademy.com/chat",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [],
+      "navLabels": [],
+      "uiStates": [
+        "error"
+      ],
+      "bodySample": "Page Not Found! Go Back Go Back",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": null,
+        "button": {
+          "color": "rgb(255, 255, 255)",
+          "background": "rgb(33, 96, 173)",
+          "fontFamily": "Inter, -apple-system, \"Segoe UI\", Roboto, sans-serif",
+          "fontSize": "14px"
+        },
+        "link": null,
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [],
+      "interactiveNav": [],
+      "error": null,
+      "slug": "chat",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://tai.thetapacademy.com/profile",
+      "finalUrl": "https://tai.thetapacademy.com/profile",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Profile"
+        },
+        {
+          "tag": "h2",
+          "text": "Yaswanth Grandhi"
+        }
+      ],
+      "navLabels": [
+        "Need help?",
+        "View leaderboard",
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "99+",
+        "Scan QR code",
+        "Ask TAI",
+        "Profile",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out",
+        "Resume 1 Uploaded PDF · Default",
+        "Remove resume"
+      ],
+      "uiStates": [
+        "progress"
+      ],
+      "bodySample": "99+ MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 G Profile Generate resume Yaswanth Grandhi Personal info Education Projects Experiences Certificates 1% Course progress 58% Assignments Resumes 1/4 Resume 1 Uploaded PDF · Default Add another resume PDF only, up to 1 MB. Quick links Need help? View leaderboard Name * Gender Male Email * Mobile * +91 WhatsApp * +91 DOB Parent/Guardian mobile * +91 LinkedIn link * Instagram Link * Current state Karnataka Current city * Native state Andhra Pradesh Native City * Permanent address * Pin code * Gap in academics No Enrolled in Offline Ready for relocation Yes Github link Portfolio link Portfolio Title Summary 306 / 350 Skills C++ Data structures Javascript MySQL C Python SQL Java Full Stack Good Programming Machine Learning Node DBMS HTML JEE Programming CSS AWS Core java OOPs JDBC JSP Servlets GitHub AI - ML Artificial Intelligence Hibernate Automation Testing Algorithms Logical Reasoning MongoDB Manual Testing Analytical Skills Adv-java core Critical Thinking UNIX Data Science Operating System HobbiesPress ↵ enter to add word LanguagesPress ↵ enter to add word Ready to sign the service agreement Yes Placed No Document Upload* PDF Yaswanth Grandhi Documen... PDF Document ↻ Cancel Save changes We use cookies to give you the best possible experience while you browse through our website. By pursuing the use of our website you implicitly agree to the usage of cookies on this site. Learn moreAccept All Preferences",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        },
+        {
+          "href": "/reportIssue",
+          "label": "Need help?"
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "profile",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://tai.thetapacademy.com/settings",
+      "finalUrl": "https://tai.thetapacademy.com/settings",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [],
+      "navLabels": [],
+      "uiStates": [
+        "error"
+      ],
+      "bodySample": "Page Not Found! Go Back Go Back",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": null,
+        "button": {
+          "color": "rgb(255, 255, 255)",
+          "background": "rgb(33, 96, 173)",
+          "fontFamily": "Inter, -apple-system, \"Segoe UI\", Roboto, sans-serif",
+          "fontSize": "14px"
+        },
+        "link": null,
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [],
+      "interactiveNav": [],
+      "error": null,
+      "slug": "settings",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://tai.thetapacademy.com/streak",
+      "finalUrl": "https://tai.thetapacademy.com/streak",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [],
+      "navLabels": [],
+      "uiStates": [
+        "error"
+      ],
+      "bodySample": "Page Not Found! Go Back Go Back",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": null,
+        "button": {
+          "color": "rgb(255, 255, 255)",
+          "background": "rgb(33, 96, 173)",
+          "fontFamily": "Inter, -apple-system, \"Segoe UI\", Roboto, sans-serif",
+          "fontSize": "14px"
+        },
+        "link": null,
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [],
+      "interactiveNav": [],
+      "error": null,
+      "slug": "streak",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://tai.thetapacademy.com/leaderboard",
+      "finalUrl": "https://tai.thetapacademy.com/leaderboard",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [],
+      "navLabels": [],
+      "uiStates": [
+        "error"
+      ],
+      "bodySample": "Page Not Found! Go Back Go Back",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": null,
+        "button": {
+          "color": "rgb(255, 255, 255)",
+          "background": "rgb(33, 96, 173)",
+          "fontFamily": "Inter, -apple-system, \"Segoe UI\", Roboto, sans-serif",
+          "fontSize": "14px"
+        },
+        "link": null,
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [],
+      "interactiveNav": [],
+      "error": null,
+      "slug": "leaderboard",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://tai.thetapacademy.com/placement",
+      "finalUrl": "https://tai.thetapacademy.com/placement",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [],
+      "navLabels": [],
+      "uiStates": [
+        "error"
+      ],
+      "bodySample": "Page Not Found! Go Back Go Back",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": null,
+        "button": {
+          "color": "rgb(255, 255, 255)",
+          "background": "rgb(33, 96, 173)",
+          "fontFamily": "Inter, -apple-system, \"Segoe UI\", Roboto, sans-serif",
+          "fontSize": "14px"
+        },
+        "link": null,
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [],
+      "interactiveNav": [],
+      "error": null,
+      "slug": "placement",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://tai.thetapacademy.com/dashboard",
+      "finalUrl": "https://tai.thetapacademy.com/dashboard",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [],
+      "navLabels": [],
+      "uiStates": [
+        "error"
+      ],
+      "bodySample": "Page Not Found! Go Back Go Back",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": null,
+        "button": {
+          "color": "rgb(255, 255, 255)",
+          "background": "rgb(33, 96, 173)",
+          "fontFamily": "Inter, -apple-system, \"Segoe UI\", Roboto, sans-serif",
+          "fontSize": "14px"
+        },
+        "link": null,
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [],
+      "interactiveNav": [],
+      "error": null,
+      "slug": "dashboard",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://tai.thetapacademy.com/",
+      "finalUrl": "https://tai.thetapacademy.com/",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [],
+      "navLabels": [
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "Ask TAI",
+        "Profile",
+        "99+",
+        "Scan QR Code",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out",
+        "Leaderboard",
+        "Placement",
+        "Streak"
+      ],
+      "uiStates": [
+        "empty",
+        "locked",
+        "completed",
+        "progress",
+        "loading-indicator"
+      ],
+      "bodySample": "99+ Scan QR Code MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 EMPLOYABILITY SCORE 0 / 100 Light Dark G G Yaswanth ✓ yaswanthgrandhi2580@gm... My Learning Pick up where you left off Courses 1% Assignments 58% Tests 73% COURSE 0% JDBC Introduction by Rohit Ravinder Start ASSIGNMENT 100% Core Java (FEB B1 2024 [BTM] ) Review Practice Streak 🔥 1 Current streak 1227 Longest streak 1227 Total Correct submissions 2026 2025 2024 Sep Oct Nov Dec Jan Feb Mar Apr May Jun Jul Aug Mon Wed Fri No practice yet today How we count Less More Placement Drives 790 Eligible drives 97 Applied 12% applied Skills Acquired Complete assignments and tests to unlock your skill ratings. Leaderboard Overall top performers D Darshan Patil 9783 pts 2 H Hemanth 10285 pts 1 G Gunavathi 9756 pts 3 4 A Ankita 9623 pts 5 A Ashwini K 9608 pts 6 F Fakkirappa S Sunagar 9507 pts 7 N Nagulapally 9505 pts 8 N N V S 9495 pts 9 S Sameeya 9401 pts 10 P Pasupathi M 9354 pts YOUR POSITION 2627 G G Yaswanth You 4113 pts ATTENDANCE Core Java Programming SQL Advanced Java Soft Skills HTML & CSS Python 56% attended 45 of 80 classes attended · 35 missed Present Absent Week off 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 Feb Mar Apr May Jun We use cookies to give you the best possible experience while you browse through our website. By pursuing the use of our website you implicitly agree to the usage of cookies on this site. Learn moreAccept All Preferences",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "nav-dashboard"
+    },
+    {
+      "url": "https://tai.thetapacademy.com/courses",
+      "finalUrl": "https://tai.thetapacademy.com/courses",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Courses"
+        },
+        {
+          "tag": "h3",
+          "text": "Java"
+        },
+        {
+          "tag": "h3",
+          "text": "Hibernate"
+        },
+        {
+          "tag": "h3",
+          "text": "Springs"
+        },
+        {
+          "tag": "h3",
+          "text": "Advanced JAVA"
+        },
+        {
+          "tag": "h3",
+          "text": "Data Structures and Algorithm - Java"
+        },
+        {
+          "tag": "h3",
+          "text": "HTML and CSS"
+        },
+        {
+          "tag": "h3",
+          "text": "Python"
+        },
+        {
+          "tag": "h3",
+          "text": "Data Structures and Algorithm - Python"
+        },
+        {
+          "tag": "h3",
+          "text": "MySQL"
+        },
+        {
+          "tag": "h3",
+          "text": "Aptitude"
+        },
+        {
+          "tag": "h3",
+          "text": "Notes"
+        },
+        {
+          "tag": "h3",
+          "text": "Javascript"
+        },
+        {
+          "tag": "h3",
+          "text": "Live Class Recordings [JUN-B1-2024]"
+        },
+        {
+          "tag": "h3",
+          "text": "Projects"
+        },
+        {
+          "tag": "h3",
+          "text": "Programming Essentials"
+        }
+      ],
+      "navLabels": [
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "Ask TAI",
+        "Profile",
+        "99+",
+        "Scan QR Code",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out"
+      ],
+      "uiStates": [
+        "completed",
+        "progress"
+      ],
+      "bodySample": "99+ Scan QR Code MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 EMPLOYABILITY SCORE 0 / 100 Light Dark G G Yaswanth ✓ yaswanthgrandhi2580@gm... Courses No live classes right now View schedule All 15 In progress 3 Completed 0 Java 23 modules 101 Hr 15.5 mins Ready to start Hibernate 6 modules 7 Hr 39 mins 4% complete Springs 8 modules 3 Hr 51 mins Ready to start Advanced JAVA 3 modules 20 Hr 34 mins Ready to start Data Structures and Algorithm - Java 14 modules 51 Hr 28 mins 6% complete HTML and CSS 2 modules 18 Hr 5 mins Ready to start Python 30 modules 52 Hr 54 mins 2% complete Data Structures and Algorithm - Python 14 modules 50 Hr 3 mins Ready to start MySQL 10 modules 28 Hr 3 mins Ready to start Aptitude 12 modules 23 Hr 35 mins Ready to start Notes 8 modules 0 mins Ready to start Javascript 41 modules 41 Hr 1 mins Ready to start Live Class Recordings [JUN-B1-2024] 9 modules 335 Hr 29 mins Ready to start Projects 3 modules 17 Hr 46 mins Ready to start Programming Essentials 9 modules 21 Hr 51 mins Ready to start We use cookies to give you the best possible experience while you browse through our website. By pursuing the use of our website you implicitly agree to the usage of cookies on this site. Learn moreAccept All Preferences",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        },
+        {
+          "href": "/courses/6547a220902b75831a41253a",
+          "label": "Java 23 modules 101 Hr 15.5 mins Ready to start"
+        },
+        {
+          "href": "/courses/65c49caf5c6956f2631ba75e",
+          "label": "Hibernate 6 modules 7 Hr 39 mins 4% complete"
+        },
+        {
+          "href": "/courses/65c4b53dc7fba0fee6602e2b",
+          "label": "Springs 8 modules 3 Hr 51 mins Ready to start"
+        },
+        {
+          "href": "/courses/65c6040cc7fba0fee6781e8b",
+          "label": "Advanced JAVA 3 modules 20 Hr 34 mins Ready to start"
+        },
+        {
+          "href": "/courses/65c72b155c6956f26342f804",
+          "label": "Data Structures and Algorithm - Java 14 modules 51 Hr 28 mins 6% complete"
+        },
+        {
+          "href": "/courses/65c72e53c7fba0fee684b4b2",
+          "label": "HTML and CSS 2 modules 18 Hr 5 mins Ready to start"
+        },
+        {
+          "href": "/courses/65c736945c6956f263448a0d",
+          "label": "Python 30 modules 52 Hr 54 mins 2% complete"
+        },
+        {
+          "href": "/courses/65c76ad3c7fba0fee68b770e",
+          "label": "Data Structures and Algorithm - Python 14 modules 50 Hr 3 mins Ready to start"
+        },
+        {
+          "href": "/courses/66e2754d6833c8e613b2fcf2",
+          "label": "MySQL 10 modules 28 Hr 3 mins Ready to start"
+        },
+        {
+          "href": "/courses/66fbd87e6ca8fe5f02c24da7",
+          "label": "Aptitude 12 modules 23 Hr 35 mins Ready to start"
+        },
+        {
+          "href": "/courses/674813f9288a02498523c583",
+          "label": "Notes 8 modules 0 mins Ready to start"
+        },
+        {
+          "href": "/courses/6787608d9ceeab182127d80a",
+          "label": "Javascript 41 modules 41 Hr 1 mins Ready to start"
+        },
+        {
+          "href": "/courses/679797ad619d1860de2c7587",
+          "label": "Live Class Recordings [JUN-B1-2024] 9 modules 335 Hr 29 mins Ready to start"
+        },
+        {
+          "href": "/courses/67b5da3297d15a0ec99454a8",
+          "label": "Projects 3 modules 17 Hr 46 mins Ready to start"
+        },
+        {
+          "href": "/courses/67c195c17b53022c0f1066f9",
+          "label": "Programming Essentials 9 modules 21 Hr 51 mins Ready to start"
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "nav-courses"
+    },
+    {
+      "url": "https://tai.thetapacademy.com/tests",
+      "finalUrl": "https://tai.thetapacademy.com/tests",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Tests"
+        },
+        {
+          "tag": "h3",
+          "text": "No tests scheduled right now"
+        },
+        {
+          "tag": "h2",
+          "text": "Practice on your own"
+        }
+      ],
+      "navLabels": [
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "Ask TAI",
+        "Profile",
+        "99+",
+        "Scan QR Code",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out"
+      ],
+      "uiStates": [],
+      "bodySample": "99+ Scan QR Code MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 EMPLOYABILITY SCORE 0 / 100 Light Dark G G Yaswanth ✓ yaswanthgrandhi2580@gm... Tests Upcoming 0 Contests 0 History 32 No tests scheduled right now Keep moving with a self-paced practice test below. SELF-PACED PRACTICE Practice on your own Choose a subject and start a focused practice test anytime. 2 subjects Core Java (FEB B1 2024 [BTM] ) Programming (Feb-B1) [BTM] We use cookies to give you the best possible experience while you browse through our website. By pursuing the use of our website you implicitly agree to the usage of cookies on this site. Learn moreAccept All Preferences",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "nav-tests"
+    },
+    {
+      "url": "https://tai.thetapacademy.com/assignments",
+      "finalUrl": "https://tai.thetapacademy.com/assignments",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Assignments"
+        }
+      ],
+      "navLabels": [
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "Ask TAI",
+        "Profile",
+        "99+",
+        "Scan QR Code",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out"
+      ],
+      "uiStates": [
+        "completed",
+        "progress"
+      ],
+      "bodySample": "99+ Scan QR Code MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 EMPLOYABILITY SCORE 0 / 100 Light Dark G G Yaswanth ✓ yaswanthgrandhi2580@gm... Assignments Overall progress 61% 1.13k of 1.84k questions solved Across 10 assignments Assignments done 4 / 10 Questions attempted 1.13k 62% of all questions Marks earned 4.11k / 7.95k 52% of available marks All 10 In progress 6 Completed 4 Core Java (FEB B1 2024 [BTM] ) Beginner Modules 19 Questions 310 Marks 429 / 448 Completed All questions solved Programming (Feb-B1) [BTM] Beginner Modules 15 Questions 260 Marks 2317 / 2611 Completed All questions solved Company Interview Questions Beginner Modules 18 Questions 89 Marks 613 / 910 Progress 80% 71 solved 18 remaining SQL [Feb B1 2024 | BTM ] Beginner Modules 9 Questions 182 Marks 175 / 183 Completed All questions solved Aptitude Beginner Modules 10 Questions 201 Marks 57 / 309 Progress 30% 60 solved 141 remaining Python Beginner Modules 12 Questions 236 Marks 98 / 309 Progress 36% 85 solved 151 remaining Java Coding Scenarios Intermediate Modules 13 Questions 125 Marks 305 / 1250 Progress 29% 36 solved 89 remaining HTML Beginner Modules 6 Questions 123 Marks 120 / 146 Completed All questions solved CSS Beginner Modules 8 Questions 160 Marks 0 / 160 Progress 0% 0 solved 160 remaining Data Structures & Algorithms (Java) Intermediate Modules 11 Questions 152 Marks 0 / 1625 Progress 0% 0 solved 152 remaining We use cookies to give you the best possible experience while you browse through our website. By pursuing the use of our website you implicitly agree to the usage of cookies on this site. Learn moreAccept All Preferences",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        },
+        {
+          "href": "/assignments/65c4dbef5c6956f263238d66?viewMode=tree-view",
+          "label": "Core Java (FEB B1 2024 [BTM] ) Beginner Modules 19 Questions 310 Marks 429 / 448"
+        },
+        {
+          "href": "/assignments/65d2f37d5c6956f263b4008e?viewMode=tree-view",
+          "label": "Programming (Feb-B1) [BTM] Beginner Modules 15 Questions 260 Marks 2317 / 2611 C"
+        },
+        {
+          "href": "/assignments/6635bc217adf493676073c81?viewMode=tree-view",
+          "label": "Company Interview Questions Beginner Modules 18 Questions 89 Marks 613 / 910 Pro"
+        },
+        {
+          "href": "/assignments/6641fe227adf49367639474d?viewMode=tree-view",
+          "label": "SQL [Feb B1 2024 | BTM ] Beginner Modules 9 Questions 182 Marks 175 / 183 Comple"
+        },
+        {
+          "href": "/assignments/66458b06bc427c696eaa969c?viewMode=tree-view",
+          "label": "Aptitude Beginner Modules 10 Questions 201 Marks 57 / 309 Progress 30% 60 solved"
+        },
+        {
+          "href": "/assignments/664af118bc427c696e6a7e6d?viewMode=tree-view",
+          "label": "Python Beginner Modules 12 Questions 236 Marks 98 / 309 Progress 36% 85 solved 1"
+        },
+        {
+          "href": "/assignments/66dedbe4470d26c8d2bb3306?viewMode=tree-view",
+          "label": "Java Coding Scenarios Intermediate Modules 13 Questions 125 Marks 305 / 1250 Pro"
+        },
+        {
+          "href": "/assignments/6651d9e17adf4936764144d1?viewMode=tree-view",
+          "label": "HTML Beginner Modules 6 Questions 123 Marks 120 / 146 Completed All questions so"
+        },
+        {
+          "href": "/assignments/6651df187adf49367642ea2d?viewMode=tree-view",
+          "label": "CSS Beginner Modules 8 Questions 160 Marks 0 / 160 Progress 0% 0 solved 160 rema"
+        },
+        {
+          "href": "/assignments/67e29e2149af40e79a9dc4ed?viewMode=tree-view",
+          "label": "Data Structures & Algorithms (Java) Intermediate Modules 11 Questions 152 Marks "
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "nav-assignments"
+    },
+    {
+      "url": "https://tai.thetapacademy.com/companyQuestions",
+      "finalUrl": "https://tai.thetapacademy.com/companyQuestions",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Company Questions"
+        },
+        {
+          "tag": "h3",
+          "text": "Inito"
+        },
+        {
+          "tag": "h3",
+          "text": "Mu Sigma"
+        },
+        {
+          "tag": "h3",
+          "text": "KARPLEXUS"
+        },
+        {
+          "tag": "h3",
+          "text": "TechnoRishi"
+        },
+        {
+          "tag": "h3",
+          "text": "Virtusa"
+        },
+        {
+          "tag": "h3",
+          "text": "ThoughtsCrest Software"
+        },
+        {
+          "tag": "h3",
+          "text": "Agile Point"
+        },
+        {
+          "tag": "h3",
+          "text": "Baryons Software Solutions"
+        },
+        {
+          "tag": "h3",
+          "text": "Zoho"
+        },
+        {
+          "tag": "h3",
+          "text": "XPLORIA"
+        },
+        {
+          "tag": "h3",
+          "text": "ThoughtMakes AI"
+        },
+        {
+          "tag": "h3",
+          "text": "Stanverse Technologies"
+        },
+        {
+          "tag": "h3",
+          "text": "iMatiz"
+        },
+        {
+          "tag": "h3",
+          "text": "BridgeLabz"
+        },
+        {
+          "tag": "h3",
+          "text": "BDI Plus Lab Pvt.Ltd"
+        },
+        {
+          "tag": "h3",
+          "text": "Bandhoo Solutions"
+        },
+        {
+          "tag": "h3",
+          "text": "IBM"
+        },
+        {
+          "tag": "h3",
+          "text": "Molecular Connections"
+        },
+        {
+          "tag": "h3",
+          "text": "Sigmoid"
+        },
+        {
+          "tag": "h3",
+          "text": "Moolya Software Testing Private Limited"
+        },
+        {
+          "tag": "h3",
+          "text": "ITC Infotech"
+        },
+        {
+          "tag": "h3",
+          "text": "Appxcelerate"
+        },
+        {
+          "tag": "h3",
+          "text": "Saina cloud Software"
+        },
+        {
+          "tag": "h3",
+          "text": "IonIdea"
+        },
+        {
+          "tag": "h3",
+          "text": "DATAZOIC MACHINES PVT. LTD"
+        },
+        {
+          "tag": "h3",
+          "text": "Zeta"
+        },
+        {
+          "tag": "h3",
+          "text": "Valuebound"
+        },
+        {
+          "tag": "h3",
+          "text": "Infocareer"
+        },
+        {
+          "tag": "h3",
+          "text": "SOLERA"
+        },
+        {
+          "tag": "h3",
+          "text": "SOLVERINES TECHNOLOGY SOLUTIONS"
+        },
+        {
+          "tag": "h3",
+          "text": "AIEnterprise Inc"
+        },
+        {
+          "tag": "h3",
+          "text": "NicheSolv"
+        },
+        {
+          "tag": "h3",
+          "text": "Webkorps Services India Private Limited"
+        },
+        {
+          "tag": "h3",
+          "text": "ITnow Inc"
+        },
+        {
+          "tag": "h3",
+          "text": "Greytip Software Pvt. Ltd."
+        },
+        {
+          "tag": "h3",
+          "text": "GigLabz Private Limited"
+        }
+      ],
+      "navLabels": [
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "Ask TAI",
+        "Profile",
+        "99+",
+        "Scan QR Code",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out"
+      ],
+      "uiStates": [
+        "completed",
+        "progress"
+      ],
+      "bodySample": "99+ Scan QR Code MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 EMPLOYABILITY SCORE 0 / 100 Light Dark G G Yaswanth ✓ yaswanthgrandhi2580@gm... Company Questions All 178 In progress Completed Favorites 0 Technology Core Java Python SQL Programming DSA Python DSA Aptitude Softskills CSS Javascript HTML JDBC JEE Spring Adv Java Hibernate Inito Core Java Python SQL Explore questions Mu Sigma Programming Python DSA Python DSA +3 Explore questions KARPLEXUS Core Java CSS Javascript HTML Explore questions TechnoRishi JDBC SQL JEE Spring +1 Explore questions Virtusa Core Java Programming SQL Javascript Explore questions ThoughtsCrest Software Programming Explore questions Agile Point Programming Explore questions Baryons Software Solutions Core Java Programming SQL Hibernate Explore questions Zoho Core Java Programming DSA Explore questions XPLORIA Core Java Explore questions ThoughtMakes AI Core Java Explore questions Stanverse Technologies Core Java Explore questions iMatiz Core Java Explore questions BridgeLabz Core Java Explore questions BDI Plus Lab Pvt.Ltd Core Java Explore questions Bandhoo Solutions Programming Explore questions IBM Programming Explore questions Molecular Connections Programming Explore questions Sigmoid Core Java SQL Explore questions Moolya Software Testing Private Limited Programming Explore questions ITC Infotech Programming Core Java DSA Explore questions Appxcelerate Core Java SQL Explore questions Saina cloud Software Core Java SQL Explore questions IonIdea Core Java Programming SQL Explore questions DATAZOIC MACHINES PVT. LTD Core Java Programming JDBC SQL +1 Explore questions Zeta Core Java Programming SQL DSA Progress 50% Valuebound Programming Progress 50% Infocareer Core Java SQL Javascript Explore questions SOLERA Core Java SQL Programming Progress 14% SOLVERINES TECHNOLOGY SOLUTIONS Core Java SQL CSS HTML Explore questions AIEnterprise Inc Core Java JEE Python Explore questions NicheSolv Pr",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        },
+        {
+          "href": "/companyQuestions/6a7d4cb99774d61e5c77406c",
+          "label": "Open Inito questions"
+        },
+        {
+          "href": "/companyQuestions/6a4cf59d698cf53b28cdcdbc",
+          "label": "Open Mu Sigma questions"
+        },
+        {
+          "href": "/companyQuestions/6a05be86643ddf22a4bea3f1",
+          "label": "Open KARPLEXUS questions"
+        },
+        {
+          "href": "/companyQuestions/6a0465c9269f0b02d02c62b2",
+          "label": "Open TechnoRishi questions"
+        },
+        {
+          "href": "/companyQuestions/69dcdfa000d1ce994df34382",
+          "label": "Open Virtusa questions"
+        },
+        {
+          "href": "/companyQuestions/69dcd0a3fdf68868ec34b7ba",
+          "label": "Open ThoughtsCrest Software questions"
+        },
+        {
+          "href": "/companyQuestions/69cd02a50eaa7c25626cd8cc",
+          "label": "Open Agile Point questions"
+        },
+        {
+          "href": "/companyQuestions/69aabc68f663e34c783dc4b5",
+          "label": "Open Baryons Software Solutions questions"
+        },
+        {
+          "href": "/companyQuestions/6972217d2fe3961bf41d3047",
+          "label": "Open Zoho questions"
+        },
+        {
+          "href": "/companyQuestions/6964cacc3617d4aed55af589",
+          "label": "Open XPLORIA questions"
+        },
+        {
+          "href": "/companyQuestions/6964ca1c5651bb53997c769d",
+          "label": "Open ThoughtMakes AI questions"
+        },
+        {
+          "href": "/companyQuestions/6964c8912fe3961bf438e6eb",
+          "label": "Open Stanverse Technologies questions"
+        },
+        {
+          "href": "/companyQuestions/6964c829f667e9915f779e80",
+          "label": "Open iMatiz questions"
+        },
+        {
+          "href": "/companyQuestions/6964c7940071571ac003ccad",
+          "label": "Open BridgeLabz questions"
+        },
+        {
+          "href": "/companyQuestions/6964c728d7c8fd13041950d7",
+          "label": "Open BDI Plus Lab Pvt.Ltd questions"
+        },
+        {
+          "href": "/companyQuestions/6964c6b1f663e34c788abdfb",
+          "label": "Open Bandhoo Solutions questions"
+        },
+        {
+          "href": "/companyQuestions/694bb53e84012a85047b2e72",
+          "label": "Open IBM questions"
+        },
+        {
+          "href": "/companyQuestions/69413f0fbac5f64aa8020977",
+          "label": "Open Molecular Connections questions"
+        },
+        {
+          "href": "/companyQuestions/6925aaff993c4242add5c4c0",
+          "label": "Open Sigmoid questions"
+        },
+        {
+          "href": "/companyQuestions/68f22add12e30e7cb88459d4",
+          "label": "Open Moolya Software Testing Private Limited questions"
+        },
+        {
+          "href": "/companyQuestions/68c55cdf395e1ddf249b3c3d",
+          "label": "Open ITC Infotech questions"
+        },
+        {
+          "href": "/companyQuestions/68b288fd9cf5f1a6cfca3290",
+          "label": "Open Appxcelerate questions"
+        },
+        {
+          "href": "/companyQuestions/68b2849f611e917aca6c4516",
+          "label": "Open Saina cloud Software questions"
+        },
+        {
+          "href": "/companyQuestions/68b280802a1e300183c4a8d6",
+          "label": "Open IonIdea questions"
+        },
+        {
+          "href": "/companyQuestions/689253cfb26a411815056186",
+          "label": "Open DATAZOIC MACHINES PVT. LTD questions"
+        },
+        {
+          "href": "/companyQuestions/68491e9af5a87633e6679c44",
+          "label": "Open Zeta questions"
+        },
+        {
+          "href": "/companyQuestions/68340d580cc331290a8536d7",
+          "label": "Open Valuebound questions"
+        },
+        {
+          "href": "/companyQuestions/681dcbc7705f64f06d7bd7f6",
+          "label": "Open Infocareer questions"
+        },
+        {
+          "href": "/companyQuestions/681dcb4d93fcccf4c6e9c266",
+          "label": "Open SOLERA questions"
+        },
+        {
+          "href": "/companyQuestions/680b7c76e0b25ac61cfff336",
+          "label": "Open SOLVERINES TECHNOLOGY SOLUTIONS questions"
+        },
+        {
+          "href": "/companyQuestions/680b71fb7c32fdcbeceb66c0",
+          "label": "Open AIEnterprise Inc questions"
+        },
+        {
+          "href": "/companyQuestions/680b676a8fcea6d052117ee1",
+          "label": "Open NicheSolv questions"
+        },
+        {
+          "href": "/companyQuestions/680b663f01d73150b4cded7a",
+          "label": "Open Webkorps Services India Private Limited questions"
+        },
+        {
+          "href": "/companyQuestions/680b6437131634c81841cc9b",
+          "label": "Open ITnow Inc questions"
+        },
+        {
+          "href": "/companyQuestions/680b626f131634c818410eeb",
+          "label": "Open Greytip Software Pvt. Ltd. questions"
+        },
+        {
+          "href": "/companyQuestions/680b539d8fcea6d0520afcb6",
+          "label": "Open GigLabz Private Limited questions"
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "nav-company-questions"
+    },
+    {
+      "url": "https://tai.thetapacademy.com/jobs",
+      "finalUrl": "https://tai.thetapacademy.com/jobs",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Jobs"
+        },
+        {
+          "tag": "h2",
+          "text": "AI/ML Engineer"
+        },
+        {
+          "tag": "h2",
+          "text": "Software Engineer"
+        },
+        {
+          "tag": "h2",
+          "text": "Intern – Software Engineer"
+        },
+        {
+          "tag": "h2",
+          "text": "Data Analyst"
+        },
+        {
+          "tag": "h2",
+          "text": "Python Developer"
+        },
+        {
+          "tag": "h2",
+          "text": "Software Engineer Trainee"
+        },
+        {
+          "tag": "h2",
+          "text": "AI Engineer - Intern"
+        },
+        {
+          "tag": "h2",
+          "text": "Trainee SAP BTP Consultant"
+        },
+        {
+          "tag": "h2",
+          "text": "Software Development Engineer (Intern)"
+        },
+        {
+          "tag": "h2",
+          "text": "Python Developer"
+        },
+        {
+          "tag": "h2",
+          "text": "JAVA Full Stack Developer"
+        },
+        {
+          "tag": "h2",
+          "text": "AI and Deep Learning"
+        },
+        {
+          "tag": "h2",
+          "text": "Full Stack Developer / Software Trainee Engineer"
+        },
+        {
+          "tag": "h2",
+          "text": "Software Developers"
+        },
+        {
+          "tag": "h2",
+          "text": "Trainee Software Engineer"
+        },
+        {
+          "tag": "h2",
+          "text": "Junior Python Developer"
+        },
+        {
+          "tag": "h2",
+          "text": "Full stack Developer"
+        },
+        {
+          "tag": "h2",
+          "text": "Forward Deployed Engineer"
+        },
+        {
+          "tag": "h2",
+          "text": "Junior Developer"
+        },
+        {
+          "tag": "h2",
+          "text": "SoftwareDeveloper"
+        }
+      ],
+      "navLabels": [
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "Ask TAI",
+        "Profile",
+        "Technical",
+        "Non-technical",
+        "Internal",
+        "Applied drives",
+        "99+",
+        "Scan QR Code",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out"
+      ],
+      "uiStates": [],
+      "bodySample": "99+ Scan QR Code MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 EMPLOYABILITY SCORE 0 / 100 Light Dark G G Yaswanth ✓ yaswanthgrandhi2580@gm... Jobs Employability score 0 Technical Non-technical Internal Applied drives TAP-JOB-ID-2608 AI/ML Engineer OPEN LOCATION Bengaluru SALARY Up to 7 LPA QUALIFICATION BE/B.Tech, ME/M.Tech PASSING YEAR 2026, 2025 Ends in 20:24:09 Know more TAP-JOB-ID-2607 Software Engineer OPEN LOCATION Bengaluru SALARY Up to 7 LPA QUALIFICATION BE/B.Tech, ME/M.Tech PASSING YEAR 2025, 2026 Ends in 20:24:09 Know more TAP-JOB-ID-2610 Intern – Software Engineer CLOSED LOCATION Bengaluru SALARY Up to 8 LPA QUALIFICATION BE/B.Tech PASSING YEAR 2026 Expired 2 days ago Know more TAP-JOB-ID-2611 Data Analyst CLOSED LOCATION Noida SALARY Up to 3.84 LPA QUALIFICATION B.Com, Any Degree PASSING YEAR 2025, 2026 Expired 2 days ago Know more TAP-JOB-ID-2609 Python Developer CLOSED LOCATION Bengaluru SALARY Up to 4 LPA QUALIFICATION Any Degree PASSING YEAR 2025, 2026, 2027 Expired 3 days ago Know more TAP-JOB-ID-2606 Software Engineer Trainee CLOSED LOCATION Pune SALARY Up to 3.6 LPA QUALIFICATION B.Sc, BE/B.Tech, BCA, MCA, ME/M.Tech, M.Sc, MS PASSING YEAR 2023, 2022, 2021, 2020, 2019, 2018 Expired 4 days ago Know more TAP-JOB-ID-2605 AI Engineer - Intern CLOSED LOCATION Hyderabad SALARY Up to 4 LPA QUALIFICATION BE/B.Tech, ME/M.Tech, MCA, M.Sc, BCA, B.Sc PASSING YEAR 2026 Expired 5 days ago Know more TAP-JOB-ID-2603 Trainee SAP BTP Consultant CLOSED LOCATION Pune SALARY Up to 4.8 LPA QUALIFICATION BE/B.Tech, MCA, ME/M.Tech, M.Sc PASSING YEAR 2024, 2025, 2026 Expired 5 days ago Know more TAP-JOB-ID-2604 Software Development Engineer (Intern) CLOSED LOCATION Pune SALARY Up to 7 LPA QUALIFICATION B.Sc, B.Com, BCA, BE/B.Tech, MCA, ME/M.Tech, M.Sc, Diploma, MS, Any Degree PASSING YEAR 2026, 2025 Expired 5 days ago Know more TAP-JOB-ID-2599 Python Developer CLOSED LOCATION Chennai SALARY Up to 4 LPA QUALIFICATION ME/M.Tech",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "nav-jobs"
+    },
+    {
+      "url": "https://tai.thetapacademy.com/bookmarks",
+      "finalUrl": "https://tai.thetapacademy.com/bookmarks",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Bookmarks"
+        },
+        {
+          "tag": "h3",
+          "text": "No questions saved"
+        }
+      ],
+      "navLabels": [
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "Ask TAI",
+        "Profile",
+        "99+",
+        "Scan QR Code",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out"
+      ],
+      "uiStates": [],
+      "bodySample": "99+ Scan QR Code MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 EMPLOYABILITY SCORE 0 / 100 Light Dark G G Yaswanth ✓ yaswanthgrandhi2580@gm... Bookmarks Questions Videos Notes No questions saved Tap the bookmark icon on any question, video or note and it will be waiting for you here. We use cookies to give you the best possible experience while you browse through our website. By pursuing the use of our website you implicitly agree to the usage of cookies on this site. Learn moreAccept All Preferences",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "nav-bookmarks"
+    },
+    {
+      "url": "https://tai.thetapacademy.com/askTai",
+      "finalUrl": "https://tai.thetapacademy.com/askTai",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Hi G Yaswanth, I'm TAI"
+        }
+      ],
+      "navLabels": [
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "Ask TAI",
+        "Profile",
+        "99+",
+        "Scan QR Code",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out",
+        "Hide chat history",
+        "New chat",
+        "Armstrong number program inquiry. a year ago",
+        "Compiling time limit exceeded. 2 years ago"
+      ],
+      "uiStates": [],
+      "bodySample": "99+ Scan QR Code MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 EMPLOYABILITY SCORE 0 / 100 Light Dark G G Yaswanth ✓ yaswanthgrandhi2580@gm... Ask TAI New chat Armstrong number program inquiry. a year ago Compiling time limit exceeded. 2 years ago Hi G Yaswanth, I'm TAI Your AI study buddy. What do you want to do today? Resolve a query Clear your code-related doubts Learn concepts Understand and practice a topic Take a quiz Quick questions to test yourself Aptitude mentor Sharpen your aptitude skills Coding problem Get a challenge to solve SQL practice Put your SQL skills to the test We use cookies to give you the best possible experience while you browse through our website. By pursuing the use of our website you implicitly agree to the usage of cookies on this site. Learn moreAccept All Preferences",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "nav-ask-tai"
+    },
+    {
+      "url": "https://tai.thetapacademy.com/profile",
+      "finalUrl": "https://tai.thetapacademy.com/profile",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Profile"
+        },
+        {
+          "tag": "h2",
+          "text": "Yaswanth Grandhi"
+        }
+      ],
+      "navLabels": [
+        "Need help?",
+        "View leaderboard",
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "Ask TAI",
+        "Profile",
+        "99+",
+        "Scan QR Code",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out",
+        "Resume 1 Uploaded PDF · Default",
+        "Remove resume"
+      ],
+      "uiStates": [
+        "progress"
+      ],
+      "bodySample": "99+ Scan QR Code MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 EMPLOYABILITY SCORE 0 / 100 Light Dark G G Yaswanth ✓ yaswanthgrandhi2580@gm... Profile Generate resume Yaswanth Grandhi Personal info Education Projects Experiences Certificates 1% Course progress 58% Assignments Resumes 1/4 Resume 1 Uploaded PDF · Default Add another resume PDF only, up to 1 MB. Quick links Need help? View leaderboard Name * Gender Male Email * Mobile * +91 WhatsApp * +91 DOB Parent/Guardian mobile * +91 LinkedIn link * Instagram Link * Current state Karnataka Current city * Native state Andhra Pradesh Native City * Permanent address * Pin code * Gap in academics No Enrolled in Offline Ready for relocation Yes Github link Portfolio link Portfolio Title Summary 306 / 350 Skills C++ Data structures Javascript MySQL C Python SQL Java Full Stack Good Programming Machine Learning Node DBMS HTML JEE Programming CSS AWS Core java OOPs JDBC JSP Servlets GitHub AI - ML Artificial Intelligence Hibernate Automation Testing Algorithms Logical Reasoning MongoDB Manual Testing Analytical Skills Adv-java core Critical Thinking UNIX Data Science Operating System HobbiesPress ↵ enter to add word LanguagesPress ↵ enter to add word Ready to sign the service agreement Yes Placed No Document Upload* PDF Yaswanth Grandhi Documen... PDF Document ↻ Cancel Save changes We use cookies to give you the best possible experience while you browse through our website. By pursuing the use of our website you implicitly agree to the usage of cookies on this site. Learn moreAccept All Preferences",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        },
+        {
+          "href": "/reportIssue",
+          "label": "Need help?"
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "nav-profile"
+    },
+    {
+      "url": "https://tai.thetapacademy.com/courses/6547a220902b75831a41253a",
+      "finalUrl": "https://tai.thetapacademy.com/courses/6547a220902b75831a41253a",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Java"
+        },
+        {
+          "tag": "h2",
+          "text": "Eclipse Installation"
+        },
+        {
+          "tag": "h3",
+          "text": "Course content"
+        }
+      ],
+      "navLabels": [
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "99+",
+        "Scan QR code",
+        "Ask TAI",
+        "Profile",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out"
+      ],
+      "uiStates": [
+        "progress"
+      ],
+      "bodySample": "99+ MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 G Java Eclipse Installation Somanna Core Java Overview Discussions Reviews Course Description Through this course, you will learn the theoretical foundations of the Java programming language, including its history, key features, and principles of object-oriented programming (OOP). You will understand the significance of platform independence, memory management, and the Java Virtual Machine (JVM). Additionally, you will explore concepts such as encapsulation, inheritance, polymorphism and abstraction, which are fundamental to Java's OOP paradigm. The course will also cover theoretical aspects of data types, operators, exception handling & multithreading in Java. By grasping these theoretical concepts, you will build a strong foundation for practical application and problem-solving in Java programming. 0% Course content 23 modules 101 Hr 15.5 mins 1 Steps to Install Eclipse IDE 1 lessons · 10 mins Eclipse Installation 10 mins 2 Introduction to FSWD & Evolution of HLL 1 lessons · 1 Hr 16 mins 3 Features of JAVA 2 lessons · 2 Hr 29 mins 4 Main Method 1 lessons · 1 Hr 9 mins 5 Data Types 3 lessons · 4 Hr 26 mins 6 Operators & Loops 2 lessons · 2 Hr 7 mins 7 Pattern Programming 3 lessons · 3 Hr 56 mins 8 Variables & Methods 3 lessons · 3 Hr 48 mins 9 Arrays 4 lessons · 4 Hr 18 mins 10 Programs on Data Types 1 lessons · 1 Hr 26 mins 11 Programs on Arrays 8 lessons · 4 Hr 9 mins 12 Strings 7 lessons · 8 Hr 24 mins 13 Programs on Strings 10 lessons · 6 Hr 46.5 mins 14 OOPs - Method Overloading & Encapsulation 6 lessons · 7 Hr 1 mins 15 OOPs - Static and Inheritance 6 lessons · 7 Hr 17 mins 16 OOPs - Polymorphism and Association 4 lessons · 4 Hr 38 mins 17 OOPs - Abstraction 5 lessons · 6 Hr 13 mins 18 Exception Handling 5 lessons · 5 Hr 54 mins 19 Multithreading 6 lessons · 6 Hr 39 mins 20 Collections 8 lessons · 6 Hr 21 Maps 16 lessons · 8 Hr 59 mins 22 File Handling 7 lessons · ",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "course-detail"
+    },
+    {
+      "url": "https://tai.thetapacademy.com/courses/6547a220902b75831a41253a",
+      "finalUrl": "https://tai.thetapacademy.com/courses/6547a220902b75831a41253a",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Java"
+        },
+        {
+          "tag": "h2",
+          "text": "Eclipse Installation"
+        },
+        {
+          "tag": "h3",
+          "text": "Course content"
+        }
+      ],
+      "navLabels": [
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "99+",
+        "Scan QR code",
+        "Ask TAI",
+        "Profile",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out"
+      ],
+      "uiStates": [
+        "progress"
+      ],
+      "bodySample": "99+ MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 G Java Eclipse Installation Somanna Core Java Overview Discussions Reviews Course Description Through this course, you will learn the theoretical foundations of the Java programming language, including its history, key features, and principles of object-oriented programming (OOP). You will understand the significance of platform independence, memory management, and the Java Virtual Machine (JVM). Additionally, you will explore concepts such as encapsulation, inheritance, polymorphism and abstraction, which are fundamental to Java's OOP paradigm. The course will also cover theoretical aspects of data types, operators, exception handling & multithreading in Java. By grasping these theoretical concepts, you will build a strong foundation for practical application and problem-solving in Java programming. 0% Course content 23 modules 101 Hr 15.5 mins 1 Steps to Install Eclipse IDE 1 lessons · 10 mins 2 Introduction to FSWD & Evolution of HLL 1 lessons · 1 Hr 16 mins 3 Features of JAVA 2 lessons · 2 Hr 29 mins 4 Main Method 1 lessons · 1 Hr 9 mins 5 Data Types 3 lessons · 4 Hr 26 mins 6 Operators & Loops 2 lessons · 2 Hr 7 mins 7 Pattern Programming 3 lessons · 3 Hr 56 mins 8 Variables & Methods 3 lessons · 3 Hr 48 mins 9 Arrays 4 lessons · 4 Hr 18 mins 10 Programs on Data Types 1 lessons · 1 Hr 26 mins 11 Programs on Arrays 8 lessons · 4 Hr 9 mins 12 Strings 7 lessons · 8 Hr 24 mins 13 Programs on Strings 10 lessons · 6 Hr 46.5 mins 14 OOPs - Method Overloading & Encapsulation 6 lessons · 7 Hr 1 mins 15 OOPs - Static and Inheritance 6 lessons · 7 Hr 17 mins 16 OOPs - Polymorphism and Association 4 lessons · 4 Hr 38 mins 17 OOPs - Abstraction 5 lessons · 6 Hr 13 mins 18 Exception Handling 5 lessons · 5 Hr 54 mins 19 Multithreading 6 lessons · 6 Hr 39 mins 20 Collections 8 lessons · 6 Hr 21 Maps 16 lessons · 8 Hr 59 mins 22 File Handling 7 lessons · 3 Hr 22 mins 23 Serialization",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "lesson-detail"
+    },
+    {
+      "url": "https://tai.thetapacademy.com/courses/6547a220902b75831a41253a",
+      "finalUrl": "https://tai.thetapacademy.com/courses/6547a220902b75831a41253a",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [
+        {
+          "tag": "h2",
+          "text": "Scan to check in"
+        },
+        {
+          "tag": "h1",
+          "text": "Java"
+        },
+        {
+          "tag": "h2",
+          "text": "Eclipse Installation"
+        },
+        {
+          "tag": "h3",
+          "text": "Course content"
+        }
+      ],
+      "navLabels": [
+        "Dashboard",
+        "Courses",
+        "Tests",
+        "Assignments",
+        "Company Questions",
+        "Jobs",
+        "Bookmarks",
+        "Ask TAI",
+        "Profile",
+        "99+",
+        "Scan QR Code",
+        "Light",
+        "Dark",
+        "Toggle theme",
+        "Log out"
+      ],
+      "uiStates": [
+        "progress"
+      ],
+      "bodySample": "99+ Scan QR Code MENU Dashboard Courses Tests Assignments Company Questions Jobs Bookmarks Ask TAI Profile 0 EMPLOYABILITY SCORE 0 / 100 Light Dark G G Yaswanth ✓ yaswanthgrandhi2580@gm... ATTENDANCE Scan to check in Batch February 2024-B1[BTM] Scan this code with the TAP Academy app to mark your attendance. Java Eclipse Installation Somanna Core Java Overview Discussions Reviews Course Description Through this course, you will learn the theoretical foundations of the Java programming language, including its history, key features, and principles of object-oriented programming (OOP). You will understand the significance of platform independence, memory management, and the Java Virtual Machine (JVM). Additionally, you will explore concepts such as encapsulation, inheritance, polymorphism and abstraction, which are fundamental to Java's OOP paradigm. The course will also cover theoretical aspects of data types, operators, exception handling & multithreading in Java. By grasping these theoretical concepts, you will build a strong foundation for practical application and problem-solving in Java programming. 0% Course content 23 modules 101 Hr 15.5 mins 1 Steps to Install Eclipse IDE 1 lessons · 10 mins 2 Introduction to FSWD & Evolution of HLL 1 lessons · 1 Hr 16 mins 3 Features of JAVA 2 lessons · 2 Hr 29 mins 4 Main Method 1 lessons · 1 Hr 9 mins 5 Data Types 3 lessons · 4 Hr 26 mins 6 Operators & Loops 2 lessons · 2 Hr 7 mins 7 Pattern Programming 3 lessons · 3 Hr 56 mins 8 Variables & Methods 3 lessons · 3 Hr 48 mins 9 Arrays 4 lessons · 4 Hr 18 mins 10 Programs on Data Types 1 lessons · 1 Hr 26 mins 11 Programs on Arrays 8 lessons · 4 Hr 9 mins 12 Strings 7 lessons · 8 Hr 24 mins 13 Programs on Strings 10 lessons · 6 Hr 46.5 mins 14 OOPs - Method Overloading & Encapsulation 6 lessons · 7 Hr 1 mins 15 OOPs - Static and Inheritance 6 lessons · 7 Hr 17 mins 16 OOPs - Polymorphism and Association 4 lessons · 4 Hr 38 mins 17 OOPs - Abstraction 5 lessons · 6 Hr 13 mins 18",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": {
+          "color": "rgba(0, 0, 0, 0.88)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "button": {
+          "color": "rgb(52, 64, 84)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "13.3333px"
+        },
+        "link": {
+          "color": "rgb(16, 24, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "14px"
+        },
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [
+        {
+          "href": "/",
+          "label": ""
+        }
+      ],
+      "interactiveNav": [
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Dashboard",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Courses",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Tests",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Assignments",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Company Questions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Jobs",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Bookmarks",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Ask TAI",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "text": "Profile",
+          "tag": "button",
+          "href": null
+        }
+      ],
+      "error": null,
+      "slug": "code-practice-ide"
+    },
+    {
+      "url": "https://tai.thetapacademy.com/loginEmail",
+      "finalUrl": "https://tai.thetapacademy.com/loginEmail",
+      "title": "Tap Academy | Training and Placement",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Login with email"
+        },
+        {
+          "tag": "h1",
+          "text": "Turn consistent practice into career momentum."
+        }
+      ],
+      "navLabels": [],
+      "uiStates": [],
+      "bodySample": "Login with email For existing TAP Academy accounts that already have a password. Email address Password Forgot password? Login securely Back to phone login TAP ACADEMY Turn consistent practice into career momentum. Access your courses, assignments, tests, jobs, and company questions in one place.",
+      "brandColors": {
+        "body": {
+          "color": "rgb(0, 0, 0)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontFamily": "Inter",
+          "fontSize": "16px"
+        },
+        "header": null,
+        "button": {
+          "color": "rgb(255, 255, 255)",
+          "background": "rgb(36, 87, 214)",
+          "fontFamily": "Inter, -apple-system, \"Segoe UI\", Roboto, sans-serif",
+          "fontSize": "15px"
+        },
+        "link": null,
+        "cssVars": {
+          "--brand": "#2160ad"
+        }
+      },
+      "linksDiscovered": [],
+      "interactiveNav": [],
+      "error": null,
+      "slug": "login"
+    }
+  ],
+  "teardown": {
+    "layout": "App shell with left/hamburger MENU sidebar + main dashboard content. Home shows My Learning, streak calendar, placement widgets. Course detail is a nested route under /courses/:id.",
+    "nav": [
+      "Dashboard",
+      "Courses",
+      "Tests",
+      "Assignments",
+      "Company Questions",
+      "Jobs",
+      "Bookmarks",
+      "99+",
+      "Scan QR code",
+      "Ask TAI",
+      "Profile",
+      "Light",
+      "Dark",
+      "Toggle theme",
+      "Log out",
+      "Leaderboard",
+      "Placement",
+      "Streak",
+      "Technical",
+      "Non-technical",
+      "Internal",
+      "Applied drives",
+      "Need help?",
+      "View leaderboard",
+      "Resume 1 Uploaded PDF · Default",
+      "Remove resume",
+      "Scan QR Code",
+      "Hide chat history",
+      "New chat",
+      "Armstrong number program inquiry. a year ago",
+      "Compiling time limit exceeded. 2 years ago"
+    ],
+    "typography": "Inter",
+    "colour": {
+      "samples": [
+        {
+          "slug": "home",
+          "body": {
+            "color": "rgb(0, 0, 0)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontFamily": "Inter",
+            "fontSize": "16px"
+          },
+          "header": {
+            "color": "rgba(0, 0, 0, 0.88)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontFamily": "Inter",
+            "fontSize": "14px"
+          },
+          "button": {
+            "color": "rgb(52, 64, 84)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontFamily": "Inter",
+            "fontSize": "13.3333px"
+          },
+          "link": {
+            "color": "rgb(16, 24, 40)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontFamily": "Inter",
+            "fontSize": "14px"
+          },
+          "cssVars": {
+            "--brand": "#2160ad"
+          }
+        },
+        {
+          "slug": "courses",
+          "body": {
+            "color": "rgb(0, 0, 0)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontFamily": "Inter",
+            "fontSize": "16px"
+          },
+          "header": {
+            "color": "rgba(0, 0, 0, 0.88)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontFamily": "Inter",
+            "fontSize": "14px"
+          },
+          "button": {
+            "color": "rgb(52, 64, 84)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontFamily": "Inter",
+            "fontSize": "13.3333px"
+          },
+          "link": {
+            "color": "rgb(16, 24, 40)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontFamily": "Inter",
+            "fontSize": "14px"
+          },
+          "cssVars": {
+            "--brand": "#2160ad"
+          }
+        }
+      ]
+    },
+    "spacing": "Dense dashboard cards; screenshot comparison at 1440 / 768 / 390.",
+    "icons": "Emoji streak flame present in copy; otherwise check screenshots for SVG iconography in MENU.",
+    "components": [
+      "Sidebar MENU",
+      "Progress % rings/bars (Courses/Assignments/Tests)",
+      "Course cards with Start CTA",
+      "Practice streak calendar heatmap",
+      "Assignment review cards",
+      "Video/lesson player (if opened)",
+      "Possible code practice IDE"
+    ],
+    "interactions": [
+      "Email/password login at /loginEmail",
+      "Direct URL routing for primary sections",
+      "Click-nav via MENU labels",
+      "Course list -> course detail drill-down",
+      "Lesson/video open when links present"
+    ],
+    "breakpoints": [
+      "1440x900",
+      "768x900",
+      "390x844"
+    ],
+    "deepDive": {
+      "course": "https://tai.thetapacademy.com/courses/6547a220902b75831a41253a",
+      "lesson": "https://tai.thetapacademy.com/courses/6547a220902b75831a41253a",
+      "ide": "https://tai.thetapacademy.com/courses/6547a220902b75831a41253a"
+    },
+    "routeMap": [
+      {
+        "mode": "direct",
+        "requested": "/",
+        "final": "/",
+        "status": 200,
+        "slug": "home"
+      },
+      {
+        "mode": "direct",
+        "requested": "/courses",
+        "final": "/courses",
+        "status": 200,
+        "slug": "courses"
+      },
+      {
+        "mode": "direct",
+        "requested": "/tests",
+        "final": "/tests",
+        "status": 200,
+        "slug": "tests"
+      },
+      {
+        "mode": "direct",
+        "requested": "/assignments",
+        "final": "/assignments",
+        "status": 200,
+        "slug": "assignments"
+      },
+      {
+        "mode": "direct",
+        "requested": "/company-questions",
+        "final": "/company-questions",
+        "status": 200,
+        "slug": "company-questions"
+      },
+      {
+        "mode": "direct",
+        "requested": "/jobs",
+        "final": "/jobs",
+        "status": 200,
+        "slug": "jobs"
+      },
+      {
+        "mode": "direct",
+        "requested": "/bookmarks",
+        "final": "/bookmarks",
+        "status": 200,
+        "slug": "bookmarks"
+      },
+      {
+        "mode": "direct",
+        "requested": "/ask-tai",
+        "final": "/ask-tai",
+        "status": 200,
+        "slug": "ask-tai"
+      },
+      {
+        "mode": "direct",
+        "requested": "/chat",
+        "final": "/chat",
+        "status": 200,
+        "slug": "chat"
+      },
+      {
+        "mode": "direct",
+        "requested": "/profile",
+        "final": "/profile",
+        "status": 200,
+        "slug": "profile"
+      },
+      {
+        "mode": "direct",
+        "requested": "/settings",
+        "final": "/settings",
+        "status": 200,
+        "slug": "settings"
+      },
+      {
+        "mode": "direct",
+        "requested": "/streak",
+        "final": "/streak",
+        "status": 200,
+        "slug": "streak"
+      },
+      {
+        "mode": "direct",
+        "requested": "/leaderboard",
+        "final": "/leaderboard",
+        "status": 200,
+        "slug": "leaderboard"
+      },
+      {
+        "mode": "direct",
+        "requested": "/placement",
+        "final": "/placement",
+        "status": 200,
+        "slug": "placement"
+      },
+      {
+        "mode": "direct",
+        "requested": "/dashboard",
+        "final": "/dashboard",
+        "status": 200,
+        "slug": "dashboard"
+      },
+      {
+        "mode": "click",
+        "requested": "Dashboard",
+        "final": "/",
+        "slug": "nav-dashboard"
+      },
+      {
+        "mode": "click",
+        "requested": "Courses",
+        "final": "/courses",
+        "slug": "nav-courses"
+      },
+      {
+        "mode": "click",
+        "requested": "Tests",
+        "final": "/tests",
+        "slug": "nav-tests"
+      },
+      {
+        "mode": "click",
+        "requested": "Assignments",
+        "final": "/assignments",
+        "slug": "nav-assignments"
+      },
+      {
+        "mode": "click",
+        "requested": "Company Questions",
+        "final": "/companyQuestions",
+        "slug": "nav-company-questions"
+      },
+      {
+        "mode": "click",
+        "requested": "Jobs",
+        "final": "/jobs",
+        "slug": "nav-jobs"
+      },
+      {
+        "mode": "click",
+        "requested": "Bookmarks",
+        "final": "/bookmarks",
+        "slug": "nav-bookmarks"
+      },
+      {
+        "mode": "click",
+        "requested": "Ask TAI",
+        "final": "/askTai",
+        "slug": "nav-ask-tai"
+      },
+      {
+        "mode": "click",
+        "requested": "Profile",
+        "final": "/profile",
+        "slug": "nav-profile"
+      },
+      {
+        "mode": "deep",
+        "requested": "course",
+        "final": "/courses/6547a220902b75831a41253a",
+        "slug": "course-detail"
+      },
+      {
+        "mode": "deep",
+        "requested": "lesson",
+        "final": "/courses/6547a220902b75831a41253a",
+        "slug": "lesson-detail"
+      },
+      {
+        "mode": "deep",
+        "requested": "ide",
+        "final": "/courses/6547a220902b75831a41253a",
+        "slug": "code-practice-ide"
+      }
+    ]
+  },
+  "discoveredRoutes": [
+    "/"
+  ],
+  "deepDive": {
+    "course": "https://tai.thetapacademy.com/courses/6547a220902b75831a41253a",
+    "lesson": "https://tai.thetapacademy.com/courses/6547a220902b75831a41253a",
+    "ide": "https://tai.thetapacademy.com/courses/6547a220902b75831a41253a"
+  },
+  "loginLanding": "/",
+  "homeNavLabels": [
+    "Dashboard",
+    "Courses",
+    "Tests",
+    "Assignments",
+    "Company Questions",
+    "Jobs",
+    "Bookmarks",
+    "99+",
+    "Scan QR code",
+    "Ask TAI",
+    "Profile",
+    "Light",
+    "Dark",
+    "Toggle theme",
+    "Log out",
+    "Leaderboard",
+    "Placement",
+    "Streak"
+  ],
+  "routeMap": [
+    {
+      "mode": "direct",
+      "requested": "/",
+      "final": "/",
+      "status": 200,
+      "slug": "home"
+    },
+    {
+      "mode": "direct",
+      "requested": "/courses",
+      "final": "/courses",
+      "status": 200,
+      "slug": "courses"
+    },
+    {
+      "mode": "direct",
+      "requested": "/tests",
+      "final": "/tests",
+      "status": 200,
+      "slug": "tests"
+    },
+    {
+      "mode": "direct",
+      "requested": "/assignments",
+      "final": "/assignments",
+      "status": 200,
+      "slug": "assignments"
+    },
+    {
+      "mode": "direct",
+      "requested": "/company-questions",
+      "final": "/company-questions",
+      "status": 200,
+      "slug": "company-questions"
+    },
+    {
+      "mode": "direct",
+      "requested": "/jobs",
+      "final": "/jobs",
+      "status": 200,
+      "slug": "jobs"
+    },
+    {
+      "mode": "direct",
+      "requested": "/bookmarks",
+      "final": "/bookmarks",
+      "status": 200,
+      "slug": "bookmarks"
+    },
+    {
+      "mode": "direct",
+      "requested": "/ask-tai",
+      "final": "/ask-tai",
+      "status": 200,
+      "slug": "ask-tai"
+    },
+    {
+      "mode": "direct",
+      "requested": "/chat",
+      "final": "/chat",
+      "status": 200,
+      "slug": "chat"
+    },
+    {
+      "mode": "direct",
+      "requested": "/profile",
+      "final": "/profile",
+      "status": 200,
+      "slug": "profile"
+    },
+    {
+      "mode": "direct",
+      "requested": "/settings",
+      "final": "/settings",
+      "status": 200,
+      "slug": "settings"
+    },
+    {
+      "mode": "direct",
+      "requested": "/streak",
+      "final": "/streak",
+      "status": 200,
+      "slug": "streak"
+    },
+    {
+      "mode": "direct",
+      "requested": "/leaderboard",
+      "final": "/leaderboard",
+      "status": 200,
+      "slug": "leaderboard"
+    },
+    {
+      "mode": "direct",
+      "requested": "/placement",
+      "final": "/placement",
+      "status": 200,
+      "slug": "placement"
+    },
+    {
+      "mode": "direct",
+      "requested": "/dashboard",
+      "final": "/dashboard",
+      "status": 200,
+      "slug": "dashboard"
+    },
+    {
+      "mode": "click",
+      "requested": "Dashboard",
+      "final": "/",
+      "slug": "nav-dashboard"
+    },
+    {
+      "mode": "click",
+      "requested": "Courses",
+      "final": "/courses",
+      "slug": "nav-courses"
+    },
+    {
+      "mode": "click",
+      "requested": "Tests",
+      "final": "/tests",
+      "slug": "nav-tests"
+    },
+    {
+      "mode": "click",
+      "requested": "Assignments",
+      "final": "/assignments",
+      "slug": "nav-assignments"
+    },
+    {
+      "mode": "click",
+      "requested": "Company Questions",
+      "final": "/companyQuestions",
+      "slug": "nav-company-questions"
+    },
+    {
+      "mode": "click",
+      "requested": "Jobs",
+      "final": "/jobs",
+      "slug": "nav-jobs"
+    },
+    {
+      "mode": "click",
+      "requested": "Bookmarks",
+      "final": "/bookmarks",
+      "slug": "nav-bookmarks"
+    },
+    {
+      "mode": "click",
+      "requested": "Ask TAI",
+      "final": "/askTai",
+      "slug": "nav-ask-tai"
+    },
+    {
+      "mode": "click",
+      "requested": "Profile",
+      "final": "/profile",
+      "slug": "nav-profile"
+    },
+    {
+      "mode": "deep",
+      "requested": "course",
+      "final": "/courses/6547a220902b75831a41253a",
+      "slug": "course-detail"
+    },
+    {
+      "mode": "deep",
+      "requested": "lesson",
+      "final": "/courses/6547a220902b75831a41253a",
+      "slug": "lesson-detail"
+    },
+    {
+      "mode": "deep",
+      "requested": "ide",
+      "final": "/courses/6547a220902b75831a41253a",
+      "slug": "code-practice-ide"
+    }
+  ],
+  "screenshotFiles": [
+    "screenshots/home-1440.png",
+    "screenshots/home-768.png",
+    "screenshots/home-390.png",
+    "screenshots/courses-1440.png",
+    "screenshots/courses-768.png",
+    "screenshots/courses-390.png",
+    "screenshots/tests-1440.png",
+    "screenshots/tests-768.png",
+    "screenshots/tests-390.png",
+    "screenshots/assignments-1440.png",
+    "screenshots/assignments-768.png",
+    "screenshots/assignments-390.png",
+    "screenshots/company-questions-1440.png",
+    "screenshots/company-questions-768.png",
+    "screenshots/company-questions-390.png",
+    "screenshots/jobs-1440.png",
+    "screenshots/jobs-768.png",
+    "screenshots/jobs-390.png",
+    "screenshots/bookmarks-1440.png",
+    "screenshots/bookmarks-768.png",
+    "screenshots/bookmarks-390.png",
+    "screenshots/ask-tai-1440.png",
+    "screenshots/ask-tai-768.png",
+    "screenshots/ask-tai-390.png",
+    "screenshots/chat-1440.png",
+    "screenshots/chat-768.png",
+    "screenshots/chat-390.png",
+    "screenshots/profile-1440.png",
+    "screenshots/profile-768.png",
+    "screenshots/profile-390.png",
+    "screenshots/settings-1440.png",
+    "screenshots/settings-768.png",
+    "screenshots/settings-390.png",
+    "screenshots/streak-1440.png",
+    "screenshots/streak-768.png",
+    "screenshots/streak-390.png",
+    "screenshots/leaderboard-1440.png",
+    "screenshots/leaderboard-768.png",
+    "screenshots/leaderboard-390.png",
+    "screenshots/placement-1440.png",
+    "screenshots/placement-768.png",
+    "screenshots/placement-390.png",
+    "screenshots/dashboard-1440.png",
+    "screenshots/dashboard-768.png",
+    "screenshots/dashboard-390.png",
+    "screenshots/nav-dashboard-1440.png",
+    "screenshots/nav-dashboard-768.png",
+    "screenshots/nav-dashboard-390.png",
+    "screenshots/nav-courses-1440.png",
+    "screenshots/nav-courses-768.png",
+    "screenshots/nav-courses-390.png",
+    "screenshots/nav-tests-1440.png",
+    "screenshots/nav-tests-768.png",
+    "screenshots/nav-tests-390.png",
+    "screenshots/nav-assignments-1440.png",
+    "screenshots/nav-assignments-768.png",
+    "screenshots/nav-assignments-390.png",
+    "screenshots/nav-company-questions-1440.png",
+    "screenshots/nav-company-questions-768.png",
+    "screenshots/nav-company-questions-390.png",
+    "screenshots/nav-jobs-1440.png",
+    "screenshots/nav-jobs-768.png",
+    "screenshots/nav-jobs-390.png",
+    "screenshots/nav-bookmarks-1440.png",
+    "screenshots/nav-bookmarks-768.png",
+    "screenshots/nav-bookmarks-390.png",
+    "screenshots/nav-ask-tai-1440.png",
+    "screenshots/nav-ask-tai-768.png",
+    "screenshots/nav-ask-tai-390.png",
+    "screenshots/nav-profile-1440.png",
+    "screenshots/nav-profile-768.png",
+    "screenshots/nav-profile-390.png",
+    "screenshots/course-detail-1440.png",
+    "screenshots/course-detail-768.png",
+    "screenshots/course-detail-390.png",
+    "screenshots/lesson-detail-1440.png",
+    "screenshots/lesson-detail-768.png",
+    "screenshots/lesson-detail-390.png",
+    "screenshots/code-practice-ide-1440.png",
+    "screenshots/code-practice-ide-768.png",
+    "screenshots/code-practice-ide-390.png",
+    "screenshots/login-1440.png",
+    "screenshots/login-768.png",
+    "screenshots/login-390.png"
+  ]
+}
