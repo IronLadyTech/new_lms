@@ -19,6 +19,7 @@ export default function MBWLessonView({
   onGoToPrevious,
   onPrevious,
   onNext,
+  courseContent = null,
 }) {
   const showLessonNav = showPrevCta || showNextCta || Boolean(successBanner);
   const taskComplete = activeState?.isComplete;
@@ -30,6 +31,8 @@ export default function MBWLessonView({
         userId={userId}
         threshold={threshold}
         showInlineSuccess={false}
+        variant="lesson"
+        courseContent={courseContent}
         onWatchProgress={onWatchProgress}
         onWatchComplete={onWatchComplete}
         onSubmit={onSubmit}

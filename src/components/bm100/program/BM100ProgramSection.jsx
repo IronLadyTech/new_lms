@@ -35,6 +35,7 @@ export default function BM100ProgramSection({
   nextTaskId,
   onToggle,
   onSelectLesson,
+  railMode = false,
 }) {
   const progress = sectionProgress[section.id] || {
     done: 0,
@@ -44,62 +45,93 @@ export default function BM100ProgramSection({
   };
   const lockDisplay = getSectionLockDisplay(section, sectionProgress, profile);
   const paymentLocked = isRegistrationPaymentLocked(section, sectionProgress, profile);
-  // Any locked section shows the icon now, not just payment ones — a bare
-  // "Locked" with no symbol read as available.
-  /*
-   * The padlock means money, not progress. A learner who has paid in full sees
-   * every section without a padlock, even the ones they cannot open yet —
-   * those are waiting on tasks, and saying so in words is honest where a
-   * padlock reads as "buy something". An expired window keeps the padlock,
-   * because that is access ending rather than work outstanding.
-   */
   const accessLocked = paymentLocked || Boolean(lockDisplay?.expired);
   const lockReason = lockDisplay?.expired
     ? lockDisplay.message
     : REGISTRATION_PAYMENT_LOCK_TOOLTIP;
   const panelId = `bm100-section-${section.id}`;
 
-  const moduleStats = !progress.unlocked
-    ? 'Locked'
-    : progress.total > 0
-      ? `${progress.total} lessons · ${progress.done}/${progress.total} done`
-      : section.subtitle;
+  const usesEngine = Array.isArray(taskStates) && taskStates.length > 0;
+  const lessonTotal = progress.total || (usesEngine ? taskStates.length : 0);
+  const moduleStats = railMode
+    ? !progress.unlocked
+      ? lessonTotal > 0
+        ? `${lessonTotal} lessons`
+        : section.subtitle || 'Locked'
+      : lessonTotal > 0
+        ? `${lessonTotal} lessons · ${progress.done}/${lessonTotal} done`
+        : section.subtitle
+    : !progress.unlocked
+      ? 'Locked'
+      : progress.total > 0
+        ? `${progress.total} lessons · ${progress.done}/${progress.total} done`
+        : section.subtitle;
+
+  const indexLabel =
+    sectionIndex != null ? String(sectionIndex).padStart(2, '0') : null;
 
   return (
     <article
-      className={`mbw-section-card${expanded ? ' is-expanded' : ''}${isCurrent ? ' is-current' : ''}${!progress.unlocked ? ' is-section-locked' : ''}${paymentLocked ? ' is-payment-locked' : ''}`}
+      className={`mbw-section-card${expanded ? ' is-expanded' : ''}${isCurrent ? ' is-current' : ''}${!progress.unlocked ? ' is-section-locked' : ''}${paymentLocked ? ' is-payment-locked' : ''}${railMode ? ' mbw-section-card--rail' : ''}`}
     >
       <h3 className="mbw-section-card__heading">
-        <button
-          type="button"
-          className="mbw-section-card__head"
-          aria-expanded={expanded}
-          aria-controls={panelId}
-          onClick={onToggle}
-        >
-          <SectionDot status={progress.status} />
-          <span className="mbw-section-card__titles">
-            {sectionIndex != null && (
-              <span className="mbw-section-card__module">Module {sectionIndex}</span>
+        {railMode ? (
+          <button
+            type="button"
+            className="mbw-section-card__toggle mbw-section-card__toggle--rail"
+            aria-expanded={expanded}
+            aria-controls={panelId}
+            onClick={onToggle}
+          >
+            {indexLabel && (
+              <span className="mbw-section-card__index" aria-hidden>
+                {indexLabel}
+              </span>
             )}
-            <span className="mbw-section-card__name">{section.title}</span>
-            <span className="mbw-section-card__sub">{moduleStats}</span>
-          </span>
-          <span className="mbw-section-card__mini">
-            {progress.done}/{progress.total}
-          </span>
-          {accessLocked && (
-            <span
-              className="mbw-section-card__pay-lock"
-              title={lockReason}
-              aria-label={lockReason}
-              role="img"
-            >
-              <Lock size={16} strokeWidth={2.25} aria-hidden />
+            <span className="mbw-section-card__copy">
+              <span className="mbw-section-card__name">{section.title}</span>
+              <span className="mbw-section-card__sub">{moduleStats}</span>
             </span>
-          )}
-          <ChevronDown size={18} className="mbw-section-card__chevron" aria-hidden />
-        </button>
+            {!progress.unlocked && (
+              <Lock size={16} className="mbw-section-card__lock" aria-hidden />
+            )}
+            <ChevronDown size={18} className="mbw-section-card__chevron" aria-hidden />
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="mbw-section-card__head"
+            aria-expanded={expanded}
+            aria-controls={panelId}
+            onClick={onToggle}
+          >
+            <SectionDot status={progress.status} />
+            <span className="mbw-section-card__titles">
+              {sectionIndex != null && (
+                <span className="mbw-section-card__module">
+                  <span className="mbw-section-card__module-label">Module </span>
+                  {sectionIndex}
+                </span>
+              )}
+              <span className="mbw-section-card__name">{section.title}</span>
+              <span className="mbw-section-card__sub">{moduleStats}</span>
+            </span>
+            <span className="mbw-section-card__mini">
+              {progress.done}/{progress.total}
+            </span>
+            {accessLocked && (
+              <span
+                className="mbw-section-card__pay-lock"
+                title={lockReason}
+                aria-label={lockReason}
+                role="img"
+              >
+                <Lock size={16} strokeWidth={2.25} aria-hidden />
+              </span>
+            )}
+            <ChevronDown size={18} className="mbw-section-card__chevron" aria-hidden />
+          </button>
+        )}
       </h3>
 
       <div id={panelId} className="mbw-section-card__panel" hidden={!expanded}>

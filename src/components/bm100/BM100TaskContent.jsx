@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ChevronRight, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import WatchGatedVideo from '../mbw/WatchGatedVideo';
@@ -23,6 +24,135 @@ function getSectionTitle(phase) {
   return BM100_PROGRAM_SECTIONS.find((s) => s.id === phase)?.title ?? '100BM';
 }
 
+function SubmissionBody({
+  task,
+  submission,
+  canSubmit,
+  userId,
+  watched,
+  showSubmittedPreview,
+  onSubmit,
+  onSaveTemplate,
+  onAddRecurringPost,
+}) {
+  if (showSubmittedPreview) {
+    return (
+      <LearnerSubmissionPreview
+        submission={submission}
+        task={task}
+        userId={userId}
+        program="100bm"
+      />
+    );
+  }
+
+  return (
+    <>
+      {!watched && task.requiresWatch && task.videoUrl && (
+        <p className="mbw-task__hint">Watch at least 90% of the video to unlock the form below.</p>
+      )}
+      {task.type === TASK_TYPES.WATCH_ONLY && <WatchOnly task={task} submission={submission} />}
+      {task.type === TASK_TYPES.TEXT && (
+        <BM100TextSubmission
+          key={task.id}
+          task={task}
+          submission={submission}
+          canSubmit={canSubmit}
+          readOnly={!canSubmit && Boolean(submission?.textValue)}
+          onSubmit={onSubmit}
+        />
+      )}
+      {task.type === TASK_TYPES.LINK && (
+        <LinkSubmission
+          key={task.id}
+          task={task}
+          submission={submission}
+          canSubmit={canSubmit}
+          onSubmit={onSubmit}
+        />
+      )}
+      {task.type === TASK_TYPES.EDITABLE_TEMPLATE && (
+        <EditableTemplate
+          key={task.id}
+          task={task}
+          submission={submission}
+          canSubmit={canSubmit || !!submission?.templateData}
+          onSave={onSaveTemplate}
+        />
+      )}
+      {task.type === TASK_TYPES.FILE_UPLOAD && (
+        <FileUpload
+          task={task}
+          submission={submission}
+          canSubmit={canSubmit}
+          userId={userId}
+          onSubmit={onSubmit}
+          program="100bm"
+        />
+      )}
+      {task.type === TASK_TYPES.VIDEO_RECORD && (
+        <VideoRecordOrUpload
+          task={task}
+          submission={submission}
+          canSubmit={canSubmit}
+          userId={userId}
+          onSubmit={onSubmit}
+          program="100bm"
+        />
+      )}
+      {task.type === TASK_TYPES.RECURRING_POST && (
+        <RecurringPost
+          task={task}
+          submission={submission}
+          canSubmit={canSubmit}
+          onAddPost={onAddRecurringPost}
+        />
+      )}
+      {task.type === TASK_TYPES.CHECKLIST && (
+        <ChecklistSubmission
+          task={task}
+          submission={submission}
+          canSubmit={canSubmit}
+          onSubmit={onSubmit}
+        />
+      )}
+    </>
+  );
+}
+
+function MaterialsSection({ resourceLinks, showExtraTemplates, task }) {
+  if (resourceLinks.length === 0 && !showExtraTemplates) return null;
+  return (
+    <section className="bm100-task-materials" aria-label="Session materials">
+      <h3 className="bm100-task-materials__title">Session materials</h3>
+      {resourceLinks.length > 0 && (
+        <ul className="bm100-task-materials__links">
+          {resourceLinks.map((link) => (
+            <li key={link.url}>
+              <a
+                className="bm100-task-materials__link"
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink size={16} aria-hidden="true" />
+                <span>{link.label || 'Open resource'}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+      {showExtraTemplates && (
+        <TaskTemplateDownloads taskId={task.id} task={task} program="100bm" />
+      )}
+    </section>
+  );
+}
+
+/**
+ * @param {'default'|'lesson'} [variant]
+ * lesson = TAP Academy–inspired: video → title/meta → Overview / Your work / Course content tabs
+ */
 export default function BM100TaskContent({
   taskState,
   userId,
@@ -37,12 +167,15 @@ export default function BM100TaskContent({
   successBanner,
   focusMode = false,
   showInlineSuccess = true,
+  variant = 'default',
+  courseContent = null,
 }) {
   const { task, submission, status, watched, canSubmit, isComplete, prevTaskId, phaseLocked } =
     taskState;
-  // Lesson media is fetched rather than bundled: shipping URLs to every
-  // browser meant an unpaid learner could read them out of the page.
   const lessonAsset = useLessonAsset(taskState?.task?.id);
+  const isLesson = variant === 'lesson';
+  const [tab, setTab] = useState('overview');
+  const hasCourseTab = Boolean(courseContent);
 
   const locked = status === SUBMISSION_STATUS.LOCKED;
   const showVideo = Boolean(task.videoUrl);
@@ -79,6 +212,177 @@ export default function BM100TaskContent({
     if (result) onActionComplete?.(result);
   };
 
+  const videoBlock =
+    !locked && showVideo ? (
+      <WatchGatedVideo
+        taskId={task.id}
+        videoUrl={lessonAsset.url || ''}
+        title={task.title}
+        watchPercent={taskState.watchPercent}
+        threshold={threshold}
+        captionsUrl={task.captionsUrl || task.captionUrl || ''}
+        onProgress={(pct) => onWatchProgress(task.id, pct)}
+        onComplete={handleWatchComplete}
+      />
+    ) : null;
+
+  const submissionProps = {
+    task,
+    submission,
+    canSubmit,
+    userId,
+    watched,
+    showSubmittedPreview,
+    onSubmit: handleSubmit,
+    onSaveTemplate: handleSaveTemplate,
+    onAddRecurringPost: handleRecurring,
+  };
+
+  const lockedAlert = (
+    <div className="alert alert-warning mbw-task__locked">
+      {phaseLocked ? (
+        <>
+          <p>
+            This section needs full program payment. Registration access covers Onboarding and Phase
+            1 only.
+          </p>
+          <Link to="/app/support" className="btn btn-outline btn-sm">
+            Payment support
+          </Link>
+        </>
+      ) : (
+        <>
+          <p>Complete the previous task to unlock this one.</p>
+          {prevTaskId && (
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={() => onGoToPrevious?.(prevTaskId)}
+            >
+              Go to previous task <ChevronRight size={14} />
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  );
+
+  if (isLesson) {
+    return (
+      <div className="mbw-task mbw-task--lesson">
+        {showInlineSuccess && successBanner && (
+          <div className="alert alert-success mbw-task__success">{successBanner}</div>
+        )}
+        {locked && lockedAlert}
+        {videoBlock}
+
+        <header className="mbw-task__header mbw-task__header--lesson">
+          <h1>{task.title}</h1>
+          <div className="mbw-task__meta">
+            <span className="mbw-task__tag">{getSectionTitle(task.phase)}</span>
+            <span className="mbw-task__tag mbw-task__tag--muted">{getModuleLabel(task)}</span>
+            {getWeekCode(task) && (
+              <span className="mbw-task__tag mbw-task__tag--muted">{getWeekCode(task)}</span>
+            )}
+            <span className="mbw-task__tag mbw-task__tag--muted">{getTaskDurationHint(task)}</span>
+            <span className={`mbw-status-pill mbw-status-pill--${primary.tone}`}>
+              {primary.label}
+            </span>
+          </div>
+        </header>
+
+        {!locked && (
+          <>
+            <div className="mbw-task__tabs" role="tablist" aria-label="Lesson sections">
+              <button
+                type="button"
+                role="tab"
+                id="bm100-tab-overview"
+                aria-selected={tab === 'overview'}
+                aria-controls="bm100-panel-overview"
+                className={`mbw-task__tab${tab === 'overview' ? ' is-active' : ''}`}
+                onClick={() => setTab('overview')}
+              >
+                Overview
+              </button>
+              <button
+                type="button"
+                role="tab"
+                id="bm100-tab-work"
+                aria-selected={tab === 'work'}
+                aria-controls="bm100-panel-work"
+                className={`mbw-task__tab${tab === 'work' ? ' is-active' : ''}`}
+                onClick={() => setTab('work')}
+              >
+                Your work
+              </button>
+              {hasCourseTab && (
+                <button
+                  type="button"
+                  role="tab"
+                  id="bm100-tab-course"
+                  aria-selected={tab === 'course'}
+                  aria-controls="bm100-panel-course"
+                  className={`mbw-task__tab mbw-task__tab--course${tab === 'course' ? ' is-active' : ''}`}
+                  onClick={() => setTab('course')}
+                >
+                  Course content
+                </button>
+              )}
+            </div>
+
+            {tab === 'overview' && (
+              <section
+                className="mbw-task__panel"
+                role="tabpanel"
+                id="bm100-panel-overview"
+                aria-labelledby="bm100-tab-overview"
+              >
+                <h2 className="mbw-task__panel-title">About this task</h2>
+                {task.description ? (
+                  <p className="mbw-task__desc">{task.description}</p>
+                ) : (
+                  <p className="mbw-task__desc muted">
+                    Watch the lesson, then open Your work to complete the submission.
+                  </p>
+                )}
+                <MaterialsSection
+                  resourceLinks={resourceLinks}
+                  showExtraTemplates={showExtraTemplates}
+                  task={task}
+                />
+              </section>
+            )}
+
+            {tab === 'work' && (
+              <section
+                className="mbw-task__panel mbw-task__submission"
+                role="tabpanel"
+                id="bm100-panel-work"
+                aria-labelledby="bm100-tab-work"
+              >
+                <h2 className="mbw-task__panel-title">Your submission</h2>
+                <SubmissionBody {...submissionProps} />
+                <LearnerReviewFeedback submission={submission} />
+              </section>
+            )}
+
+            {hasCourseTab && tab === 'course' && (
+              <section
+                className="mbw-task__panel mbw-task__panel--course"
+                role="tabpanel"
+                id="bm100-panel-course"
+                aria-labelledby="bm100-tab-course"
+              >
+                {courseContent}
+              </section>
+            )}
+          </>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={`mbw-task${focusMode ? ' mbw-task--focus' : ''}`}>
       <header className="mbw-task__header">
@@ -111,162 +415,21 @@ export default function BM100TaskContent({
         <div className="alert alert-success mbw-task__success">{successBanner}</div>
       )}
 
-      {locked && (
-        <div className="alert alert-warning mbw-task__locked">
-          {phaseLocked ? (
-            <>
-              <p>
-                This section needs full program payment. Registration access covers Onboarding and
-                Phase 1 only.
-              </p>
-              <Link to="/app/support" className="btn btn-outline btn-sm">
-                Payment support
-              </Link>
-            </>
-          ) : (
-            <>
-              <p>Complete the previous task to unlock this one.</p>
-              {prevTaskId && (
-                <button
-                  type="button"
-                  className="btn btn-outline btn-sm"
-                  onClick={() => onGoToPrevious?.(prevTaskId)}
-                >
-                  Go to previous task <ChevronRight size={14} />
-                </button>
-              )}
-            </>
-          )}
-        </div>
-      )}
+      {locked && lockedAlert}
+      {videoBlock}
 
-      {!locked && showVideo && (
-        <WatchGatedVideo
-          taskId={task.id}
-          videoUrl={lessonAsset.url || ''}
-          title={task.title}
-          watchPercent={taskState.watchPercent}
-          threshold={threshold}
-          captionsUrl={task.captionsUrl || task.captionUrl || ''}
-          onProgress={(pct) => onWatchProgress(task.id, pct)}
-          onComplete={handleWatchComplete}
+      {!locked && (
+        <MaterialsSection
+          resourceLinks={resourceLinks}
+          showExtraTemplates={showExtraTemplates}
+          task={task}
         />
-      )}
-
-      {!locked && (resourceLinks.length > 0 || showExtraTemplates) && (
-        <section className="bm100-task-materials" aria-label="Session materials">
-          <h2 className="bm100-task-materials__title">Session materials</h2>
-          {resourceLinks.length > 0 && (
-            <ul className="bm100-task-materials__links">
-              {resourceLinks.map((link) => (
-                <li key={link.url}>
-                  <a
-                    className="bm100-task-materials__link"
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink size={16} aria-hidden="true" />
-                    <span>{link.label || 'Open resource'}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-          {showExtraTemplates && (
-            <TaskTemplateDownloads taskId={task.id} task={task} program="100bm" />
-          )}
-        </section>
       )}
 
       {!locked && (
         <section className="mbw-task__submission">
           <h2>Your submission</h2>
-          {!watched && task.requiresWatch && task.videoUrl && (
-            <p className="mbw-task__hint">
-              Watch at least 90% of the video to unlock the form below.
-            </p>
-          )}
-
-          {showSubmittedPreview ? (
-            <LearnerSubmissionPreview
-              submission={submission}
-              task={task}
-              userId={userId}
-              program="100bm"
-            />
-          ) : (
-            <>
-              {task.type === TASK_TYPES.WATCH_ONLY && (
-                <WatchOnly task={task} submission={submission} />
-              )}
-              {task.type === TASK_TYPES.TEXT && (
-                <BM100TextSubmission
-                  key={task.id}
-                  task={task}
-                  submission={submission}
-                  canSubmit={canSubmit}
-                  readOnly={!canSubmit && Boolean(submission?.textValue)}
-                  onSubmit={handleSubmit}
-                />
-              )}
-              {task.type === TASK_TYPES.LINK && (
-                <LinkSubmission
-                  key={task.id}
-                  task={task}
-                  submission={submission}
-                  canSubmit={canSubmit}
-                  onSubmit={handleSubmit}
-                />
-              )}
-              {task.type === TASK_TYPES.EDITABLE_TEMPLATE && (
-                <EditableTemplate
-                  key={task.id}
-                  task={task}
-                  submission={submission}
-                  canSubmit={canSubmit || !!submission?.templateData}
-                  onSave={handleSaveTemplate}
-                />
-              )}
-              {task.type === TASK_TYPES.FILE_UPLOAD && (
-                <FileUpload
-                  task={task}
-                  submission={submission}
-                  canSubmit={canSubmit}
-                  userId={userId}
-                  onSubmit={handleSubmit}
-                  program="100bm"
-                />
-              )}
-              {task.type === TASK_TYPES.VIDEO_RECORD && (
-                <VideoRecordOrUpload
-                  task={task}
-                  submission={submission}
-                  canSubmit={canSubmit}
-                  userId={userId}
-                  onSubmit={handleSubmit}
-                  program="100bm"
-                />
-              )}
-              {task.type === TASK_TYPES.RECURRING_POST && (
-                <RecurringPost
-                  task={task}
-                  submission={submission}
-                  canSubmit={canSubmit}
-                  onAddPost={handleRecurring}
-                />
-              )}
-              {task.type === TASK_TYPES.CHECKLIST && (
-                <ChecklistSubmission
-                  task={task}
-                  submission={submission}
-                  canSubmit={canSubmit}
-                  onSubmit={handleSubmit}
-                />
-              )}
-            </>
-          )}
-
+          <SubmissionBody {...submissionProps} />
           <LearnerReviewFeedback submission={submission} />
         </section>
       )}

@@ -11,6 +11,8 @@ import ProgramLockedPanel from '../../components/ProgramLockedPanel';
 import MBWProgramHero from '../../components/mbw/program/MBWProgramHero';
 import MBWLessonTopbar from '../../components/mbw/program/MBWLessonTopbar';
 import LessonCurriculumDrawer from '../../components/mbw/program/LessonCurriculumDrawer';
+import LessonCourseContentRail from '../../components/mbw/program/LessonCourseContentRail';
+import MBWProgramJourney from '../../components/mbw/program/MBWProgramJourney';
 import MBWProgramSkeleton from '../../components/mbw/program/MBWProgramSkeleton';
 import MBWOverviewView from '../../components/mbw/views/MBWOverviewView';
 import MBWLessonView from '../../components/mbw/views/MBWLessonView';
@@ -26,8 +28,14 @@ import { getModuleLabel } from '../../utils/mbwDisplay';
 import { getProgramAccessState } from '../../utils/programAccess';
 import { applyBatchRecordingsToTaskStates } from '../../utils/batchRecordingSessions';
 import { PROGRAMS } from '../../data/programTypes';
+import { MBW_PROGRAM_SECTIONS } from '../../data/mbwProgramStructure';
 import LessonSearchDialog from '../../components/ui/LessonSearchDialog';
 import { useLessonSearchShortcut } from '../../hooks/useLessonSearchShortcut';
+import {
+  countCompletedModules,
+  estimateCurriculumMinutes,
+  formatCurriculumDuration,
+} from '../../utils/curriculumDuration';
 
 /*
  * The dialog hands its callback a taskState, not a task. Passing getModuleLabel
@@ -49,6 +57,7 @@ export default function MBWPage() {
   const [toast, setToast] = useState('');
   const [successBanner, setSuccessBanner] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
+  const [railSearch, setRailSearch] = useState('');
 
   const openSearch = useCallback(() => setSearchOpen(true), []);
   useLessonSearchShortcut(openSearch);
@@ -88,6 +97,11 @@ export default function MBWPage() {
   const completedMilestones = useMemo(
     () => getCompletedMilestones(sectionProgress),
     [sectionProgress]
+  );
+  const modulesDone = useMemo(() => countCompletedModules(sectionProgress), [sectionProgress]);
+  const durationLabel = useMemo(
+    () => formatCurriculumDuration(estimateCurriculumMinutes(mergedTaskStates)),
+    [mergedTaskStates]
   );
   const nextTaskId = nextTaskState?.task?.id || null;
 
@@ -330,6 +344,33 @@ export default function MBWPage() {
                   onGoToPrevious={openTask}
                   onPrevious={goToPreviousTask}
                   onNext={goToNextTask}
+                  courseContent={
+                    <LessonCourseContentRail
+                      className="lesson-course-rail--tab"
+                      completed={completedMilestones}
+                      total={totalMilestones}
+                      moduleCount={MBW_PROGRAM_SECTIONS.length}
+                      modulesDone={modulesDone}
+                      durationLabel={durationLabel}
+                      searchQuery={railSearch}
+                      onSearchChange={setRailSearch}
+                    >
+                      <MBWProgramJourney
+                        sectionProgress={sectionProgress}
+                        profile={profile}
+                        expandedSectionId={expandedSectionId ?? activeState.task.phase}
+                        currentSectionId={currentSectionId}
+                        onToggleSection={handleToggleSection}
+                        taskStates={mergedTaskStates}
+                        activeTaskId={activeTaskId}
+                        nextTaskId={nextTaskId}
+                        onSelectLesson={openTask}
+                        autoScroll
+                        embedded
+                        searchQuery={railSearch}
+                      />
+                    </LessonCourseContentRail>
+                  }
                 />
               ) : (
                 <MBWOverviewView
@@ -355,6 +396,34 @@ export default function MBWPage() {
                 />
               )}
             </div>
+
+            {lessonMode && activeState && (
+              <LessonCourseContentRail
+                className="lesson-course-rail--aside"
+                completed={completedMilestones}
+                total={totalMilestones}
+                moduleCount={MBW_PROGRAM_SECTIONS.length}
+                modulesDone={modulesDone}
+                durationLabel={durationLabel}
+                searchQuery={railSearch}
+                onSearchChange={setRailSearch}
+              >
+                <MBWProgramJourney
+                  sectionProgress={sectionProgress}
+                  profile={profile}
+                  expandedSectionId={expandedSectionId ?? activeState.task.phase}
+                  currentSectionId={currentSectionId}
+                  onToggleSection={handleToggleSection}
+                  taskStates={mergedTaskStates}
+                  activeTaskId={activeTaskId}
+                  nextTaskId={nextTaskId}
+                  onSelectLesson={openTask}
+                  autoScroll
+                  embedded
+                  searchQuery={railSearch}
+                />
+              </LessonCourseContentRail>
+            )}
           </div>
 
           {lessonMode && activeState && (

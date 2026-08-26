@@ -1,6 +1,20 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { MBW_PROGRAM_SECTIONS } from '../../../data/mbwProgramStructure';
 import MBWProgramSection from './MBWProgramSection';
+
+function sectionMatchesQuery(section, sectionTasks, query) {
+  if (!query) return true;
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  if (section.title.toLowerCase().includes(q)) return true;
+  return sectionTasks.some((ts) => (ts.task.title || '').toLowerCase().includes(q));
+}
+
+function filterTasksByQuery(sectionTasks, query) {
+  if (!query?.trim()) return sectionTasks;
+  const q = query.trim().toLowerCase();
+  return sectionTasks.filter((ts) => (ts.task.title || '').toLowerCase().includes(q));
+}
 
 export default function MBWProgramJourney({
   sectionProgress,
@@ -14,37 +28,64 @@ export default function MBWProgramJourney({
   onSelectLesson,
   autoScroll = true,
   embedded = false,
+  searchQuery = '',
 }) {
   const currentRef = useRef(null);
+  const q = searchQuery.trim().toLowerCase();
+
+  const visibleSections = useMemo(() => {
+    return MBW_PROGRAM_SECTIONS.map((section, index) => {
+      const sectionTasks = section.usesTaskEngine
+        ? taskStates.filter((t) => t.task.phase === section.id)
+        : [];
+      const titleMatch = q && section.title.toLowerCase().includes(q);
+      const matches = sectionMatchesQuery(section, sectionTasks, q);
+      const filteredTasks = !q
+        ? sectionTasks
+        : titleMatch
+          ? sectionTasks
+          : filterTasksByQuery(sectionTasks, q);
+      return { section, index, sectionTasks: filteredTasks, matches };
+    }).filter((row) => row.matches);
+  }, [taskStates, q]);
 
   useEffect(() => {
     if (!autoScroll || !currentRef.current) return;
     currentRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [autoScroll, currentSectionId, expandedSectionId]);
+  }, [autoScroll, currentSectionId, expandedSectionId, q]);
 
   return (
     <nav className="mbw-program-journey" aria-label="MBW program curriculum">
       {!embedded && <h2 className="mbw-program-journey__title">Your journey</h2>}
       <div className="mbw-program-journey__sections">
-        {MBW_PROGRAM_SECTIONS.map((section, index) => (
-          <div key={section.id} ref={section.id === currentSectionId ? currentRef : undefined}>
-            <MBWProgramSection
-              section={section}
-              sectionIndex={index + 1}
-              sectionProgress={sectionProgress}
-              profile={profile}
-              expanded={expandedSectionId === section.id}
-              isCurrent={section.id === currentSectionId}
-              taskStates={
-                section.usesTaskEngine ? taskStates.filter((t) => t.task.phase === section.id) : []
-              }
-              activeTaskId={activeTaskId}
-              nextTaskId={nextTaskId}
-              onToggle={() => onToggleSection(section.id)}
-              onSelectLesson={onSelectLesson}
-            />
-          </div>
-        ))}
+        {visibleSections.length === 0 ? (
+          <p className="lesson-course-rail__empty muted">No lessons match your search.</p>
+        ) : (
+          visibleSections.map(({ section, index, sectionTasks }) => {
+            const forceExpand = Boolean(q) || expandedSectionId === section.id;
+            return (
+              <div
+                key={section.id}
+                ref={section.id === currentSectionId ? currentRef : undefined}
+              >
+                <MBWProgramSection
+                  section={section}
+                  sectionIndex={index + 1}
+                  sectionProgress={sectionProgress}
+                  profile={profile}
+                  expanded={forceExpand}
+                  isCurrent={section.id === currentSectionId}
+                  taskStates={sectionTasks}
+                  activeTaskId={activeTaskId}
+                  nextTaskId={nextTaskId}
+                  onToggle={() => onToggleSection(section.id)}
+                  onSelectLesson={onSelectLesson}
+                  railMode={embedded}
+                />
+              </div>
+            );
+          })
+        )}
       </div>
     </nav>
   );

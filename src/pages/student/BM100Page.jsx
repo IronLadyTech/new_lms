@@ -12,6 +12,8 @@ import MBWProgramSkeleton from '../../components/mbw/program/MBWProgramSkeleton'
 import BM100ProgramHero from '../../components/bm100/program/BM100ProgramHero';
 import BM100LessonTopbar from '../../components/bm100/program/BM100LessonTopbar';
 import BM100LessonCurriculumDrawer from '../../components/bm100/program/BM100LessonCurriculumDrawer';
+import BM100ProgramJourney from '../../components/bm100/program/BM100ProgramJourney';
+import LessonCourseContentRail from '../../components/mbw/program/LessonCourseContentRail';
 import BM100OverviewView from '../../components/bm100/views/BM100OverviewView';
 import BM100LessonView from '../../components/bm100/views/BM100LessonView';
 import { countSavedSubmissions } from '../../utils/mbwSubmissionUtils';
@@ -26,8 +28,15 @@ import { getModuleLabel } from '../../utils/mbwDisplay';
 import { getProgramAccessState } from '../../utils/programAccess';
 import { applyBatchRecordingsToTaskStates } from '../../utils/batchRecordingSessions';
 import { PROGRAMS } from '../../data/programTypes';
+import { BM100_PROGRAM_SECTIONS } from '../../data/bm100ProgramStructure';
 import LessonSearchDialog from '../../components/ui/LessonSearchDialog';
 import { useLessonSearchShortcut } from '../../hooks/useLessonSearchShortcut';
+import {
+  countCompletedModules,
+  estimateCurriculumMinutes,
+  formatCurriculumDuration,
+} from '../../utils/curriculumDuration';
+import { TASK_TYPES as BM100_TASK_TYPES } from '../../services/bm100Service';
 
 /*
  * The dialog hands its callback a taskState, not a task. Passing getModuleLabel
@@ -49,6 +58,7 @@ export default function BM100Page() {
   const [toast, setToast] = useState('');
   const [successBanner, setSuccessBanner] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
+  const [railSearch, setRailSearch] = useState('');
 
   const openSearch = useCallback(() => setSearchOpen(true), []);
   useLessonSearchShortcut(openSearch);
@@ -90,6 +100,12 @@ export default function BM100Page() {
   const completedMilestones = useMemo(
     () => getCompletedMilestones(sectionProgress),
     [sectionProgress]
+  );
+  const modulesDone = useMemo(() => countCompletedModules(sectionProgress), [sectionProgress]);
+  const durationLabel = useMemo(
+    () =>
+      formatCurriculumDuration(estimateCurriculumMinutes(mergedTaskStates, BM100_TASK_TYPES)),
+    [mergedTaskStates]
   );
   const nextTaskId = nextTaskState?.task?.id || null;
 
@@ -362,6 +378,33 @@ export default function BM100Page() {
                   onGoToPrevious={openTask}
                   onPrevious={goToPreviousTask}
                   onNext={goToNextTask}
+                  courseContent={
+                    <LessonCourseContentRail
+                      className="lesson-course-rail--tab"
+                      completed={completedMilestones}
+                      total={totalMilestones}
+                      moduleCount={BM100_PROGRAM_SECTIONS.length}
+                      modulesDone={modulesDone}
+                      durationLabel={durationLabel}
+                      searchQuery={railSearch}
+                      onSearchChange={setRailSearch}
+                    >
+                      <BM100ProgramJourney
+                        sectionProgress={sectionProgress}
+                        profile={profile}
+                        expandedSectionId={expandedSectionId ?? activeState.task.phase}
+                        currentSectionId={currentSectionId}
+                        onToggleSection={handleToggleSection}
+                        taskStates={mergedTaskStates}
+                        activeTaskId={activeTaskId}
+                        nextTaskId={nextTaskId}
+                        onSelectLesson={openTask}
+                        autoScroll
+                        embedded
+                        searchQuery={railSearch}
+                      />
+                    </LessonCourseContentRail>
+                  }
                 />
               ) : (
                 <BM100OverviewView
@@ -388,6 +431,34 @@ export default function BM100Page() {
                 />
               )}
             </div>
+
+            {lessonMode && activeState && (
+              <LessonCourseContentRail
+                className="lesson-course-rail--aside"
+                completed={completedMilestones}
+                total={totalMilestones}
+                moduleCount={BM100_PROGRAM_SECTIONS.length}
+                modulesDone={modulesDone}
+                durationLabel={durationLabel}
+                searchQuery={railSearch}
+                onSearchChange={setRailSearch}
+              >
+                <BM100ProgramJourney
+                  sectionProgress={sectionProgress}
+                  profile={profile}
+                  expandedSectionId={expandedSectionId ?? activeState.task.phase}
+                  currentSectionId={currentSectionId}
+                  onToggleSection={handleToggleSection}
+                  taskStates={mergedTaskStates}
+                  activeTaskId={activeTaskId}
+                  nextTaskId={nextTaskId}
+                  onSelectLesson={openTask}
+                  autoScroll
+                  embedded
+                  searchQuery={railSearch}
+                />
+              </LessonCourseContentRail>
+            )}
           </div>
 
           {lessonMode && activeState && (

@@ -1,18 +1,17 @@
 import { ListTree, ChevronLeft } from 'lucide-react';
 import { MBW_PROGRAM_META, MBW_PROGRAM_SECTIONS } from '../../../data/mbwProgramStructure';
-import MBWProgramProgressBand from './MBWProgramProgressBand';
 import Breadcrumbs from '../../ui/Breadcrumbs';
 
 function getSectionTitle(phase) {
   return MBW_PROGRAM_SECTIONS.find((s) => s.id === phase)?.title ?? 'MBW';
 }
 
+/**
+ * Compact lesson chrome — no red hero. Back + crumbs only so the task stays primary.
+ */
 export default function MBWLessonTopbar({
-  cohortLabel,
   lessonTitle,
   sectionPhase,
-  completedMilestones,
-  totalMilestones,
   onBack,
   onOpenOutline,
   showOutlineButton = false,
@@ -20,18 +19,9 @@ export default function MBWLessonTopbar({
   const sectionTitle = sectionPhase ? getSectionTitle(sectionPhase) : null;
 
   return (
-    <header className="mbw-program-hero mbw-program-hero--lesson">
-      <Breadcrumbs
-        className="mbw-lesson-topbar__crumbs"
-        items={[
-          { label: 'Programs', href: '/app/home' },
-          { label: MBW_PROGRAM_META.title, href: '/app/mbw' },
-          ...(sectionTitle ? [{ label: sectionTitle }] : []),
-          { label: lessonTitle || 'Lesson' },
-        ]}
-      />
+    <header className="mbw-lesson-topbar mbw-lesson-topbar--compact">
       <div className="mbw-lesson-topbar__row">
-        <button type="button" className="mbw-program-hero__back" onClick={onBack}>
+        <button type="button" className="mbw-lesson-topbar__back" onClick={onBack}>
           <ChevronLeft size={16} aria-hidden="true" />
           Back to program
         </button>
@@ -47,17 +37,14 @@ export default function MBWLessonTopbar({
           </button>
         )}
       </div>
-
-      {/* Cohort only — the section is already the third crumb above. */}
-      <p className="mbw-program-hero__label">{cohortLabel || MBW_PROGRAM_META.title}</p>
-      {/*
-        No heading here. The lesson name is the last crumb above and the card
-        below carries it as the page's h1 — two h1s on one page is also wrong
-        for screen readers. The hero's job is context and progress.
-      */}
-      <MBWProgramProgressBand
-        completedMilestones={completedMilestones}
-        totalMilestones={totalMilestones}
+      <Breadcrumbs
+        className="mbw-lesson-topbar__crumbs"
+        items={[
+          { label: 'Programs', href: '/app/home' },
+          { label: MBW_PROGRAM_META.title, href: '/app/mbw' },
+          ...(sectionTitle ? [{ label: sectionTitle }] : []),
+          { label: lessonTitle || 'Lesson' },
+        ]}
       />
     </header>
   );

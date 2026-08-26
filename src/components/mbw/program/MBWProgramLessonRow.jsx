@@ -1,7 +1,14 @@
-import { Check, Lock } from 'lucide-react';
+import { Check, Lock, Play } from 'lucide-react';
 import { taskTypeIcon } from './taskTypeIcons';
 
-function StatusControl({ visual }) {
+function StatusControl({ visual, isActive }) {
+  if (isActive) {
+    return (
+      <span className="mbw-lesson-row__status mbw-lesson-row__status--playing" aria-label="Playing">
+        <Play size={14} fill="currentColor" strokeWidth={0} />
+      </span>
+    );
+  }
   if (visual === 'done') {
     return (
       <span className="mbw-lesson-row__status mbw-lesson-row__status--done" aria-label="Completed">
@@ -69,8 +76,8 @@ export default function MBWProgramLessonRow({
         title={locked && reason && !showLockReason ? reason : undefined}
         onClick={() => clickable && onSelect?.()}
       >
-        <span className="mbw-lesson-row__node">
-          <StatusControl visual={visual} />
+        <span className="mbw-lesson-row__lead" aria-hidden>
+          <Icon size={18} className="mbw-lesson-row__type" />
         </span>
         <span className="mbw-lesson-row__body">
           <span className="mbw-lesson-row__heading">
@@ -85,9 +92,11 @@ export default function MBWProgramLessonRow({
                 {kindLabel}
               </span>
             )}
-            <Icon size={13} className="mbw-lesson-row__type" aria-hidden />
-            {durationHint}
+            {durationHint && <span className="mbw-lesson-row__duration">{durationHint}</span>}
           </span>
+        </span>
+        <span className="mbw-lesson-row__node">
+          <StatusControl visual={visual} isActive={isActive} />
         </span>
       </button>
       {locked && reason && showLockReason && (

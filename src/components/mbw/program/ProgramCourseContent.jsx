@@ -20,7 +20,12 @@ export default function ProgramCourseContent({
           Course content
         </h2>
         <p className="program-course-content__stats">
-          {moduleCount} modules · {totalMilestones} lessons · {pct}% complete
+          <span>
+            {moduleCount} modules · {totalMilestones} lessons
+          </span>
+          <span className="program-course-content__pct" aria-label={`${pct}% complete`}>
+            {pct}% complete
+          </span>
         </p>
       </header>
       <div className="program-course-content__body">{children}</div>
