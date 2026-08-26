@@ -1,0 +1,27 @@
+Day	Time	Date	Content	Deliverable
+Wednesday	8:00pm to 8:45pm	10th June	Core story Practice Session	Complete 2 Core Stories
+Thursday	8:45pm to 9:30pm	2nd July	Milestone Table Practice Session	Create Delta Table
+Saturday	9:00am to 12:00pm	11th July	Session 1 Board Member Image Creation	Create an imperfect Video Script using IL format
+Saturday	8:00am to 8:45am	18th July	Imperfect Brand Video Session	Create Imperfect Brand Video
+Saturday	8:00am to 8:45am	25th July	Resume and Differentiated Brand	Create your CV and Update your LinkedIn profile
+Saturday	9:00am to 12:30pm	01st Aug	Session 2 - Mid Level Performance excellence	Create an ERRC Table
+Saturday	8:00am to 8:45am	08th Aug	Theme Management	Create Imperfect Brand Video
+Saturday	8:00am to 8:45am	22nd Aug	Pre Session on Capability Matrix	List of Top 3 Super Powers and Top 3 Capabilities to develop
+Saturday	9:00am to 12:30am	29th Aug	Session 3 - Leadership Super Power - Capability matrix	Capability Demonstration Video
+Saturday	8:00am to 8:45am	05th Sep	Post session capability matrix	A video/voice recording about 1 learning
+Saturday	8:00am to 8:45am	12th Sep	Pre-Session on Pitch	Create 1 Pitch document
+Saturday	9:00am to 12:30pm	19th Sep	Session 4 - Pitching and influencing tactics	Create Pitch Video
+Saturday	8:00am to 8:45am	26th Sep	Post-Session on Pitch	Create Pitch Video
+Saturday	8:00am to 8:45am	3rd Oct	Pre-Session on Mid Level Politics	Strategy - Problem statement (first 5 points)
+Saturday	9:00am to 12:30pm	10th Oct	Session 5 - Mid-Level politics management	Complete Strategy document
+Saturday	8:00am to 8:45am	17th Oct	Post-Session on Politics Management	Updated Strategy document
+Saturday	9:00am to 12:30pm	24th Oct	Session 6 - Strategic outlook	A video of Speaking as a CEO in townhall
+Saturday	8:00am to 8:45am	31st Oct	Strategy Review session	Updated Strategy document
+Saturday	8:00am to 8:45am	07th Nov	Mock Interview	Video of answering 1 interview question
+Saturday	8:00pm to 8:45pm	14th Nov	Pitch Video Challenge - WTB Preparation	Pitch video
+Saturday	8:00am to 8:45am	28th Nov	Walk to Board - Present to external leader
+Saturday	8:00pm to 8:45pm	5th Dec	Prep of LinkedIn Brand Video Challenge	Updated LinkedIn profile
+Saturday	8:00am to 8:45am	19th Dec	Showcasing: LinkedIn Brand Video	Create 1 LinkedIn post
+Saturday	8:00am to 8:45am	26th Dec	Prep of Super Power Challenge Video	Create a table of superpower and capability mapping
+Saturday	8:00pm to 8:45pm	09th Jan	Showcasing: Speak like CEO challenge	Time saved through ERRC, 1 new initiative started
+Saturday	8:00am to 8:45am	16th Jan	Graduation Ceremony	One Speech video (Reference - C-Suite Video)

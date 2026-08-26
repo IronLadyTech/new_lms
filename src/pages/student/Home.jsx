@@ -8,6 +8,7 @@ import {
 } from '../../services/announcementService';
 import { getUserActivities } from '../../services/userService';
 import { getEvents } from '../../services/eventService';
+import { filterEventsForLearner } from '../../utils/eventVisibility';
 import AnnouncementFeed from '../../components/AnnouncementFeed';
 import ActivityLogList, { buildCourseMap } from '../../components/ActivityLogList';
 import CourseCard from '../../components/home/CourseCard';
@@ -81,7 +82,13 @@ export default function Home() {
         setActivities(acts);
 
         const today = new Date().toLocaleDateString('en-CA');
-        setUpcomingEvents(events.filter((e) => e.date >= today).slice(0, 5));
+        /*
+         * Batch sessions belong to one cohort. The Calendar page already scopes
+         * them; this panel did not, so importing a batch's schedule would have
+         * put it on every learner's dashboard — other 100BM batches, MBW, LEP.
+         */
+        const visible = filterEventsForLearner(events, { batchId: profile?.batchId || '' });
+        setUpcomingEvents(visible.filter((e) => e.date >= today).slice(0, 5));
       } catch (e) {
         console.error(e);
         if (!cancelled) {
@@ -95,7 +102,10 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [isGuest, user?.uid, profile?.enrolledCourses, reloadKey]);
+    // batchId decides which sessions are visible, and it arrives with the
+    // profile rather than on the first render — without it here the panel
+    // would filter against an empty batch and never try again.
+  }, [isGuest, user?.uid, profile?.enrolledCourses, profile?.batchId, reloadKey]);
 
   useEffect(() => {
     if (loading || window.location.hash !== '#courses') return;
