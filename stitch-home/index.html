@@ -1,0 +1,1356 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Iron Lady LMS — Dashboard (Stitch)</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Gemunu+Libre:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+    <style data-purpose="custom-fonts">
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f8f9fa;
+      }
+    </style>
+    <style>
+      a:focus-visible,
+      button:focus-visible {
+        outline: 2px solid #ed1c24;
+        outline-offset: 2px;
+        border-radius: 8px;
+      }
+      /*
+       * The design is a fixed-viewport shell: page pinned to 100vh, sidebar
+       * full height, content scrolling inside its own panel. That only works
+       * if the viewport can actually hold the sidebar, which needs ~600px.
+       *
+       * Windows display scaling is what breaks it — at 150% a 1080p screen
+       * reports roughly 590px of height, with browser zoom still at 100%.
+       * Earlier attempts kept the shell and made things scroll inside it, which
+       * produced a cramped two-item box with its own scrollbar. Wrong answer:
+       * the shell is what should give way, and the sidebar should be short
+       * enough that it rarely has to. It needs 524px.
+       *
+       * So below 560px of height the page is an ordinary scrolling document —
+       * everything visible, nothing nested, no inner scrollbars. Above it, the
+       * design renders exactly as drawn.
+       */
+      /*
+       * The sidebar stays put — `md:sticky md:top-0 md:self-start` on the
+       * element itself. It was written here as `.shell__aside { position:
+       * sticky }` first, and lost: Tailwind's `relative` utility is also one
+       * class and is injected after this block, so it won on source order.
+       */
+      @media (min-width: 768px) and (min-height: 560px) {
+        .shell {
+          height: 100vh;
+          overflow: hidden;
+        }
+        .shell__panel {
+          height: 100%;
+          overflow: hidden;
+        }
+        .shell__main {
+          overflow-y: auto;
+        }
+      }
+
+
+      /*
+       * Three surfaces, as in the WizeUp reference: a neutral page, a white app
+       * card inset on it, and a tinted nav card inset inside that. Previously
+       * the rail sat directly on the page, so it read as a region of the
+       * background rather than an object in its own right.
+       *
+       * Selectors are doubled throughout — `.w-full` and friends are single
+       * classes injected after this block, and a single-class rule here loses
+       * to them silently.
+       */
+      .shell {
+        min-height: 100vh;
+        background: #fff;
+      }
+
+      .app-card {
+        background: #fff;
+        min-height: 100vh;
+      }
+
+      /*
+       * A structural column, not a floating card: fixed to the viewport so the
+       * pink reaches the top, left and bottom edges with nothing between it and
+       * the browser chrome. The content is pushed clear with a matching
+       * margin-left rather than sitting beside it in flow.
+       */
+      .nav-card {
+        background: linear-gradient(180deg, #fdf1f1 0%, #fcebeb 45%, #f7dede 100%);
+        box-shadow:
+          6px 0 18px rgb(120 20 24 / 0.1),
+          2px 0 4px rgb(120 20 24 / 0.06),
+          inset 0 1px 0 rgb(255 255 255 / 0.7),
+          inset -1px 0 0 rgb(120 20 24 / 0.05);
+      }
+
+      @media (min-width: 768px) {
+        .shell > .app-card {
+          height: 100vh;
+        }
+
+        .app-card > .shell__aside {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 200px;
+          height: 100vh;
+          margin: 0;
+          /* Right corners only — the left edge stays square against the
+             viewport, so the pink reaches the screen edge cleanly. */
+          border-radius: 0 24px 24px 0;
+        }
+
+        .app-card > .shell__panel {
+          margin-left: 200px;
+        }
+      }
+
+
+      /* ---------- Hours spent ---------- */
+
+      .hours-bar {
+        flex: 1;
+        min-width: 0;
+        border-radius: 6px 6px 3px 3px;
+        background: linear-gradient(180deg, #ed1c24 0%, #f4757a 60%, #fbd0d2 100%);
+      }
+
+      /* ---------- Activity timeline ---------- */
+
+      .activity-feed {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .activity-item {
+        position: relative;
+        display: flex;
+        gap: 12px;
+        padding-bottom: 18px;
+      }
+
+      .activity-item:last-child {
+        padding-bottom: 0;
+      }
+
+      /* The rule joins one marker to the next, so the order reads without
+         numbering. It stops at the last item rather than trailing into space. */
+      .activity-item:not(:last-child)::before {
+        content: '';
+        position: absolute;
+        left: 13px;
+        top: 28px;
+        bottom: 4px;
+        width: 1px;
+        background: #e9e3e3;
+      }
+
+      .activity-marker {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        flex-shrink: 0;
+        border-radius: 9px;
+        font-size: 12px;
+      }
+
+      .activity-marker--done {
+        background: #dcfce7;
+        color: #15803d;
+      }
+
+      .activity-marker--submit {
+        background: #fcebeb;
+        color: #b9151f;
+      }
+
+      .activity-marker--live {
+        background: #e0e7ff;
+        color: #4338ca;
+      }
+
+      /* ---------- Brand ---------- */
+
+      .nav-brand {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 18px;
+        padding: 0 6px;
+        flex-shrink: 0;
+      }
+
+      .nav-brand__row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      /*
+       * Decorative, and it sits over the collapse control in the collapsed
+       * state. At `opacity: 0` it is invisible but still swallows the click,
+       * which left the sidebar stuck collapsed with no way back.
+       */
+      .nav-brand__logo {
+        pointer-events: none;
+      }
+
+      .nav-brand__logo {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+        flex-shrink: 0;
+        transition: opacity 0.12s ease;
+      }
+
+      .nav-wordmark {
+        flex: 1;
+        min-width: 0;
+        font-family: 'Gemunu Libre', 'Inter', sans-serif;
+        font-size: 19px;
+        font-weight: 800;
+        line-height: 1.15;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #000;
+      }
+
+      .nav-caption {
+        margin: 6px 0 0;
+        font-size: 10px;
+        line-height: 1.4;
+        white-space: nowrap;
+        color: #6b7280;
+      }
+
+      .nav-toggle {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border: 0;
+        border-radius: 8px;
+        background: rgb(252 235 235 / 0.5);
+        color: #4b5563;
+        cursor: pointer;
+      }
+
+      .nav-toggle:hover {
+        background: #fcebeb;
+      }
+
+      /* ---------- Sidebar ---------- */
+
+      /*
+       * Measured off the Zoho reference: 28px rows on a 36px pitch, so 8px of
+       * clear space between them. Earlier passes kept closing the gap while the
+       * rows stayed tall, which is what made the list read as cramped — the
+       * height was the problem, not the spacing.
+       */
+      .nav-list,
+      .nav-footer {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        min-height: 28px;
+        padding: 0 11px;
+        border-radius: 4px;
+        color: #374151;
+        font-size: 13px;
+        font-weight: 400;
+        text-decoration: none;
+        white-space: nowrap;
+        transition:
+          background-color 0.15s ease,
+          color 0.15s ease;
+      }
+
+      .nav-item:hover {
+        background: rgb(237 28 36 / 0.08);
+        color: #b9151f;
+        border-radius: 10px;
+      }
+
+      /*
+       * Selection follows the click. Two classes plus an attribute, so it beats
+       * anything Tailwind injects later — writing this as a single class lost
+       * that race earlier in this file's history.
+       */
+      .shell__aside .nav-item[aria-current='page'] {
+        background: linear-gradient(180deg, #f4363e 0%, #ed1c24 55%, #d4141c 100%);
+        box-shadow:
+          0 2px 6px rgb(180 20 25 / 0.35),
+          0 1px 2px rgb(180 20 25 / 0.25),
+          inset 0 1px 0 rgb(255 255 255 / 0.25);
+        color: #fff;
+        font-weight: 600;
+        border-radius: 10px;
+      }
+
+      .nav-icon {
+        width: 16px;
+        font-size: 15px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+
+      .nav-item--logout {
+        margin-top: 4px;
+      }
+
+      /* ---------- Collapsed: icons only ---------- */
+
+      @media (min-width: 768px) {
+        .shell__aside.is-collapsed {
+          width: 72px;
+        }
+
+        .shell__aside.is-collapsed .nav-label,
+        .shell__aside.is-collapsed .nav-wordmark,
+        .shell__aside.is-collapsed .nav-caption {
+          display: none;
+        }
+
+
+        .shell__aside.is-collapsed .nav-item {
+          justify-content: center;
+          padding: 0;
+        }
+
+        .shell__aside.is-collapsed .nav-brand {
+          justify-content: center;
+        }
+
+        /*
+         * Collapsed, the rail shows the logo and nothing else — no wordmark,
+         * no caption. There is no room for a separate control at 72px, so
+         * pointing at the rail swaps the logo for it in the same slot. That is
+         * also the only way back to expanded, hence the touch rule below.
+         */
+        .shell__aside.is-collapsed .nav-brand {
+          padding: 0;
+        }
+
+        .shell__aside.is-collapsed .nav-brand__row {
+          position: relative;
+          justify-content: center;
+          min-height: 24px;
+        }
+
+        .shell__aside.is-collapsed .nav-toggle {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          opacity: 0;
+          pointer-events: none;
+        }
+
+        .shell__aside.is-collapsed:hover .nav-brand__logo,
+        .shell__aside.is-collapsed:has(.nav-toggle:focus-visible) .nav-brand__logo {
+          opacity: 0;
+        }
+
+        .shell__aside.is-collapsed:hover .nav-toggle,
+        .shell__aside.is-collapsed:has(.nav-toggle:focus-visible) .nav-toggle {
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        /* No hover on touch, and while collapsed unreachable means stuck. */
+        @media (hover: none) {
+          .shell__aside.is-collapsed .nav-brand__logo {
+            opacity: 0;
+          }
+          .shell__aside.is-collapsed .nav-toggle {
+            opacity: 1;
+            pointer-events: auto;
+          }
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .shell__aside,
+        .nav-item,
+        .nav-toggle {
+          transition: none;
+        }
+      }
+
+      /* ---------- Phone: off-canvas drawer ---------- */
+
+      .nav-close {
+        display: none;
+        width: 44px;
+        height: 44px;
+        align-items: center;
+        justify-content: center;
+        margin-left: auto;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        color: #374151;
+        cursor: pointer;
+      }
+
+      .nav-menu-btn {
+        display: none;
+        width: 40px;
+        height: 40px;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        color: #374151;
+        cursor: pointer;
+      }
+
+      .nav-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 55;
+        background: rgb(0 0 0 / 0.4);
+      }
+
+      .header-logo {
+        display: none;
+      }
+
+      @media (max-width: 767px) {
+        .nav-menu-btn {
+          display: inline-flex;
+        }
+
+        /*
+         * Two rows on a phone. The top one is brand on the left and controls on
+         * the right with nothing between them; the greeting drops to its own row
+         * beneath, where it has the width to be read.
+         */
+        header .header-logo {
+          display: inline-flex;
+          order: 1;
+        }
+
+        .header-logo img {
+          width: 30px;
+          height: 30px;
+          object-fit: contain;
+        }
+
+        header .header-actions {
+          order: 2;
+          margin-left: auto;
+          gap: 4px;
+          padding-right: 0;
+        }
+
+        header .nav-menu-btn {
+          order: 3;
+        }
+
+        header .header-greeting {
+          order: 4;
+          width: 100%;
+        }
+
+        .nav-close {
+          display: inline-flex;
+        }
+
+        /* The bell and the name/role block are what would fill the middle.
+           Element + class: these carry Tailwind's `flex`, which is one class
+           injected after this block and would otherwise win. */
+        header .header-identity,
+        header .header-actions .fa-chevron-down {
+          display: none;
+        }
+
+        header .header-actions > div {
+          padding: 0;
+        }
+
+        /*
+         * Stacked, the rail was 374px tall — 44% of a 390x844 screen — so the
+         * dashboard began below the fold and every visit started with a scroll
+         * past the whole menu. Off-canvas gives the content the screen back and
+         * keeps all eight items, which a five-slot bottom bar could not.
+         */
+        .app-card > .shell__aside,
+        .shell__aside {
+          position: fixed;
+          top: 0;
+          left: 0;
+          z-index: 60;
+          /* Full screen, not a 280px sliver — at 390px wide the leftover strip
+             showed nothing useful and gave no obvious way to dismiss it. */
+          width: 100%;
+          max-width: none;
+          height: 100vh;
+          border-radius: 0;
+          transform: translateX(-100%);
+          transition: transform 0.22s ease;
+        }
+
+        .shell__aside.is-open {
+          transform: translateX(0);
+        }
+
+        /* Fingers, not a pointer: rows go back to the 44px minimum and the
+           caption back above the 12px readable floor. */
+        .nav-item {
+          min-height: 44px;
+          font-size: 15px;
+        }
+
+        .nav-list,
+        .nav-footer {
+          gap: 4px;
+        }
+
+        .nav-caption {
+          font-size: 12px;
+          white-space: normal;
+        }
+
+        .nav-wordmark {
+          font-size: 22px;
+        }
+
+        /* The desktop collapse control has no meaning in a drawer. */
+        .nav-toggle {
+          display: none;
+        }
+      }
+
+      @media (min-width: 768px) {
+        .nav-backdrop {
+          display: none;
+        }
+      }
+
+      /*
+       * Touch is not a width. A 768–1024px tablet keeps the fixed rail, so the
+       * width query above never reaches it and it was still drawing 28px rows
+       * and 10px type for people using fingers. `pointer: coarse` is the signal
+       * that actually matters, and it covers phone and tablet alike.
+       */
+      @media (pointer: coarse) {
+        .nav-item {
+          min-height: 44px;
+          font-size: 14px;
+        }
+
+        .nav-list,
+        .nav-footer {
+          gap: 4px;
+        }
+
+        .nav-caption {
+          font-size: 12px;
+          white-space: normal;
+        }
+
+        /* Element + class, to outrank Tailwind's `text-[11px]` — a single-class
+           rule here loses to it on source order. Fourth time in this file. */
+        header .header-subline {
+          font-size: 12px;
+        }
+
+        /* Calendar labels were 11px — fine to glance at with a pointer, under
+           the readable floor when it is the thing you are tapping. Element +
+           class again, to outrank Tailwind's arbitrary size utility. */
+        .cal-grid div,
+        .cal-grid span {
+          font-size: 12px;
+        }
+
+        .nav-menu-btn,
+        .nav-toggle {
+          min-width: 44px;
+          min-height: 44px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .shell__aside {
+          transition: none;
+        }
+
+        * {
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                light: '#FCEBEB',
+                DEFAULT: '#ED1C24',
+                dark: '#B9151F',
+              },
+              stat: {
+                blue: '#D4E8F9',
+                green: '#D4F5E9',
+                red: '#FCE4E4',
+                orange: '#FCEFE4',
+              },
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+
+  <body class="shell">
+    <div class="nav-backdrop" hidden></div>
+    <div class="app-card flex flex-col md:flex-row">
+      <!-- BEGIN: Sidebar -->
+    <aside
+      class="shell__aside nav-card w-full shrink-0 flex flex-col justify-between z-10"
+    >
+      <div class="shell__navwrap px-2 pt-3 pb-0 flex flex-col">
+        <div class="nav-brand">
+          <div class="nav-brand__row">
+            <img alt="Iron Lady" class="nav-brand__logo" src="logo.png" />
+            <span class="nav-wordmark">Iron Lady</span>
+            <button
+              type="button"
+              class="nav-toggle"
+              aria-expanded="true"
+              aria-label="Collapse sidebar"
+            >
+              <span class="material-symbols-outlined text-lg">side_navigation</span>
+            </button>
+            <button type="button" class="nav-close" aria-label="Close menu">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+          <p class="nav-caption">Elevating a million women to the top</p>
+        </div>
+
+        <nav class="nav-list" aria-label="Main navigation">
+          <a class="nav-item" href="#">
+            <i class="fa-solid fa-border-all nav-icon"></i>
+            <span class="nav-label">Dashboard</span>
+          </a>
+
+
+          <a class="nav-item" href="#">
+            <i class="fa-solid fa-book-open nav-icon"></i>
+            <span class="nav-label">Browse Courses</span>
+          </a>
+          <a class="nav-item" href="#">
+            <i class="fa-solid fa-folder nav-icon"></i>
+            <span class="nav-label">My Courses</span>
+          </a>
+          <a class="nav-item" href="#">
+            <i class="fa-regular fa-calendar nav-icon"></i>
+            <span class="nav-label">Schedule</span>
+          </a>
+          <a class="nav-item" href="#">
+            <i class="fa-solid fa-chart-simple nav-icon"></i>
+            <span class="nav-label">Track Progress</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="nav-footer px-2 pb-3 pt-1 shrink-0">
+        <a class="nav-item" href="#">
+          <i class="fa-solid fa-gear nav-icon"></i>
+          <span class="nav-label">Settings</span>
+        </a>
+        <a class="nav-item" href="#">
+          <i class="fa-solid fa-headset nav-icon"></i>
+          <span class="nav-label">Help &amp; Support</span>
+        </a>
+        <a class="nav-item nav-item--logout" href="#">
+          <i class="fa-solid fa-arrow-right-from-bracket nav-icon"></i>
+          <span class="nav-label">Log Out</span>
+        </a>
+      </div>
+    </aside>
+    <!-- END: Sidebar -->
+
+    <!-- BEGIN: Main Content Area -->
+    <div
+      class="shell__panel flex-1 flex flex-col bg-white min-w-0"
+    >
+      <!-- BEGIN: Header -->
+      <header
+        class="border-b border-gray-100 flex flex-wrap items-center justify-between gap-3 px-8 shrink-0 py-2.5"
+      >
+        <!-- Mobile only: the rail is off-canvas there, so the brand lives here. -->
+        <span class="header-logo">
+          <img alt="Iron Lady" src="logo.png" />
+        </span>
+
+        <button type="button" class="nav-menu-btn" aria-label="Open menu" aria-expanded="false">
+          <span class="material-symbols-outlined">menu</span>
+        </button>
+        <div class="header-greeting flex flex-col">
+          <h1 class="text-base font-bold text-black">Welcome, Alex Antony 👋</h1>
+          <p class="header-subline text-[11px] text-gray-500 mt-0.5">Here's what happened with your learning system</p>
+        </div>
+        <div class="header-actions flex items-center gap-4 pr-2 ml-auto">
+          <div class="header-bell flex items-center gap-3">
+            <button
+              class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 relative"
+            >
+              <i class="fa-regular fa-bell"></i>
+            </button>
+          </div>
+          <div
+            class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1.5 rounded-lg transition-colors"
+          >
+            <div
+              class="w-8 h-8 rounded-full bg-brand text-white flex items-center justify-center text-xs font-bold shrink-0"
+            >
+              A
+            </div>
+            <div class="header-identity flex flex-col">
+              <div class="flex items-center gap-2">
+                <span class="text-[13px] font-bold text-black">Alex Antony</span>
+                <i class="fa-solid fa-chevron-down text-xs text-gray-500"></i>
+              </div>
+              <span class="text-xs text-gray-500 leading-tight"
+                >Game Design Enthusiast, Learner</span
+              >
+            </div>
+          </div>
+        </div>
+      </header>
+      <!-- END: Header -->
+
+      <!-- BEGIN: Scrollable Content Area -->
+      <main class="shell__main flex-1 flex flex-col lg:flex-row gap-8 px-8 py-6">
+        <!-- Left Column (Main Dashboard Stats & Courses) -->
+        <div class="flex-1 min-w-0 flex flex-col gap-5">
+          <!--
+            PROTOTYPE CONTENT. Sample data, like the rest of this page — but the
+            programmes, tiers and access states are the real ones, so the shapes
+            are testable. Ordered by what a learner opens the page to find out:
+            what next, what is due, how far along, then everything else.
+          -->
+
+          <!-- 1. CONTINUE — what most visits are actually for -->
+          <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <p class="text-[11px] font-bold uppercase tracking-wider text-brand">Continue learning</p>
+            <h2 class="mt-1 text-lg font-bold text-black">Master of Business Warfare</h2>
+            <p class="mt-0.5 text-[13px] text-gray-500">Next: Section 4 &middot; Negotiating from strength</p>
+            <div class="mt-4 flex items-center gap-3">
+              <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100">
+                <div class="h-full rounded-full bg-brand" style="width: 63%"></div>
+              </div>
+              <span class="shrink-0 text-[11px] font-bold text-gray-600">33 of 52 milestones</span>
+            </div>
+            <button class="mt-4 rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-white">
+              Open MBW tasks
+            </button>
+          </section>
+
+          <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <!-- 2. HOURS SPENT — a week of study time, with the trend named -->
+            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+              <div class="flex items-center justify-between">
+                <h2 class="text-[13px] font-bold text-black">Hours spent</h2>
+                <button
+                  class="flex items-center gap-1 rounded-full border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-600"
+                >
+                  This week
+                  <i class="fa-solid fa-chevron-down text-[9px]"></i>
+                </button>
+              </div>
+
+              <div class="mt-3 flex items-baseline justify-center gap-2">
+                <span class="text-2xl font-bold text-black">4.5 hrs</span>
+                <!-- Direction is carried by the arrow and the word, not colour
+                     alone — the same figure has to read for a colour-blind eye. -->
+                <span class="flex items-center gap-0.5 text-xs font-semibold text-emerald-600">
+                  <i class="fa-solid fa-arrow-up text-[9px]"></i>
+                  20% up
+                </span>
+              </div>
+
+              <div class="mt-4 flex h-24 items-end justify-between gap-2">
+                <span class="hours-bar" style="height: 62%"></span>
+                <span class="hours-bar" style="height: 28%"></span>
+                <span class="hours-bar" style="height: 45%"></span>
+                <span class="hours-bar" style="height: 70%"></span>
+                <span class="hours-bar" style="height: 100%"></span>
+                <span class="hours-bar" style="height: 84%"></span>
+                <span class="hours-bar" style="height: 16%"></span>
+              </div>
+              <div class="mt-1.5 flex justify-between text-[10px] text-gray-400">
+                <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+              </div>
+            </section>
+            <!-- 3. PROGRESS — segmented, so the granularity is honest -->
+            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+              <h2 class="text-[13px] font-bold text-black">Your progress</h2>
+              <div class="mt-3 space-y-3">
+                <div>
+                  <div class="flex items-baseline justify-between">
+                    <span class="text-xs font-semibold text-gray-700">Leadership Essentials</span>
+                    <span class="text-[11px] text-gray-500">12 of 12</span>
+                  </div>
+                  <div class="mt-1.5 flex gap-1">
+                    <span class="h-2 flex-1 rounded-sm bg-brand"></span>
+                    <span class="h-2 flex-1 rounded-sm bg-brand"></span>
+                    <span class="h-2 flex-1 rounded-sm bg-brand"></span>
+                    <span class="h-2 flex-1 rounded-sm bg-brand"></span>
+                    <span class="h-2 flex-1 rounded-sm bg-brand"></span>
+                    <span class="h-2 flex-1 rounded-sm bg-brand"></span>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex items-baseline justify-between">
+                    <span class="text-xs font-semibold text-gray-700">100 Board Members</span>
+                    <span class="text-[11px] text-gray-500">7 of 24</span>
+                  </div>
+                  <div class="mt-1.5 flex gap-1">
+                    <span class="h-2 flex-1 rounded-sm bg-brand"></span>
+                    <span class="h-2 flex-1 rounded-sm bg-brand"></span>
+                    <span class="h-2 flex-1 rounded-sm bg-gray-200"></span>
+                    <span class="h-2 flex-1 rounded-sm bg-gray-200"></span>
+                    <span class="h-2 flex-1 rounded-sm bg-gray-200"></span>
+                    <span class="h-2 flex-1 rounded-sm bg-gray-200"></span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <!-- 4. REGISTRATION — renders ONLY for a registered-but-unpaid tier -->
+          <section class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <span class="flex flex-col">
+                <span class="text-[13px] font-bold text-black">100 Board Members is registered, not unlocked</span>
+                <span class="text-xs text-gray-600">Complete payment to open the programme.</span>
+              </span>
+              <button class="rounded-lg border border-amber-400 bg-white px-3 py-1.5 text-xs font-semibold text-amber-800">
+                Complete payment
+              </button>
+            </div>
+          </section>
+
+          <!-- 5. PROGRAMMES — meta and action both follow the real data -->
+          <section>
+            <h2 class="mb-3 text-[13px] font-bold text-black">Your programmes</h2>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <!--
+                The covers are 800x450. `aspect-video` matches that exactly, so
+                nothing is cropped at any width — a fixed pixel height crops the
+                top and bottom, and the programme name sits in the middle of the
+                artwork.
+              -->
+              <article class="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+                <img
+                  class="aspect-video w-full object-cover"
+                  src="programs/lep.png"
+                  alt="Leadership Essentials Program"
+                />
+                <div class="flex flex-1 flex-col p-4">
+                  <h3 class="text-[13px] font-bold text-black">Leadership Essentials</h3>
+                  <ul class="mt-2 mb-3 space-y-1 text-xs text-gray-500">
+                    <li class="flex items-center gap-1.5">
+                      <i class="fa-regular fa-clock w-3.5 text-[11px]"></i>
+                      4 weeks
+                    </li>
+                    <li class="flex items-center gap-1.5">
+                      <i class="fa-solid fa-layer-group w-3.5 text-[11px]"></i>
+                      2 live days + weekly sessions
+                    </li>
+                  </ul>
+                  <button class="mt-auto w-full rounded-lg bg-brand py-1.5 text-xs font-semibold text-white">
+                    Review
+                  </button>
+                </div>
+              </article>
+
+              <article class="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+                <img
+                  class="aspect-video w-full object-cover"
+                  src="programs/100bm.png"
+                  alt="100 Board Members Program"
+                />
+                <div class="flex flex-1 flex-col p-4">
+                  <h3 class="text-[13px] font-bold text-black">100 Board Members</h3>
+                  <ul class="mt-2 mb-3 space-y-1 text-xs text-gray-500">
+                    <li class="flex items-center gap-1.5">
+                      <i class="fa-regular fa-clock w-3.5 text-[11px]"></i>
+                      6 months
+                    </li>
+                    <li class="flex items-center gap-1.5">
+                      <i class="fa-solid fa-layer-group w-3.5 text-[11px]"></i>
+                      Online cohort
+                    </li>
+                  </ul>
+                  <button class="mt-auto w-full rounded-lg bg-brand py-1.5 text-xs font-semibold text-white">
+                    Open tasks
+                  </button>
+                </div>
+              </article>
+
+              <!--
+                Locked, but not a dead end. The cover stays recognisable and the
+                action is the one thing a learner can actually do from here —
+                enrol — rather than a disabled button telling them to wait.
+              -->
+              <article class="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+                <span class="relative block">
+                  <img
+                    class="aspect-video w-full object-cover opacity-45 grayscale"
+                    src="programs/mbw.png"
+                    alt="Master of Business Warfare Program"
+                  />
+                  <span
+                    class="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-gray-600"
+                  >
+                    <i class="fa-solid fa-lock text-[9px]"></i>
+                    Locked
+                  </span>
+                </span>
+                <div class="flex flex-1 flex-col p-4">
+                  <h3 class="text-[13px] font-bold text-black">Master of Business Warfare</h3>
+                  <ul class="mt-2 mb-3 space-y-1 text-xs text-gray-500">
+                    <li class="flex items-center gap-1.5">
+                      <i class="fa-regular fa-clock w-3.5 text-[11px]"></i>
+                      1 year
+                    </li>
+                    <li class="flex items-center gap-1.5">
+                      <i class="fa-solid fa-layer-group w-3.5 text-[11px]"></i>
+                      Quarterly weekends + online
+                    </li>
+                  </ul>
+                  <button class="mt-auto w-full rounded-lg bg-brand py-1.5 text-xs font-semibold text-white">
+                    Enroll
+                  </button>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <!-- 6. ANNOUNCEMENT — notice and announcement merged into one slot -->
+          <section class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+            <div class="flex items-start justify-between gap-3">
+              <span class="flex flex-col">
+                <span class="text-[13px] font-bold text-black">March cohort timings have moved</span>
+                <span class="mt-0.5 text-xs text-gray-500">Sessions now start 30 minutes later. &middot; 2 days ago</span>
+              </span>
+              <span class="shrink-0 rounded-full bg-brand-light px-2 py-0.5 text-[10px] font-bold text-brand-dark">
+                +2 more
+              </span>
+            </div>
+          </section>
+        </div>
+
+        <!-- Right Column (Events Sidebar) -->
+        <aside class="w-full lg:w-72 shrink-0 flex flex-col gap-6">
+          <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-4">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-base font-bold text-black">Upcoming Events</h2>
+              <a
+                class="text-xs font-medium text-brand flex items-center gap-1 hover:underline"
+                href="#"
+              >
+                View calendar <i class="fa-solid fa-chevron-right text-xs"></i>
+              </a>
+            </div>
+
+            <div class="flex flex-col gap-4">
+              <!-- Calendar Header -->
+              <div class="flex items-center justify-between px-2">
+                <button
+                  class="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50"
+                >
+                  <span class="material-symbols-outlined text-lg">chevron_left</span>
+                </button>
+                <h3 class="text-sm font-bold text-black">
+                  June <span class="font-medium">2022</span>
+                </h3>
+                <button
+                  class="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50"
+                >
+                  <span class="material-symbols-outlined text-lg">chevron_right</span>
+                </button>
+              </div>
+
+              <!-- Calendar Grid -->
+              <div class="cal-grid grid grid-cols-7 gap-y-2 text-center">
+                <div class="text-[11px] font-semibold text-gray-500 uppercase">Mon</div>
+                <div class="text-[11px] font-semibold text-gray-500 uppercase">Tue</div>
+                <div class="text-[11px] font-semibold text-gray-500 uppercase">Wed</div>
+                <div class="text-[11px] font-semibold text-gray-500 uppercase">Thu</div>
+                <div class="text-[11px] font-semibold text-gray-500 uppercase">Fri</div>
+                <div class="text-[11px] font-semibold text-gray-500 uppercase">Sat</div>
+                <div class="text-[11px] font-semibold text-gray-500 uppercase">Sun</div>
+
+                <!-- Empty slots for June 2022 (starts on Wednesday) -->
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">1</span>
+                  <div class="flex gap-0.5">
+                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                  </div>
+                </div>
+                <div class="text-[11px] font-medium">2</div>
+                <div class="text-[11px] font-medium">3</div>
+
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">4</span>
+                  <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">5</span>
+                  <div class="flex gap-0.5">
+                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                  </div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">6</span>
+                  <div class="flex gap-0.5">
+                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                  </div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">7</span>
+                  <div class="flex gap-0.5">
+                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
+                  </div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">8</span>
+                  <div class="flex gap-0.5">
+                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                  </div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">9</span>
+                  <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                </div>
+                <div class="text-[11px] font-medium">10</div>
+
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">11</span>
+                  <div class="flex gap-0.5">
+                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                  </div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">12</span>
+                  <div class="flex gap-0.5">
+                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                  </div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">13</span>
+                  <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">14</span>
+                  <div class="flex gap-0.5">
+                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                  </div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">15</span>
+                  <div class="flex gap-0.5">
+                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                  </div>
+                </div>
+                <div class="text-[11px] font-medium">16</div>
+                <div class="text-[11px] font-medium">17</div>
+
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">18</span>
+                  <div class="flex gap-0.5">
+                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                  </div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">19</span>
+                  <div class="flex gap-0.5">
+                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                  </div>
+                </div>
+                <div class="text-[11px] font-medium">20</div>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">21</span>
+                  <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">22</span>
+                  <div class="flex gap-0.5">
+                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                  </div>
+                </div>
+                <div class="text-[11px] font-medium">23</div>
+                <div class="text-[11px] font-medium">24</div>
+
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">25</span>
+                  <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">26</span>
+                  <div class="flex gap-0.5">
+                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                  </div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">27</span>
+                  <div class="flex gap-0.5">
+                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                  </div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">28</span>
+                  <div class="flex gap-0.5">
+                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                  </div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-[11px] font-medium">29</span>
+                  <div class="flex gap-0.5">
+                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                  </div>
+                </div>
+                <div class="text-[11px] font-medium">30</div>
+                <div class="text-[11px] font-medium">31</div>
+              </div>
+
+              <!-- Event List -->
+              <div class="space-y-3 mt-1">
+                <div class="flex gap-3">
+                  <div class="w-2 h-2 rounded-full bg-purple-500 mt-1.5 shrink-0"></div>
+                  <div class="flex flex-col">
+                    <span class="text-[13px] font-bold text-black">Grade 7 Tea Party</span>
+                    <span class="text-xs text-gray-500">8th July, 2022</span>
+                  </div>
+                </div>
+                <div class="flex gap-3">
+                  <div class="w-2 h-2 rounded-full bg-teal-500 mt-1.5 shrink-0"></div>
+                  <div class="flex flex-col">
+                    <span class="text-sm font-bold text-black"
+                      >Geography Test - Europe as a continent</span
+                    >
+                    <span class="text-xs text-gray-500">8th July, 2022</span>
+                  </div>
+                </div>
+                <div class="flex gap-3">
+                  <div class="w-2 h-2 rounded-full bg-pink-500 mt-1.5 shrink-0"></div>
+                  <div class="flex flex-col">
+                    <span class="text-[13px] font-bold text-black">PTA Meeting</span>
+                    <span class="text-xs text-gray-500">9th July, 2022</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- ACTIVITY — a timeline, so the order reads without numbering -->
+          <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <h2 class="text-[13px] font-bold text-black">Recent activity</h2>
+
+            <ol class="activity-feed mt-4">
+              <li class="activity-item">
+                <span class="activity-marker activity-marker--done">
+                  <i class="fa-solid fa-circle-check"></i>
+                </span>
+                <span class="flex flex-col gap-1">
+                  <span class="text-[13px] leading-snug text-black">
+                    <b class="font-bold">You</b> completed
+                    <b class="font-bold">Reading the room</b>
+                  </span>
+                  <span class="flex items-center gap-1.5 text-[11px] text-gray-400">
+                    <i class="fa-regular fa-calendar text-[10px]"></i>
+                    Yesterday &middot; 19:40
+                  </span>
+                </span>
+              </li>
+
+              <li class="activity-item">
+                <span class="activity-marker activity-marker--submit">
+                  <i class="fa-regular fa-paper-plane"></i>
+                </span>
+                <span class="flex flex-col gap-1">
+                  <span class="text-[13px] leading-snug text-black">
+                    <b class="font-bold">You</b> submitted
+                    <b class="font-bold">Assignment 3</b>
+                  </span>
+                  <span class="flex items-center gap-1.5 text-[11px] text-gray-400">
+                    <i class="fa-regular fa-calendar text-[10px]"></i>
+                    3 days ago &middot; 22:05
+                  </span>
+                </span>
+              </li>
+
+              <li class="activity-item">
+                <span class="activity-marker activity-marker--live">
+                  <i class="fa-solid fa-video"></i>
+                </span>
+                <span class="flex flex-col gap-1">
+                  <span class="text-[13px] leading-snug text-black">
+                    <b class="font-bold">You</b> joined
+                    <b class="font-bold">Board readiness &mdash; live session</b>
+                  </span>
+                  <span class="flex items-center gap-1.5 text-[11px] text-gray-400">
+                    <i class="fa-regular fa-calendar text-[10px]"></i>
+                    Last week &middot; 11:00
+                  </span>
+                </span>
+              </li>
+            </ol>
+
+            <div class="mt-4 flex flex-col gap-2 border-t border-gray-100 pt-3">
+              <button
+                class="flex w-full items-center justify-between rounded-lg border border-gray-200 px-3 py-1.5 text-[11px] font-medium text-gray-600"
+              >
+                All programmes
+                <i class="fa-solid fa-chevron-down text-[9px]"></i>
+              </button>
+              <button
+                class="flex w-full items-center justify-between rounded-lg border border-gray-200 px-3 py-1.5 text-[11px] font-medium text-gray-600"
+              >
+                Daily
+                <i class="fa-solid fa-chevron-down text-[9px]"></i>
+              </button>
+            </div>
+          </section>
+        </div>
+        </aside>
+      </main>
+      <!-- END: Scrollable Content Area -->
+    </div>
+      <!-- END: Main Content Area -->
+    </div>
+
+    <script>
+      (function () {
+        var aside = document.querySelector('.shell__aside');
+
+        /* Selection follows the click, rather than Dashboard being permanently
+           marked. `aria-current` carries it, so the styling and the accessible
+           name stay in step. */
+        aside.addEventListener('click', function (e) {
+          var item = e.target.closest('.nav-item');
+          if (!item || item.classList.contains('nav-item--logout')) return;
+          e.preventDefault();
+          aside.querySelectorAll('.nav-item[aria-current]').forEach(function (el) {
+            el.removeAttribute('aria-current');
+          });
+          item.setAttribute('aria-current', 'page');
+        });
+
+        /* Phone drawer: open, close, and hand focus back where it started. */
+        var menuBtn = document.querySelector('.nav-menu-btn');
+        var backdrop = document.querySelector('.nav-backdrop');
+
+        function setDrawer(open) {
+          aside.classList.toggle('is-open', open);
+          backdrop.hidden = !open;
+          menuBtn.setAttribute('aria-expanded', String(open));
+          document.body.style.overflow = open ? 'hidden' : '';
+          if (!open) menuBtn.focus();
+        }
+
+        menuBtn.addEventListener('click', function () {
+          setDrawer(true);
+          var first = aside.querySelector('.nav-item');
+          if (first) first.focus();
+        });
+        backdrop.addEventListener('click', function () {
+          setDrawer(false);
+        });
+        var closeBtn = aside.querySelector('.nav-close');
+        closeBtn.addEventListener('click', function () {
+          setDrawer(false);
+        });
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && aside.classList.contains('is-open')) setDrawer(false);
+        });
+        /* Choosing a destination dismisses the drawer, as on any phone. */
+        aside.addEventListener('click', function (e) {
+          if (e.target.closest('.nav-item') && matchMedia('(max-width: 767px)').matches) {
+            setDrawer(false);
+          }
+        });
+
+        /* Collapse to icons only, and back. */
+        var toggle = aside.querySelector('.nav-toggle');
+        toggle.addEventListener('click', function () {
+          var collapsed = aside.classList.toggle('is-collapsed');
+          toggle.setAttribute('aria-expanded', String(!collapsed));
+          toggle.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+        });
+      })();
+    </script>
+  </body>
+</html>
