@@ -18048,3 +18048,35 @@ body.notification-sheet-open .bottom-nav {
 .activity-list__item:hover {
   border-left-color: var(--il-red);
 }
+
+/* ============================================================
+   Lesson view — one course outline, not two
+   ------------------------------------------------------------
+   The outline has two presentations: an aside rail for wide
+   screens, and a "Course content" tab for narrow ones where
+   there is no room beside the lesson. Neither had any CSS, so
+   both rendered at every width and desktop showed the whole
+   outline twice — once behind the tab, once again below the
+   lesson card.
+
+   The breakpoint matches the one the lesson layout already
+   uses (1023/1024).
+   ============================================================ */
+
+/* Wide: the rail carries the outline, so the tab would repeat it. */
+@media (min-width: 1024px) {
+  .mbw-task__tab--course,
+  .mbw-task__panel--course {
+    display: none;
+  }
+}
+
+/*
+ * Narrow: no room for an aside, so the tab carries the outline and the rail
+ * would be a second copy stacked under the lesson.
+ */
+@media (max-width: 1023px) {
+  .lesson-course-rail--aside {
+    display: none;
+  }
+}
