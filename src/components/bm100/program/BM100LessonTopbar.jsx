@@ -2,7 +2,7 @@ import { ListTree, ChevronLeft } from 'lucide-react';
 import { DEFAULT_PROGRAM_UI } from '../../../data/programUiAdapters';
 import Breadcrumbs from '../../ui/Breadcrumbs';
 
-function getSectionTitle(phase) {
+function getSectionTitle(phase, program) {
   return program.sections.find((s) => s.id === phase)?.title ?? program.meta.title;
 }
 
@@ -17,7 +17,7 @@ export default function BM100LessonTopbar({
   onOpenOutline,
   showOutlineButton = false,
 }) {
-  const sectionTitle = sectionPhase ? getSectionTitle(sectionPhase) : null;
+  const sectionTitle = sectionPhase ? getSectionTitle(sectionPhase, program) : null;
 
   return (
     <header className="mbw-lesson-topbar mbw-lesson-topbar--compact">
