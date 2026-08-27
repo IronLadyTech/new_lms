@@ -20,10 +20,16 @@ import {
   submissionDocId as bm100SubmissionDocId,
   BM100_SUBMISSIONS,
 } from '../services/bm100Service';
+import {
+  getTasks as getLepTasks,
+  getSubmissionsForCx as getLepSubmissionsForCx,
+  getAllSubmissions as getAllLepSubmissions,
+  getSubmission as getLepSubmission,
+  reviewSubmission as reviewLepSubmission,
+  submissionDocId as lepSubmissionDocId,
+  LEP_SUBMISSIONS,
+} from '../services/lepService';
 import { PROGRAMS } from './programTypes';
-
-const noTasks = async () => [];
-const noSubmissions = async () => [];
 
 export const PROGRAM_ADAPTERS = {
   [PROGRAMS.MBW]: {
@@ -43,10 +49,15 @@ export const PROGRAM_ADAPTERS = {
   [PROGRAMS.LEP]: {
     id: PROGRAMS.LEP,
     shortLabel: 'LEP',
-    hasTasks: false,
-    submissionCollection: null,
-    getTasks: noTasks,
-    getSubmissions: noSubmissions,
+    hasTasks: true,
+    submissionCollection: LEP_SUBMISSIONS,
+    getTasks: getLepTasks,
+    /** @param {{ batchIds?: string[], includePending?: boolean }} scope */
+    getSubmissions: getLepSubmissionsForCx,
+    getAllSubmissions: getAllLepSubmissions,
+    getSubmission: getLepSubmission,
+    reviewSubmission: reviewLepSubmission,
+    submissionDocId: lepSubmissionDocId,
   },
   [PROGRAMS.BM100]: {
     id: PROGRAMS.BM100,
