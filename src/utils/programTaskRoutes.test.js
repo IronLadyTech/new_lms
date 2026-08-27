@@ -45,7 +45,7 @@ describe('getProgramTasksPath', () => {
   it('returns null for programmes with no task workspace', () => {
     // LEP has no task journey — callers must hide the link rather than
     // navigate to "/null".
-    expect(getProgramTasksPath('LEP')).toBeNull();
+    expect(getProgramTasksPath('LEP')).toBe('/app/lep');
     expect(getProgramTasksPath('XYZ')).toBeNull();
     expect(getProgramTasksPath('')).toBeNull();
   });
@@ -63,7 +63,7 @@ describe('getProgramLessonPath', () => {
   });
 
   it('stays null when the programme has no workspace', () => {
-    expect(getProgramLessonPath('LEP', 't1')).toBeNull();
+    expect(getProgramLessonPath('LEP', 't1')).toBe('/app/lep?lesson=t1');
   });
 });
 
@@ -71,7 +71,7 @@ describe('isProgramWithTasks', () => {
   it('is true only for MBW and 100BM', () => {
     expect(isProgramWithTasks('MBW')).toBe(true);
     expect(isProgramWithTasks('100 Board Members')).toBe(true);
-    expect(isProgramWithTasks('LEP')).toBe(false);
+    expect(isProgramWithTasks('LEP')).toBe(true);
     expect(isProgramWithTasks('')).toBe(false);
   });
 });

@@ -14,6 +14,7 @@ export function getProgramTasksPath(courseCode) {
   const code = normalizeCourseCode(courseCode);
   if (code === 'MBW') return '/app/mbw';
   if (code === '100BM') return '/app/100bm';
+  if (code === 'LEP') return '/app/lep';
   return null;
 }
 
@@ -24,6 +25,5 @@ export function getProgramLessonPath(courseCode, taskId) {
 }
 
 export function isProgramWithTasks(courseCode) {
-  const code = normalizeCourseCode(courseCode);
-  return code === 'MBW' || code === '100BM';
+  return getProgramTasksPath(courseCode) !== null;
 }
