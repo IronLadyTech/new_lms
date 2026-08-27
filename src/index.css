@@ -18339,3 +18339,114 @@ body.notification-sheet-open .bottom-nav {
 .lesson-course-rail--aside::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* ============================================================
+   Lesson tabs — Overview / Your work / Course content
+   ------------------------------------------------------------
+   The whole tab system shipped unstyled: .mbw-task__tabs,
+   .mbw-task__tab, its .is-active state and .mbw-task__panel had
+   no rules at all, so three tabs rendered as bare bordered
+   boxes with nothing marking which one was open except the
+   panel below.
+
+   Underline tabs, which is what the rest of this LMS uses.
+   ============================================================ */
+
+.mbw-task__tabs {
+  display: flex;
+  align-items: stretch;
+  /*
+   * The separation comes from the gap, not from padding inside each tab, so
+   * the active underline is exactly as wide as its label rather than a bar
+   * under a padded box.
+   */
+  gap: var(--space-lg);
+  margin: var(--space-md) 0 0;
+  border-bottom: 1px solid var(--border);
+  /* Three labels can outrun a narrow phone; the strip scrolls rather than
+     wrapping into a second row that shifts the lesson down. */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.mbw-task__tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.mbw-task__tab {
+  flex: 0 0 auto;
+  padding: var(--space-sm) 0;
+  border: 0;
+  /* Transparent, not absent: the active tab's underline must not add height
+     and push the panel down when it appears. */
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: none;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: var(--text-base);
+  /* The weight steps up on the active tab, so it reads as selected even
+     before the underline is noticed. */
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.mbw-task__tab:hover {
+  color: var(--text);
+}
+
+.mbw-task__tab:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.mbw-task__tab.is-active {
+  color: var(--primary-text);
+  border-bottom-color: var(--primary);
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mbw-task__tab {
+    transition: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .mbw-task__tabs {
+    gap: var(--space-md);
+  }
+
+  .mbw-task__tab {
+    font-size: var(--text-sm);
+  }
+}
+
+/* Touch gets the full target; a mouse does not need the strip that tall. */
+@media (pointer: coarse) {
+  .mbw-task__tab {
+    min-height: 44px;
+  }
+}
+
+.mbw-task__panel {
+  padding-top: var(--space-md);
+}
+
+.mbw-task__panel-title {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+/*
+ * The course panel already holds the rail, which carries its own surface —
+ * the panel only needs to not add a second frame around it.
+ */
+.mbw-task__panel--course {
+  padding-top: var(--space-sm);
+}
