@@ -16,6 +16,7 @@ const Support = lazy(() => import('./pages/student/Support'));
 const CourseDetail = lazy(() => import('./pages/student/CourseDetail'));
 const MBWPage = lazy(() => import('./pages/student/MBWPage'));
 const BM100Page = lazy(() => import('./pages/student/BM100Page'));
+const LEPPage = lazy(() => import('./pages/student/LEPPage'));
 const Calendar = lazy(() => import('./pages/student/Calendar'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const SuperAdminDashboard = lazy(() => import('./pages/superadmin/SuperAdminDashboard'));
@@ -81,6 +82,7 @@ export default function App() {
           <Route path="course/:courseId" element={<CourseDetail />} />
           <Route path="mbw" element={<MBWPage />} />
           <Route path="100bm" element={<BM100Page />} />
+          <Route path="lep" element={<LEPPage />} />
         </Route>
 
         <Route

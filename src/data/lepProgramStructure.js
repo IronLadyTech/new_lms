@@ -56,7 +56,7 @@ export const LEP_PROGRAM_SECTIONS = [
   {
     id: 'day-2',
     title: 'Day 2 — Strategies and Tactics',
-    subtitle: '6 lessons · Week 1',
+    subtitle: '5 lessons · Week 1',
     usesTaskEngine: true,
     gate: { type: LEP_GATE_TYPES.SEQUENCE, requiresSectionId: 'day-1' },
     lockedMessage: 'Complete Day 1 to unlock Day 2.',
@@ -84,7 +84,7 @@ export const LEP_PROGRAM_SECTIONS = [
   {
     id: 'resume',
     title: 'Build your Profile / Resume',
-    subtitle: '5 lessons · Week 2',
+    subtitle: '4 lessons · Week 2',
     usesTaskEngine: true,
     gate: {
       type: LEP_GATE_TYPES.SEQUENCE,
@@ -96,7 +96,7 @@ export const LEP_PROGRAM_SECTIONS = [
   {
     id: 'day-5',
     title: 'Day 5 — Shameless Pitch',
-    subtitle: '6 lessons · Week 3',
+    subtitle: '3 lessons · Week 3',
     usesTaskEngine: true,
     gate: {
       type: LEP_GATE_TYPES.SEQUENCE,
@@ -132,7 +132,7 @@ export const LEP_PROGRAM_SECTIONS = [
   {
     id: 'day-8',
     title: 'Day 8 — Graduation Day',
-    subtitle: '5 lessons · Week 4',
+    subtitle: '3 lessons · Week 4',
     usesTaskEngine: true,
     gate: {
       type: LEP_GATE_TYPES.SEQUENCE,

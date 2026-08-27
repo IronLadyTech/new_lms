@@ -1,7 +1,9 @@
 import { CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 import BM100TaskContent from '../BM100TaskContent';
+import { DEFAULT_PROGRAM_UI } from '../../../data/programUiAdapters';
 
 export default function BM100LessonView({
+  program = DEFAULT_PROGRAM_UI,
   activeState,
   userId,
   threshold,
@@ -25,8 +27,9 @@ export default function BM100LessonView({
   const taskComplete = activeState?.isComplete;
 
   return (
-    <article className="mbw-program-lesson-card" id="bm100-lesson-panel">
+    <article className="mbw-program-lesson-card" id={`${program.key}-lesson-panel`}>
       <BM100TaskContent
+        program={program}
         taskState={activeState}
         userId={userId}
         threshold={threshold}

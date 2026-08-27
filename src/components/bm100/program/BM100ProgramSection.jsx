@@ -1,23 +1,14 @@
 import { ChevronDown, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { BM100_SECTION_STATUS } from '../../../data/bm100ProgramStructure';
 import ProgramLessonList from '../../mbw/program/ProgramLessonList';
 import RefreshAccessButton from '../../ui/RefreshAccessButton';
-import {
-  getLessonRowState,
-  getTaskTypeIcon,
-  getTaskDurationHint,
-  getTaskKindLabel,
-  getSectionLockDisplay,
-  isRegistrationPaymentLocked,
-  REGISTRATION_PAYMENT_LOCK_TOOLTIP,
-} from '../../../utils/bm100ProgramUtils';
+import { DEFAULT_PROGRAM_UI } from '../../../data/programUiAdapters';
 
-function SectionDot({ status }) {
+function SectionDot({ status, sectionStatus }) {
   const cls =
-    status === BM100_SECTION_STATUS.DONE
+    status === sectionStatus.DONE
       ? 'done'
-      : status === BM100_SECTION_STATUS.IN_PROGRESS
+      : status === sectionStatus.IN_PROGRESS
         ? 'active'
         : 'locked';
   return <span className={`mbw-section-card__dot mbw-section-card__dot--${cls}`} aria-hidden />;
@@ -36,7 +27,17 @@ export default function BM100ProgramSection({
   onToggle,
   onSelectLesson,
   railMode = false,
+  program = DEFAULT_PROGRAM_UI,
 }) {
+  const {
+    getLessonRowState,
+    getTaskTypeIcon,
+    getTaskDurationHint,
+    getTaskKindLabel,
+    getSectionLockDisplay,
+    isRegistrationPaymentLocked,
+    REGISTRATION_PAYMENT_LOCK_TOOLTIP,
+  } = program.utils;
   const progress = sectionProgress[section.id] || {
     done: 0,
     total: 0,
@@ -49,7 +50,7 @@ export default function BM100ProgramSection({
   const lockReason = lockDisplay?.expired
     ? lockDisplay.message
     : REGISTRATION_PAYMENT_LOCK_TOOLTIP;
-  const panelId = `bm100-section-${section.id}`;
+  const panelId = `${program.key}-section-${section.id}`;
 
   const usesEngine = Array.isArray(taskStates) && taskStates.length > 0;
   const lessonTotal = progress.total || (usesEngine ? taskStates.length : 0);
@@ -105,7 +106,7 @@ export default function BM100ProgramSection({
             aria-controls={panelId}
             onClick={onToggle}
           >
-            <SectionDot status={progress.status} />
+            <SectionDot status={progress.status} sectionStatus={program.sectionStatus} />
             <span className="mbw-section-card__titles">
               {sectionIndex != null && (
                 <span className="mbw-section-card__module">

@@ -13,7 +13,7 @@ export const PROGRAM_JOURNEY = [
     shortLabel: 'LEP',
     title: 'Leadership Essentials Program',
     order: 0,
-    tasksPath: null,
+    tasksPath: '/app/lep',
   },
   {
     id: PROGRAMS.BM100,

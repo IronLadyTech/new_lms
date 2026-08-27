@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { BM100_PROGRAM_SECTIONS } from '../../../data/bm100ProgramStructure';
 import BM100ProgramSection from './BM100ProgramSection';
+import { DEFAULT_PROGRAM_UI } from '../../../data/programUiAdapters';
 
 function sectionMatchesQuery(section, sectionTasks, query) {
   if (!query) return true;
@@ -17,6 +17,7 @@ function filterTasksByQuery(sectionTasks, query) {
 }
 
 export default function BM100ProgramJourney({
+  program = DEFAULT_PROGRAM_UI,
   sectionProgress,
   profile,
   expandedSectionId,
@@ -34,7 +35,7 @@ export default function BM100ProgramJourney({
   const q = searchQuery.trim().toLowerCase();
 
   const visibleSections = useMemo(() => {
-    return BM100_PROGRAM_SECTIONS.map((section, index) => {
+    return program.sections.map((section, index) => {
       const sectionTasks = section.usesTaskEngine
         ? taskStates.filter((t) => t.task.phase === section.id)
         : [];
@@ -69,6 +70,7 @@ export default function BM100ProgramJourney({
                 ref={section.id === currentSectionId ? currentRef : undefined}
               >
                 <BM100ProgramSection
+                  program={program}
                   section={section}
                   sectionIndex={index + 1}
                   sectionProgress={sectionProgress}

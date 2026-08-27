@@ -77,6 +77,23 @@ describe('LEP static tasks', () => {
     expect(bad).toEqual([]);
   });
 
+  /*
+   * A subtitle that says "6 lessons" over a section holding 5 is invented data,
+   * and it drifts the moment a task is added or moved. Checked against the real
+   * count rather than trusted.
+   */
+  it('states a lesson count that matches the section', () => {
+    const counts = {};
+    LEP_STATIC_TASKS.forEach((t) => {
+      counts[t.phase] = (counts[t.phase] || 0) + 1;
+    });
+    const wrong = LEP_PROGRAM_SECTIONS.filter((s) => {
+      const claimed = Number((s.subtitle.match(/^(\d+) lesson/) || [])[1]);
+      return claimed !== (counts[s.id] || 0);
+    }).map((s) => `${s.id}: says ${s.subtitle.split(' ')[0]}, has ${counts[s.id] || 0}`);
+    expect(wrong).toEqual([]);
+  });
+
   it('orders tasks consistently with their section order', () => {
     const sectionRank = new Map(LEP_PROGRAM_SECTIONS.map((s, i) => [s.id, i]));
     const byOrder = [...LEP_STATIC_TASKS].sort((a, b) => a.order - b.order);

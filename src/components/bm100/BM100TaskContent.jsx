@@ -10,18 +10,16 @@ import RecurringPost from '../mbw/submissions/RecurringPost';
 import ChecklistSubmission from '../mbw/submissions/ChecklistSubmission';
 import FileUpload from '../submissions/FileUpload';
 import VideoRecordOrUpload from '../submissions/VideoRecordOrUpload';
-import { TASK_TYPES, SUBMISSION_STATUS } from '../../services/bm100Service';
+import { TASK_TYPES, SUBMISSION_STATUS } from '../../services/mbwService';
 import { getModuleLabel, getWeekCode, getPrimaryStatus } from '../../utils/mbwDisplay';
-import { getTaskDurationHint } from '../../utils/bm100ProgramUtils';
-import { BM100_PROGRAM_SECTIONS } from '../../data/bm100ProgramStructure';
-import { getBm100TaskTemplates } from '../../data/bm100TaskTemplates';
+import { DEFAULT_PROGRAM_UI } from '../../data/programUiAdapters';
 import TaskTemplateDownloads from '../submissions/TaskTemplateDownloads';
 import LearnerReviewFeedback from '../submissions/LearnerReviewFeedback';
 import LearnerSubmissionPreview from '../submissions/LearnerSubmissionPreview';
 import { useLessonAsset } from '../../hooks/useLessonAsset';
 
-function getSectionTitle(phase) {
-  return BM100_PROGRAM_SECTIONS.find((s) => s.id === phase)?.title ?? '100BM';
+function getSectionTitle(phase, program) {
+  return program.sections.find((s) => s.id === phase)?.title ?? program.meta.title;
 }
 
 function SubmissionBody({
@@ -154,6 +152,7 @@ function MaterialsSection({ resourceLinks, showExtraTemplates, task }) {
  * lesson = TAP Academy–inspired: video → title/meta → Overview / Your work / Course content tabs
  */
 export default function BM100TaskContent({
+  program = DEFAULT_PROGRAM_UI,
   taskState,
   userId,
   onWatchProgress,
@@ -170,6 +169,7 @@ export default function BM100TaskContent({
   variant = 'default',
   courseContent = null,
 }) {
+  const { getTaskDurationHint } = program.utils;
   const { task, submission, status, watched, canSubmit, isComplete, prevTaskId, phaseLocked } =
     taskState;
   const lessonAsset = useLessonAsset(taskState?.task?.id);
@@ -183,7 +183,7 @@ export default function BM100TaskContent({
     ? task.resourceLinks.filter((r) => r?.url)
     : [];
   const showExtraTemplates =
-    task.type !== TASK_TYPES.FILE_UPLOAD && getBm100TaskTemplates(task.id, task).length > 0;
+    task.type !== TASK_TYPES.FILE_UPLOAD && program.getTaskTemplates(task.id, task).length > 0;
   const primary = getPrimaryStatus(status, isComplete);
   const showSubmittedPreview =
     Boolean(submission) &&
@@ -279,7 +279,7 @@ export default function BM100TaskContent({
         <header className="mbw-task__header mbw-task__header--lesson">
           <h1>{task.title}</h1>
           <div className="mbw-task__meta">
-            <span className="mbw-task__tag">{getSectionTitle(task.phase)}</span>
+            <span className="mbw-task__tag">{getSectionTitle(task.phase, program)}</span>
             <span className="mbw-task__tag mbw-task__tag--muted">{getModuleLabel(task)}</span>
             {getWeekCode(task) && (
               <span className="mbw-task__tag mbw-task__tag--muted">{getWeekCode(task)}</span>
@@ -297,9 +297,9 @@ export default function BM100TaskContent({
               <button
                 type="button"
                 role="tab"
-                id="bm100-tab-overview"
+                id={`${program.key}-tab-overview`}
                 aria-selected={tab === 'overview'}
-                aria-controls="bm100-panel-overview"
+                aria-controls={`${program.key}-panel-overview`}
                 className={`mbw-task__tab${tab === 'overview' ? ' is-active' : ''}`}
                 onClick={() => setTab('overview')}
               >
@@ -308,9 +308,9 @@ export default function BM100TaskContent({
               <button
                 type="button"
                 role="tab"
-                id="bm100-tab-work"
+                id={`${program.key}-tab-work`}
                 aria-selected={tab === 'work'}
-                aria-controls="bm100-panel-work"
+                aria-controls={`${program.key}-panel-work`}
                 className={`mbw-task__tab${tab === 'work' ? ' is-active' : ''}`}
                 onClick={() => setTab('work')}
               >
@@ -320,9 +320,9 @@ export default function BM100TaskContent({
                 <button
                   type="button"
                   role="tab"
-                  id="bm100-tab-course"
+                  id={`${program.key}-tab-course`}
                   aria-selected={tab === 'course'}
-                  aria-controls="bm100-panel-course"
+                  aria-controls={`${program.key}-panel-course`}
                   className={`mbw-task__tab mbw-task__tab--course${tab === 'course' ? ' is-active' : ''}`}
                   onClick={() => setTab('course')}
                 >
@@ -335,8 +335,8 @@ export default function BM100TaskContent({
               <section
                 className="mbw-task__panel"
                 role="tabpanel"
-                id="bm100-panel-overview"
-                aria-labelledby="bm100-tab-overview"
+                id={`${program.key}-panel-overview`}
+                aria-labelledby={`${program.key}-tab-overview`}
               >
                 <h2 className="mbw-task__panel-title">About this task</h2>
                 {task.description ? (
@@ -358,8 +358,8 @@ export default function BM100TaskContent({
               <section
                 className="mbw-task__panel mbw-task__submission"
                 role="tabpanel"
-                id="bm100-panel-work"
-                aria-labelledby="bm100-tab-work"
+                id={`${program.key}-panel-work`}
+                aria-labelledby={`${program.key}-tab-work`}
               >
                 <h2 className="mbw-task__panel-title">Your submission</h2>
                 <SubmissionBody {...submissionProps} />
@@ -371,8 +371,8 @@ export default function BM100TaskContent({
               <section
                 className="mbw-task__panel mbw-task__panel--course"
                 role="tabpanel"
-                id="bm100-panel-course"
-                aria-labelledby="bm100-tab-course"
+                id={`${program.key}-panel-course`}
+                aria-labelledby={`${program.key}-tab-course`}
               >
                 {courseContent}
               </section>
@@ -394,7 +394,7 @@ export default function BM100TaskContent({
           </div>
         ) : (
           <>
-            <p className="mbw-task__eyebrow">Iron Lady · 100BM · {getSectionTitle(task.phase)}</p>
+            <p className="mbw-task__eyebrow">Iron Lady · {program.meta.shortName ?? program.meta.title} · {getSectionTitle(task.phase, program)}</p>
             <h1>{task.title}</h1>
             <div className="mbw-task__meta">
               <span className="mbw-task__module-label">{getModuleLabel(task)}</span>

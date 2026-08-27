@@ -1,15 +1,16 @@
 import { ListTree, ChevronLeft } from 'lucide-react';
-import { BM100_PROGRAM_META, BM100_PROGRAM_SECTIONS } from '../../../data/bm100ProgramStructure';
+import { DEFAULT_PROGRAM_UI } from '../../../data/programUiAdapters';
 import Breadcrumbs from '../../ui/Breadcrumbs';
 
 function getSectionTitle(phase) {
-  return BM100_PROGRAM_SECTIONS.find((s) => s.id === phase)?.title ?? '100BM';
+  return program.sections.find((s) => s.id === phase)?.title ?? program.meta.title;
 }
 
 /**
  * Compact lesson chrome — no red hero. Back + crumbs only so the task stays primary.
  */
 export default function BM100LessonTopbar({
+  program = DEFAULT_PROGRAM_UI,
   lessonTitle,
   sectionPhase,
   onBack,
@@ -41,7 +42,7 @@ export default function BM100LessonTopbar({
         className="mbw-lesson-topbar__crumbs"
         items={[
           { label: 'Programs', href: '/app/home' },
-          { label: BM100_PROGRAM_META.title, href: '/app/100bm' },
+          { label: program.meta.title, href: program.basePath },
           ...(sectionTitle ? [{ label: sectionTitle }] : []),
           { label: lessonTitle || 'Lesson' },
         ]}

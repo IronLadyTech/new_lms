@@ -6,7 +6,7 @@ import ProgramNextStep from '../../mbw/program/ProgramNextStep';
 import ProgramUpNext from '../../mbw/program/ProgramUpNext';
 import MBWSubmissionsArchive from '../../mbw/MBWSubmissionsArchive';
 import CourseRecordingsPanel from '../../course/CourseRecordingsPanel';
-import { BM100_PROGRAM_SECTIONS } from '../../../data/bm100ProgramStructure';
+import { DEFAULT_PROGRAM_UI } from '../../../data/programUiAdapters';
 import {
   getLessonRowState,
   getTaskTypeIcon,
@@ -15,6 +15,7 @@ import {
 } from '../../../utils/bm100ProgramUtils';
 
 export default function BM100OverviewView({
+  program = DEFAULT_PROGRAM_UI,
   showFirstTime,
   onStartFirst,
   profile,
@@ -37,7 +38,7 @@ export default function BM100OverviewView({
   recordings = [],
 }) {
   const phaseTitle = nextTaskState
-    ? BM100_PROGRAM_SECTIONS.find((s) => s.id === nextTaskState.task.phase)?.title || null
+    ? program.sections.find((s) => s.id === nextTaskState.task.phase)?.title || null
     : null;
 
   // Only a payment block when there is genuinely nothing left to work on.
@@ -45,7 +46,7 @@ export default function BM100OverviewView({
 
   return (
     <>
-      {showFirstTime && <BM100FirstTimePanel onStart={onStartFirst} />}
+      {showFirstTime && <BM100FirstTimePanel program={program} onStart={onStartFirst} />}
 
       <ProgramNextStep
         nextTaskState={nextTaskState}
@@ -73,11 +74,12 @@ export default function BM100OverviewView({
       />
 
       <ProgramCourseContent
-        moduleCount={BM100_PROGRAM_SECTIONS.length}
+        moduleCount={program.sections.length}
         completedMilestones={completedMilestones}
         totalMilestones={totalMilestones}
       >
         <BM100ProgramJourney
+          program={program}
           sectionProgress={sectionProgress}
           profile={profile}
           expandedSectionId={expandedSectionId}

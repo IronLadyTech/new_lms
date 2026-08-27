@@ -1,7 +1,9 @@
 import { X } from 'lucide-react';
 import BM100ProgramJourney from './BM100ProgramJourney';
+import { DEFAULT_PROGRAM_UI } from '../../../data/programUiAdapters';
 
 export default function BM100LessonCurriculumDrawer({
+  program = DEFAULT_PROGRAM_UI,
   open,
   onClose,
   sectionProgress,
@@ -33,10 +35,10 @@ export default function BM100LessonCurriculumDrawer({
         className="lesson-curriculum-drawer__panel"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="bm100-lesson-curriculum-title"
+        aria-labelledby={`${program.key}-lesson-curriculum-title`}
       >
         <header className="lesson-curriculum-drawer__head">
-          <h2 id="bm100-lesson-curriculum-title">Course outline</h2>
+          <h2 id={`${program.key}-lesson-curriculum-title`}>Course outline</h2>
           <button type="button" className="lesson-curriculum-drawer__close" onClick={onClose}>
             <X size={20} aria-hidden />
             <span className="sr-only">Close</span>
@@ -44,6 +46,7 @@ export default function BM100LessonCurriculumDrawer({
         </header>
         <div className="lesson-curriculum-drawer__body">
           <BM100ProgramJourney
+            program={program}
             sectionProgress={sectionProgress}
             profile={profile}
             expandedSectionId={expandedSectionId}
