@@ -350,6 +350,18 @@ async function applyEntitlements(db, uid, record, profile = {}) {
   const batch = record?.batch || record?.Batch;
   if (isValidBatchName(batch)) updates.batchName = batch.toString().trim();
 
+  /*
+   * Stamp where this write came from.
+   *
+   * Entitlements land on program / paymentStatus / accessTier, which are the
+   * very fields onUserProfileZohoSync watches. Without this marker an inbound
+   * change from Zoho triggers an outbound upsert straight back to Zoho, which
+   * makes Zoho fire the webhook again — each round costing several API calls
+   * for information Zoho already had.
+   */
+  updates.zohoWriteOrigin = 'zoho';
+  updates.zohoWriteOriginAt = Date.now();
+
   await db.collection('users').doc(uid).update(updates);
 
   let merged = { ...profile, ...updates };

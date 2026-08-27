@@ -452,6 +452,21 @@ exports.onUserProfileZohoSync = onDocumentWritten({ document: 'users/{userId}' }
   if (!after?.email) return;
   if (!zoho.userProfileChanged(before, after)) return;
 
+  /*
+   * Do not push back what Zoho just pushed in.
+   *
+   * An inbound entitlement write lands on the same fields this trigger watches,
+   * so echoing it out as an upsert makes Zoho fire its webhook again — a loop
+   * that costs several API calls per lap to tell Zoho what it already knew.
+   *
+   * The stamp is honoured only briefly: it marks one write as an echo, not the
+   * learner as permanently unsyncable, so any later real change still syncs.
+   */
+  const originAge = Date.now() - Number(after.zohoWriteOriginAt || 0);
+  if (after.zohoWriteOrigin === 'zoho' && originAge >= 0 && originAge < 60000) {
+    return;
+  }
+
   const userId = event.params.userId;
   try {
     await zoho.syncUserToZoho(db, userId, after);
