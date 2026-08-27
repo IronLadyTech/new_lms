@@ -21,6 +21,7 @@ const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
 const zoho = require('./zoho');
+const zohoBudget = require('./zohoBudget');
 const { parseWebhookBody, hasWebhookCredentials } = require('./webhookBody');
 const {
   needsEntitlementBackfill,
@@ -468,6 +469,12 @@ exports.onActivityZohoNote = onDocumentCreated(
     const activity = event.data?.data();
     if (!activity?.userId) return;
 
+    // One note per activity is the highest-volume automatic call into Zoho.
+    // It is a CRM nicety, not something a learner is waiting on, so it is the
+    // first thing to stop when the day's background allowance runs out.
+    const budget = await zohoBudget.canSpend(db, zohoBudget.PRIORITY.BACKGROUND, 1);
+    if (!budget.ok) return;
+
     try {
       await zoho.logActivityToZoho(db, activity);
     } catch (err) {
@@ -814,7 +821,11 @@ exports.zohoBackfillEntitlements = onCall(ZOHO_BULK_SYNC_OPTS, async (request) =
  */
 exports.zohoReconcileLearners = onSchedule(
   {
-    schedule: '*/3 * * * *',
+    // Every 3 minutes was 480 passes a day against Zoho whether or not
+    // anything had changed. zohoLeadWebhook already pushes changes here in
+    // real time; this pass is the net for anything the webhook missed, and a
+    // net does not need to be checked twenty times an hour.
+    schedule: '*/15 * * * *',
     timeZone: 'Asia/Kolkata',
     timeoutSeconds: 300,
     memory: '512MiB',
@@ -824,6 +835,16 @@ exports.zohoReconcileLearners = onSchedule(
   },
   async () => {
     if (!zoho.isConfigured()) return;
+    // Background work yields the last of the day's quota to people waiting on
+    // a login or a password reset. Skipping a pass costs nothing: the next one
+    // picks up from the same watermark.
+    const budget = await zohoBudget.canSpend(db, zohoBudget.PRIORITY.BACKGROUND, 10);
+    if (!budget.ok) {
+      console.warn(
+        `Reconcile skipped: Zoho budget ${budget.spent}/${budget.ceiling} for background work`
+      );
+      return;
+    }
     try {
       const result = await zoho.runZohoReconcile(db, {});
       if (result.provisioned || result.refreshed || result.failed) {

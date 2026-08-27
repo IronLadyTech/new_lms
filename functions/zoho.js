@@ -17,6 +17,13 @@ const rosterSync = require('./zohoRosterSync');
 const { readPasswordFromLead } = require('./zohoFieldMap');
 const { FAILURES } = require('./syncAlerts');
 const reconciler = require('./zohoReconcile');
+const budget = require('./zohoBudget');
+
+/* admin.firestore() is only valid once the app is initialised, which happens in
+   index.js — resolved lazily so requiring this module stays side-effect free. */
+function getDb() {
+  return admin.firestore();
+}
 
 const DEFAULT_API_DOMAIN = 'https://www.zohoapis.in';
 const DEFAULT_MODULE = 'Leads';
@@ -234,11 +241,36 @@ function leadPasswordPayload(baseFields, password, options = {}) {
   };
 }
 
+/**
+ * Every CRM API call goes through here so the day's spend is actually known.
+ *
+ * Counting is the point: a budget nobody measures is a budget that gets spent.
+ * The OAuth token refresh is deliberately not counted — it is cached in memory
+ * and shared across instances, so it is neither frequent nor optional.
+ *
+ * A 429 from Zoho is recorded as the rate limit it is, so the budget reflects
+ * reality rather than only what we intended to spend.
+ */
+async function zohoApiFetch(url, init) {
+  const res = await fetch(url, init);
+  try {
+    await budget.record(getDb(), 1);
+    if (res.status === 429) {
+      // Burn the rest of the background allowance: Zoho is already refusing us.
+      await budget.record(getDb(), budget.DEFAULT_DAILY_BUDGET);
+      console.warn('Zoho returned 429 — background sync paused for the rest of the day');
+    }
+  } catch {
+    /* never let accounting break a call that already succeeded */
+  }
+  return res;
+}
+
 async function upsertLead(fields) {
   const token = await getAccessToken();
   if (!token) throw new Error('Unable to obtain Zoho access token');
 
-  const res = await fetch(`${getApiDomain()}/crm/v2/${getModule()}/upsert`, {
+  const res = await zohoApiFetch(`${getApiDomain()}/crm/v2/${getModule()}/upsert`, {
     method: 'POST',
     headers: {
       Authorization: `Zoho-oauthtoken ${token}`,
@@ -307,7 +339,7 @@ async function listLeadsPage({ page = 1, perPage = 50 } = {}) {
     fields: LEAD_LIST_FIELDS,
   });
 
-  const res = await fetch(`${getApiDomain()}/crm/v2/${getModule()}?${params}`, {
+  const res = await zohoApiFetch(`${getApiDomain()}/crm/v2/${getModule()}?${params}`, {
     headers: { Authorization: `Zoho-oauthtoken ${token}` },
   });
 
@@ -335,7 +367,7 @@ async function searchLeadByEmail(email) {
   if (!token || !email) return null;
 
   const criteria = encodeURIComponent(`(Email:equals:${email})`);
-  const res = await fetch(`${getApiDomain()}/crm/v2/${getModule()}/search?criteria=${criteria}`, {
+  const res = await zohoApiFetch(`${getApiDomain()}/crm/v2/${getModule()}/search?criteria=${criteria}`, {
     headers: { Authorization: `Zoho-oauthtoken ${token}` },
   });
 
@@ -354,7 +386,7 @@ async function getLeadById(leadId) {
   const token = await getAccessToken();
   if (!token || !leadId) return null;
 
-  const res = await fetch(`${getApiDomain()}/crm/v2/${getModule()}/${leadId}`, {
+  const res = await zohoApiFetch(`${getApiDomain()}/crm/v2/${getModule()}/${leadId}`, {
     headers: { Authorization: `Zoho-oauthtoken ${token}` },
   });
 
@@ -370,7 +402,7 @@ async function getLeadByEmail(email) {
   const token = await getAccessToken();
   if (!token) return null;
 
-  const res = await fetch(`${getApiDomain()}/crm/v2/${getModule()}/${leadId}`, {
+  const res = await zohoApiFetch(`${getApiDomain()}/crm/v2/${getModule()}/${leadId}`, {
     headers: { Authorization: `Zoho-oauthtoken ${token}` },
   });
 
@@ -492,7 +524,15 @@ async function syncUserToZoho(db, uid, profile, options = {}) {
   let knownLeadId = getZohoLeadId(profile);
 
   if (syncCredentials) {
-    const lead = await getLeadByEmail(profile.email);
+    /*
+     * getLeadByEmail is two calls: a search, then a fetch by the id it found.
+     * Once a profile carries zohoLeadId there is nothing to search for, so the
+     * search is skipped and only the fetch is made — a third off the cost of
+     * every repeat sync, which is almost all of them.
+     */
+    const lead = knownLeadId
+      ? (await getLeadById(knownLeadId)) || (await getLeadByEmail(profile.email))
+      : await getLeadByEmail(profile.email);
     if (lead) {
       await provisioning.applyEntitlements(db, uid, lead, profile);
       const freshSnap = await db.collection('users').doc(uid).get();
@@ -539,6 +579,16 @@ async function syncUserToZoho(db, uid, profile, options = {}) {
     if (!zohoLeadId) return { synced: false, reason: err.message };
   }
 
+  /*
+   * The write below re-triggers onUserProfileZohoSync, which then exits on the
+   * field guard because zohoSyncedAt is not one of RELEVANT_USER_FIELDS. That
+   * echo costs one extra invocation and no Zoho call.
+   *
+   * It stays on the profile deliberately: the admin panel reads zohoSyncedAt
+   * from the user document, and the bulk paths write it there too. Moving it to
+   * a subcollection to save an invocation would leave that column empty for
+   * every automatically synced learner.
+   */
   if (zohoLeadId && zohoLeadId !== getZohoLeadId(profile)) {
     await db.collection('users').doc(uid).update({
       zohoLeadId,
@@ -579,7 +629,7 @@ async function logActivityToZoho(db, activity) {
     .filter(Boolean)
     .join('\n');
 
-  const res = await fetch(`${getApiDomain()}/crm/v2/Notes`, {
+  const res = await zohoApiFetch(`${getApiDomain()}/crm/v2/Notes`, {
     method: 'POST',
     headers: {
       Authorization: `Zoho-oauthtoken ${token}`,
@@ -927,7 +977,7 @@ async function runZohoReconcile(db, options = {}) {
       let lastError = null;
       for (let attempt = 0; attempt < 2; attempt += 1) {
         for (const version of ['v7', 'v6', 'v2']) {
-          const res = await fetch(`${getApiDomain()}/crm/${version}/coql`, {
+          const res = await zohoApiFetch(`${getApiDomain()}/crm/${version}/coql`, {
             method: 'POST',
             headers: {
               Authorization: `Zoho-oauthtoken ${token}`,
