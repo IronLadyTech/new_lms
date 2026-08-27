@@ -17,6 +17,7 @@ import TaskTemplateDownloads from '../submissions/TaskTemplateDownloads';
 import LearnerReviewFeedback from '../submissions/LearnerReviewFeedback';
 import LearnerSubmissionPreview from '../submissions/LearnerSubmissionPreview';
 import { useLessonAsset } from '../../hooks/useLessonAsset';
+import useMediaQuery from '../../hooks/useMediaQuery';
 
 function getSectionTitle(phase, program) {
   return program.sections.find((s) => s.id === phase)?.title ?? program.meta.title;
@@ -170,6 +171,12 @@ export default function BM100TaskContent({
   courseContent = null,
 }) {
   const { getTaskDurationHint } = program.utils;
+  /*
+   * Tabs are a narrow-screen device. With room to spare there is no reason to
+   * make someone choose between the task and their work — both are shown, and
+   * the outline lives in the side rail rather than a third tab.
+   */
+  const stacked = useMediaQuery('(min-width: 1024px)');
   const { task, submission, status, watched, canSubmit, isComplete, prevTaskId, phaseLocked } =
     taskState;
   const lessonAsset = useLessonAsset(taskState?.task?.id);
@@ -293,6 +300,7 @@ export default function BM100TaskContent({
 
         {!locked && (
           <>
+            {!stacked && (
             <div className="mbw-task__tabs" role="tablist" aria-label="Lesson sections">
               <button
                 type="button"
@@ -330,13 +338,18 @@ export default function BM100TaskContent({
                 </button>
               )}
             </div>
+            )}
 
-            {tab === 'overview' && (
+            {(stacked || tab === 'overview') && (
               <section
                 className="mbw-task__panel"
-                role="tabpanel"
-                id={`${program.key}-panel-overview`}
-                aria-labelledby={`${program.key}-tab-overview`}
+                {...(stacked
+                  ? {}
+                  : {
+                      role: 'tabpanel',
+                      id: `${program.key}-panel-overview`,
+                      'aria-labelledby': `${program.key}-tab-overview`,
+                    })}
               >
                 <h2 className="mbw-task__panel-title">About this task</h2>
                 {task.description ? (
@@ -354,12 +367,16 @@ export default function BM100TaskContent({
               </section>
             )}
 
-            {tab === 'work' && (
+            {(stacked || tab === 'work') && (
               <section
                 className="mbw-task__panel mbw-task__submission"
-                role="tabpanel"
-                id={`${program.key}-panel-work`}
-                aria-labelledby={`${program.key}-tab-work`}
+                {...(stacked
+                  ? {}
+                  : {
+                      role: 'tabpanel',
+                      id: `${program.key}-panel-work`,
+                      'aria-labelledby': `${program.key}-tab-work`,
+                    })}
               >
                 <h2 className="mbw-task__panel-title">Your submission</h2>
                 <SubmissionBody {...submissionProps} />
@@ -367,7 +384,7 @@ export default function BM100TaskContent({
               </section>
             )}
 
-            {hasCourseTab && tab === 'course' && (
+            {!stacked && hasCourseTab && tab === 'course' && (
               <section
                 className="mbw-task__panel mbw-task__panel--course"
                 role="tabpanel"
