@@ -18198,3 +18198,144 @@ body.notification-sheet-open .bottom-nav {
     overscroll-behavior: contain;
   }
 }
+
+/* ============================================================
+   Course rail — the compact section rows
+   ------------------------------------------------------------
+   BM100ProgramSection already renders a distinct rail variant:
+   the journey passes railMode, and the card gets
+   `mbw-section-card--rail` with its own markup. None of it had
+   any CSS, so full-width cards were squeezed into a 374px rail
+   — 16px radius, page-sized titles, and __name / __sub left as
+   inline spans, which is why a section read
+   "Phase 1 — Foundation8 lessons" and broke across lines
+   mid-phrase.
+   ============================================================ */
+
+/*
+ * The fix for the run-together title: these are two separate spans that were
+ * never given a direction to stack in.
+ */
+.mbw-section-card__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* Takes the free space so the lock and chevron sit at the card's right edge
+     rather than trailing the title wherever it happens to end. */
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.mbw-section-card__name,
+.mbw-section-card__sub {
+  display: block;
+  min-width: 0;
+}
+
+.mbw-section-card--rail {
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+.mbw-program-journey__sections .mbw-section-card--rail + .mbw-section-card--rail {
+  margin-top: var(--space-2xs);
+}
+
+.mbw-section-card__toggle--rail {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-sm);
+  border: none;
+  background: none;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+}
+
+.mbw-section-card__toggle--rail:hover {
+  background: var(--surface-2);
+}
+
+.mbw-section-card__toggle--rail:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+/* The 01 / 02 index — a fixed column so the titles line up down the rail. */
+.mbw-section-card__index {
+  flex: 0 0 auto;
+  min-width: 1.4em;
+  padding-top: 1px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+/* A rail is not the page: the section name steps down a size to fit it. */
+.mbw-section-card--rail .mbw-section-card__name {
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.mbw-section-card--rail .mbw-section-card__sub {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.mbw-section-card__lock,
+.mbw-section-card--rail .mbw-section-card__chevron {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--muted);
+}
+
+.mbw-section-card--rail.is-expanded .mbw-section-card__chevron {
+  transform: rotate(180deg);
+}
+
+.mbw-section-card--rail .mbw-section-card__chevron {
+  transition: transform 150ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mbw-section-card--rail .mbw-section-card__chevron {
+    transition: none;
+  }
+}
+
+/* The current section should be findable without reading every row. */
+.mbw-section-card--rail.is-current {
+  border-color: var(--primary-muted);
+  background: var(--primary-soft-bg);
+}
+
+.lesson-course-rail__body {
+  min-width: 0;
+}
+
+/*
+ * A slim scrollbar: the rail scrolls inside a page that also scrolls, and two
+ * full-width bars side by side read as a broken layout.
+ */
+.lesson-course-rail--aside {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+.lesson-course-rail--aside::-webkit-scrollbar {
+  width: 8px;
+}
+
+.lesson-course-rail--aside::-webkit-scrollbar-thumb {
+  border-radius: var(--radius-pill);
+  background: var(--border-strong);
+}
+
+.lesson-course-rail--aside::-webkit-scrollbar-track {
+  background: transparent;
+}
