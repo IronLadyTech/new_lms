@@ -18080,3 +18080,121 @@ body.notification-sheet-open .bottom-nav {
     display: none;
   }
 }
+
+/* ============================================================
+   Lesson view — the desktop two-column layout
+   ------------------------------------------------------------
+   LessonCourseContentRail's own doc says "Mobile: Course content
+   tab. Desktop: sticky side rail." The rail was built and never
+   styled — `.lesson-course-rail` had no CSS at all, and
+   `.mbw-program-layout--lesson` was `display: block`. So on web
+   the outline fell full-width beneath the lesson: the phone
+   layout, stretched.
+
+   The vestigial `grid-template-columns: 1fr !important` on the
+   overview variant is the fossil of the grid this restores.
+   ============================================================ */
+
+/* The rail's own surface — shared by the desktop aside and the mobile tab. */
+.lesson-course-rail {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  box-sizing: border-box;
+}
+
+.lesson-course-rail__head-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.lesson-course-rail__title {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 700;
+}
+
+.lesson-course-rail__pct {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--primary-text);
+}
+
+.lesson-course-rail__meta {
+  margin: var(--space-2xs) 0 0;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.lesson-course-rail__bar {
+  height: 6px;
+  margin-top: var(--space-sm);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.lesson-course-rail__bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--il-red), var(--il-gold));
+}
+
+.lesson-course-rail__search {
+  position: relative;
+  margin: var(--space-md) 0 var(--space-sm);
+}
+
+.lesson-course-rail__search-icon {
+  position: absolute;
+  top: 50%;
+  left: var(--space-sm);
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.lesson-course-rail__search-input {
+  width: 100%;
+  /* Left padding clears the icon; 16px min so iOS does not zoom on focus. */
+  padding: var(--space-2xs) var(--space-sm) var(--space-2xs) 2.25rem;
+  min-height: 40px;
+  font-size: var(--text-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  box-sizing: border-box;
+}
+
+.lesson-course-rail__search-input:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+@media (min-width: 1024px) {
+  /*
+   * Two columns. `align-items: start` is what lets the rail be sticky —
+   * a stretched grid item is already full height and has nothing to stick to.
+   */
+  .mbw-program-layout--lesson {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(300px, 26vw, 380px);
+    gap: var(--space-lg);
+    align-items: start;
+  }
+
+  .lesson-course-rail--aside {
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-md));
+    /* Its own scroll, so a 15-section outline cannot outrun the viewport. */
+    max-height: calc(100dvh - var(--header-h) - var(--space-xl));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
