@@ -8,7 +8,8 @@ import {
 } from '../../services/announcementService';
 import { getUserActivities } from '../../services/userService';
 import { getEvents } from '../../services/eventService';
-import { filterEventsForLearner } from '../../utils/eventVisibility';
+import { resolveVisibleEvents } from '../../utils/eventVisibility';
+import useModeratedBatchIds from '../../hooks/useModeratedBatchIds';
 import AnnouncementFeed from '../../components/AnnouncementFeed';
 import ActivityLogList, { buildCourseMap } from '../../components/ActivityLogList';
 import CourseCard from '../../components/home/CourseCard';
@@ -48,7 +49,11 @@ function timeGreeting() {
 }
 
 export default function Home() {
-  const { user, profile, isGuest } = useAuth();
+  const { user, profile, isGuest, role } = useAuth();
+  const { batchIds: moderatedBatchIds } = useModeratedBatchIds();
+  /* A stable dependency: the array is a fresh identity on every render, and
+     depending on it directly would reload the dashboard in a loop. */
+  const moderatedKey = moderatedBatchIds.join(',');
   const [courses, setCourses] = useState([]);
   const [courseMap, setCourseMap] = useState({});
   const [announcements, setAnnouncements] = useState([]);
@@ -87,7 +92,11 @@ export default function Home() {
          * them; this panel did not, so importing a batch's schedule would have
          * put it on every learner's dashboard — other 100BM batches, MBW, LEP.
          */
-        const visible = filterEventsForLearner(events, { batchId: profile?.batchId || '' });
+        const visible = resolveVisibleEvents(events, {
+          role,
+          batchId: profile?.batchId || '',
+          moderatedBatchIds,
+        });
         /* One. The panel is a nudge toward the next thing, not a calendar —
            the calendar is a click away and holds the rest. */
         setUpcomingEvents(visible.filter((e) => e.date >= today).slice(0, 1));
@@ -107,7 +116,10 @@ export default function Home() {
     // batchId decides which sessions are visible, and it arrives with the
     // profile rather than on the first render — without it here the panel
     // would filter against an empty batch and never try again.
-  }, [isGuest, user?.uid, profile?.enrolledCourses, profile?.batchId, reloadKey]);
+    // role and the moderated batches decide which sessions are visible, and
+    // the batch list arrives after the first render — without them here the
+    // panel would resolve against an empty list and never try again.
+  }, [isGuest, user?.uid, profile?.enrolledCourses, profile?.batchId, role, moderatedKey, reloadKey]);
 
   useEffect(() => {
     if (loading || window.location.hash !== '#courses') return;

@@ -4,7 +4,7 @@ import { CalendarDays, CalendarX, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getEvents } from '../../services/eventService';
 import { getGroupsByProgram } from '../../services/groupService';
-import { filterEventsForLearner, filterEventsForStaff } from '../../utils/eventVisibility';
+import { resolveVisibleEvents } from '../../utils/eventVisibility';
 import { PROGRAMS } from '../../data/programTypes';
 import LearnerCalendar from '../../components/LearnerCalendar';
 import GuestLockedPanel from '../../components/GuestLockedPanel';
@@ -64,12 +64,15 @@ export default function CalendarPage() {
     load();
   }, [isGuest, load]);
 
-  const visibleEvents = useMemo(() => {
-    if (isStaff) {
-      return filterEventsForStaff(events, { moderatedBatchIds });
-    }
-    return filterEventsForLearner(events, { batchId: profile?.batchId || '' });
-  }, [events, isStaff, moderatedBatchIds, profile?.batchId]);
+  const visibleEvents = useMemo(
+    () =>
+      resolveVisibleEvents(events, {
+        role,
+        batchId: profile?.batchId || '',
+        moderatedBatchIds,
+      }),
+    [events, role, moderatedBatchIds, profile?.batchId]
+  );
 
   const header = (
     <PageHeader

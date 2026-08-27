@@ -36,3 +36,26 @@ export function filterEventsForBatchOnly(events, batchId) {
   if (!batchId) return [];
   return (events || []).filter((ev) => isBatchEvent(ev, batchId));
 }
+
+/** Roles that see batches they moderate rather than a batch they belong to. */
+export function isStaffRole(role) {
+  return role === 'moderator' || role === 'admin' || role === 'superadmin';
+}
+
+/**
+ * The one place that decides which events a viewer sees.
+ *
+ * Home and the Calendar each answered this separately, and drifted: the
+ * Calendar was staff-aware while Home always filtered as a learner, so a CX
+ * moderator saw their batch's sessions on the Calendar and "No live sessions
+ * scheduled" on their dashboard, for the same day and the same batch.
+ *
+ * @param {object[]} events
+ * @param {{ role?: string, batchId?: string, moderatedBatchIds?: string[] }} viewer
+ */
+export function resolveVisibleEvents(events, { role, batchId, moderatedBatchIds = [] } = {}) {
+  if (isStaffRole(role)) {
+    return filterEventsForStaff(events, { moderatedBatchIds });
+  }
+  return filterEventsForLearner(events, { batchId: batchId || '' });
+}
