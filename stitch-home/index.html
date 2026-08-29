@@ -300,6 +300,44 @@
           color 0.15s ease;
       }
 
+      /*
+       * Doubled selector: `.flex` and friends are single-class utilities
+       * injected after this block and would otherwise win on source order.
+       *
+       * A border-bottom would run the full width of the header and meet both
+       * edges. This is inset by the header's own 32px padding, so it begins and
+       * ends in line with the content beneath it.
+       */
+      .app-header.app-header {
+        position: relative;
+      }
+
+      .app-header.app-header::after {
+        content: '';
+        position: absolute;
+        left: 32px;
+        right: 32px;
+        bottom: 0;
+        height: 1px;
+        background: #e5e7eb;
+      }
+
+      /*
+       * The divider between the bell and the profile. A fixed height rather
+       * than a stretched border, so it stops short of the header's top and
+       * bottom edges; the flex row is centre-aligned, so it centres itself.
+       *
+       * Doubled selector: single-class rules in this file lose to the Tailwind
+       * utilities injected after this block.
+       */
+      .header-rule.header-rule {
+        flex: 0 0 auto;
+        align-self: center;
+        width: 1px;
+        height: 24px;
+        background: #e5e7eb;
+      }
+
       .nav-item:hover {
         background: rgb(237 28 36 / 0.08);
         color: #b9151f;
@@ -716,7 +754,7 @@
     >
       <!-- BEGIN: Header -->
       <header
-        class="border-b border-gray-100 flex flex-wrap items-center justify-between gap-3 px-8 shrink-0 py-2.5"
+        class="app-header flex flex-wrap items-center justify-between gap-3 px-8 shrink-0 py-2.5"
       >
         <!-- Mobile only: the rail is off-canvas there, so the brand lives here. -->
         <span class="header-logo">
@@ -738,6 +776,9 @@
               <i class="fa-regular fa-bell"></i>
             </button>
           </div>
+
+          <span class="header-rule" aria-hidden="true"></span>
+
           <div
             class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1.5 rounded-lg transition-colors"
           >
