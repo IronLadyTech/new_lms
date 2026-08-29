@@ -182,12 +182,19 @@ export const LEP_STATIC_TASKS = [
     phase: 'day-1',
     week: 'Day 1',
     title: 'Crucibles of Leadership',
-    type: TASK_TYPES.TEXT,
+    /*
+     * The worksheet is five questions worked through one at a time, then three
+     * statements drawn from them — not one open box. Asking for the statement
+     * alone skipped the reflection that produces it.
+     */
+    type: TASK_TYPES.EDITABLE_TEMPLATE,
+    templateId: 'crucible',
     requiresWatch: false,
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Write your crucible statement.',
+    description:
+      'Read each question, close your eyes and ask it of yourself, then open your eyes and write your answer. Work through all five in the same way before writing your statement.',
     resourceLinks: [{ label: 'Crucibles of Leadership', url: T('crucibles-of-leadership.pdf') }],
     uploadSubmitLabel: 'Submit crucible statement',
   },

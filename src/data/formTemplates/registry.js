@@ -20,6 +20,7 @@ export const TEMPLATE_IDS = {
   PITCH: 'pitch',
   STRATEGY_PROBLEM: 'strategy-problem',
   STRATEGY: 'strategy',
+  CRUCIBLE: 'crucible',
 };
 
 /** @typedef {'grid'|'fields'} FormTemplateType */
@@ -46,6 +47,80 @@ export const FORM_TEMPLATES = {
     rowLabels: DELTA_TIMELINES,
     columns: DELTA_COLUMNS.map((col) => ({ key: col.key, label: col.label })),
   },
+  /*
+   * Crucibles of Leadership, as the LEP worksheet sets it out: five questions
+   * worked through one at a time, then three statements drawn from them.
+   *
+   * The order is the exercise. The learner is asked to sit with each question
+   * before answering, and the three statements at the end only make sense once
+   * the five above are done — which is why this is a sequence of prompts and
+   * not the single "write your crucible statement" box it replaced.
+   */
+  [TEMPLATE_IDS.CRUCIBLE]: {
+    type: 'fields',
+    submitLabel: 'Submit crucible statement',
+    fields: [
+      {
+        key: 'experience',
+        label:
+          'One experience or incident in my life, from birth to now, that is most unpleasant',
+        hint: 'Preferably something that happened very early in your life.',
+        type: 'textarea',
+        required: true,
+        section: 'Work through these one at a time',
+      },
+      {
+        key: 'emotion',
+        label: 'What was the emotion of that experience at the time?',
+        type: 'textarea',
+        required: true,
+        section: 'Work through these one at a time',
+      },
+      {
+        key: 'selfTalk',
+        label: 'What did I tell myself?',
+        type: 'textarea',
+        required: true,
+        section: 'Work through these one at a time',
+      },
+      {
+        key: 'aboutOthers',
+        label: 'What did I feel about others?',
+        type: 'textarea',
+        required: true,
+        section: 'Work through these one at a time',
+      },
+      {
+        key: 'conclusion',
+        label: 'What is the conclusion I reached based on that experience?',
+        type: 'textarea',
+        required: true,
+        section: 'Work through these one at a time',
+      },
+      {
+        key: 'crucibleStatement',
+        label: 'My crucible statement is',
+        type: 'textarea',
+        required: true,
+        section: 'Now draw it together',
+      },
+      {
+        key: 'dominantEmotion',
+        label: 'My dominant crucible emotion is',
+        type: 'text',
+        required: true,
+        section: 'Now draw it together',
+      },
+      {
+        key: 'behaviourPattern',
+        label: 'My dominant crucible behaviour pattern is',
+        type: 'text',
+        required: true,
+        section: 'Now draw it together',
+      },
+    ],
+  },
+
   [TEMPLATE_IDS.ERRC]: {
     type: 'grid',
     rowKey: 'activity',
