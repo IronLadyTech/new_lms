@@ -62,19 +62,24 @@ service firebase.storage {
      * The size ceiling is enforced here as well as in the client, because a
      * client-side check only stops the honest mistake. 200MB matches the video
      * cap the recorder applies; documents are held to 15MB below.
+     *
+     * The null check is what allows a delete. `write` covers create, update and
+     * delete, and on a delete there is no request.resource — so a bare size
+     * comparison silently refused every removal, leaving a learner unable to
+     * take back a file they had uploaded.
      */
     match /lep/{userId}/{taskId}/video/{allPaths=**} {
       allow read: if request.auth != null && (request.auth.uid == userId || isStaffUser());
       allow write: if request.auth != null
         && request.auth.uid == userId
-        && request.resource.size < 200 * 1024 * 1024;
+        && (request.resource == null || request.resource.size < 200 * 1024 * 1024);
     }
 
     match /lep/{userId}/{allPaths=**} {
       allow read: if request.auth != null && (request.auth.uid == userId || isStaffUser());
       allow write: if request.auth != null
         && request.auth.uid == userId
-        && request.resource.size < 15 * 1024 * 1024;
+        && (request.resource == null || request.resource.size < 15 * 1024 * 1024);
     }
 
     match /events/{allPaths=**} {
