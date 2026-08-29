@@ -31,9 +31,11 @@ import { getBm100TaskTemplates } from './bm100TaskTemplates';
 import { PROGRAMS } from './programTypes';
 
 /*
- * LEP has no editable-template tasks — its work is checklists, written answers,
- * uploads and links — so it supplies none rather than borrowing 100BM's, which
- * would offer a learner a Delta Table on a Purpose Peg lesson.
+ * This is the list of *extra* downloadable templates a lesson offers, not the
+ * fillable form itself — EditableTemplate resolves that from task.templateId
+ * and is programme-agnostic, which is how LEP's ERRC task uses the same grid
+ * 100BM does. LEP offers no extras, rather than borrowing 100BM's, which would
+ * put a Delta Table on a Purpose Peg lesson.
  */
 const noTemplates = () => [];
 

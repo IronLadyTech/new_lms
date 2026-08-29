@@ -159,13 +159,20 @@ export const LEP_STATIC_TASKS = [
     phase: 'day-1',
     week: 'Day 1',
     title: 'ERRC Table',
-    type: TASK_TYPES.TEXT,
+    /*
+     * The same fillable table 100BM uses, not a free-text box. The ERRC grid is
+     * shared and programme-agnostic — asking an LEP learner to retype four
+     * columns into a textarea when the table already exists would have been a
+     * worse version of the same exercise.
+     */
+    type: TASK_TYPES.EDITABLE_TEMPLATE,
+    templateId: 'errc',
     requiresWatch: false,
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
     description:
-      'Complete your ERRC table — what you will Eliminate, Reduce, Raise and Create.',
+      'Complete your ERRC table below — what you will Eliminate, Reduce, Raise and Create. Fill every block before submitting.',
     resourceLinks: [{ label: 'ERRC Template', url: T('errc-template.pdf') }],
     uploadSubmitLabel: 'Submit ERRC table',
   },
