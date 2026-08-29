@@ -19,7 +19,6 @@ import HomeDashboardHero from '../../components/home/HomeDashboardHero';
 import HomeQuickStats from '../../components/home/HomeQuickStats';
 import HomeContinueCard from '../../components/home/HomeContinueCard';
 import HomeSchedulePanel from '../../components/home/HomeSchedulePanel';
-import HomeWeeklyActivity from '../../components/home/HomeWeeklyActivity';
 import GuestHomePreview from '../../components/home/GuestHomePreview';
 import DashboardSkeleton from '../../components/ui/DashboardSkeleton';
 import { RefreshCw } from 'lucide-react';
@@ -27,8 +26,6 @@ import EmptyState from '../../components/ui/EmptyState';
 import useMbwEnrollment from '../../hooks/useMbwEnrollment';
 import useTaskEngine from '../../hooks/useTaskEngine';
 import useBm100TaskEngine from '../../hooks/useBm100TaskEngine';
-import useLepTaskEngine from '../../hooks/useLepTaskEngine';
-import { mergeSubmissions } from '../../utils/weeklyActivity';
 import {
   computeSectionProgress,
   getTotalMilestones,
@@ -163,19 +160,6 @@ export default function Home() {
   const canOpenBm100 = canAccessProgram(PROGRAMS.BM100, profile, courses);
   const bm100Engine = useBm100TaskEngine(canOpenBm100 && !isGuest ? user?.uid : null);
 
-  const canOpenLep = canAccessProgram(PROGRAMS.LEP, profile, courses);
-  const lepEngine = useLepTaskEngine(canOpenLep && !isGuest ? user?.uid : null);
-
-  /*
-   * One map across every programme the learner is in. Task ids are unique
-   * between programmes, so a learner doing both 100BM and LEP sees one honest
-   * weekly figure rather than whichever engine happened to load.
-   */
-  const allSubmissions = useMemo(
-    () => mergeSubmissions(engine.submissions, bm100Engine.submissions, lepEngine.submissions),
-    [engine.submissions, bm100Engine.submissions, lepEngine.submissions]
-  );
-
   /**
    * Counted from the task engines — the same source the programme pages use.
    *
@@ -303,8 +287,6 @@ export default function Home() {
           </div>
 
           <HomeQuickStats stats={quickStats} />
-
-          <HomeWeeklyActivity submissions={allSubmissions} />
         </div>
       )}
 
