@@ -21,6 +21,7 @@ export const TEMPLATE_IDS = {
   STRATEGY_PROBLEM: 'strategy-problem',
   STRATEGY: 'strategy',
   CRUCIBLE: 'crucible',
+  CODESEF: 'codesef',
 };
 
 /** @typedef {'grid'|'fields'} FormTemplateType */
@@ -117,6 +118,86 @@ export const FORM_TEMPLATES = {
         type: 'text',
         required: true,
         section: 'Now draw it together',
+      },
+    ],
+  },
+
+  /*
+   * CoDeSeF — Context, Design, Sequence & Stakes, Faizen — as the LEP worksheet
+   * sets it out. Four numbered steps, in order, because each one is built from
+   * the step above it.
+   *
+   * The worksheet's Design step is printed as a two-column table: each task,
+   * and whether it falls in the top 20% by impact. No template here can take a
+   * table whose rows the learner writes — every grid has fixed row labels — so
+   * the two are asked as a list and a shortlist. The pairing survives; the
+   * printed layout does not. Worth revisiting if learner-entered rows land.
+   */
+  [TEMPLATE_IDS.CODESEF]: {
+    type: 'fields',
+    submitLabel: 'Submit CoDeSeF',
+    fields: [
+      {
+        key: 'goal',
+        label: 'My goal',
+        hint: 'Your Big Hairy Audacious Goal — set it big enough to stretch you.',
+        type: 'textarea',
+        required: true,
+        section: '1. Context',
+      },
+      {
+        key: 'capability',
+        label: 'The capability I want to develop',
+        hint: 'What you will need to reach the goal, and to sustain it beyond.',
+        type: 'textarea',
+        required: true,
+        section: '1. Context',
+      },
+      {
+        key: 'tasks',
+        label: 'Tasks towards the goal',
+        hint: 'One per line.',
+        type: 'textarea',
+        required: true,
+        section: '2. Design',
+      },
+      {
+        key: 'topTasks',
+        label: 'Which of those are the 20% that make the most impact?',
+        type: 'textarea',
+        required: true,
+        section: '2. Design',
+      },
+      {
+        key: 'readiness',
+        label: 'What I need to get ready before starting Faizen',
+        type: 'textarea',
+        required: true,
+        section: '3. Sequence & Stakes',
+      },
+      {
+        key: 'stake',
+        label: 'What I am putting at stake',
+        hint: 'Something that matters to you — the method depends on it.',
+        type: 'textarea',
+        required: true,
+        section: '3. Sequence & Stakes',
+      },
+      {
+        key: 'faizen1',
+        label: 'Level 1 Faizen — the first steps',
+        hint: 'The steps you will take consistently over a period of time.',
+        type: 'textarea',
+        required: true,
+        section: '4. Faizen',
+      },
+      {
+        key: 'faizen2',
+        label: 'Level 2 Faizen — the next steps',
+        hint: 'Once level 1 is mastered, the level up where you would fail.',
+        type: 'textarea',
+        required: true,
+        section: '4. Faizen',
       },
     ],
   },

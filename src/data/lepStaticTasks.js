@@ -224,12 +224,18 @@ export const LEP_STATIC_TASKS = [
     phase: 'day-2',
     week: 'Day 2',
     title: 'CoDeSeF',
-    type: TASK_TYPES.TEXT,
+    /*
+     * Four ordered steps, not one box: each is built from the one above it, and
+     * a single textarea gave the learner no sense of that sequence.
+     */
+    type: TASK_TYPES.EDITABLE_TEMPLATE,
+    templateId: 'codesef',
     requiresWatch: false,
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Work through the CoDeSeF guidelines and complete the template.',
+    description:
+      'Iron Lady’s technique for strategising towards your BHAG. Work through the four steps in order — each one builds on the step above it.',
     resourceLinks: [
       { label: 'CoDeSeF Guidelines and Template', url: T('codesef-guidelines-template.pdf') },
     ],
