@@ -3,6 +3,19 @@ import { saveSubmissionBlob, submissionBlobKey } from '../../utils/submissionBlo
 import { getSubmissionProgramConfig } from './submissionProgramConfig';
 import TaskTemplateDownloads from './TaskTemplateDownloads';
 
+/*
+ * Documents had no ceiling at all — only video did — so nothing stopped a
+ * 500MB "resume" from being uploaded and paid for. 15MB is generous for a CV,
+ * an assignment or a survey report, and the Storage rules enforce the same
+ * number: a check here alone only catches the honest mistake.
+ */
+const MAX_DOCUMENT_BYTES = 15 * 1024 * 1024;
+
+function readableSize(bytes) {
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export default function FileUpload({
   task,
   submission,
@@ -24,8 +37,28 @@ export default function FileUpload({
   const skipLabel = task.uploadSkipLabel || 'Continue without uploading';
   const uploadKind = task.uploadKind || 'file';
 
+  const chooseFile = (picked) => {
+    setError('');
+    if (picked && picked.size > MAX_DOCUMENT_BYTES) {
+      // Says the limit and the actual size, so the learner knows how far over
+      // they are rather than just that something is wrong.
+      setError(
+        `That file is ${readableSize(picked.size)}. The limit is ${readableSize(
+          MAX_DOCUMENT_BYTES
+        )} — please upload a smaller version.`
+      );
+      setFile(null);
+      return;
+    }
+    setFile(picked);
+  };
+
   const handleUpload = async () => {
     if (!file) return;
+    if (file.size > MAX_DOCUMENT_BYTES) {
+      setError(`That file is over the ${readableSize(MAX_DOCUMENT_BYTES)} limit.`);
+      return;
+    }
     setUploading(true);
     setUploadProgress(null);
     setError('');
@@ -123,9 +156,15 @@ export default function FileUpload({
       <input
         type="file"
         accept={task.accept || '.pdf,.doc,.docx'}
-        onChange={(e) => setFile(e.target.files?.[0] || null)}
+        onChange={(e) => chooseFile(e.target.files?.[0] || null)}
         disabled={!canSubmit && saved}
       />
+      {/* Stated before they pick, not only after a rejection. */}
+      <p className="mbw-task__hint muted">
+        {(task.accept || '.pdf,.doc,.docx').replace(/\./g, '').toUpperCase().replace(/,/g, ', ')}
+        {' · up to '}
+        {readableSize(MAX_DOCUMENT_BYTES)}
+      </p>
       {!storageEnabled && (
         <p className="mbw-task__hint muted">
           Cloud storage is not enabled — your file name is saved and the task completes; re-upload
