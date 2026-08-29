@@ -18476,3 +18476,12 @@ body.notification-sheet-open .bottom-nav {
 .mbw-task__panel--course {
   padding-top: var(--space-sm);
 }
+
+/* Sits where the Next button will appear, so the footer is never empty on a
+   lesson the learner has not finished yet. */
+.mbw-lesson-nav__hint {
+  margin: 0;
+  margin-left: auto;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}

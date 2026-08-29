@@ -23,8 +23,17 @@ export default function BM100LessonView({
   onNext,
   courseContent = null,
 }) {
-  const showLessonNav = showPrevCta || showNextCta || Boolean(successBanner);
   const taskComplete = activeState?.isComplete;
+
+  /*
+   * The first lesson of a programme has nothing before it, and Next only
+   * appears once the lesson is done — so on lesson one, before any work, the
+   * footer rendered nothing at all and the learner was given no sense of where
+   * they were or what came next. The bar now stays, carrying the reason.
+   */
+  const showLessonNav =
+    showPrevCta || showNextCta || Boolean(successBanner) || !taskComplete;
+  const showNextHint = !showNextCta && !taskComplete;
 
   return (
     <article className="mbw-program-lesson-card" id={`${program.key}-lesson-panel`}>
@@ -96,6 +105,17 @@ export default function BM100LessonView({
               >
                 Back to program
               </button>
+            ) : null}
+
+            {/*
+              Says what unlocks the next lesson. A disabled button would be the
+              obvious alternative, but this view cannot tell "no next lesson
+              exists" from "the next one is not open yet" — showNextCta already
+              folds both together — and a dead button on the last lesson of a
+              programme would be a worse lie than a sentence.
+            */}
+            {showNextHint ? (
+              <p className="mbw-lesson-nav__hint">Finish this lesson to continue.</p>
             ) : null}
           </div>
         </footer>
