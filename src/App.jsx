@@ -10,6 +10,9 @@ const StudentLayout = lazy(() => import('./components/StudentLayout'));
 const AuthPage = lazy(() => import('./pages/auth/AuthPage'));
 const AuthActionPage = lazy(() => import('./pages/auth/AuthActionPage'));
 const Home = lazy(() => import('./pages/student/Home'));
+/* The parallel rebuild. Unlinked from the navigation on purpose: it is
+   reachable by URL for testing while /app/home keeps serving everyone. */
+const HomeNext = lazy(() => import('./pages/student/HomeNext'));
 const Progress = lazy(() => import('./pages/student/Progress'));
 const Profile = lazy(() => import('./pages/student/Profile'));
 const Support = lazy(() => import('./pages/student/Support'));
@@ -74,6 +77,7 @@ export default function App() {
         >
           <Route index element={<Navigate to="home" replace />} />
           <Route path="home" element={<Home />} />
+          <Route path="home-next" element={<HomeNext />} />
           <Route path="dashboard" element={<Navigate to="/app/home" replace />} />
           <Route path="progress" element={<Progress />} />
           <Route path="calendar" element={<Calendar />} />
