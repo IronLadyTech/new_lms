@@ -344,43 +344,97 @@
       .cal-dot--lep { background: #f5b301; }
       .cal-dot--bm100 { background: #231f20; }
 
-      /* ---------- Statistics tiles ---------- */
-      .stat-tile {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        padding: 14px 16px;
-        border-radius: 16px;
+      /* ---------- Statistics ----------
+         Four measures of the same kind, so one surface divided by hairlines
+         rather than four separately coloured tiles. The four tints carried no
+         meaning: the cream one dissolved into the page and the beige one read
+         as disabled, so "Completed" looked switched off. Colour is used once
+         here, on the only stat that points at something to do.
+      */
+      .stats-card {
+        /* Grows to the height of the achievements card beside it, so the two
+           end on the same line rather than leaving a ledge of empty page. */
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr;
+        background: #fff;
         border: 1px solid #ebeadc;
+        border-radius: 20px;
         overflow: hidden;
+        box-shadow: 0 1px 2px rgb(35 31 32 / 0.04);
       }
 
-      .stat-tile--pink { background: #f2dede; }
-      .stat-tile--beige { background: #ebeadc; }
-      .stat-tile--gold { background: #fbe9bf; }
-      .stat-tile--cream { background: #f7f6e4; }
+      .stat {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 18px;
+        border-top: 1px solid #ebeadc;
+      }
 
-      .stat-tile__label {
-        font-size: 11px;
-        font-weight: 600;
+      .stat:first-child {
+        border-top: none;
+      }
+
+      @media (min-width: 640px) {
+        .stats-card {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .stat:nth-child(2) {
+          border-top: none;
+        }
+
+        .stat:nth-child(even) {
+          border-left: 1px solid #ebeadc;
+        }
+      }
+
+      .stat__icon {
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: #f3f1e4;
+        color: #5c5557;
+        font-size: 14px;
+      }
+
+      /* The one measure that points at work waiting today. */
+      .stat__icon--live {
+        background: #f2dede;
+        color: #c8102e;
+      }
+
+      .stat__figure {
+        display: flex;
+        align-items: baseline;
+        gap: 5px;
+        line-height: 1.1;
+      }
+
+      /* Figure and unit at one size read as a sentence; nothing scans. */
+      .stat__value {
+        font-size: 26px;
+        font-weight: 700;
+        color: #231f20;
+        /* Tabular, so a 1 and a 2 sit at the same width down the column. */
+        font-variant-numeric: tabular-nums;
+      }
+
+      .stat__unit {
+        font-size: 12px;
+        font-weight: 500;
         color: #5c5557;
       }
 
-      .stat-tile__value {
-        font-size: 17px;
-        font-weight: 700;
-        color: #231f20;
-        line-height: 1.2;
-      }
-
-      /* Decorative, kept faint so it never competes with the figure. */
-      .stat-tile__icon {
-        position: absolute;
-        right: 12px;
-        bottom: 8px;
-        font-size: 26px;
-        color: rgb(35 31 32 / 0.12);
+      .stat__label {
+        margin-top: 2px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #5c5557;
       }
 
       /* ---------- Achievements ---------- */
@@ -979,37 +1033,55 @@
             have no source in the product yet — the README records which.
           -->
           <div class="grid grid-cols-1 gap-5 lg:grid-cols-[1.35fr_1fr]">
-            <section>
+            <section class="flex flex-col">
               <div class="mb-3 flex items-center justify-between">
                 <h2 class="text-[13px] font-bold text-black">My statistics</h2>
-                <button class="rounded-full border border-[#ded9c4] bg-white px-3 py-1 text-[11px] font-medium text-[#5c5557]">
-                  This week
-                </button>
+                <!--
+                  A "This week" chip sat here and filtered nothing. Three of the
+                  four measures are lifetime totals, so the control was claiming
+                  a scope the numbers underneath it did not have.
+                -->
               </div>
 
-              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div class="stat-tile stat-tile--pink">
-                  <span class="stat-tile__label">In progress</span>
-                  <span class="stat-tile__value">2 programmes</span>
-                  <span class="stat-tile__icon" aria-hidden><i class="fa-solid fa-circle-half-stroke"></i></span>
+              <div class="stats-card">
+                <div class="stat">
+                  <span class="stat__icon stat__icon--live" aria-hidden><i class="fa-solid fa-circle-half-stroke"></i></span>
+                  <div>
+                    <p class="stat__figure">
+                      <span class="stat__value">2</span><span class="stat__unit">programmes</span>
+                    </p>
+                    <p class="stat__label">In progress</p>
+                  </div>
                 </div>
 
-                <div class="stat-tile stat-tile--beige">
-                  <span class="stat-tile__label">Completed</span>
-                  <span class="stat-tile__value">1 programme</span>
-                  <span class="stat-tile__icon" aria-hidden><i class="fa-solid fa-circle-check"></i></span>
+                <div class="stat">
+                  <span class="stat__icon" aria-hidden><i class="fa-solid fa-circle-check"></i></span>
+                  <div>
+                    <p class="stat__figure">
+                      <span class="stat__value">1</span><span class="stat__unit">programme</span>
+                    </p>
+                    <p class="stat__label">Completed</p>
+                  </div>
                 </div>
 
-                <div class="stat-tile stat-tile--gold">
-                  <span class="stat-tile__label">Lessons this week</span>
-                  <span class="stat-tile__value">6 done</span>
-                  <span class="stat-tile__icon" aria-hidden><i class="fa-regular fa-clock"></i></span>
+                <div class="stat">
+                  <span class="stat__icon" aria-hidden><i class="fa-regular fa-clock"></i></span>
+                  <div>
+                    <p class="stat__figure">
+                      <span class="stat__value">6</span><span class="stat__unit">lessons</span>
+                    </p>
+                    <p class="stat__label">Done this week</p>
+                  </div>
                 </div>
 
-                <div class="stat-tile stat-tile--cream">
-                  <span class="stat-tile__label">Certificates</span>
-                  <span class="stat-tile__value">1 earned</span>
-                  <span class="stat-tile__icon" aria-hidden><i class="fa-solid fa-award"></i></span>
+                <div class="stat">
+                  <span class="stat__icon" aria-hidden><i class="fa-solid fa-award"></i></span>
+                  <div>
+                    <p class="stat__figure">
+                      <span class="stat__value">1</span><span class="stat__unit">earned</span>
+                    </p>
+                    <p class="stat__label">Certificates</p>
+                  </div>
                 </div>
               </div>
             </section>
