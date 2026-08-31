@@ -24,13 +24,13 @@
     <style data-purpose="custom-fonts">
       body {
         font-family: 'Inter', sans-serif;
-        background-color: #f8f9fa;
+        background-color: #f7f6e4;
       }
     </style>
     <style>
       a:focus-visible,
       button:focus-visible {
-        outline: 2px solid #ed1c24;
+        outline: 2px solid #f52929;
         outline-offset: 2px;
         border-radius: 8px;
       }
@@ -83,11 +83,13 @@
        */
       .shell {
         min-height: 100vh;
-        background: #fff;
+        /* Cream is the ground; the cards stay white so they read as surfaces
+           sitting on it rather than as the page itself. */
+        background: #f7f6e4;
       }
 
       .app-card {
-        background: #fff;
+        background: #f7f6e4;
         min-height: 100vh;
       }
 
@@ -98,7 +100,7 @@
        * margin-left rather than sitting beside it in flow.
        */
       .nav-card {
-        background: linear-gradient(180deg, #fdf1f1 0%, #fcebeb 45%, #f7dede 100%);
+        background: linear-gradient(180deg, #fdf3f3 0%, #f2dede 45%, #f2dede 100%);
         box-shadow:
           6px 0 18px rgb(120 20 24 / 0.1),
           2px 0 4px rgb(120 20 24 / 0.06),
@@ -135,7 +137,7 @@
         flex: 1;
         min-width: 0;
         border-radius: 6px 6px 3px 3px;
-        background: linear-gradient(180deg, #ed1c24 0%, #f4757a 60%, #fbd0d2 100%);
+        background: linear-gradient(180deg, #f52929 0%, #f88a8f 60%, #f7d6d6 100%);
       }
 
       /* ---------- Activity timeline ---------- */
@@ -166,7 +168,7 @@
         top: 28px;
         bottom: 4px;
         width: 1px;
-        background: #e9e3e3;
+        background: #ebeadc;
       }
 
       .activity-marker {
@@ -188,13 +190,13 @@
       }
 
       .activity-marker--submit {
-        background: #fcebeb;
-        color: #b9151f;
+        background: #f2dede;
+        color: #c8102e;
       }
 
       .activity-marker--live {
-        background: #e0e7ff;
-        color: #4338ca;
+        background: #fbe9bf;
+        color: #6b4c00;
       }
 
       /* ---------- Brand ---------- */
@@ -247,7 +249,7 @@
         font-size: 10px;
         line-height: 1.4;
         white-space: nowrap;
-        color: #6b7280;
+        color: #5c5557;
       }
 
       .nav-toggle {
@@ -260,12 +262,12 @@
         border: 0;
         border-radius: 8px;
         background: rgb(252 235 235 / 0.5);
-        color: #4b5563;
+        color: #231f20;
         cursor: pointer;
       }
 
       .nav-toggle:hover {
-        background: #fcebeb;
+        background: #f2dede;
       }
 
       /* ---------- Sidebar ---------- */
@@ -290,7 +292,7 @@
         min-height: 28px;
         padding: 0 11px;
         border-radius: 4px;
-        color: #374151;
+        color: #231f20;
         font-size: 13px;
         font-weight: 400;
         text-decoration: none;
@@ -319,7 +321,7 @@
         right: 32px;
         bottom: 0;
         height: 1px;
-        background: #e5e7eb;
+        background: #ded9c4;
       }
 
       /*
@@ -335,12 +337,16 @@
         align-self: center;
         width: 1px;
         height: 24px;
-        background: #e5e7eb;
+        background: #ded9c4;
       }
+
+      .cal-dot--mbw { background: #c8102e; }
+      .cal-dot--lep { background: #f5b301; }
+      .cal-dot--bm100 { background: #231f20; }
 
       .nav-item:hover {
         background: rgb(237 28 36 / 0.08);
-        color: #b9151f;
+        color: #c8102e;
         border-radius: 10px;
       }
 
@@ -350,7 +356,7 @@
        * that race earlier in this file's history.
        */
       .shell__aside .nav-item[aria-current='page'] {
-        background: linear-gradient(180deg, #f4363e 0%, #ed1c24 55%, #d4141c 100%);
+        background: linear-gradient(180deg, #f5484d 0%, #f52929 55%, #a30f26 100%);
         box-shadow:
           0 2px 6px rgb(180 20 25 / 0.35),
           0 1px 2px rgb(180 20 25 / 0.25),
@@ -462,7 +468,7 @@
         border: 0;
         border-radius: 10px;
         background: transparent;
-        color: #374151;
+        color: #231f20;
         cursor: pointer;
       }
 
@@ -475,7 +481,7 @@
         border: 0;
         border-radius: 10px;
         background: transparent;
-        color: #374151;
+        color: #231f20;
         cursor: pointer;
       }
 
@@ -660,16 +666,29 @@
         theme: {
           extend: {
             colors: {
+              /*
+               * DEFAULT is the darker red on purpose: it is a button fill with
+               * white on it, and the bright brand red only reaches 4.01:1 that
+               * way. This measures 5.23. The bright red is used where nothing
+               * sits on top of it — accents, underlines, the focus ring.
+               */
               brand: {
-                light: '#FCEBEB',
-                DEFAULT: '#ED1C24',
-                dark: '#B9151F',
+                light: '#F2DEDE',
+                DEFAULT: '#D41F1F',
+                dark: '#C8102E',
+                bright: '#F52929',
               },
+              ink: '#231F20',
+              cream: '#F7F6E4',
+              beige: '#EBEADC',
+              gold: '#F5B301',
+              /* Four surfaces from the brand's own range rather than four
+                 arbitrary hues. */
               stat: {
-                blue: '#D4E8F9',
-                green: '#D4F5E9',
-                red: '#FCE4E4',
-                orange: '#FCEFE4',
+                blue: '#EBEADC',
+                green: '#FBE9BF',
+                red: '#F2DEDE',
+                orange: '#F7F6E4',
               },
             },
           },
@@ -750,7 +769,7 @@
 
     <!-- BEGIN: Main Content Area -->
     <div
-      class="shell__panel flex-1 flex flex-col bg-white min-w-0"
+      class="shell__panel flex-1 flex flex-col min-w-0"
     >
       <!-- BEGIN: Header -->
       <header
@@ -766,12 +785,12 @@
         </button>
         <div class="header-greeting flex flex-col">
           <h1 class="text-base font-bold text-black">Welcome, Alex Antony 👋</h1>
-          <p class="header-subline text-[11px] text-gray-500 mt-0.5">Here's what happened with your learning system</p>
+          <p class="header-subline text-[11px] text-[#5c5557] mt-0.5">Here's what happened with your learning system</p>
         </div>
         <div class="header-actions flex items-center gap-4 pr-2 ml-auto">
           <div class="header-bell flex items-center gap-3">
             <button
-              class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 relative"
+              class="w-8 h-8 rounded-full border border-[#ded9c4] flex items-center justify-center text-[#5c5557] hover:bg-gray-50 relative"
             >
               <i class="fa-regular fa-bell"></i>
             </button>
@@ -790,9 +809,9 @@
             <div class="header-identity flex flex-col">
               <div class="flex items-center gap-2">
                 <span class="text-[13px] font-bold text-black">Alex Antony</span>
-                <i class="fa-solid fa-chevron-down text-xs text-gray-500"></i>
+                <i class="fa-solid fa-chevron-down text-xs text-[#5c5557]"></i>
               </div>
-              <span class="text-xs text-gray-500 leading-tight"
+              <span class="text-xs text-[#5c5557] leading-tight"
                 >Game Design Enthusiast, Learner</span
               >
             </div>
@@ -813,15 +832,15 @@
           -->
 
           <!-- 1. CONTINUE — what most visits are actually for -->
-          <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <section class="rounded-2xl border border-[#ebeadc] bg-white p-5 shadow-sm">
             <p class="text-[11px] font-bold uppercase tracking-wider text-brand">Continue learning</p>
             <h2 class="mt-1 text-lg font-bold text-black">Master of Business Warfare</h2>
-            <p class="mt-0.5 text-[13px] text-gray-500">Next: Section 4 &middot; Negotiating from strength</p>
+            <p class="mt-0.5 text-[13px] text-[#5c5557]">Next: Section 4 &middot; Negotiating from strength</p>
             <div class="mt-4 flex items-center gap-3">
               <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100">
                 <div class="h-full rounded-full bg-brand" style="width: 63%"></div>
               </div>
-              <span class="shrink-0 text-[11px] font-bold text-gray-600">33 of 52 milestones</span>
+              <span class="shrink-0 text-[11px] font-bold text-[#5c5557]">33 of 52 milestones</span>
             </div>
             <button class="mt-4 rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-white">
               Open MBW tasks
@@ -830,11 +849,11 @@
 
           <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
             <!-- 2. HOURS SPENT — a week of study time, with the trend named -->
-            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <section class="rounded-2xl border border-[#ebeadc] bg-white p-5 shadow-sm">
               <div class="flex items-center justify-between">
                 <h2 class="text-[13px] font-bold text-black">Hours spent</h2>
                 <button
-                  class="flex items-center gap-1 rounded-full border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-600"
+                  class="flex items-center gap-1 rounded-full border border-[#ded9c4] px-2.5 py-1 text-[11px] font-medium text-[#5c5557]"
                 >
                   This week
                   <i class="fa-solid fa-chevron-down text-[9px]"></i>
@@ -860,18 +879,18 @@
                 <span class="hours-bar" style="height: 84%"></span>
                 <span class="hours-bar" style="height: 16%"></span>
               </div>
-              <div class="mt-1.5 flex justify-between text-[10px] text-gray-400">
+              <div class="mt-1.5 flex justify-between text-[10px] text-[#5c5557]">
                 <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
               </div>
             </section>
             <!-- 3. PROGRESS — segmented, so the granularity is honest -->
-            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <section class="rounded-2xl border border-[#ebeadc] bg-white p-5 shadow-sm">
               <h2 class="text-[13px] font-bold text-black">Your progress</h2>
               <div class="mt-3 space-y-3">
                 <div>
                   <div class="flex items-baseline justify-between">
-                    <span class="text-xs font-semibold text-gray-700">Leadership Essentials</span>
-                    <span class="text-[11px] text-gray-500">12 of 12</span>
+                    <span class="text-xs font-semibold text-[#231f20]">Leadership Essentials</span>
+                    <span class="text-[11px] text-[#5c5557]">12 of 12</span>
                   </div>
                   <div class="mt-1.5 flex gap-1">
                     <span class="h-2 flex-1 rounded-sm bg-brand"></span>
@@ -884,8 +903,8 @@
                 </div>
                 <div>
                   <div class="flex items-baseline justify-between">
-                    <span class="text-xs font-semibold text-gray-700">100 Board Members</span>
-                    <span class="text-[11px] text-gray-500">7 of 24</span>
+                    <span class="text-xs font-semibold text-[#231f20]">100 Board Members</span>
+                    <span class="text-[11px] text-[#5c5557]">7 of 24</span>
                   </div>
                   <div class="mt-1.5 flex gap-1">
                     <span class="h-2 flex-1 rounded-sm bg-brand"></span>
@@ -901,13 +920,13 @@
           </div>
 
           <!-- 4. REGISTRATION — renders ONLY for a registered-but-unpaid tier -->
-          <section class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <section class="rounded-2xl border border-[#f5b301] bg-[#fbeecc] p-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <span class="flex flex-col">
                 <span class="text-[13px] font-bold text-black">100 Board Members is registered, not unlocked</span>
-                <span class="text-xs text-gray-600">Complete payment to open the programme.</span>
+                <span class="text-xs text-[#5c5557]">Complete payment to open the programme.</span>
               </span>
-              <button class="rounded-lg border border-amber-400 bg-white px-3 py-1.5 text-xs font-semibold text-amber-800">
+              <button class="rounded-lg border border-[#f5b301] bg-white px-3 py-1.5 text-xs font-semibold text-[#6b4c00]">
                 Complete payment
               </button>
             </div>
@@ -923,7 +942,7 @@
                 top and bottom, and the programme name sits in the middle of the
                 artwork.
               -->
-              <article class="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+              <article class="flex flex-col overflow-hidden rounded-2xl border border-[#ebeadc] bg-white shadow-sm">
                 <img
                   class="aspect-video w-full object-cover"
                   src="programs/lep.png"
@@ -931,7 +950,7 @@
                 />
                 <div class="flex flex-1 flex-col p-4">
                   <h3 class="text-[13px] font-bold text-black">Leadership Essentials</h3>
-                  <ul class="mt-2 mb-3 space-y-1 text-xs text-gray-500">
+                  <ul class="mt-2 mb-3 space-y-1 text-xs text-[#5c5557]">
                     <li class="flex items-center gap-1.5">
                       <i class="fa-regular fa-clock w-3.5 text-[11px]"></i>
                       4 weeks
@@ -947,7 +966,7 @@
                 </div>
               </article>
 
-              <article class="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+              <article class="flex flex-col overflow-hidden rounded-2xl border border-[#ebeadc] bg-white shadow-sm">
                 <img
                   class="aspect-video w-full object-cover"
                   src="programs/100bm.png"
@@ -955,7 +974,7 @@
                 />
                 <div class="flex flex-1 flex-col p-4">
                   <h3 class="text-[13px] font-bold text-black">100 Board Members</h3>
-                  <ul class="mt-2 mb-3 space-y-1 text-xs text-gray-500">
+                  <ul class="mt-2 mb-3 space-y-1 text-xs text-[#5c5557]">
                     <li class="flex items-center gap-1.5">
                       <i class="fa-regular fa-clock w-3.5 text-[11px]"></i>
                       6 months
@@ -976,7 +995,7 @@
                 action is the one thing a learner can actually do from here —
                 enrol — rather than a disabled button telling them to wait.
               -->
-              <article class="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+              <article class="flex flex-col overflow-hidden rounded-2xl border border-[#ebeadc] bg-white shadow-sm">
                 <span class="relative block">
                   <img
                     class="aspect-video w-full object-cover opacity-45 grayscale"
@@ -984,7 +1003,7 @@
                     alt="Master of Business Warfare Program"
                   />
                   <span
-                    class="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-gray-600"
+                    class="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-[#5c5557]"
                   >
                     <i class="fa-solid fa-lock text-[9px]"></i>
                     Locked
@@ -992,7 +1011,7 @@
                 </span>
                 <div class="flex flex-1 flex-col p-4">
                   <h3 class="text-[13px] font-bold text-black">Master of Business Warfare</h3>
-                  <ul class="mt-2 mb-3 space-y-1 text-xs text-gray-500">
+                  <ul class="mt-2 mb-3 space-y-1 text-xs text-[#5c5557]">
                     <li class="flex items-center gap-1.5">
                       <i class="fa-regular fa-clock w-3.5 text-[11px]"></i>
                       1 year
@@ -1011,11 +1030,11 @@
           </section>
 
           <!-- 6. ANNOUNCEMENT — notice and announcement merged into one slot -->
-          <section class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+          <section class="rounded-2xl border border-[#ebeadc] bg-white p-4 shadow-sm">
             <div class="flex items-start justify-between gap-3">
               <span class="flex flex-col">
                 <span class="text-[13px] font-bold text-black">March cohort timings have moved</span>
-                <span class="mt-0.5 text-xs text-gray-500">Sessions now start 30 minutes later. &middot; 2 days ago</span>
+                <span class="mt-0.5 text-xs text-[#5c5557]">Sessions now start 30 minutes later. &middot; 2 days ago</span>
               </span>
               <span class="shrink-0 rounded-full bg-brand-light px-2 py-0.5 text-[10px] font-bold text-brand-dark">
                 +2 more
@@ -1026,7 +1045,7 @@
 
         <!-- Right Column (Events Sidebar) -->
         <aside class="w-full lg:w-72 shrink-0 flex flex-col gap-6">
-          <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-4">
+          <div class="bg-white rounded-3xl shadow-sm border border-[#ebeadc] p-4">
             <div class="flex items-center justify-between mb-4">
               <h2 class="text-base font-bold text-black">Upcoming Events</h2>
               <a
@@ -1041,7 +1060,7 @@
               <!-- Calendar Header -->
               <div class="flex items-center justify-between px-2">
                 <button
-                  class="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50"
+                  class="w-7 h-7 rounded-full border border-[#ded9c4] flex items-center justify-center text-[#5c5557] hover:bg-gray-50"
                 >
                   <span class="material-symbols-outlined text-lg">chevron_left</span>
                 </button>
@@ -1049,7 +1068,7 @@
                   June <span class="font-medium">2022</span>
                 </h3>
                 <button
-                  class="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50"
+                  class="w-7 h-7 rounded-full border border-[#ded9c4] flex items-center justify-center text-[#5c5557] hover:bg-gray-50"
                 >
                   <span class="material-symbols-outlined text-lg">chevron_right</span>
                 </button>
@@ -1057,13 +1076,13 @@
 
               <!-- Calendar Grid -->
               <div class="cal-grid grid grid-cols-7 gap-y-2 text-center">
-                <div class="text-[11px] font-semibold text-gray-500 uppercase">Mon</div>
-                <div class="text-[11px] font-semibold text-gray-500 uppercase">Tue</div>
-                <div class="text-[11px] font-semibold text-gray-500 uppercase">Wed</div>
-                <div class="text-[11px] font-semibold text-gray-500 uppercase">Thu</div>
-                <div class="text-[11px] font-semibold text-gray-500 uppercase">Fri</div>
-                <div class="text-[11px] font-semibold text-gray-500 uppercase">Sat</div>
-                <div class="text-[11px] font-semibold text-gray-500 uppercase">Sun</div>
+                <div class="text-[11px] font-semibold text-[#5c5557] uppercase">Mon</div>
+                <div class="text-[11px] font-semibold text-[#5c5557] uppercase">Tue</div>
+                <div class="text-[11px] font-semibold text-[#5c5557] uppercase">Wed</div>
+                <div class="text-[11px] font-semibold text-[#5c5557] uppercase">Thu</div>
+                <div class="text-[11px] font-semibold text-[#5c5557] uppercase">Fri</div>
+                <div class="text-[11px] font-semibold text-[#5c5557] uppercase">Sat</div>
+                <div class="text-[11px] font-semibold text-[#5c5557] uppercase">Sun</div>
 
                 <!-- Empty slots for June 2022 (starts on Wednesday) -->
                 <div></div>
@@ -1074,9 +1093,9 @@
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">1</span>
                   <div class="flex gap-0.5">
-                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--mbw"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--lep"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--bm100"></div>
                   </div>
                 </div>
                 <div class="text-[11px] font-medium">2</div>
@@ -1084,76 +1103,76 @@
 
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">4</span>
-                  <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                  <div class="w-1 h-1 rounded-full cal-dot cal-dot--mbw"></div>
                 </div>
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">5</span>
                   <div class="flex gap-0.5">
-                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--lep"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--bm100"></div>
                   </div>
                 </div>
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">6</span>
                   <div class="flex gap-0.5">
-                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--mbw"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--lep"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--bm100"></div>
                   </div>
                 </div>
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">7</span>
                   <div class="flex gap-0.5">
-                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--mbw"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--lep"></div>
                   </div>
                 </div>
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">8</span>
                   <div class="flex gap-0.5">
-                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--lep"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--mbw"></div>
                   </div>
                 </div>
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">9</span>
-                  <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                  <div class="w-1 h-1 rounded-full cal-dot cal-dot--bm100"></div>
                 </div>
                 <div class="text-[11px] font-medium">10</div>
 
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">11</span>
                   <div class="flex gap-0.5">
-                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--mbw"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--lep"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--bm100"></div>
                   </div>
                 </div>
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">12</span>
                   <div class="flex gap-0.5">
-                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--mbw"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--lep"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--bm100"></div>
                   </div>
                 </div>
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">13</span>
-                  <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                  <div class="w-1 h-1 rounded-full cal-dot cal-dot--mbw"></div>
                 </div>
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">14</span>
                   <div class="flex gap-0.5">
-                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--mbw"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--lep"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--bm100"></div>
                   </div>
                 </div>
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">15</span>
                   <div class="flex gap-0.5">
-                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--lep"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--mbw"></div>
                   </div>
                 </div>
                 <div class="text-[11px] font-medium">16</div>
@@ -1162,29 +1181,29 @@
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">18</span>
                   <div class="flex gap-0.5">
-                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--mbw"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--lep"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--bm100"></div>
                   </div>
                 </div>
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">19</span>
                   <div class="flex gap-0.5">
-                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--mbw"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--bm100"></div>
                   </div>
                 </div>
                 <div class="text-[11px] font-medium">20</div>
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">21</span>
-                  <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                  <div class="w-1 h-1 rounded-full cal-dot cal-dot--bm100"></div>
                 </div>
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">22</span>
                   <div class="flex gap-0.5">
-                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--mbw"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--lep"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--bm100"></div>
                   </div>
                 </div>
                 <div class="text-[11px] font-medium">23</div>
@@ -1192,36 +1211,36 @@
 
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">25</span>
-                  <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                  <div class="w-1 h-1 rounded-full cal-dot cal-dot--bm100"></div>
                 </div>
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">26</span>
                   <div class="flex gap-0.5">
-                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--lep"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--mbw"></div>
                   </div>
                 </div>
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">27</span>
                   <div class="flex gap-0.5">
-                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--mbw"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--lep"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--bm100"></div>
                   </div>
                 </div>
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">28</span>
                   <div class="flex gap-0.5">
-                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-teal-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--mbw"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--lep"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--bm100"></div>
                   </div>
                 </div>
                 <div class="flex flex-col items-center gap-1">
                   <span class="text-[11px] font-medium">29</span>
                   <div class="flex gap-0.5">
-                    <div class="w-1 h-1 rounded-full bg-purple-500"></div>
-                    <div class="w-1 h-1 rounded-full bg-pink-500"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--mbw"></div>
+                    <div class="w-1 h-1 rounded-full cal-dot cal-dot--bm100"></div>
                   </div>
                 </div>
                 <div class="text-[11px] font-medium">30</div>
@@ -1231,33 +1250,33 @@
               <!-- Event List -->
               <div class="space-y-3 mt-1">
                 <div class="flex gap-3">
-                  <div class="w-2 h-2 rounded-full bg-purple-500 mt-1.5 shrink-0"></div>
+                  <div class="w-2 h-2 rounded-full cal-dot cal-dot--mbw mt-1.5 shrink-0"></div>
                   <div class="flex flex-col">
                     <span class="text-[13px] font-bold text-black">Grade 7 Tea Party</span>
-                    <span class="text-xs text-gray-500">8th July, 2022</span>
+                    <span class="text-xs text-[#5c5557]">8th July, 2022</span>
                   </div>
                 </div>
                 <div class="flex gap-3">
-                  <div class="w-2 h-2 rounded-full bg-teal-500 mt-1.5 shrink-0"></div>
+                  <div class="w-2 h-2 rounded-full cal-dot cal-dot--lep mt-1.5 shrink-0"></div>
                   <div class="flex flex-col">
                     <span class="text-sm font-bold text-black"
                       >Geography Test - Europe as a continent</span
                     >
-                    <span class="text-xs text-gray-500">8th July, 2022</span>
+                    <span class="text-xs text-[#5c5557]">8th July, 2022</span>
                   </div>
                 </div>
                 <div class="flex gap-3">
-                  <div class="w-2 h-2 rounded-full bg-pink-500 mt-1.5 shrink-0"></div>
+                  <div class="w-2 h-2 rounded-full cal-dot cal-dot--bm100 mt-1.5 shrink-0"></div>
                   <div class="flex flex-col">
                     <span class="text-[13px] font-bold text-black">PTA Meeting</span>
-                    <span class="text-xs text-gray-500">9th July, 2022</span>
+                    <span class="text-xs text-[#5c5557]">9th July, 2022</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
           <!-- ACTIVITY — a timeline, so the order reads without numbering -->
-          <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <section class="rounded-2xl border border-[#ebeadc] bg-white p-5 shadow-sm">
             <h2 class="text-[13px] font-bold text-black">Recent activity</h2>
 
             <ol class="activity-feed mt-4">
@@ -1270,7 +1289,7 @@
                     <b class="font-bold">You</b> completed
                     <b class="font-bold">Reading the room</b>
                   </span>
-                  <span class="flex items-center gap-1.5 text-[11px] text-gray-400">
+                  <span class="flex items-center gap-1.5 text-[11px] text-[#5c5557]">
                     <i class="fa-regular fa-calendar text-[10px]"></i>
                     Yesterday &middot; 19:40
                   </span>
@@ -1286,7 +1305,7 @@
                     <b class="font-bold">You</b> submitted
                     <b class="font-bold">Assignment 3</b>
                   </span>
-                  <span class="flex items-center gap-1.5 text-[11px] text-gray-400">
+                  <span class="flex items-center gap-1.5 text-[11px] text-[#5c5557]">
                     <i class="fa-regular fa-calendar text-[10px]"></i>
                     3 days ago &middot; 22:05
                   </span>
@@ -1302,7 +1321,7 @@
                     <b class="font-bold">You</b> joined
                     <b class="font-bold">Board readiness &mdash; live session</b>
                   </span>
-                  <span class="flex items-center gap-1.5 text-[11px] text-gray-400">
+                  <span class="flex items-center gap-1.5 text-[11px] text-[#5c5557]">
                     <i class="fa-regular fa-calendar text-[10px]"></i>
                     Last week &middot; 11:00
                   </span>
@@ -1310,15 +1329,15 @@
               </li>
             </ol>
 
-            <div class="mt-4 flex flex-col gap-2 border-t border-gray-100 pt-3">
+            <div class="mt-4 flex flex-col gap-2 border-t border-[#ebeadc] pt-3">
               <button
-                class="flex w-full items-center justify-between rounded-lg border border-gray-200 px-3 py-1.5 text-[11px] font-medium text-gray-600"
+                class="flex w-full items-center justify-between rounded-lg border border-[#ded9c4] px-3 py-1.5 text-[11px] font-medium text-[#5c5557]"
               >
                 All programmes
                 <i class="fa-solid fa-chevron-down text-[9px]"></i>
               </button>
               <button
-                class="flex w-full items-center justify-between rounded-lg border border-gray-200 px-3 py-1.5 text-[11px] font-medium text-gray-600"
+                class="flex w-full items-center justify-between rounded-lg border border-[#ded9c4] px-3 py-1.5 text-[11px] font-medium text-[#5c5557]"
               >
                 Daily
                 <i class="fa-solid fa-chevron-down text-[9px]"></i>
