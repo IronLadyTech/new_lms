@@ -344,6 +344,108 @@
       .cal-dot--lep { background: #f5b301; }
       .cal-dot--bm100 { background: #231f20; }
 
+      /* ---------- Statistics tiles ---------- */
+      .stat-tile {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid #ebeadc;
+        overflow: hidden;
+      }
+
+      .stat-tile--pink { background: #f2dede; }
+      .stat-tile--beige { background: #ebeadc; }
+      .stat-tile--gold { background: #fbe9bf; }
+      .stat-tile--cream { background: #f7f6e4; }
+
+      .stat-tile__label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #5c5557;
+      }
+
+      .stat-tile__value {
+        font-size: 17px;
+        font-weight: 700;
+        color: #231f20;
+        line-height: 1.2;
+      }
+
+      /* Decorative, kept faint so it never competes with the figure. */
+      .stat-tile__icon {
+        position: absolute;
+        right: 12px;
+        bottom: 8px;
+        font-size: 26px;
+        color: rgb(35 31 32 / 0.12);
+      }
+
+      /* ---------- Achievements ---------- */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        font-size: 14px;
+        color: #fff;
+      }
+
+      /* Deepened from #6b4c00, which measured 4.26 on this gold. */
+      .badge--gold { background: #f5b301; color: #4a3400; }
+      .badge--red { background: #d41f1f; }
+      .badge--charcoal { background: #231f20; }
+      /* Locked reads as locked by its icon too, never by colour alone. */
+      .badge--muted { background: #ebeadc; color: #5c5557; }
+
+      .leader {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: #f7f6e4;
+        border: 1px solid #ebeadc;
+      }
+
+      .leader__rank {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        background: #d41f1f;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .leader__who { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
+      .leader__name { font-size: 12.5px; font-weight: 700; color: #231f20; }
+      .leader__meta { font-size: 11px; color: #5c5557; }
+
+      /* ---------- Events rail ---------- */
+      .events-rail.events-rail {
+        background: #f9eded;
+        border: 1px solid #f0dcdc;
+        border-radius: 20px;
+        padding: 14px;
+        align-self: flex-start;
+      }
+
+      .events-rail .rail-heading {
+        margin: 2px 2px 0;
+        font-size: 15px;
+        font-weight: 700;
+        color: #231f20;
+      }
+
       .nav-item:hover {
         background: rgb(237 28 36 / 0.08);
         color: #c8102e;
@@ -847,6 +949,78 @@
             </button>
           </section>
 
+          <!--
+            MY STATISTICS + ACHIEVEMENTS
+
+            Sample figures, like the rest of this prototype. Several of these
+            have no source in the product yet — the README records which.
+          -->
+          <div class="grid grid-cols-1 gap-5 lg:grid-cols-[1.35fr_1fr]">
+            <section>
+              <div class="mb-3 flex items-center justify-between">
+                <h2 class="text-[13px] font-bold text-black">My statistics</h2>
+                <button class="rounded-full border border-[#ded9c4] bg-white px-3 py-1 text-[11px] font-medium text-[#5c5557]">
+                  This week
+                </button>
+              </div>
+
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div class="stat-tile stat-tile--pink">
+                  <span class="stat-tile__label">In progress</span>
+                  <span class="stat-tile__value">2 programmes</span>
+                  <span class="stat-tile__icon" aria-hidden><i class="fa-solid fa-circle-half-stroke"></i></span>
+                </div>
+
+                <div class="stat-tile stat-tile--beige">
+                  <span class="stat-tile__label">Completed</span>
+                  <span class="stat-tile__value">1 programme</span>
+                  <span class="stat-tile__icon" aria-hidden><i class="fa-solid fa-circle-check"></i></span>
+                </div>
+
+                <div class="stat-tile stat-tile--gold">
+                  <span class="stat-tile__label">Lessons this week</span>
+                  <span class="stat-tile__value">6 done</span>
+                  <span class="stat-tile__icon" aria-hidden><i class="fa-regular fa-clock"></i></span>
+                </div>
+
+                <div class="stat-tile stat-tile--cream">
+                  <span class="stat-tile__label">Certificates</span>
+                  <span class="stat-tile__value">1 earned</span>
+                  <span class="stat-tile__icon" aria-hidden><i class="fa-solid fa-award"></i></span>
+                </div>
+              </div>
+            </section>
+
+            <section class="rounded-2xl border border-[#ebeadc] bg-white p-5 shadow-sm">
+              <div class="mb-3 flex items-center justify-between">
+                <h2 class="text-[13px] font-bold text-black">Achievements</h2>
+                <a class="text-xs font-medium text-brand hover:underline" href="#">View all</a>
+              </div>
+
+              <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#5c5557]">
+                Badges earned
+              </p>
+              <ul class="mb-4 flex flex-wrap gap-2">
+                <li class="badge badge--gold" title="First submission"><i class="fa-solid fa-trophy" aria-hidden></i></li>
+                <li class="badge badge--red" title="Week streak"><i class="fa-solid fa-fire" aria-hidden></i></li>
+                <li class="badge badge--charcoal" title="Programme complete"><i class="fa-solid fa-medal" aria-hidden></i></li>
+                <li class="badge badge--muted" title="Locked"><i class="fa-solid fa-lock" aria-hidden></i></li>
+              </ul>
+
+              <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#5c5557]">
+                Leaderboard
+              </p>
+              <div class="leader">
+                <span class="leader__rank">4th</span>
+                <span class="leader__who">
+                  <span class="leader__name">Alex Antony</span>
+                  <span class="leader__meta">Leadership Essentials &middot; 12 of 12</span>
+                </span>
+                <i class="fa-solid fa-chevron-right text-[10px] text-[#5c5557]" aria-hidden></i>
+              </div>
+            </section>
+          </div>
+
           <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
             <!-- 2. HOURS SPENT — a week of study time, with the trend named -->
             <section class="rounded-2xl border border-[#ebeadc] bg-white p-5 shadow-sm">
@@ -1043,8 +1217,13 @@
           </section>
         </div>
 
-        <!-- Right Column (Events Sidebar) -->
-        <aside class="w-full lg:w-72 shrink-0 flex flex-col gap-6">
+        <!--
+          Right column, held in one tinted container so it reads as a place
+          rather than three cards adrift. The reference uses light purple; this
+          uses the brand's soft pink, purple not being in the palette.
+        -->
+        <aside class="events-rail w-full lg:w-72 shrink-0 flex flex-col gap-4">
+          <h2 class="rail-heading">Events</h2>
           <div class="bg-white rounded-3xl shadow-sm border border-[#ebeadc] p-4">
             <div class="flex items-center justify-between mb-4">
               <h2 class="text-base font-bold text-black">Upcoming Events</h2>
