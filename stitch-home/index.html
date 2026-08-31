@@ -439,11 +439,34 @@
         align-self: flex-start;
       }
 
-      .events-rail .rail-heading {
+      .events-rail .rail-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
         margin: 2px 2px 0;
+      }
+
+      .events-rail .rail-heading {
+        margin: 0;
         font-size: 15px;
         font-weight: 700;
         color: #231f20;
+      }
+
+      .events-rail .rail-head__link {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        /* --il-red-deep: the bright red measures 4.01 as text. */
+        color: #c8102e;
+        text-decoration: none;
+      }
+
+      .events-rail .rail-head__link:hover {
+        text-decoration: underline;
       }
 
       .nav-item:hover {
@@ -1223,18 +1246,19 @@
           uses the brand's soft pink, purple not being in the palette.
         -->
         <aside class="events-rail w-full lg:w-72 shrink-0 flex flex-col gap-4">
-          <h2 class="rail-heading">Events</h2>
-          <div class="bg-white rounded-3xl shadow-sm border border-[#ebeadc] p-4">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-base font-bold text-black">Upcoming Events</h2>
-              <a
-                class="text-xs font-medium text-brand flex items-center gap-1 hover:underline"
-                href="#"
-              >
-                View calendar <i class="fa-solid fa-chevron-right text-xs"></i>
-              </a>
-            </div>
+          <!--
+            One heading for the column, with its link beside it. "Upcoming
+            Events" sat inside the card directly under "Events" and named the
+            same thing twice, each with its own link out.
+          -->
+          <div class="rail-head">
+            <h2 class="rail-heading">Events</h2>
+            <a class="rail-head__link" href="#">
+              View all <i class="fa-solid fa-chevron-right text-[10px]" aria-hidden></i>
+            </a>
+          </div>
 
+          <div class="bg-white rounded-3xl shadow-sm border border-[#ebeadc] p-4">
             <div class="flex flex-col gap-4">
               <!-- Calendar Header -->
               <div class="flex items-center justify-between px-2">
