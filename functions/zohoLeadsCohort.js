@@ -745,6 +745,52 @@ function resolveLeadCohortFromLead(lead) {
   };
 }
 
+const LEP_BATCH_FIELD = () => process.env.ZOHO_LEAD_LEP_BATCH_FIELD?.trim() || 'LEP_Batch';
+const LEP_REG_DATE_FIELD = () =>
+  process.env.ZOHO_LEAD_LEP_REG_DATE_FIELD?.trim() || 'LEP_Registration_Date';
+
+function registrationDateWindowsForDesk() {
+  const windows = [{ start: '2000-01-01', end: '2025-12-31' }];
+  for (let y = 2026; y <= 2028; y += 1) {
+    for (const [m1, m2] of [[1, 3], [4, 6], [7, 9], [10, 12]]) {
+      const last = new Date(y, m2, 0).getUTCDate();
+      windows.push({
+        start: `${y}-${String(m1).padStart(2, '0')}-01`,
+        end: `${y}-${String(m2).padStart(2, '0')}-${String(last).padStart(2, '0')}`,
+      });
+    }
+  }
+  return windows;
+}
+
+/**
+ * Unique Zoho Leads `LEP_Batch` values — same cohort list as LEP Delivery Desk.
+ * Windows on LEP_Registration_Date to stay under Zoho search/COQL limits.
+ */
+async function listUniqueLepBatchValues(deps, { maxPagesPerWindow = 50 } = {}) {
+  const unique = new Set();
+  const batchF = LEP_BATCH_FIELD();
+  const regF = LEP_REG_DATE_FIELD();
+  const module = deps.getModule?.() || process.env.ZOHO_CRM_MODULE || 'Leads';
+
+  for (const w of registrationDateWindowsForDesk()) {
+    let offset = 0;
+    for (let page = 0; page < maxPagesPerWindow; page += 1) {
+      const where = `(${regF} >= '${w.start}' and ${regF} <= '${w.end}')`;
+      const selectQuery = `select ${batchF} from ${module} where ${where} limit 200 offset ${offset}`;
+      const { rows } = await runCoqlQuery(selectQuery, deps);
+      (rows || []).forEach((r) => {
+        const v = String(r[batchF] ?? r.LEP_Batch ?? '').trim();
+        if (v && !v.includes('$')) unique.add(v);
+      });
+      if (!rows?.length || rows.length < 200) break;
+      offset += 200;
+    }
+  }
+
+  return [...unique].sort();
+}
+
 module.exports = {
   getCohortFieldMap,
   parseDateParts,
@@ -760,4 +806,5 @@ module.exports = {
   isZohoRateLimitMessage,
   fetchLeadsCohortMembers,
   previewLeadCohorts,
+  listUniqueLepBatchValues,
 };

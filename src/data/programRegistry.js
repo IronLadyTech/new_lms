@@ -26,6 +26,7 @@ import {
   getAllSubmissions as getAllLepSubmissions,
   getSubmission as getLepSubmission,
   reviewSubmission as reviewLepSubmission,
+  markReviewStarted as markLepReviewStarted,
   submissionDocId as lepSubmissionDocId,
   LEP_SUBMISSIONS,
 } from '../services/lepService';
@@ -57,6 +58,8 @@ export const PROGRAM_ADAPTERS = {
     getAllSubmissions: getAllLepSubmissions,
     getSubmission: getLepSubmission,
     reviewSubmission: reviewLepSubmission,
+    /** LEP only: opening a submission starts its review and ends learner edits. */
+    markReviewStarted: markLepReviewStarted,
     submissionDocId: lepSubmissionDocId,
   },
   [PROGRAMS.BM100]: {

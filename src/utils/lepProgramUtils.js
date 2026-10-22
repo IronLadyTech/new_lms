@@ -15,7 +15,16 @@ import { PROGRAMS } from '../data/programTypes';
 import { submissionUnlocksNext } from './submissionReview';
 
 /** The section every later gate measures "preparation" against. */
-export const LEP_PREPARATION_SECTION_ID = 'orientation';
+/*
+ * The phase everything else waits on.
+ *
+ * This was 'orientation' while Orientation came first. The outline now opens
+ * with Pre-Program Preparation — the VIA survey, the CoDeSeF sheet, the NSDC
+ * registration — and Orientation is gated on it. Left pointing at 'orientation'
+ * the gate asked whether Orientation was finished before unlocking Orientation,
+ * which no learner could ever satisfy.
+ */
+export const LEP_PREPARATION_SECTION_ID = 'pre-program';
 
 export const LEP_ACCESS_EXPIRED_MESSAGE =
   'Your access to the Leadership Essentials Program has ended. Contact support to renew it.';
@@ -198,21 +207,35 @@ export function getTaskTypeIcon(type) {
       return 'document';
     case TASK_TYPES.VIDEO_RECORD:
       return 'recording';
+    /* Its own symbol. Sharing `link` meant a one-off URL and a repeated weekly
+       post were indistinguishable in the list. */
     case TASK_TYPES.RECURRING_POST:
-      return 'link';
+      return 'post';
+    /* Previously fell through to the default, which rendered a play button. */
+    case TASK_TYPES.CHECKLIST:
+      return 'checklist';
     default:
       return 'lesson';
   }
 }
 
+/*
+ * The short label under a lesson in course content.
+ *
+ * No durations: no LEP lesson stores one, and "~10 min", "~15 min video" and
+ * "~5 min recording" were guesses shown as facts. The weekly post count is real
+ * task data, so it stays.
+ */
 export function getTaskDurationHint(task) {
-  if (task.type === TASK_TYPES.WATCH_ONLY) return '~15 min video';
+  if (task.type === TASK_TYPES.WATCH_ONLY) return 'Video';
   if (task.type === TASK_TYPES.RECURRING_POST) return `${task.postsPerWeek || 1}/week`;
   if (task.type === TASK_TYPES.FILE_UPLOAD) return 'Upload';
-  if (task.type === TASK_TYPES.VIDEO_RECORD) return '~5 min recording';
+  if (task.type === TASK_TYPES.VIDEO_RECORD) return 'Recording';
   if (task.type === TASK_TYPES.EDITABLE_TEMPLATE) return 'Template';
   if (task.type === TASK_TYPES.CHECKLIST) return 'Checklist';
-  return '~10 min';
+  if (task.type === TASK_TYPES.LINK) return 'Link';
+  if (task.type === TASK_TYPES.TEXT) return 'Written';
+  return 'Lesson';
 }
 
 export function isRegistrationPaymentLocked(section, sectionProgress, profile = null) {

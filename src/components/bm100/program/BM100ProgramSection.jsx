@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import ProgramLessonList from '../../mbw/program/ProgramLessonList';
 import RefreshAccessButton from '../../ui/RefreshAccessButton';
 import { DEFAULT_PROGRAM_UI } from '../../../data/programUiAdapters';
+import { lessonSubmissionTag } from '../../../utils/lessonFilters';
+import { splitSectionTitle } from '../../lessons/lessonContext';
 
 function SectionDot({ status, sectionStatus }) {
   const cls =
@@ -28,6 +30,8 @@ export default function BM100ProgramSection({
   onSelectLesson,
   railMode = false,
   program = DEFAULT_PROGRAM_UI,
+  showSubmissionTags = false,
+  outline = 'cards',
 }) {
   const {
     getLessonRowState,
@@ -52,6 +56,10 @@ export default function BM100ProgramSection({
     : REGISTRATION_PAYMENT_LOCK_TOOLTIP;
   const panelId = `${program.key}-section-${section.id}`;
 
+  /* LEP's course content column is a list of topics: the lock icon carries the
+     reason, so the written explanation is left to the lesson itself. */
+  const topicsOnly = railMode && outline === 'list';
+
   const usesEngine = Array.isArray(taskStates) && taskStates.length > 0;
   const lessonTotal = progress.total || (usesEngine ? taskStates.length : 0);
   const moduleStats = railMode
@@ -70,13 +78,52 @@ export default function BM100ProgramSection({
 
   const indexLabel =
     sectionIndex != null ? String(sectionIndex).padStart(2, '0') : null;
+  const titleParts = splitSectionTitle(section.title);
+  const donePct =
+    lessonTotal > 0 ? Math.round((Math.min(progress.done, lessonTotal) / lessonTotal) * 100) : 0;
 
   return (
     <article
       className={`mbw-section-card${expanded ? ' is-expanded' : ''}${isCurrent ? ' is-current' : ''}${!progress.unlocked ? ' is-section-locked' : ''}${paymentLocked ? ' is-payment-locked' : ''}${railMode ? ' mbw-section-card--rail' : ''}`}
     >
       <h3 className="mbw-section-card__heading">
-        {railMode ? (
+        {railMode && outline === 'list' ? (
+          /*
+           * LEP's course content column: the day or week as a small label over
+           * the module name, and how much of it is done as a bar. Locked
+           * modules say so instead of showing an empty bar.
+           */
+          <button
+            type="button"
+            className="mbw-section-card__toggle mbw-section-card__toggle--rail mbw-section-card__toggle--list"
+            aria-expanded={expanded}
+            aria-controls={panelId}
+            onClick={onToggle}
+          >
+            <span className="mbw-section-card__copy">
+              {titleParts.eyebrow && (
+                <span className="mbw-section-card__eyebrow">{titleParts.eyebrow}</span>
+              )}
+              <span className="mbw-section-card__name">{titleParts.name}</span>
+              <span className="mbw-section-card__progress">
+                {progress.unlocked && lessonTotal > 0 ? (
+                  <>
+                    <span className="mbw-section-card__minibar" aria-hidden="true">
+                      <i style={{ width: `${donePct}%` }} />
+                    </span>
+                    {`${progress.done}/${lessonTotal} done`}
+                  </>
+                ) : (
+                  moduleStats
+                )}
+              </span>
+            </span>
+            {!progress.unlocked && (
+              <Lock size={16} className="mbw-section-card__lock" aria-hidden />
+            )}
+            <ChevronDown size={18} className="mbw-section-card__chevron" aria-hidden />
+          </button>
+        ) : railMode ? (
           <button
             type="button"
             className="mbw-section-card__toggle mbw-section-card__toggle--rail"
@@ -154,11 +201,14 @@ export default function BM100ProgramSection({
            * message above says what to finish first.
            */
           <>
-            <div className="mbw-section-card__locked-panel">
-              <LockMessage message={lockDisplay.message} cta={lockDisplay.cta} />
-            </div>
+            {!topicsOnly && (
+              <div className="mbw-section-card__locked-panel">
+                <LockMessage message={lockDisplay.message} cta={lockDisplay.cta} />
+              </div>
+            )}
             {section.usesTaskEngine && taskStates?.length ? (
               <ProgramLessonList
+                hideLockReason={topicsOnly}
                 taskStates={taskStates}
                 activeTaskId={activeTaskId}
                 getRowState={(ts) => ({
@@ -172,14 +222,18 @@ export default function BM100ProgramSection({
                 getDurationHint={getTaskDurationHint}
                 getKindLabel={getTaskKindLabel}
                 onSelectLesson={() => {}}
+                iconInMeta={outline === 'list'}
               />
             ) : null}
           </>
         ) : section.usesTaskEngine && taskStates?.length ? (
           <ProgramLessonList
+            hideLockReason={topicsOnly}
             taskStates={taskStates}
             activeTaskId={activeTaskId}
             getRowState={(ts) => getLessonRowState(ts, activeTaskId, nextTaskId)}
+            getTag={showSubmissionTags ? lessonSubmissionTag : undefined}
+            iconInMeta={outline === 'list'}
             getTypeIcon={getTaskTypeIcon}
             getDurationHint={getTaskDurationHint}
             getKindLabel={getTaskKindLabel}

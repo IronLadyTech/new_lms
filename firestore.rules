@@ -116,6 +116,30 @@ service cloud.firestore {
       allow write: if hasAdminAccess();
     }
 
+    match /payment_orders/{orderId} {
+      allow read: if isSignedIn() && (
+        resource.data.uid == request.auth.uid || hasStaffAccess()
+      );
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasAll(['uid', 'transactionId', 'amountPaise', 'status']);
+      allow update, delete: if hasStaffAccess();
+    }
+
+    match /razorpay_payments/{paymentId} {
+      allow read: if isSignedIn() && (
+        resource.data.uid == request.auth.uid || hasStaffAccess()
+      );
+      allow write: if false;
+    }
+
+    match /razorpay_orders/{orderId} {
+      allow read: if isSignedIn() && (
+        resource.data.uid == request.auth.uid || hasStaffAccess()
+      );
+      allow write: if false;
+    }
+
     match /activities/{activityId} {
       allow read: if canUseApp() && (
         resource.data.userId == request.auth.uid || hasStaffAccess()
@@ -431,6 +455,31 @@ service cloud.firestore {
                  >= resource.data.get('reviewHistory', []).size());
       }
 
+      // Versions are added, never rewritten or removed: what was handed in stays.
+      function learnerLepVersionsAppendOnly() {
+        return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['versions'])
+          || (request.resource.data.versions is list
+              && request.resource.data.versions.size()
+                 >= resource.data.get('versions', []).size()
+              && request.resource.data.versions[0:resource.data.get('versions', []).size()]
+                 == resource.data.get('versions', []));
+      }
+
+      // Starting a review is the facilitator's step, not the learner's.
+      function learnerNotStartingLepReview() {
+        return !request.resource.data.keys().hasAny(['status'])
+          || request.resource.data.status != 'under_review';
+      }
+
+      // Once a review has started, the answer is frozen. Watch progress may still move.
+      function learnerLepUnderReviewUntouched() {
+        return resource.data.get('status', '') != 'under_review'
+          || !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+               'status', 'versions', 'submittedAt', 'templateData', 'textValue', 'linkValue',
+               'fileUrl', 'fileName', 'fileType', 'checkedItems', 'videoUrl', 'audioUrl'
+             ]);
+      }
+
       allow read: if canUseApp() && (
         hasStaffAccess()
         || (resource == null && isOwnLepSubmissionId())
@@ -440,7 +489,11 @@ service cloud.firestore {
         || (canUseApp()
           && isOwnLepSubmissionId()
           && request.resource.data.userId == request.auth.uid
-          && learnerMbwStatusOk());
+          && learnerMbwStatusOk()
+          && learnerNotStartingLepReview()
+          && (!request.resource.data.keys().hasAny(['versions'])
+              || (request.resource.data.versions is list
+                  && request.resource.data.versions.size() <= 1)));
       allow update: if hasStaffAccess()
         || (canUseApp()
           && isOwnLepSubmissionId()
@@ -451,8 +504,10 @@ service cloud.firestore {
               || !request.resource.data.keys()
                    .hasAny(['reviewedBy', 'reviewedAt', 'feedback', 'reviewOutcome']))
           && learnerLepReviewHistoryOk()
+          && learnerLepVersionsAppendOnly()
+          && learnerLepUnderReviewUntouched()
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status'])
-              || learnerMbwStatusOk()));
+              || (learnerMbwStatusOk() && learnerNotStartingLepReview())));
       allow delete: if hasStaffAccess();
     }
 

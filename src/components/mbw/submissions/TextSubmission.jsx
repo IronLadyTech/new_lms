@@ -22,7 +22,7 @@ export default function TextSubmission({ task, submission, canSubmit, onSubmit, 
   return (
     <div className="mbw-submission">
       <TaskTemplateDownloads taskId={task.id} task={task} />
-      <label htmlFor={`text-${task.id}`}>{task.description}</label>
+      <label htmlFor={`text-${task.id}`}>Your response</label>
       <textarea
         id={`text-${task.id}`}
         rows={6}

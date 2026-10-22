@@ -6114,7 +6114,7 @@ body.notification-sheet-open .mbw-lesson-nav--sticky {
   font-size: var(--text-sm);
 }
 
-/* Summary stat cards (Tap Academy style) */
+/* Summary stat cards */
 .streak-summary-card {
   display: flex;
   align-items: flex-start;
@@ -7289,6 +7289,307 @@ button.streak-heatmap__cell:focus-visible {
   white-space: pre-wrap;
 }
 
+/*
+ * A table inside a form template: a worksheet's printed grid, filled in on the
+ * page. The table and the phone cards are the ERRC editor's own (`.mbw-errc__*`),
+ * so these rules only seat it inside a form section.
+ */
+.mbw-table-field {
+  margin-bottom: var(--space-md);
+}
+
+.mbw-table-field__label {
+  margin: 0 0 var(--space-2xs);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.mbw-table-field .mbw-form-template__hint {
+  margin: 0 0 var(--space-sm);
+}
+
+.mbw-table-field .mbw-errc__wrap,
+.mbw-table-field .mbw-errc__cards {
+  margin-bottom: 0;
+}
+
+.mbw-form-template__dl-row dd .mbw-errc__wrap {
+  margin: var(--space-2xs) 0 0;
+  white-space: normal;
+}
+
+/* 16px on phones, or iOS zooms the page when a cell takes focus. */
+@media (max-width: 767px) {
+  .mbw-table-field .mbw-errc-card__field textarea {
+    font-size: 16px;
+  }
+}
+
+/*
+ * A pick per row (I Respond / I React, Yes / No): a radio centred in its cell.
+ * Two classes deep: `.mbw-errc__table tbody td` sets `vertical-align: top` and
+ * would otherwise pin the radio to the top of a tall row.
+ */
+.mbw-errc__table .mbw-table-field__choice {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.mbw-errc__table td.mbw-table-field__choice label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.mbw-table-field input[type='radio'] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.mbw-table-field__choice-group {
+  border: 0;
+  margin: 0;
+}
+
+.mbw-table-field__choice-group legend {
+  padding: 0;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--primary);
+}
+
+/* The card field's label styling is for column names, not for option text. */
+.mbw-table-field__choice-group .mbw-form-template__radio span {
+  font-size: var(--text-base);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text);
+}
+
+.mbw-errc__table tfoot th,
+.mbw-errc__table tfoot td {
+  padding: var(--space-2sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.mbw-errc__table tfoot th {
+  text-align: left;
+}
+
+.mbw-table-field__totals {
+  margin: 0;
+  padding: var(--space-sm) var(--space-2sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-weight: 700;
+}
+
+/*
+ * A PDF read in the lesson player.
+ *
+ * It takes the video's place and its frame (`.lesson-video`), so reading and
+ * watching look like the same kind of lesson. The pages scroll inside the
+ * player rather than stretching the page to the length of the document.
+ */
+.lesson-document {
+  margin-bottom: var(--space-md);
+}
+
+.lesson-document__open {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-height: 44px;
+  padding: 0 var(--space-2sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--primary-text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.lesson-document__open:hover {
+  text-decoration: underline;
+}
+
+.lesson-document__open:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.lesson-document__pages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  max-height: min(78vh, 960px);
+  padding: var(--space-md);
+  overflow-y: auto;
+  background: var(--surface-muted);
+}
+
+.lesson-document__page {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 0;
+}
+
+.lesson-document__page canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  box-shadow: var(--shadow-sm);
+}
+
+.lesson-document__skeleton {
+  width: 100%;
+  max-width: 680px;
+  aspect-ratio: 1 / 1.414;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  animation: lesson-document-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes lesson-document-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lesson-document__skeleton {
+    animation: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .lesson-document__pages {
+    max-height: 70vh;
+    padding: var(--space-2sm);
+  }
+}
+
+/*
+ * The bar under the lesson player: Fullscreen and Expand.
+ */
+.lesson-player-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2xs);
+  padding: var(--space-2xs) var(--space-sm);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.lesson-player-bar__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.lesson-player-bar__btn:hover {
+  background: var(--surface-2);
+  color: var(--primary);
+}
+
+.lesson-player-bar__btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.lesson-player-bar__btn[aria-pressed='true'] {
+  background: var(--primary-subtle);
+  color: var(--primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lesson-player-bar__btn {
+    transition: none;
+  }
+}
+
+/* Expand only means something where the course content sits beside the lesson. */
+@media (max-width: 1100px) {
+  .lesson-player-bar__btn--expand,
+  .lesson-player-bar__doc,
+  .lesson-player-bar--no-fullscreen {
+    display: none;
+  }
+}
+
+.lesson-document-stage {
+  margin-bottom: var(--space-md);
+}
+
+.lesson-document-stage .lesson-document {
+  margin-bottom: 0;
+}
+
+/* Fullscreen: the pages take the whole height instead of their 78vh window. */
+.lesson-document-stage:fullscreen {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.lesson-document-stage:fullscreen .lesson-document {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.lesson-document-stage:fullscreen .lesson-document__pages {
+  flex: 1;
+  max-height: none;
+}
+
+/* Expand moves the course content aside, which is already off-screen here. */
+.lesson-document-stage:fullscreen .lesson-player-bar__btn--expand {
+  display: none;
+}
+
+/*
+ * Expanded: one column, course content hidden. Three classes deep so it
+ * outranks the two-class split grid wherever that rule sits in this file.
+ */
+@media (min-width: 1101px) {
+  .mbw-program-layout.mbw-program-layout--split.mbw-program-layout--expanded {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mbw-program-layout.mbw-program-layout--split.mbw-program-layout--expanded
+    .mbw-program-layout__rail {
+    display: none;
+  }
+}
+
 .mbw-form-template--readonly .mbw-form-template__section {
   background: transparent;
   padding: 0;
@@ -8399,18 +8700,24 @@ button.streak-heatmap__cell:focus-visible {
   text-underline-offset: 2px;
 }
 
+/*
+ * Lesson chrome: a navigation bar, not a hero.
+ *
+ * This was a red gradient slab with a 20px radius and a red drop shadow — the
+ * loudest thing on a page whose subject is the task below it. A back link and a
+ * breadcrumb trail are wayfinding; they do not need a poster. Now it reads on
+ * the page ground with a single hairline under it, which is also what lets it
+ * sit flush against the lesson in the split layout.
+ */
 .mbw-lesson-topbar {
   position: relative;
   width: 100%;
   box-sizing: border-box;
-  margin: 0 0 1.75rem; /* 28px — clear gap before lesson cards (24–32px) */
-  padding: clamp(1rem, 2.5vw, 1.25rem) var(--mbw-lesson-pad-x) clamp(1rem, 2.5vw, 1.15rem);
-  background: linear-gradient(135deg, var(--il-red-hover) 0%, var(--il-red-deep) 100%);
-  color: #fff;
-  box-shadow: 0 8px 24px rgba(245, 41, 41, 0.22);
-  border-bottom: 3px solid var(--mbw-red);
-  border-radius: 20px;
-  overflow: hidden;
+  margin: 0;
+  padding: var(--space-2sm) var(--mbw-lesson-pad-x);
+  background: var(--surface);
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
 }
 
 .mbw-lesson-topbar__row {
@@ -8425,15 +8732,6 @@ button.streak-heatmap__cell:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2xs);
-  border-color: rgba(255, 255, 255, 0.45);
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.mbw-lesson-topbar__outline:hover {
-  background: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.65);
-  color: #fff;
 }
 
 .mbw-lesson-topbar__back {
@@ -8445,14 +8743,14 @@ button.streak-heatmap__cell:focus-visible {
   margin: 0;
   font: inherit;
   font-size: var(--text-sm);
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.92);
+  font-weight: 600;
+  color: var(--primary-text);
   cursor: pointer;
   text-decoration: none;
 }
 
 .mbw-lesson-topbar__back:hover {
-  color: #fff;
+  color: var(--primary);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -8462,15 +8760,14 @@ button.streak-heatmap__cell:focus-visible {
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  opacity: 0.9;
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--muted);
 }
 
 .mbw-lesson-topbar__section {
   margin: 0 0 12px;
   font-size: var(--text-sm);
   line-height: 1.4;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text);
 }
 
 .mbw-lesson-topbar__section strong {
@@ -8481,7 +8778,7 @@ button.streak-heatmap__cell:focus-visible {
   margin: 0 0 12px;
   font-size: clamp(1.15rem, 2.5vw, 1.45rem);
   font-weight: 800;
-  color: #fff;
+  color: var(--text);
   line-height: 1.3;
 }
 
@@ -8538,6 +8835,54 @@ button.streak-heatmap__cell:focus-visible {
   width: 100%;
   padding: 0 0 24px;
   box-sizing: border-box;
+}
+
+/*
+ * Lesson split — the course contents beside the lesson, not behind a tab.
+ *
+ * The rail is the same `LessonCourseContentRail` the tab used; it is rendered
+ * as a sibling here rather than passed into the task body, so there is one rail
+ * component and one task engine, not a second copy of either. Below 1100px the
+ * column has nowhere to go, so the tab and the Outline drawer come back.
+ */
+.mbw-program-layout--split .mbw-program-layout__rail {
+  position: sticky;
+  top: 16px;
+  align-self: start;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: var(--surface);
+  /*
+   * The contents column is part of the player, not a card sitting on it.
+   *
+   * This aside — the outer wrapper, not the `.lesson-course-rail` inside it —
+   * kept the 16px radius, the full border and the shadow after the full-bleed
+   * pass, because that pass flattened the inner panel and missed this one. It
+   * measured `border-radius: 16px` while everything it contained was square,
+   * which is the curve that was still visible at the top of the column.
+   *
+   * One hairline down its left edge is the whole separation now. Longhands
+   * rather than the `border-left` shorthand: a shorthand carrying a var() is
+   * held as a pending substitution and silently wipes widths set beside it.
+   */
+  border-top-width: 0;
+  border-right-width: 0;
+  border-bottom-width: 0;
+  border-left-width: 1px;
+  border-left-style: solid;
+  border-left-color: var(--border);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+@media (max-width: 1100px) {
+  .mbw-program-layout--split {
+    display: block;
+  }
+
+  .mbw-program-layout--split .mbw-program-layout__rail {
+    display: none;
+  }
 }
 
 .mbw-program-layout--lesson .mbw-program-layout__main {
@@ -9392,7 +9737,7 @@ button.streak-heatmap__cell:focus-visible {
   border-top: 1px solid var(--mbw-divider, var(--border));
 }
 
-/* ══ Course content — Tap-style always-visible outline ══ */
+/* ══ Course content — always-visible outline ══ */
 .program-course-content {
   margin-bottom: var(--space-md, 16px);
 }
@@ -12829,7 +13174,9 @@ a.cx-batch-row:hover {
   font-size: 1rem;
   text-align: left;
   cursor: pointer;
-  transition: border-color 180ms ease-out, box-shadow 180ms ease-out;
+  transition:
+    border-color 180ms ease-out,
+    box-shadow 180ms ease-out;
 }
 
 .cx-batch-members__toggle:hover {
@@ -16575,17 +16922,14 @@ body.notification-sheet-open .bottom-nav {
  * heroes are red in either theme, so the override is not theme-scoped, and it
  * is placed after the dark rule above so it wins on source order.
  */
-.mbw-program-hero .breadcrumbs__link,
-.mbw-lesson-topbar .breadcrumbs__link {
+.mbw-program-hero .breadcrumbs__link {
   color: #fff;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
 .mbw-program-hero .breadcrumbs__current,
-.mbw-lesson-topbar .breadcrumbs__current,
-.mbw-program-hero .breadcrumbs__sep,
-.mbw-lesson-topbar .breadcrumbs__sep {
+.mbw-program-hero .breadcrumbs__sep {
   color: #ffeaea;
 }
 
@@ -16693,7 +17037,7 @@ body.notification-sheet-open .bottom-nav {
 }
 
 .mbw-lesson-topbar__crumbs {
-  margin-bottom: var(--space-sm);
+  margin-bottom: 0;
 }
 
 .mbw-program-hero__back,
@@ -17738,7 +18082,10 @@ body.notification-sheet-open .bottom-nav {
   color: var(--muted);
   cursor: pointer;
   text-decoration: none;
-  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+  transition:
+    background 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease;
 }
 
 .batch-sessions__icon-btn:hover {
@@ -18094,6 +18441,84 @@ body.notification-sheet-open .bottom-nav {
 }
 
 /* ============================================================
+   Lesson on a phone — a different page, not the web one narrowed
+   ------------------------------------------------------------
+   The desktop lesson is a two-column player: contents beside the
+   task, breadcrumb trail, room to spare. None of that survives a
+   390px screen, and shrinking it produced the worst of both — two
+   nested cards inside 28px of gutter on each side (12px from the
+   page, 16px from the shell), leaving 334px of usable width, with
+   a three-line breadcrumb block above a heading that said the same
+   thing.
+
+   The phone gets its own arrangement instead: full width, one line
+   of chrome, and the contents behind the Outline control rather
+   than on screen. The web layout is untouched — every rule here is
+   inside the phone query and hangs off `:has(.mbw-program-layout--split)`,
+   so only a lesson is affected, not the programme overview.
+   ============================================================ */
+@media (max-width: 639px) {
+  /*
+   * Edge to edge.
+   *
+   * 56px of the 390px viewport — one seventh of the screen — was spent on
+   * gutters around a card floating on the page ground. On a phone the lesson
+   * IS the page; it does not need to be framed as an object on one. The
+   * padding moves inside, where it buys reading margin instead of border.
+   */
+  .student-main:has(.mbw-program-layout--split) {
+    /* Top too: a 16px strip of page ground between the app header and the
+       lesson chrome read as a seam, not as spacing. */
+    padding-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .mbw-program-page:has(.mbw-program-layout--split) {
+    padding-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .mbw-program-layout--split .mbw-program-lesson-card {
+    border-left-width: 0;
+    border-right-width: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /*
+   * One line of chrome.
+   *
+   * The trail is clipped rather than removed, the same way the phone rule
+   * further up clips its leading levels: a screen reader still gets the whole
+   * path from Programs down to the lesson. What goes is the 67px it occupied
+   * on screen restating the heading directly beneath it.
+   */
+  .mbw-program-page:has(.mbw-program-layout--split) .mbw-lesson-topbar__crumbs {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .mbw-program-page:has(.mbw-program-layout--split) .mbw-lesson-topbar__row {
+    margin-bottom: 0;
+  }
+
+  /* Reading margin now comes from the card rather than the page gutter, so it
+     has to be worth reading against: 12px put body text against the glass. */
+  .mbw-program-layout--split .mbw-program-lesson-card {
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+  }
+}
+
+/* ============================================================
    Lesson view — the desktop two-column layout
    ------------------------------------------------------------
    LessonCourseContentRail's own doc says "Mobile: Course content
@@ -18191,12 +18616,130 @@ body.notification-sheet-open .bottom-nav {
 
 @media (min-width: 1024px) {
   /*
-   * Web lesson is a single column — Course content side rail removed.
-   * Curriculum outline opens from the topbar Outline control / drawer.
+   * Web lesson was made a single column here, with the outline moved to a
+   * drawer behind the topbar's Outline control. The split layout below puts the
+   * contents back beside the lesson — the Udemy arrangement — and has to be two
+   * classes deep to outrank this rule, which is two classes itself.
    */
   .mbw-program-layout.mbw-program-layout--lesson {
     display: block;
     width: 100%;
+  }
+
+  .mbw-program-layout.mbw-program-layout--split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    /* 12px between the lesson and the contents. Only the column gap between the
+       two outer containers — nothing inside either changes. */
+    gap: 12px;
+    align-items: start;
+  }
+
+  .mbw-program-layout--split .mbw-task__tab--course {
+    display: none;
+  }
+
+  /*
+   * In the rail the sections are one continuous list, not a stack of cards.
+   * Separate boxes with a 20px gap between them read as eight small panels;
+   * flush rows with a hairline between read as one contents list, which is what
+   * it is. Scoped to the rail — on the programme overview the cards are right.
+   */
+  /*
+   * Full bleed.
+   *
+   * The reference player fills the viewport: the contents panel is flush
+   * against the lesson, edge to edge, separated by a single divider. Ours
+   * floated two rounded, bordered cards on the page ground with the page's own
+   * 24px padding around them. Scoped with `:has()` so only a lesson in the
+   * split layout loses the page padding — the programme overview keeps it.
+   */
+  /*
+   * The app shell caps every page at 1280px with 48px of side padding, which
+   * left 169px of the viewport unused beside the contents rail. A lesson is the
+   * one page that wants the whole width, so the cap is released here and only
+   * here — `:has()` keeps it to a lesson actually in the split layout.
+   */
+  .student-main:has(.mbw-program-layout--split) {
+    max-width: none;
+    padding: 0;
+  }
+
+  .mbw-program-page:has(.mbw-program-layout--split) {
+    padding-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .mbw-program-layout.mbw-program-layout--split {
+    gap: 0;
+  }
+
+  .mbw-program-layout--split .mbw-program-lesson-card {
+    border-radius: 0;
+    border-left-width: 0;
+    border-right-width: 0;
+    box-shadow: none;
+  }
+
+  /* One hairline between the two columns, rather than two card borders and a
+     gap. Longhands, not the `border-left` shorthand — a shorthand carrying a
+     var() is resolved late and can drop a width set beside it. */
+  /* The hairline lives on the aside now — see the note there. Two borders,
+     one on each, drew a 2px double rule down the column. */
+  .mbw-program-layout--split .lesson-course-rail {
+    border-radius: 0;
+    border-width: 0;
+  }
+
+  /*
+   * The search sits flush on the list below it. Its 8px bottom margin was the
+   * last real gap in the rail — everything under it is already 0 with hairline
+   * dividers, so one loose edge read as "the boxes still have gaps".
+   * The header keeps its own breathing room above; a divider separates it.
+   */
+  .mbw-program-layout__rail .lesson-course-rail__search {
+    margin-bottom: 0;
+  }
+
+  .mbw-program-layout__rail .mbw-program-journey__sections {
+    gap: 0;
+    border-top: 1px solid var(--mbw-border-warm);
+  }
+
+  .mbw-program-layout__rail .mbw-section-card {
+    /*
+     * Longhands only. `border: 0 solid var(--mbw-border-warm)` cannot be
+     * resolved at parse time because of the var(), so it is held as a pending
+     * substitution and wipes the `border-bottom-width` declared after it — the
+     * divider computed to 0px with no warning anywhere.
+     */
+    border-top-width: 0;
+    border-right-width: 0;
+    border-left-width: 0;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: var(--mbw-border-warm);
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /*
+   * No `:last-child` exception here. Each card is the only child of its own
+   * wrapper, so `:last-child` matches every one of them and silently zeroed
+   * every divider — the rail looked gapless but had no separators at all. The
+   * hairline under the final section sits on the rail's own border anyway.
+   */
+
+  .mbw-program-layout__rail .mbw-section-card__toggle {
+    border-radius: 0;
+    padding: 12px 14px;
+  }
+
+  /* The heading carries a browser em margin — 18.7px top and bottom — which on
+     a contents row is most of the row's height. */
+  .mbw-program-layout__rail .mbw-section-card__heading {
+    margin: 0;
   }
 
   .mbw-task__tab--course {
@@ -18286,13 +18829,14 @@ body.notification-sheet-open .bottom-nav {
 
 /* A rail is not the page: the section name steps down a size to fit it. */
 .mbw-section-card--rail .mbw-section-card__name {
-  font-size: var(--text-sm);
-  line-height: 1.35;
+  font-size: var(--text-xs);
+  line-height: 1.3;
   overflow-wrap: anywhere;
 }
 
 .mbw-section-card--rail .mbw-section-card__sub {
   font-size: var(--text-xs);
+  line-height: 1.3;
   color: var(--muted);
 }
 
@@ -18400,7 +18944,9 @@ body.notification-sheet-open .bottom-nav {
   line-height: 1.2;
   white-space: nowrap;
   cursor: pointer;
-  transition: color 150ms ease, border-color 150ms ease;
+  transition:
+    color 150ms ease,
+    border-color 150ms ease;
 }
 
 .mbw-task__tab:hover {
@@ -18484,4 +19030,3386 @@ body.notification-sheet-open .bottom-nav {
   margin-left: auto;
   font-size: var(--text-sm);
   color: var(--muted);
+}
+
+/* ---- Video: speed and fullscreen ---- */
+
+/*
+ * One row, right-aligned, sitting quietly under the player. This was five
+ * speed pills and a labelled "Rotate / fullscreen" button on two rows — more
+ * chrome than the video, and taller than the action beneath it on a phone.
+ */
+.mbw-video__controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2xs);
+  margin-top: var(--space-2xs);
+}
+
+.mbw-video__speed select,
+.mbw-video__fs {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* A real 44px, not a small control with a pseudo-element pretending to be
+     one: these are tapped mid-watch, one-handed. */
+  min-height: 44px;
+  padding: 0 var(--space-2xs);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.mbw-video__speed select {
+  /* The OS picker does the work on a phone; strip only the chrome, keeping the
+     element itself native so it stays accessible and familiar. */
+  appearance: none;
+  padding-right: var(--space-sm);
+  text-align: center;
+}
+
+.mbw-video__fs {
+  width: 44px;
+}
+
+.mbw-video__speed select:hover,
+.mbw-video__fs:hover {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+.mbw-video__speed select:focus-visible,
+.mbw-video__fs:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mbw-video__speed select,
+  .mbw-video__fs {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   Lesson page, desktop: the player layout
+   ------------------------------------------------------------
+   One header bar, a 16:9 player sized to the screen with the
+   lesson title under it, and course content as a column of
+   cards beside it. Desktop only (1101px and up, where the column
+   is shown); the phone layout is untouched. Selectors hang off
+   the split layout and the column variant, which only LEP lessons
+   use, and sit at the end of the file so they win on source order
+   as well as specificity.
+   ============================================================ */
+
+/* The slot is empty, and so hidden, on every page but a wide lesson. */
+.app-header__lesson:empty {
+  display: none;
+}
+
+.app-header__lesson {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  min-width: 0;
+  height: 32px;
+  margin-left: var(--space-sm);
+  padding-left: var(--space-2xs);
+  border-left: 1px solid var(--border);
+}
+
+.lesson-header-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-width: 0;
+}
+
+.lesson-header-bar__back {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.lesson-header-bar__back:hover {
+  background: var(--surface-2);
+  color: var(--primary);
+}
+
+.lesson-header-bar__back:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.lesson-header-bar__title {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lesson-header-bar__back {
+    transition: none;
+  }
+}
+
+/* The document's name and Open PDF, folded into the player's own bar. */
+.lesson-player-bar__doc {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+  margin-right: auto;
+  padding-left: var(--space-2xs);
+}
+
+.lesson-player-bar__label {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lesson-player-bar__open {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-height: 44px;
+  padding: 0 var(--space-2xs);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--primary-text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.lesson-player-bar__open:hover {
+  text-decoration: underline;
+}
+
+.lesson-player-bar__open:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* The course content column's header: ring, title, meta with icons. */
+.lesson-course-rail__head--column {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.lesson-course-rail__head-copy {
+  min-width: 0;
+}
+
+.lesson-course-rail--column .lesson-course-rail__title {
+  margin: 0 0 2px;
+  font-size: var(--text-lg);
+}
+
+.lesson-course-rail__meta--icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px var(--space-sm);
+  margin: 0;
+}
+
+.lesson-course-rail__meta--icons span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lesson-course-rail__ring .course-progress-ring__label strong {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--text);
+}
+
+@media (min-width: 1101px) {
+  .mbw-program-page {
+    /* Height the player may take: the screen, less the header, the card's top
+       padding, and the title, status and controls under the player. */
+    --lesson-stage-h: calc(100vh - var(--header-h) - 190px);
+  }
+
+  /* Back and the course name are in the app header now. */
+  .mbw-program-page:has(.mbw-program-layout--split) .mbw-lesson-topbar {
+    display: none;
+  }
+
+  .mbw-program-page .mbw-program-layout.mbw-program-layout--split {
+    grid-template-columns: minmax(0, 1fr) clamp(280px, 22vw, 340px);
+    gap: 0;
+    padding-right: 0;
+  }
+
+  .mbw-program-page .mbw-program-layout.mbw-program-layout--split.mbw-program-layout--expanded {
+    grid-template-columns: minmax(0, 1fr);
+    padding-right: 0;
+  }
+
+  /* Document lessons: no card inset around the PDF — form keeps side padding below. */
+  .mbw-program-page .mbw-program-layout--split .mbw-program-lesson-card:has(.lesson-document-stage) {
+    padding-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* Course content flush against the lesson; scrollbar on the shared divider. */
+  .mbw-program-page .mbw-program-layout--split .mbw-program-layout__rail {
+    top: var(--header-h);
+    max-height: calc(100vh - var(--header-h));
+    padding: 0;
+    border-left-width: 1px;
+    border-left-style: solid;
+    border-left-color: var(--border);
+    background: var(--surface-2, var(--surface-muted));
+    /* Scrollbar sits on the left, next to the main lesson column. */
+    direction: rtl;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+
+  .mbw-program-page .mbw-program-layout--split .mbw-program-layout__rail::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .mbw-program-page .mbw-program-layout--split .mbw-program-layout__rail::-webkit-scrollbar-thumb {
+    border-radius: var(--radius-pill);
+    background: var(--border-strong);
+  }
+
+  .mbw-program-page .mbw-program-layout--split .mbw-program-layout__rail::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .mbw-program-page .mbw-program-layout--split .mbw-program-layout__rail > * {
+    direction: ltr;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .lesson-course-rail {
+    padding: 12px 10px 16px;
+    background: transparent;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .lesson-course-rail--column .lesson-course-rail__search {
+    margin: 0 0 var(--space-md);
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .lesson-course-rail--column .lesson-course-rail__search-input {
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--border);
+    background: var(--surface);
+  }
+
+  /* Modules as cards, with space between; the lessons inside stay one list. */
+  .mbw-program-page .mbw-program-layout__rail .mbw-program-journey__sections {
+    gap: 10px;
+    border-top-width: 0;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .mbw-section-card {
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-style: solid;
+    border-color: var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .mbw-section-card.is-current {
+    border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .mbw-section-card__toggle {
+    align-items: center;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .mbw-section-card__index {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
+    padding: 0;
+    border-radius: 50%;
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 0.6875rem; /* 11px — index only; labels stay ≥12px */
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .mbw-section-card__name {
+    font-size: var(--text-xs); /* 12px — was ~15px and wrapped to 2–3 lines */
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .mbw-section-card__sub {
+    font-size: var(--text-xs);
+    line-height: 1.3;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .mbw-section-card__chevron {
+    width: 14px;
+    height: 14px;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .mbw-section-card__panel {
+    border-top: 1px solid var(--border);
+  }
+
+  /* Lesson rows: denser type + less side padding so titles fit the narrow column. */
+  .mbw-program-page .mbw-program-layout__rail .mbw-lesson-row__main {
+    gap: 8px;
+    padding: 8px 10px;
+    min-height: 44px;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .mbw-lesson-row__title {
+    font-size: var(--text-xs);
+    line-height: 1.3;
+    font-weight: 500;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .mbw-lesson-row__meta,
+  .mbw-program-page .mbw-program-layout__rail .mbw-lesson-row__kind {
+    font-size: 0.6875rem; /* 11px — meta/badge only */
+    letter-spacing: 0.01em;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .mbw-lesson-row__kind {
+    padding: 0 4px;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .mbw-lesson-row__type svg,
+  .mbw-program-page .mbw-program-layout__rail .mbw-lesson-row__status svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .lesson-course-rail--column .lesson-course-rail__title {
+    font-size: var(--text-sm);
+    line-height: 1.25;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .lesson-course-rail__meta--icons {
+    font-size: var(--text-xs);
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .lesson-course-rail__meta--icons svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .lesson-course-rail__search-input {
+    font-size: var(--text-xs);
+    min-height: 36px;
+    padding-block: 6px;
+  }
+
+  /* PDF player: fill the lesson column — not a small 16:9 letterbox. */
+  .mbw-program-page .mbw-program-layout--split .lesson-document-stage {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: none;
+    margin: 0 0 var(--space-md);
+    height: calc(100dvh - var(--header-h));
+    min-height: 480px;
+    max-height: none;
+    aspect-ratio: auto;
+    border: 1px solid var(--border);
+    border-radius: 0;
+    border-left-width: 0;
+    border-right-width: 0;
+    background: var(--surface-muted);
+    overflow: hidden;
+  }
+
+  .mbw-program-page .mbw-program-layout--split .lesson-document-stage .lesson-document {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    margin: 0;
+    border-width: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* Its name and Open PDF are in the bar at the bottom of the frame. */
+  .mbw-program-page .mbw-program-layout--split .lesson-document-stage .lesson-video__head {
+    display: none;
+  }
+
+  .mbw-program-page .mbw-program-layout--split .lesson-document-stage .lesson-document__pages {
+    flex: 1;
+    max-height: none;
+    width: 100%;
+    padding: 0;
+    gap: 0;
+  }
+
+  .mbw-program-page .mbw-program-layout--split .lesson-document-stage .lesson-document__page {
+    width: 100%;
+  }
+
+  .mbw-program-page .mbw-program-layout--split .lesson-document-stage .lesson-document__page canvas {
+    /* PdfPage sizes via ResizeObserver; keep the bitmap sharp, not CSS-stretched. */
+    max-width: 100%;
+    height: auto;
+    box-shadow: none;
+  }
+
+  .mbw-program-page .mbw-program-layout--split .lesson-document-stage .lesson-document__skeleton {
+    max-width: none;
+  }
+
+  .mbw-program-page .mbw-program-layout--split .lesson-document-stage .lesson-player-bar {
+    border-top: 1px solid var(--border);
+    border-bottom-width: 0;
+  }
+
+  /*
+   * A video gets the same width cap. Its title strip repeats the lesson title
+   * under it, and its hint repeats the notice above the submission form.
+   */
+  .mbw-program-page .mbw-program-layout--split .lesson-video.mbw-video {
+    width: min(100%, calc(var(--lesson-stage-h) * 16 / 9));
+    margin-inline: auto;
+    border-radius: 12px;
+  }
+
+  .mbw-program-page .mbw-program-layout--split .mbw-video .lesson-video__head,
+  .mbw-program-page .mbw-program-layout--split .mbw-video .mbw-video__hint {
+    display: none;
+  }
+}
+
+@media (min-width: 1101px) {
+  /*
+   * Only video lessons share the 16:9 player width. Form-only and PDF lessons
+   * use the full main column — otherwise a short assignment sits in a narrow
+   * strip with empty space on both sides (see VIA Survey).
+   */
+  .mbw-program-page .mbw-program-layout--split .mbw-task--lesson:has(.mbw-video) {
+    max-width: calc(var(--lesson-stage-h) * 16 / 9);
+    margin-inline: auto;
+  }
+
+  .mbw-program-page .mbw-program-layout--split .mbw-task--lesson:not(:has(.mbw-video)) {
+    max-width: none;
+    margin-inline: 0;
+  }
+
+  .mbw-program-page .mbw-program-layout--split .mbw-task--lesson:has(.lesson-document-stage) {
+    padding-inline: 0;
+  }
+
+  /* Keep title + form readable once the PDF stage bleeds edge-to-edge. */
+  .mbw-program-page .mbw-program-layout--split .mbw-task--lesson:has(.lesson-document-stage) > .mbw-task__header,
+  .mbw-program-page .mbw-program-layout--split .mbw-task--lesson:has(.lesson-document-stage) > .mbw-task__tabs,
+  .mbw-program-page .mbw-program-layout--split .mbw-task--lesson:has(.lesson-document-stage) > .mbw-task__panel,
+  .mbw-program-page .mbw-program-layout--split .mbw-task--lesson:has(.lesson-document-stage) > .mbw-task__locked,
+  .mbw-program-page .mbw-program-layout--split .mbw-task--lesson:has(.lesson-document-stage) > .mbw-task__success,
+  .mbw-program-page .mbw-program-layout--split .mbw-program-lesson-card:has(.lesson-document-stage) > .mbw-lesson-nav {
+    padding-inline: var(--space-md);
+  }
+}
+
+/* ============================================================
+   LEP lesson, Phase 1: assignment guidance and course content filters
+   ------------------------------------------------------------
+   Every class here is rendered only when the LEP page asks for it,
+   so MBW and 100BM pages never carry these elements.
+   ============================================================ */
+
+/* What a worksheet still needs. */
+.template-reqs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs) var(--space-md);
+  margin: var(--space-sm) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.template-reqs li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.template-reqs li.is-met {
+  color: var(--success);
+}
+
+.mbw-submission__actions:has(.template-reqs__reason) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* The one thing still missing, beside Submit. */
+.template-reqs__reason {
+  flex: 1 1 240px;
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+
+.mbw-table-field__add {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-height: 44px;
+  margin-top: var(--space-sm);
+  padding: 0 var(--space-sm);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.mbw-table-field__add:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.mbw-table-field__add:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Course content filters. */
+.lesson-course-rail__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+  margin: calc(var(--space-2xs) * -1) 0 var(--space-md);
+}
+
+.lesson-course-rail__filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.lesson-course-rail__filter:hover {
+  border-color: var(--primary);
+}
+
+.lesson-course-rail__filter:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.lesson-course-rail__filter[aria-pressed='true'] {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+
+.lesson-course-rail__filter-count {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+/* Row tags: Submitted, Needs changes. */
+.mbw-lesson-row__tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.mbw-lesson-row__tag--ok {
+  background: color-mix(in srgb, var(--success) 14%, var(--surface));
+  color: var(--success);
+}
+
+.mbw-lesson-row__tag--changes {
+  background: color-mix(in srgb, var(--warning) 14%, var(--surface));
+  color: var(--warning);
+}
+
+/* The next lesson, locked. */
+.mbw-lesson-nav__locked {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-height: 44px;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 10px);
+  background: var(--surface-2);
+  text-align: right;
+}
+
+.mbw-lesson-nav__locked-note {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.mbw-lesson-nav__locked-title {
+  font-weight: 600;
+  color: var(--text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mbw-table-field__add,
+  .lesson-course-rail__filter {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   LEP lesson: workspace design
+   ------------------------------------------------------------
+   The lesson page as the workspace design lays it out, in Iron
+   Lady colours and type: a breadcrumb, a large title over a meta
+   row, resources as cards, the work in one panel with its action
+   bar, facilitator feedback as panels, Previous and Next as cards,
+   and course content as a list led by status. Every selector hangs
+   off a class only the LEP page renders (`.mbw-task--lep`,
+   `.lesson-course-rail--column`, `.mbw-lesson-nav--cards`), so MBW
+   and 100BM are untouched.
+   ============================================================ */
+
+/* ---- Breadcrumb ---- */
+.lesson-crumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin: 0 0 var(--space-md);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.lesson-crumb svg {
+  flex: none;
+}
+
+.lesson-crumb__link {
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.lesson-crumb__link:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.lesson-crumb__link:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.lesson-crumb__here {
+  color: var(--text);
+}
+
+/* ---- Title and meta row ---- */
+.mbw-task--lep .mbw-task__header--lesson {
+  margin: var(--space-md) 0 var(--space-lg, 1.5rem);
+}
+
+.mbw-task--lep .mbw-task__header--lesson h1 {
+  margin: 0 0 var(--space-sm);
+  font-family: var(--font-heading);
+  font-size: clamp(1.75rem, 2.6vw, 2.25rem);
+  line-height: 1.1;
+}
+
+.lesson-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.lesson-meta__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lesson-meta .mbw-status-pill {
+  margin-left: 0;
+}
+
+/* ---- About this task: a small heading, and resources as cards ---- */
+.mbw-task--lep .mbw-task__panel:not(.mbw-task__submission) > .mbw-task__panel-title {
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.mbw-task--lep .mbw-task__desc {
+  max-width: 66ch;
+  font-size: var(--text-base);
+}
+
+.mbw-task--lep .bm100-task-materials {
+  margin: var(--space-sm) 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.mbw-task--lep .bm100-task-materials__title {
+  display: none;
+}
+
+.mbw-task--lep .bm100-task-materials__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+}
+
+.mbw-task--lep .bm100-task-materials__link {
+  gap: 10px;
+  padding: 8px 14px 8px 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.mbw-task--lep .bm100-task-materials__link:hover {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 6%, var(--surface));
+}
+
+.mbw-task--lep .bm100-task-materials__link svg {
+  box-sizing: content-box;
+  padding: 9px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  color: var(--primary);
+}
+
+/* A PDF says so on its card, instead of a generic link icon. */
+.mbw-task--lep .bm100-task-materials__link[href$='.pdf'] svg {
+  display: none;
+}
+
+.mbw-task--lep .bm100-task-materials__link[href$='.pdf']::before {
+  content: 'PDF';
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* ---- The work, in one panel ---- */
+.mbw-task--lep .lesson-work {
+  margin-top: var(--space-lg, 1.5rem);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  overflow: clip;
+}
+
+.mbw-task--lep .lesson-work:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.lesson-work__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.lesson-work__head .mbw-task__panel-title {
+  flex: 1 1 auto;
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.375rem;
+}
+
+.lesson-work__when {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.lesson-work__body {
+  padding: 18px;
+}
+
+.mbw-task--lep .lesson-work .mbw-submission__actions {
+  margin: var(--space-md) -18px 0;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+/* The action bar stays in reach while a long worksheet scrolls. On phones the
+   lesson footer is the sticky bar, so this one stays put there. */
+@media (min-width: 768px) {
+  .mbw-task--lep .lesson-work .mbw-submission__actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+  }
+}
+
+/* ---- Facilitator feedback, as panels ---- */
+.mbw-task--lep .submission-review {
+  margin-top: var(--space-md);
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.mbw-task--lep .submission-review__round {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.mbw-task--lep .submission-review__round--done {
+  border-left-color: var(--success);
+}
+
+.mbw-task--lep .submission-review__round--improvement,
+.mbw-task--lep .submission-review__round--rejected {
+  border-left-color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 6%, var(--surface));
+}
+
+.submission-review__round-label {
+  display: block;
+  width: 100%;
+  font-size: var(--text-xs);
+}
+
+/* ---- Player bar: Go to assignment ---- */
+.lesson-player-bar__jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  margin-right: var(--space-2xs);
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lesson-player-bar__jump:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.lesson-player-bar__jump:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ---- Previous and Next as cards ---- */
+.mbw-lesson-nav__prev-title {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .mbw-lesson-nav--cards .mbw-lesson-nav__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .mbw-lesson-nav--cards .mbw-lesson-nav__prev {
+    grid-column: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+    min-height: 64px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    text-align: left;
+  }
+
+  .mbw-lesson-nav--cards .mbw-lesson-nav__prev-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .mbw-lesson-nav--cards .mbw-lesson-nav__prev-title {
+    display: -webkit-box;
+    overflow: hidden;
+    font-weight: 600;
+    color: var(--text);
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .mbw-lesson-nav--cards .mbw-lesson-nav__next,
+  .mbw-lesson-nav--cards .mbw-lesson-nav__locked,
+  .mbw-lesson-nav--cards .mbw-lesson-nav__hint {
+    grid-column: 2;
+  }
+
+  .mbw-lesson-nav--cards .mbw-lesson-nav__next,
+  .mbw-lesson-nav--cards .mbw-lesson-nav__locked {
+    min-height: 64px;
+    border-radius: 12px;
+  }
+
+  .mbw-lesson-nav--cards .mbw-lesson-nav__next {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .mbw-lesson-nav--cards .mbw-lesson-nav__hint {
+    align-self: center;
+    text-align: right;
+  }
+}
+
+/* ---- Course content column: header ---- */
+.lesson-course-rail--column .lesson-course-rail__head--column {
+  display: grid;
+  gap: 12px;
+  margin-bottom: var(--space-md);
+}
+
+.lesson-course-rail--column .lesson-course-rail__head-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.lesson-course-rail--column .lesson-course-rail__title {
+  flex: 1 1 auto;
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.375rem;
+}
+
+.lesson-course-rail__hide {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.lesson-course-rail__hide:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.lesson-course-rail__hide:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.lesson-course-rail__progress {
+  display: grid;
+  gap: 6px;
+}
+
+.lesson-course-rail__progress-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.lesson-course-rail__progress-row--muted {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.lesson-course-rail--column .lesson-course-rail__bar {
+  height: 6px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.lesson-course-rail--column .lesson-course-rail__bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--il-gold);
+}
+
+/* ---- Course content column: modules as a list, lessons led by status ---- */
+@media (min-width: 1101px) {
+  .mbw-program-page .mbw-program-layout__rail .lesson-course-rail--column .mbw-program-journey__sections {
+    gap: 0;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .lesson-course-rail--column .mbw-section-card,
+  .mbw-program-page .mbw-program-layout__rail .lesson-course-rail--column .mbw-section-card.is-current {
+    border-top-width: 0;
+    border-right-width: 0;
+    border-left-width: 0;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: var(--border);
+    border-radius: 0;
+    background: transparent;
+    overflow: visible;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .lesson-course-rail--column .mbw-section-card__toggle--list {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 8px;
+    border-radius: 8px;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .lesson-course-rail--column .mbw-section-card__name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .mbw-program-page .mbw-program-layout__rail .lesson-course-rail--column .mbw-section-card__panel {
+    border-top-width: 0;
+    padding: 0 0 10px;
+  }
+
+  .lesson-course-rail--column .mbw-section-card__lessons,
+  .lesson-course-rail--column .mbw-lesson-group__rows {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .lesson-course-rail--column .mbw-lesson-group__head {
+    padding: 8px 8px 2px;
+    background: transparent;
+  }
+
+  .lesson-course-rail--column .mbw-lesson-group__node {
+    display: none;
+  }
+
+  .lesson-course-rail--column .mbw-lesson-row__main {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    padding: 9px 8px;
+    border-radius: 9px;
+  }
+
+  .lesson-course-rail--column .mbw-lesson-row__lead,
+  .lesson-course-rail--column .mbw-lesson-row__code,
+  .lesson-course-rail--column .mbw-lesson-row__kind {
+    display: none;
+  }
+
+  .lesson-course-rail--column .mbw-lesson-row__node {
+    grid-row: 1;
+    grid-column: 1;
+    align-self: start;
+    width: 22px;
+    padding-top: 1px;
+  }
+
+  .lesson-course-rail--column .mbw-lesson-row__body {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  /* The timeline spine goes: status leads each row instead. */
+  .lesson-course-rail--column .mbw-lesson-row__node::before,
+  .lesson-course-rail--column .mbw-lesson-row__node::after {
+    display: none;
+  }
+
+  .lesson-course-rail--column .mbw-lesson-row__title {
+    font-size: 0.90625rem;
+    color: var(--text);
+  }
+
+  .lesson-course-rail--column .mbw-lesson-row__meta {
+    flex-wrap: wrap;
+    color: var(--muted);
+  }
+
+  .lesson-course-rail--column .mbw-lesson-row__main:hover:not(:disabled) {
+    background: var(--surface);
+  }
+
+  .lesson-course-rail--column .mbw-lesson-row.is-active {
+    background: transparent;
+  }
+
+  /* Red is for the current lesson only. */
+  .lesson-course-rail--column .mbw-lesson-row.is-active .mbw-lesson-row__main {
+    background: var(--surface);
+    box-shadow:
+      var(--shadow-sm),
+      inset 3px 0 0 var(--primary);
+  }
+
+  .lesson-course-rail--column .mbw-lesson-row.is-active .mbw-lesson-row__title {
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  .lesson-course-rail--column .mbw-lesson-row.is-current:not(.is-active) .mbw-lesson-row__title {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .lesson-course-rail--column .mbw-lesson-row__status {
+    width: 20px;
+    height: 20px;
+  }
+
+  .lesson-course-rail--column .mbw-lesson-row__status--done {
+    background: var(--success);
+    color: var(--surface);
+  }
+
+  .lesson-course-rail--column .mbw-lesson-row__status--available,
+  .lesson-course-rail--column .mbw-lesson-row__status--current {
+    border: 2px solid var(--border);
+    background: var(--surface);
+    box-shadow: none;
+  }
+
+  .lesson-course-rail--column .mbw-lesson-row__status--playing {
+    border: 2px solid var(--primary);
+    background: var(--surface);
+    color: transparent;
+  }
+
+  .lesson-course-rail--column .mbw-lesson-row__status--playing svg {
+    display: none;
+  }
+
+  .lesson-course-rail--column .mbw-lesson-row__status--playing::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary);
+  }
+
+  .lesson-course-rail--column .mbw-lesson-row__lock-reason {
+    padding: 0 8px 6px 40px;
+  }
+}
+
+/* ---- Module label and progress bar (course content column) ---- */
+.mbw-section-card__eyebrow {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.mbw-section-card__progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-xs);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.mbw-section-card__minibar {
+  flex: none;
+  width: 54px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.mbw-section-card__minibar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--il-gold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mbw-task--lep .bm100-task-materials__link,
+  .lesson-course-rail__hide {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   LEP lesson workspace: fitting it to the lesson layout rules
+   ============================================================ */
+
+/*
+ * The work panel's title. `.mbw-program-page .mbw-task__submission h2` (0,2,1)
+ * makes every submission heading a 12px uppercase label; in the workspace
+ * design it is the panel's own title, so this outranks it.
+ */
+.mbw-task--lep .lesson-work__head h2.mbw-task__panel-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--text);
+}
+
+/* The task description is already under "About this task" just above. */
+.mbw-task--lep .lesson-work .mbw-form-template > .mbw-task__hint {
+  display: none;
+}
+
+@media (min-width: 1101px) {
+  /* "Course content" is the column's title, not a small label. */
+  .mbw-program-page .mbw-program-layout__rail .lesson-course-rail--column .lesson-course-rail__title {
+    font-size: 1.375rem;
+  }
+
+  /*
+   * Document lessons run the PDF edge to edge and re-pad the parts around it.
+   * The breadcrumb is one of those parts, so it takes the same inset, plus the
+   * top padding the card gives up.
+   */
+  .mbw-program-page .mbw-program-layout--split .mbw-task--lesson:has(.lesson-document-stage) > .lesson-crumb {
+    margin-bottom: 0;
+    padding: var(--space-sm) var(--space-md);
+  }
+}
+
+/* The kind of lesson as a small icon beside its label (LEP course content). */
+.mbw-lesson-row__meta-icon {
+  flex: none;
+  color: var(--muted);
+}
+
+/* ============================================================
+   LEP lesson: editing a submission, and its version history
+   ============================================================ */
+.lesson-work__version {
+  padding: 2px 7px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: var(--text-xs);
+}
+
+.lesson-work__banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px 12px;
+  margin: 0 0 var(--space-md);
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--warning) 45%, var(--border));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--warning) 10%, var(--surface));
+}
+
+.lesson-work__banner > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--warning);
+}
+
+.lesson-work__banner p {
+  flex: 1 1 240px;
+  margin: 0;
+}
+
+.lesson-work__banner strong {
+  display: block;
+}
+
+.lesson-work__editbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: var(--space-md);
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.lesson-work__note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.lesson-work__note > svg {
+  flex: none;
+}
+
+.lesson-work__note--review {
+  margin-top: var(--space-md);
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.lesson-work__editbar .btn,
+.lesson-work__banner .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+}
+
+.lesson-history {
+  margin-top: var(--space-lg, 1.5rem);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border);
+}
+
+.lesson-history__title {
+  margin: 0 0 var(--space-sm);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.lesson-history__list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lesson-history__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  gap: 12px;
+  padding-bottom: 14px;
+  font-size: var(--text-sm);
+}
+
+.lesson-history__item::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  bottom: 0;
+  left: 10px;
+  width: 2px;
+  background: var(--border);
+}
+
+.lesson-history__item:last-child::before {
+  display: none;
+}
+
+.lesson-history__dot {
+  width: 12px;
+  height: 12px;
+  margin: 4px 0 0 5px;
+  border-radius: 50%;
+  background: var(--success);
+}
+
+.lesson-history__item.is-draft .lesson-history__dot {
+  background: var(--warning);
+}
+
+.lesson-history__what small {
+  display: block;
+  color: var(--muted);
+}
+
+.lesson-history__when {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.template-draft {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+/* What the learner has changed since the version they are editing. */
+.mbw-form-template textarea.is-changed {
+  border-color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 10%, var(--surface));
+  box-shadow: inset 0 0 0 1px var(--warning);
+}
+
+.cx-review-versions__item {
+  margin-top: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.cx-review-versions__item summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+/* LEP: handed-in worksheet, shown as the worksheet itself but locked. */
+.mbw-form-template--locked textarea,
+.mbw-form-template--locked input[type='text'] {
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: default;
+  resize: none;
+}
+
+.mbw-form-template--locked textarea:focus-visible,
+.mbw-form-template--locked input[type='text']:focus-visible {
+  outline: 2px solid var(--primary-ring, var(--primary));
+  outline-offset: 1px;
+}
+
+.mbw-form-template--locked input[type='radio']:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.mbw-form-template--locked input[type='radio']:disabled + span {
+  color: var(--text);
+}
+
+/* Locked worksheet inside the LEP work panel: beat the panel's own field rules. */
+.mbw-task--lep .lesson-work .mbw-form-template--locked textarea,
+.mbw-task--lep .lesson-work .mbw-form-template--locked input[type='text'] {
+  background: var(--surface-2);
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+.mbw-task--lep .lesson-work .mbw-form-template--locked input[type='radio']:disabled {
+  accent-color: var(--primary);
+  opacity: 1;
+  filter: saturate(1.4) contrast(1.3);
+}
+
+/* LEP editing: draft status in the work panel header, actions in one row. */
+.lesson-work__draft {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.lesson-work__draft > svg {
+  flex: none;
+  color: var(--success);
+}
+
+.mbw-task--lep .lesson-work .mbw-submission__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 12px;
+}
+
+.mbw-task--lep .lesson-work .mbw-submission__actions .template-reqs__reason {
+  flex: 1 1 180px;
+  margin: 0;
+}
+
+.template-actions__discard {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-sm, 6px);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.template-actions__discard:hover {
+  background: var(--surface-2);
+}
+
+.template-actions__discard:focus-visible {
+  outline: 2px solid var(--primary-ring, var(--primary));
+  outline-offset: 2px;
+}
+
+.lesson-history__item.is-draft .lesson-history__dot {
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 2px var(--border);
+}
+
+/*
+ * LEP action row, one layout at every width. Wider screens: what's missing on
+ * the left, then Discard · Save draft · Resubmit in a row. Phones: the reason
+ * on its own line, Discard and Save draft side by side, Resubmit full width.
+ * Scoped past the shared rules that stack every button full width.
+ */
+.mbw-task--lep .lesson-work .mbw-submission__actions {
+  flex-direction: row;
+  align-items: center;
+}
+
+.mbw-task--lep .lesson-work .mbw-submission__actions .btn {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 767px) {
+  .mbw-task--lep .lesson-work .mbw-submission__actions .template-reqs__reason {
+    flex: 1 1 100%;
+    text-align: left;
+  }
+
+  .mbw-task--lep .lesson-work .mbw-submission__actions .template-actions__discard,
+  .mbw-task--lep .lesson-work .mbw-submission__actions .btn-outline {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+
+  .mbw-task--lep .lesson-work .mbw-submission__actions .btn-primary {
+    flex: 1 1 100%;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+
+/* ============================================================
+   LEP lesson workspace: type and layout spec
+   ------------------------------------------------------------
+   Everything is scoped to `.mbw-program-page--lep` (and the lesson
+   title bar, which is portalled into the app header), and written
+   two classes deeper than the older split-layout rules so it wins
+   at every width. MBW and 100BM keep their own type and layout.
+   Breakpoints: 1100px (panel 330px, padding 24px), 900px (panel
+   becomes a drawer), 560px (phone).
+   ============================================================ */
+
+/* ---- Fonts ---- */
+.mbw-program-page--lep,
+.lesson-header-bar {
+  --font-body: 'Source Sans 3', system-ui, sans-serif;
+  --font-heading: 'Barlow Condensed', 'Source Sans 3', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-family: var(--font-body);
+}
+
+.mbw-program-page--lep :is(button, input, textarea, select),
+.lesson-header-bar button {
+  font-family: var(--font-body);
+}
+
+.mbw-program-page--lep :is(h1, h2, h3) {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+/* ---- Top bar ---- */
+.student-layout:has(.mbw-program-page--lep.mbw-program-page--lesson) {
+  --header-h: 58px;
+}
+
+.student-layout:has(.mbw-program-page--lep.mbw-program-page--lesson) .app-header {
+  padding: 10px max(18px, env(safe-area-inset-right, 0px)) 10px
+    max(18px, env(safe-area-inset-left, 0px));
+}
+
+.student-layout:has(.mbw-program-page--lep.mbw-program-page--lesson)
+  .app-header__actions
+  :is(.notification-bell__trigger, [class*='theme-toggle']),
+.lesson-header-bar .lesson-header-bar__back {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-topbar {
+  padding: 10px 18px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-topbar__back,
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-topbar__outline {
+  min-height: 38px;
+}
+
+/* ---- Page layout: lesson beside the course content panel ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout.mbw-program-layout--split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 0;
+  align-items: start;
+  padding-right: 0;
+}
+
+.mbw-program-page.mbw-program-page--lep
+  .mbw-program-layout.mbw-program-layout--split.mbw-program-layout--expanded {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-layout__main {
+  min-width: 0;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-lesson-card,
+.mbw-program-page.mbw-program-page--lep
+  .mbw-program-layout--split
+  .mbw-program-lesson-card:has(.lesson-document-stage) {
+  padding: 28px 36px 48px;
+  border-width: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.mbw-program-page.mbw-program-page--lep
+  .mbw-program-layout--split
+  .mbw-program-lesson-card
+  > .mbw-task--lesson,
+.mbw-program-page.mbw-program-page--lep
+  .mbw-program-layout--split
+  .mbw-program-lesson-card
+  > .mbw-lesson-nav {
+  width: 100%;
+  max-width: 880px;
+  margin-inline: auto;
+  padding-inline: 0;
+}
+
+/* 26px between the lesson's sections. */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-task--lesson {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  padding: 0;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-task--lesson > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.mbw-program-page.mbw-program-page--lep
+  .mbw-program-layout--split
+  .mbw-task--lesson
+  > :is(
+    .lesson-crumb,
+    .mbw-task__header,
+    .mbw-task__tabs,
+    .mbw-task__panel,
+    .mbw-task__locked,
+    .mbw-task__success
+  ) {
+  padding-inline: 0;
+}
+
+.mbw-program-page.mbw-program-page--lep
+  .mbw-program-layout--split
+  .mbw-program-lesson-card
+  > .mbw-lesson-nav {
+  margin-top: 26px;
+}
+
+/* Video 16:9 with 14px corners; a document frame gets the same corners. */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .lesson-video.mbw-video {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-video video {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  height: auto;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .lesson-document-stage {
+  width: 100%;
+  margin: 0;
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+@media (max-width: 1100px) {
+  .mbw-program-page.mbw-program-page--lep .mbw-program-layout.mbw-program-layout--split {
+    grid-template-columns: minmax(0, 1fr) 330px;
+  }
+
+  .mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-lesson-card,
+  .mbw-program-page.mbw-program-page--lep
+    .mbw-program-layout--split
+    .mbw-program-lesson-card:has(.lesson-document-stage) {
+    padding-inline: 24px;
+  }
+}
+
+/* The panel as a column: sticky beside the lesson. */
+@media (min-width: 901px) {
+  .mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-layout__rail {
+    display: block;
+    position: sticky;
+    top: var(--header-h);
+    align-self: start;
+    max-height: calc(100vh - var(--header-h));
+    overflow-y: auto;
+  }
+
+  .mbw-program-page.mbw-program-page--lep
+    .mbw-program-layout--split.mbw-program-layout--expanded
+    .mbw-program-layout__rail {
+    display: none;
+  }
+
+  /* The panel is on screen, so Outline has nothing to open. */
+  .mbw-program-page.mbw-program-page--lep .mbw-lesson-topbar__outline {
+    display: none;
+  }
+}
+
+/* The panel as a drawer from the right. */
+@media (max-width: 900px) {
+  .mbw-program-page.mbw-program-page--lep .mbw-program-layout.mbw-program-layout--split,
+  .mbw-program-page.mbw-program-page--lep
+    .mbw-program-layout.mbw-program-layout--split.mbw-program-layout--expanded {
+    display: block;
+  }
+
+  .mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-layout__rail {
+    display: block;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1200;
+    width: min(360px, 92vw);
+    max-height: none;
+    overflow-y: auto;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    border-right-width: 0;
+    border-left-width: 1px;
+    border-left-style: solid;
+    border-left-color: var(--border);
+    background: var(--surface-2, var(--surface));
+    box-shadow: var(--shadow-lg, 0 12px 40px rgb(0 0 0 / 0.25));
+    direction: ltr;
+    transform: translateX(100%);
+    visibility: hidden;
+    transition:
+      transform 250ms ease,
+      visibility 0s linear 250ms;
+  }
+
+  .mbw-program-page.mbw-program-page--lep
+    .mbw-program-layout--split
+    .mbw-program-layout__rail.is-open {
+    transform: none;
+    visibility: visible;
+    transition: transform 250ms ease;
+  }
+
+  .lesson-rail-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1190;
+    border: 0;
+    background: rgb(0 0 0 / 0.45);
+    cursor: pointer;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-layout__rail {
+    transition: none;
+  }
+}
+
+/* ---- Course content panel ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail.lesson-course-rail--column {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border-width: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .lesson-course-rail__head--column {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 18px 18px 0;
+  border-width: 0;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .lesson-course-rail__head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .lesson-course-rail__title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .lesson-course-rail__progress {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .lesson-course-rail__progress-row {
+  margin: 0;
+  font-size: 13px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .lesson-course-rail__bar {
+  height: 6px;
+  margin: 0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .lesson-course-rail__bar-fill {
+  border-radius: 999px;
+  background: var(--il-gold);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .lesson-course-rail__search {
+  margin: 12px 18px 0;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .lesson-course-rail__search-input {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border-radius: 9px;
+  font-size: 14px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .lesson-course-rail__filters {
+  margin: 12px 18px 0;
+  padding-bottom: 12px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .lesson-course-rail__filter {
+  min-height: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .lesson-course-rail__body {
+  padding: 8px 10px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-program-journey__sections {
+  gap: 0;
+  padding: 0;
+  border-top-width: 0;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-section-card,
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-section-card.is-current {
+  border-top-width: 0;
+  border-right-width: 0;
+  border-left-width: 0;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-section-card__heading {
+  margin: 0;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-section-card__toggle--list {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  text-align: left;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-section-card__copy {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-section-card__eyebrow {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-section-card__name {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-section-card__progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-section-card__minibar {
+  flex: none;
+  width: 54px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-section-card__minibar i {
+  display: block;
+  height: 100%;
+  background: var(--il-gold);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-section-card__panel {
+  padding: 0 0 10px;
+  border-top-width: 0;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column :is(.mbw-section-card__lessons, .mbw-lesson-group__rows) {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Lesson row: status · text · tag. */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-lesson-row__main {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 8px;
+  border-width: 0;
+  border-radius: 9px;
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column :is(.mbw-lesson-row__lead, .mbw-lesson-row__code, .mbw-lesson-row__kind, .mbw-lesson-group__node) {
+  display: none;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-lesson-row__node {
+  display: flex;
+  justify-content: center;
+  grid-row: 1;
+  grid-column: 1;
+  width: 22px;
+  padding-top: 1px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-lesson-row__node::before,
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-lesson-row__node::after {
+  display: none;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-lesson-row__status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border-radius: 50%;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-lesson-row__status svg {
+  width: 12px;
+  height: 12px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-lesson-row__body {
+  grid-row: 1;
+  grid-column: 2;
+  min-width: 0;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-lesson-row__title {
+  font-size: 15.5px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-lesson-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-lesson-row__meta-icon {
+  width: 13px;
+  height: 13px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-lesson-row__tag {
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-lesson-row__tag--end {
+  grid-row: 1;
+  grid-column: 3;
+  align-self: start;
+  margin-top: 2px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-lesson-row__main:hover:not(:disabled) {
+  background: var(--surface);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-lesson-row.is-active {
+  background: transparent;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-lesson-row.is-active .mbw-lesson-row__main {
+  padding-left: 5px;
+  border-left-width: 3px;
+  border-left-style: solid;
+  border-left-color: var(--primary);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-lesson-row.is-active .mbw-lesson-row__title {
+  font-weight: 600;
+}
+
+/* ---- Lesson content area ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-crumb {
+  font-size: 13px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-task__header--lesson h1 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-meta,
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-meta__item {
+  font-size: 13.5px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-meta__item svg {
+  width: 16px;
+  height: 16px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-status-pill {
+  padding: 3px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* "ABOUT THIS TASK" */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-task__panel > h2.mbw-task__panel-title {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-task__desc {
+  max-width: 66ch;
+  font-size: 16px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .bm100-task-materials__link {
+  font-size: 14px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work__head h2.mbw-task__panel-title {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-errc__table th {
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-errc__table td {
+  font-size: 15px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-form-template textarea {
+  min-height: 84px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-form-template input[type='text'] {
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .btn:not(.btn-sm) {
+  padding: 9px 16px;
+  border-radius: 9px;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .btn.btn-sm {
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .template-actions__discard {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work__note {
+  font-size: 13px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work__version {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-nav--cards :is(.mbw-lesson-nav__prev-label, .mbw-lesson-nav__next-label, .mbw-lesson-nav__locked-note) {
+  font-size: 12px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-nav--cards :is(.mbw-lesson-nav__prev-title, .mbw-lesson-nav__next-title, .mbw-lesson-nav__locked-title) {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Tables stay tables down to 561px; cards below. */
+@media (min-width: 561px) {
+  .mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-errc__cards {
+    display: none;
+  }
+
+  .mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-errc__wrap--desktop {
+    display: block;
+  }
+
+  /* The action row stays a row above phone width. */
+  .mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work .mbw-submission__actions .template-reqs__reason {
+    flex: 1 1 180px;
+  }
+
+  .mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work .mbw-submission__actions :is(.btn, .template-actions__discard) {
+    flex: 0 0 auto;
+    width: auto;
+  }
+}
+
+/* ---- Phone ---- */
+@media (max-width: 560px) {
+  .mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-lesson-card,
+  .mbw-program-page.mbw-program-page--lep
+    .mbw-program-layout--split
+    .mbw-program-lesson-card:has(.lesson-document-stage) {
+    padding: 18px 16px 48px;
+  }
+
+  .mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-task__header--lesson h1 {
+    font-size: 28px;
+  }
+
+  .mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-errc__cards {
+    display: flex;
+  }
+
+  .mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-errc__wrap--desktop {
+    display: none;
+  }
+
+  .mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-form-template textarea {
+    min-height: 64px;
+  }
+
+  .mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work .mbw-submission__actions .template-reqs__reason {
+    flex: 1 1 100%;
+  }
+
+  .mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work .mbw-submission__actions :is(.btn-outline, .template-actions__discard) {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+
+  .mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work .mbw-submission__actions .btn-primary {
+    flex: 1 1 100%;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* LEP lesson: the page's own side padding goes at every width, not only from
+   1024px, so the column and panel get the widths the spec gives them. */
+.student-main:has(.mbw-program-page--lep .mbw-program-layout--split) {
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.mbw-program-page.mbw-program-page--lep:has(.mbw-program-layout--split) {
+  padding-top: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* LEP lesson: the current lesson's status is a ring at every width. */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-lesson-row__status--current {
+  border-width: 2px;
+  border-style: solid;
+  border-color: var(--primary);
+  background: var(--surface);
+  box-shadow: none;
+}
+
+/* Below 1101px the lesson's top bar keeps Back and Outline; where the lesson
+   sits is already in the breadcrumb above its title. */
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-topbar__crumbs {
+  display: none;
+}
+
+.student-main:has(.mbw-program-page--lep .mbw-program-layout--split) {
+  padding-top: 0;
+}
+
+/* LEP lesson: the video or reading sits under the title, so the frame is a
+   band inside the content column rather than a full screen of its own. */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .lesson-document-stage {
+  height: min(70vh, 760px);
+  min-height: 380px;
+  max-height: none;
+}
+
+/* ---- LEP: course content hidden ---- */
+
+/* With the column away, the lesson uses more of the width rather than sitting
+   in an 880px strip with wide empty margins; text blocks stay capped for reading. */
+.mbw-program-page.mbw-program-page--lep
+  .mbw-program-layout--split.mbw-program-layout--expanded
+  .mbw-program-lesson-card
+  > .mbw-task--lesson,
+.mbw-program-page.mbw-program-page--lep
+  .mbw-program-layout--split.mbw-program-layout--expanded
+  .mbw-program-lesson-card
+  > .mbw-lesson-nav {
+  max-width: min(1200px, 100%);
+}
+
+/* The tab that brings the course content back, on the edge it went out of. */
+.lesson-rail-reopen {
+  position: fixed;
+  top: calc(var(--header-h) + 24px);
+  right: 0;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-right-width: 0;
+  border-radius: 9px 0 0 9px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.lesson-rail-reopen:hover {
+  background: var(--surface-2);
+}
+
+.lesson-rail-reopen:focus-visible {
+  outline: 2px solid var(--primary-ring, var(--primary));
+  outline-offset: 2px;
+}
+
+/* ---- LEP: Previous / Next cards ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-nav--cards .mbw-lesson-nav__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: stretch;
+}
+
+/* The first lesson has nothing before it, and the last nothing after: one card
+   alone sits in the middle rather than hugging a corner. */
+.mbw-program-page.mbw-program-page--lep
+  .mbw-lesson-nav--cards
+  .mbw-lesson-nav__actions:not(:has(.mbw-lesson-nav__prev)),
+.mbw-program-page.mbw-program-page--lep
+  .mbw-lesson-nav--cards
+  .mbw-lesson-nav__actions:not(:has(.mbw-lesson-nav__next, .mbw-lesson-nav__locked)) {
+  grid-template-columns: minmax(0, 520px);
+  justify-content: center;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-nav--cards .mbw-lesson-nav__prev,
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-nav--cards .mbw-lesson-nav__next {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 6px;
+  width: 100%;
+  height: 100%;
+  padding: 12px 16px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-nav--cards .mbw-lesson-nav__prev {
+  grid-template-areas:
+    'label label'
+    'title title';
+  justify-items: start;
+  text-align: left;
+}
+
+/* "Next lesson ›" on one line, the lesson's name under it, both to the right. */
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-nav--cards .mbw-lesson-nav__next {
+  grid-template-areas:
+    'label chev'
+    'title title';
+  align-items: center;
+  justify-items: end;
+  text-align: right;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-nav--cards .mbw-lesson-nav__next-label {
+  grid-area: label;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-nav--cards .mbw-lesson-nav__next-chev {
+  grid-area: chev;
+  margin: 0;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-nav--cards .mbw-lesson-nav__next-title,
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-nav--cards .mbw-lesson-nav__prev-title {
+  grid-area: title;
+}
+
+/* ---- LEP: task section spacing ---- */
+/* The 26px between sections is the whole gap; the panel added 16px on top of it. */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-task__panel {
+  padding-top: 0;
+}
+
+/* The cards fill the two columns in order; an older rule pinned Next to the
+   second column, which left an extra column beside a single card. */
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-nav--cards .mbw-lesson-nav__next,
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-nav--cards .mbw-lesson-nav__locked,
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-nav--cards .mbw-lesson-nav__hint {
+  grid-column: auto;
+}
+
+/* In the card the chevron sits beside "Next lesson", not floating on the edge. */
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-nav--cards .mbw-lesson-nav__next-chev {
+  position: static;
+  transform: none;
+}
+
+/* The row spans the content column; its two cards then split that width. */
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-nav--cards .mbw-lesson-nav__actions {
+  width: 100%;
+  max-width: none;
+}
+
+/* ---- LEP: the task block fills its column ---- */
+/* Long lines are hard to read, but 66 characters left a wide empty band beside
+   the text. A slightly longer measure, and resource cards that share the row. */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-task__desc {
+  max-width: 78ch;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .bm100-task-materials__links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .bm100-task-materials__link {
+  width: 100%;
+}
+
+/* ============================================================
+   LEP lesson: the Home-Next palette
+   ------------------------------------------------------------
+   The page ground is the same token the new Home uses (--bg is
+   --il-cream, #f7f6e4, the value stitchHome.css calls --sh-bg), so
+   the lesson, the course content column and everything around the
+   cards share one ground and no band appears under the content.
+   The learner's own work is the one tinted surface: a light red
+   mixed from the brand red, not another beige.
+   ============================================================ */
+.mbw-program-page.mbw-program-page--lep {
+  /* Mixed with --surface so both themes get a tint, not a light patch. */
+  --lep-tint: color-mix(in srgb, var(--il-red) 6%, var(--surface));
+  --lep-tint-strong: color-mix(in srgb, var(--il-red) 10%, var(--surface));
+  --lep-tint-border: color-mix(in srgb, var(--il-red) 18%, var(--border));
+  --lep-neutral: color-mix(in srgb, var(--il-charcoal) 4%, var(--surface));
+  background: var(--bg);
+}
+
+/* One ground from the header to the foot of the page. */
+.student-main:has(.mbw-program-page--lep .mbw-program-layout--split),
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split,
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-layout__main,
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-lesson-card {
+  background: var(--bg);
+}
+
+.student-main:has(.mbw-program-page--lep .mbw-program-layout--split) {
+  min-height: calc(100dvh - var(--header-h));
+}
+
+/* Course content: the same ground as the new Home, not a beige panel. */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-layout__rail,
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column {
+  background: var(--bg);
+}
+
+/* Chips and pills in the list: neutral, so nothing else reads as beige. */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail :is(.mbw-lesson-row__code, .mbw-lesson-row__kind, .mbw-lesson-row__lock-pill, .mbw-lesson-row__status--locked) {
+  background: var(--lep-neutral);
+}
+
+/* ---- The learner's work: light red ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work {
+  border-color: var(--lep-tint-border);
+  background: var(--lep-tint);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work__head {
+  border-bottom-color: var(--lep-tint-border);
+  background: var(--lep-tint-strong);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work .mbw-submission__actions {
+  border-top-color: var(--lep-tint-border);
+  background: var(--lep-tint-strong);
+}
+
+/* Edit submission, and the same box once a facilitator has it. */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work__editbar,
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work__note--review,
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work__banner {
+  border: 1px solid var(--lep-tint-border);
+  background: var(--lep-tint);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work__banner > svg {
+  color: var(--primary);
+}
+
+/* The button keeps its own white surface against the tint. */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work__editbar .btn,
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work__banner .btn,
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work .mbw-submission__actions .btn-outline {
+  background: var(--surface);
+}
+
+/* ---- Answering stays clean ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep :is(.mbw-form-template__section, .mbw-errc-card, .mbw-errc__table td, .mbw-lesson-nav__locked) {
+  background: var(--surface);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-form-template__section {
+  border: 1px solid var(--border);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-errc-card__task {
+  background: transparent;
+}
+
+/* A handed-in worksheet reads as read-only without borrowing the old beige. */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-form-template--locked textarea,
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-form-template--locked input[type='text'] {
+  background: var(--lep-neutral);
+}
+
+/* The locked next-lesson card sits beside the task, not inside it. */
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-nav--cards .mbw-lesson-nav__locked {
+  background: var(--surface);
+}
+
+/* Course content: a lighter wash of the same brand red as the submission card,
+   so the column reads as part of the page rather than a cream slab. */
+.mbw-program-page.mbw-program-page--lep {
+  --lep-rail-bg: color-mix(in srgb, var(--il-red) 4%, var(--surface));
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-layout__rail,
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column {
+  background: var(--lep-rail-bg);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-layout__rail {
+  border-left-color: var(--lep-tint-border);
+}
+
+/* The drawer is the same column, so it carries the same wash. */
+@media (max-width: 900px) {
+  .mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-layout__rail {
+    background: var(--lep-rail-bg);
+  }
+}
+
+/* ---- LEP: the lesson fills its column, the panel fills the screen ---- */
+
+/* The column was capped at 880px, which left wide empty margins inside an
+   already narrowed area. The lesson now uses the width it is given; paragraphs
+   keep their own measure so the lines stay readable. */
+.mbw-program-page.mbw-program-page--lep
+  .mbw-program-layout--split
+  .mbw-program-lesson-card
+  > .mbw-task--lesson,
+.mbw-program-page.mbw-program-page--lep
+  .mbw-program-layout--split
+  .mbw-program-lesson-card
+  > .mbw-lesson-nav,
+.mbw-program-page.mbw-program-page--lep
+  .mbw-program-layout--split.mbw-program-layout--expanded
+  .mbw-program-lesson-card
+  > .mbw-task--lesson,
+.mbw-program-page.mbw-program-page--lep
+  .mbw-program-layout--split.mbw-program-layout--expanded
+  .mbw-program-lesson-card
+  > .mbw-lesson-nav {
+  max-width: none;
+  margin-inline: 0;
+}
+
+/* Course content runs from under the top bar to the foot of the screen and
+   scrolls inside itself, instead of stopping where the lesson happens to end. */
+@media (min-width: 901px) {
+  .mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-layout__rail {
+    height: calc(100dvh - var(--header-h));
+    max-height: calc(100dvh - var(--header-h));
+  }
+}
+
+/* An anchored jump lands below the sticky bar rather than under it. */
+html:has(.mbw-program-page--lep) {
+  scroll-padding-top: calc(var(--header-h) + 12px);
+}
+
+/* ---- LEP: media edge to edge, nav at the foot ---- */
+
+/* The video and the reading frame span the whole lesson column: they pull out
+   past the column's side padding instead of sitting inside it. */
+.mbw-program-page.mbw-program-page--lep
+  .mbw-program-layout--split
+  .mbw-task--lesson
+  > :is(.lesson-document-stage, .lesson-video.mbw-video) {
+  width: auto;
+  margin-inline: -36px;
+  border-left-width: 0;
+  border-right-width: 0;
+  border-radius: 0;
+}
+
+.mbw-program-page.mbw-program-page--lep
+  .mbw-program-layout--split
+  .lesson-document-stage
+  .lesson-document__page canvas {
+  width: 100%;
+  height: auto;
+}
+
+@media (max-width: 1100px) {
+  .mbw-program-page.mbw-program-page--lep
+    .mbw-program-layout--split
+    .mbw-task--lesson
+    > :is(.lesson-document-stage, .lesson-video.mbw-video) {
+    margin-inline: -24px;
+  }
+}
+
+@media (max-width: 560px) {
+  .mbw-program-page.mbw-program-page--lep
+    .mbw-program-layout--split
+    .mbw-task--lesson
+    > :is(.lesson-document-stage, .lesson-video.mbw-video) {
+    margin-inline: -16px;
+  }
+}
+
+/* Previous / Next sit at the foot of the page rather than leaving a long empty
+   run beneath them on a short lesson. */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-lesson-card {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - var(--header-h));
+}
+
+.mbw-program-page.mbw-program-page--lep
+  .mbw-program-layout--split
+  .mbw-program-lesson-card
+  > .mbw-lesson-nav {
+  margin-top: auto;
+  padding-top: 26px;
+}
+
+/* ---- LEP: room above the nav, and a panel that reaches the page foot ---- */
+
+/* The nav's top rule sat right on the submission card's edge. The column's own
+   gap keeps them apart even when the nav is pushed to the foot. */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-lesson-card {
+  gap: 26px;
+}
+
+/* Nothing below the grid, so the course content column can run to the very
+   bottom: a sticky column cannot reach into its parent's padding. */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split {
+  padding-bottom: 0;
+  min-height: calc(100dvh - var(--header-h));
+  align-items: stretch;
+}
+
+.mbw-program-page.mbw-program-page--lep:has(.mbw-program-layout--split) {
+  padding-bottom: 0;
+}
+
+.student-main:has(.mbw-program-page--lep .mbw-program-layout--split) {
+  padding-bottom: 0;
+}
+
+/* ---- LEP: heavier labels, larger worksheet type, wider submission ---- */
+
+/* "ABOUT THIS TASK" and the other section labels: black and heavier. */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-task__panel > h2.mbw-task__panel-title,
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-history__title {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* Worksheet steps ("1. Context") and each question ("My goal"). */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-form-template__section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-form-template :is(.field > span, .field > label, .mbw-table-field__label, .mbw-errc-card__field > span),
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-form-template legend {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-form-template .mbw-form-template__hint {
+  font-size: 0.875rem;
+}
+
+/* The submission card spans the whole lesson column, like the media above it. */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-task--lesson > .lesson-work {
+  width: auto;
+  margin-inline: -36px;
+}
+
+@media (max-width: 1100px) {
+  .mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-task--lesson > .lesson-work {
+    margin-inline: -24px;
+  }
+}
+
+@media (max-width: 560px) {
+  .mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-task--lesson > .lesson-work {
+    margin-inline: -16px;
+  }
+}
+
+/* The hint under a question is not the question: it stays small and quiet. */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-form-template :is(.field, .mbw-errc-card__field) > span.mbw-form-template__hint,
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-form-template p.mbw-form-template__hint {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* ---- LEP: a lesson's resources, in the course content list ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row__resources {
+  padding: 0 8px 8px 40px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row__resources-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--primary);
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row__resources-toggle:hover {
+  border-color: var(--primary);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row__resources-toggle:focus-visible {
+  outline: 2px solid var(--primary-ring, var(--primary));
+  outline-offset: 2px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row__resources-toggle[aria-expanded='true'] .mbw-lesson-row__resources-chev {
+  transform: rotate(180deg);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row__resource-list {
+  display: grid;
+  gap: 2px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row__resource-list a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 12.5px;
+  text-decoration: none;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row__resource-list a:hover {
+  background: var(--surface);
+  text-decoration: underline;
+}
+
+/* ============================================================
+   LEP lesson: the Iron Lady palette, applied
+   ------------------------------------------------------------
+   Primary   red #ED1D24 · black #000 · white #FFF · cream #F7F6E4
+   Secondary deep teal #113744 · cream #EAE8DC · black #000
+   The page runs on two roles: red is action and "you are here",
+   deep teal is progress and work received. Gold, green and amber
+   are not in the palette and are replaced here. Scoped to LEP,
+   so the rest of the app keeps its current colours.
+   ============================================================ */
+.mbw-program-page.mbw-program-page--lep,
+.lesson-header-bar {
+  --il-red: #ed1d24;
+  --il-red-hover: #c8161c;
+  --il-teal: #113744;
+  --il-cream: #f7f6e4;
+  --il-cream-2: #eae8dc;
+
+  --primary: var(--il-red);
+  --primary-hover: var(--il-red-hover);
+  --primary-cta-bg: var(--il-red);
+  --primary-ring: color-mix(in srgb, var(--il-red) 45%, transparent);
+  --accent: var(--il-teal);
+  --text: #000000;
+
+  /* Work received, and work that needs another pass. */
+  --success: var(--il-teal);
+  --success-text: var(--il-teal);
+  --warning: var(--il-red);
+  --warning-text: var(--il-red-hover);
+}
+
+/* Dark: the brand red holds, the deep teal would disappear, so it lifts. */
+[data-theme='dark'] .mbw-program-page.mbw-program-page--lep,
+[data-theme='dark'] .lesson-header-bar {
+  --il-teal: #7fb8cc;
+  --text: #f7f6e4;
+  --success-text: #9ed0e0;
+  --warning-text: #ff8a8f;
+}
+
+/* ---- Progress reads teal, not gold ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .lesson-course-rail__bar-fill,
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-section-card__minibar i {
+  background: var(--il-teal);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column :is(.lesson-course-rail__bar, .mbw-section-card__minibar) {
+  background: color-mix(in srgb, var(--il-teal) 18%, var(--surface));
+}
+
+/* A finished lesson: teal tick, so red stays the current lesson's alone. */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row__status--done {
+  background: var(--il-teal);
+  color: #ffffff;
+}
+
+/* ---- Tags: received vs needs another pass ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row__tag--ok {
+  background: color-mix(in srgb, var(--il-teal) 12%, var(--surface));
+  color: var(--il-teal);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row__tag--changes {
+  background: color-mix(in srgb, var(--il-red) 10%, var(--surface));
+  color: var(--il-red-hover);
+}
+
+/* ---- Neutral chips use the secondary cream ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail :is(.mbw-lesson-row__code, .mbw-lesson-row__kind, .mbw-lesson-row__lock-pill, .mbw-lesson-row__status--locked) {
+  background: var(--il-cream-2);
+  color: color-mix(in srgb, #000000 65%, var(--il-cream-2));
+}
+
+/* ---- Second-rank buttons wear the teal ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep :is(.lesson-work__editbar, .lesson-work__banner, .mbw-submission__actions) .btn-outline,
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .template-actions__discard,
+.mbw-program-page.mbw-program-page--lep .lesson-rail-reopen,
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row__resources-toggle {
+  border-color: color-mix(in srgb, var(--il-teal) 35%, transparent);
+  color: var(--il-teal);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep :is(.lesson-work__editbar, .lesson-work__banner) .btn-outline:hover,
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row__resources-toggle:hover {
+  border-color: var(--il-teal);
+  background: color-mix(in srgb, var(--il-teal) 6%, var(--surface));
+}
+
+/* ---- Headings are black, as the brand has them ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep :is(.mbw-task__header--lesson h1, .mbw-form-template__section-title),
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail__title,
+.lesson-header-bar .lesson-header-bar__title {
+  color: var(--text);
+}
+
+/* The status pill on a submitted lesson, in the same teal as its tag. */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-status-pill--success {
+  background: color-mix(in srgb, var(--il-teal) 12%, var(--surface));
+  color: var(--il-teal);
+}
+
+/* The version chip: quiet, on the brand cream. */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work__version {
+  border-color: color-mix(in srgb, var(--il-red) 20%, var(--border));
+  background: var(--surface);
+}
+
+/* Requirements met read teal, the one still missing stays red. */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .template-reqs li.is-met {
+  color: var(--il-teal);
+}
+
+/* The "Submitted" pill is toned `done`, and joins the teal family. */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-status-pill--done {
+  background: color-mix(in srgb, var(--il-teal) 12%, var(--surface));
+  color: var(--il-teal);
+  border-color: color-mix(in srgb, var(--il-teal) 30%, transparent);
+}
+
+/*
+ * A filled button carries white text, and white on #ED1D24 measures 4.37:1 —
+ * just under the 4.5 a 14.5px label needs. The fill therefore uses the darker
+ * Iron Lady red (5.9:1); #ED1D24 stays the accent: borders, the current lesson,
+ * table headers and every red mark that carries no text on top of it.
+ */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .btn-primary,
+.mbw-program-page.mbw-program-page--lep .mbw-lesson-nav--cards .mbw-lesson-nav__next,
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail__filter[aria-pressed='true'] {
+  background: var(--il-red-hover);
+  border-color: var(--il-red-hover);
+  color: #ffffff;
+}
+
+/* On the lifted teal of dark mode, the tick reads dark rather than white. */
+[data-theme='dark'] .mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row__status--done {
+  color: #0b1f28;
+}
+
+/* The secondary cream is a light-mode surface; in dark it becomes a tint of
+   itself so a lock pill does not glow against the dark ground. */
+[data-theme='dark'] .mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail :is(.mbw-lesson-row__code, .mbw-lesson-row__kind, .mbw-lesson-row__lock-pill, .mbw-lesson-row__status--locked) {
+  background: color-mix(in srgb, var(--il-cream-2) 14%, var(--surface));
+  color: var(--text);
+}
+
+/* ============================================================
+   LEP lesson: one red, one teal, and the two creams
+   ------------------------------------------------------------
+   Red was doing two jobs — the submission surface and the inline
+   links — which left nothing for it to mean. It now marks action
+   and "you are here" only: primary buttons, the current lesson,
+   the chosen filter, and anything asking for attention.
+   Deep teal carries the learner's work: the submission header,
+   links, progress, ticks and received tags. Cream is the ground,
+   white is the paper, the second cream is for neutral chips.
+   ============================================================ */
+.mbw-program-page.mbw-program-page--lep {
+  --lep-teal-wash: color-mix(in srgb, var(--il-teal) 4%, var(--surface));
+  --lep-teal-tint: color-mix(in srgb, var(--il-teal) 8%, var(--surface));
+  --lep-teal-edge: color-mix(in srgb, var(--il-teal) 22%, transparent);
+}
+
+/* ---- Course content: a cool wash, so the warm ground reads as the page ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-layout__rail,
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column {
+  background: var(--lep-teal-wash);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-layout__rail {
+  border-left-color: var(--lep-teal-edge);
+}
+
+/* ---- The learner's work: white paper under a teal header ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work {
+  border-color: var(--lep-teal-edge);
+  background: var(--surface);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work__head {
+  border-bottom-color: var(--lep-teal-edge);
+  background: var(--lep-teal-tint);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work .mbw-submission__actions {
+  border-top-color: var(--lep-teal-edge);
+  background: var(--lep-teal-wash);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep :is(.lesson-work__editbar, .lesson-work__note--review, .lesson-work__banner) {
+  border-color: var(--lep-teal-edge);
+  background: var(--lep-teal-wash);
+}
+
+/* Editing is a change in progress, so its pen keeps the red. */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work__banner > svg {
+  color: var(--il-red);
+}
+
+/* ---- Links inside a lesson are teal, and look like links ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep :is(.lesson-work, .mbw-task__panel) a:not(.btn):not(.bm100-task-materials__link) {
+  color: var(--il-teal);
+  text-decoration-color: color-mix(in srgb, var(--il-teal) 45%, transparent);
+  text-underline-offset: 2px;
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep :is(.lesson-work, .mbw-task__panel) a:not(.btn):hover {
+  text-decoration-color: currentColor;
+}
+
+/* ---- A worksheet's table: teal headings, white body ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-errc__table :is(thead th, th[scope='col'], th[scope='colgroup']) {
+  background: var(--il-teal);
+  color: #ffffff;
+  border-color: color-mix(in srgb, var(--il-teal) 60%, #ffffff);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-errc__table th[scope='row'],
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-errc__table tfoot :is(th, td) {
+  background: var(--lep-teal-tint);
+  color: var(--text);
+}
+
+/* ---- Red, where it now means something ---- */
+/* The version chip belongs to the work, not to an action. */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work__version {
+  border-color: var(--lep-teal-edge);
+  background: var(--surface);
+  color: var(--il-teal);
+}
+
+/* A file or link the learner sent reads as a link, not as an alarm. */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work :is(.mbw-submission__saved a, .mbw-submission__file a, .mbw-submission__body a) {
+  color: var(--il-teal);
+}
+
+/* Attention keeps the brand red: what is missing, and what came back. */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .template-reqs li:not(.is-met),
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .template-reqs__reason {
+  color: color-mix(in srgb, var(--il-red-hover) 85%, var(--text));
+}
+
+/* ============================================================
+   LEP lesson: the palette with its tints
+   ------------------------------------------------------------
+   Elevation runs cream #F7F6E4 (page) → #EAE8DC (dividers, locked,
+   read-only) → #FCFBF3 (panels a step above the page) → white
+   (cards, fields). Black #000 carries text, #5A574F the quiet copy.
+   Red #ED1D24 is the one loud accent, with #FCE2E0 / #F5A29B for
+   the feeling of it. Teal #113744 is the one cool structural
+   accent, with #D6E4E4 / #DCE8E8 for the same.
+   ============================================================ */
+.mbw-program-page.mbw-program-page--lep,
+.lesson-header-bar {
+  --il-red-soft: #f5a29b;
+  --il-red-pale: #fce2e0;
+  --il-ink-soft: #5a574f;
+  --il-teal-pale: #dce8e8;
+  --il-teal-pale-2: #d6e4e4;
+  --il-cream-hi: #fcfbf3;
+
+  --muted: var(--il-ink-soft);
+  --border: var(--il-cream-2);
+  --surface-2: var(--il-cream-hi);
+}
+
+[data-theme='dark'] .mbw-program-page.mbw-program-page--lep,
+[data-theme='dark'] .lesson-header-bar {
+  /* The tints are light-mode surfaces; dark keeps its own, tinted the same way. */
+  --il-red-pale: color-mix(in srgb, var(--il-red) 18%, var(--surface));
+  --il-red-soft: color-mix(in srgb, var(--il-red) 32%, var(--surface));
+  --il-teal-pale: color-mix(in srgb, var(--il-teal) 22%, var(--surface));
+  --il-teal-pale-2: color-mix(in srgb, var(--il-teal) 16%, var(--surface));
+  --il-cream-hi: var(--surface);
+  --muted: #b8a8aa;
+  --border: #4a4043;
+  --surface-2: #2a2224;
+}
+
+/* ---- Course content: a panel one step above the page ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-layout__rail,
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column {
+  background: var(--il-cream-hi);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-layout__rail {
+  border-left-color: var(--il-cream-2);
+}
+
+/* Hoverable but not chosen: the pale teal. Chosen: white, marked in red. */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-lesson-row__main:hover:not(:disabled) {
+  background: var(--il-teal-pale);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column .mbw-section-card__toggle--list:hover {
+  background: var(--il-teal-pale);
+}
+
+/* Progress: teal fill on the secondary cream. */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column :is(.lesson-course-rail__bar, .mbw-section-card__minibar) {
+  background: var(--il-cream-2);
+}
+
+/* Locked lessons sit on the secondary cream, as disabled things do. */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row.is-locked .mbw-lesson-row__main {
+  background: var(--il-cream-2);
+}
+
+/* ---- Tags and pills: the feeling of red, without the red ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-status-pill--done,
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row__tag--ok {
+  border-color: transparent;
+  background: var(--il-red-pale);
+  color: var(--il-red-hover);
+}
+
+/* Work that came back asks louder: the soft rose. */
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row__tag--changes,
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-status-pill--improvement {
+  background: var(--il-red-soft);
+  color: #000000;
+}
+
+/* ---- The learner's work: a white card, teal-headed ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work {
+  border-color: var(--il-cream-2);
+  background: var(--surface);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work__head {
+  border-bottom-color: var(--il-cream-2);
+  background: var(--il-teal-pale);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work .mbw-submission__actions {
+  border-top-color: var(--il-cream-2);
+  background: var(--il-cream-hi);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep :is(.lesson-work__editbar, .lesson-work__note--review, .lesson-work__banner) {
+  border-color: var(--il-teal-pale-2);
+  background: var(--il-teal-pale-2);
+}
+
+/* ---- Fields: white to type in, secondary cream once read-only ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-form-template :is(textarea, input[type='text']) {
+  border-color: var(--il-cream-2);
+  background: var(--surface);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-form-template--locked :is(textarea, input[type='text']) {
+  background: var(--il-cream-2);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-form-template ::placeholder {
+  color: var(--il-ink-soft);
+}
+
+/* Worksheet steps sit on the pale cream inside the white card. */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-form-template__section {
+  border-color: var(--il-cream-2);
+  background: var(--il-cream-hi);
+}
+
+/* ---- Quiet copy: the warm grey, not black ---- */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep :is(.lesson-work__when, .lesson-work__note, .lesson-work__draft, .lesson-history__when, .mbw-form-template__hint),
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .lesson-course-rail--column :is(.mbw-lesson-row__meta, .mbw-section-card__progress, .lesson-course-rail__progress-row) {
+  color: var(--il-ink-soft);
+}
+
+/* Dark: the quiet grey and the tag text are light-mode values, so they lift. */
+[data-theme='dark'] .mbw-program-page.mbw-program-page--lep,
+[data-theme='dark'] .lesson-header-bar {
+  --il-ink-soft: #c9c1b4;
+}
+
+[data-theme='dark'] .mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-status-pill--done,
+[data-theme='dark'] .mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row__tag--ok {
+  color: #ff9ea2;
+}
+
+[data-theme='dark'] .mbw-program-page.mbw-program-page--lep .mbw-program-layout__rail .mbw-lesson-row__tag--changes,
+[data-theme='dark'] .mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-status-pill--improvement {
+  color: #ffffff;
+}
+
+/* ---- LEP lesson: white page, white inside the submission ---- */
+.mbw-program-page.mbw-program-page--lep {
+  --bg: #ffffff;
+  background: #ffffff;
+}
+
+.student-main:has(.mbw-program-page--lep .mbw-program-layout--split),
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split,
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-layout__main,
+.mbw-program-page.mbw-program-page--lep .mbw-program-layout--split .mbw-program-lesson-card {
+  background: #ffffff;
+}
+
+/* Everything inside the card is white; the secondary cream draws the lines. */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work .mbw-submission__actions,
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .mbw-form-template__section,
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep :is(.lesson-work__editbar, .lesson-work__note--review, .lesson-work__banner) {
+  background: #ffffff;
+}
+
+/* The header band and the callout keep their edge, not a fill. */
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep :is(.lesson-work__editbar, .lesson-work__note--review, .lesson-work__banner) {
+  border-color: var(--il-teal-pale-2);
+}
+
+.mbw-program-page.mbw-program-page--lep .mbw-task--lep .lesson-work__head {
+  background: var(--il-teal-pale);
 }

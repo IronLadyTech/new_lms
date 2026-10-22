@@ -431,34 +431,6 @@ export default function BM100Page() {
                 />
               )}
             </div>
-
-            {lessonMode && activeState && (
-              <LessonCourseContentRail
-                className="lesson-course-rail--aside"
-                completed={completedMilestones}
-                total={totalMilestones}
-                moduleCount={BM100_PROGRAM_SECTIONS.length}
-                modulesDone={modulesDone}
-                durationLabel={durationLabel}
-                searchQuery={railSearch}
-                onSearchChange={setRailSearch}
-              >
-                <BM100ProgramJourney
-                  sectionProgress={sectionProgress}
-                  profile={profile}
-                  expandedSectionId={expandedSectionId ?? activeState.task.phase}
-                  currentSectionId={currentSectionId}
-                  onToggleSection={handleToggleSection}
-                  taskStates={mergedTaskStates}
-                  activeTaskId={activeTaskId}
-                  nextTaskId={nextTaskId}
-                  onSelectLesson={openTask}
-                  autoScroll
-                  embedded
-                  searchQuery={railSearch}
-                />
-              </LessonCourseContentRail>
-            )}
           </div>
 
           {lessonMode && activeState && (

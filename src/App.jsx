@@ -8,14 +8,16 @@ import { isAdminRole, isModeratorOnly } from './utils/roles';
 
 const StudentLayout = lazy(() => import('./components/StudentLayout'));
 const AuthPage = lazy(() => import('./pages/auth/AuthPage'));
+/* Stitch login preview — /auth/login-next; live login stays /auth/login. */
+const LoginNext = lazy(() => import('./pages/auth/LoginNext'));
 const AuthActionPage = lazy(() => import('./pages/auth/AuthActionPage'));
 const Home = lazy(() => import('./pages/student/Home'));
 /* The parallel rebuild. Unlinked from the navigation on purpose: it is
    reachable by URL for testing while /app/home keeps serving everyone. */
 const HomeNext = lazy(() => import('./pages/student/HomeNext'));
-const Progress = lazy(() => import('./pages/student/Progress'));
-const Profile = lazy(() => import('./pages/student/Profile'));
-const Support = lazy(() => import('./pages/student/Support'));
+const StitchPage = lazy(() => import('./components/stitchHome/StitchPage'));
+const StitchSettings = lazy(() => import('./components/stitchHome/StitchSettings'));
+const StitchSupport = lazy(() => import('./components/stitchHome/StitchSupport'));
 const CourseDetail = lazy(() => import('./pages/student/CourseDetail'));
 const MBWPage = lazy(() => import('./pages/student/MBWPage'));
 const BM100Page = lazy(() => import('./pages/student/BM100Page'));
@@ -55,6 +57,7 @@ export default function App() {
         <Route path="/" element={<RoleRedirect />} />
 
         <Route path="/auth/login" element={<AuthPage mode="login" />} />
+        <Route path="/auth/login-next" element={<LoginNext />} />
         <Route path="/auth/signup" element={<AuthPage mode="signup" />} />
         <Route path="/auth/action" element={<AuthActionPage />} />
 
@@ -78,11 +81,30 @@ export default function App() {
           <Route index element={<Navigate to="home" replace />} />
           <Route path="home" element={<Home />} />
           <Route path="home-next" element={<HomeNext />} />
+          {/* Same loader, schedule body. */}
+          <Route path="schedule" element={<HomeNext view="schedule" />} />
+          <Route path="browse" element={<HomeNext view="browse" />} />
           <Route path="dashboard" element={<Navigate to="/app/home" replace />} />
-          <Route path="progress" element={<Progress />} />
+          <Route path="progress" element={<HomeNext view="progress" />} />
           <Route path="calendar" element={<Calendar />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="support" element={<Support />} />
+          {/* Wrapped at the route so every return path inside the page — the
+              guest branch included — gets the same chrome. */}
+          <Route
+            path="profile"
+            element={
+              <StitchPage activeId="settings" subtitle="">
+                <StitchSettings />
+              </StitchPage>
+            }
+          />
+          <Route
+            path="support"
+            element={
+              <StitchPage activeId="support" subtitle="">
+                <StitchSupport />
+              </StitchPage>
+            }
+          />
           <Route path="course/:courseId" element={<CourseDetail />} />
           <Route path="mbw" element={<MBWPage />} />
           <Route path="100bm" element={<BM100Page />} />

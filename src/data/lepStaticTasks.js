@@ -8,6 +8,12 @@ import { TASK_TYPES } from '../services/mbwService';
  * display value and must stay stable: recycling an id for a different task
  * re-attaches an existing learner's submission to the wrong one.
  *
+ * `order` is banded by phase — 0 pre-program, 100 orientation, 200 Day 1, 300
+ * Day 2, 400–700 Weeks 1–4, 800 community, 900 evaluation, 1000 certificate —
+ * with the position inside the phase added on. Tasks of one phase have to stay
+ * contiguous once sorted, and a flat running number could not survive a phase
+ * being resequenced without renumbering every task after it.
+ *
  * Resource files live in `public/templates/lep/` and are served from the app,
  * so the programme does not depend on Moodle staying up.
  *
@@ -25,7 +31,7 @@ export const LEP_STATIC_TASKS = [
   /* ---------------------------------------------------------- Orientation */
   {
     id: 'lep-orientation-framework',
-    order: 0,
+    order: 100,
     phase: 'orientation',
     week: 'Start',
     title: 'Program Framework',
@@ -36,9 +42,10 @@ export const LEP_STATIC_TASKS = [
     reviewRequired: false,
     description:
       'Read the programme framework and confirm you know how the four weeks are structured.',
-    resourceLinks: [
-      { label: 'Leadership Essentials Program Framework', url: T('lep-program-framework.pdf') },
-    ],
+    readingDocument: {
+      label: 'Leadership Essentials Program Information',
+      url: T('lep-program-framework.pdf'),
+    },
     checklistItems: [
       'I have read the programme framework',
       'I know which days are live sessions',
@@ -47,7 +54,7 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-orientation-access',
-    order: 1,
+    order: 101,
     phase: 'orientation',
     week: 'Start',
     title: 'Program Access Essentials',
@@ -57,7 +64,10 @@ export const LEP_STATIC_TASKS = [
     unlockDate: null,
     reviewRequired: false,
     description: 'Set up your access so nothing blocks you on Day 1.',
-    resourceLinks: [{ label: 'Program Access Essentials', url: T('program-access-essentials.pdf') }],
+    readingDocument: {
+      label: 'Program Access Essentials',
+      url: T('program-access-essentials.pdf'),
+    },
     checklistItems: [
       'I can sign in to the programme',
       'I have joined the community group',
@@ -66,7 +76,7 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-orientation-schedule',
-    order: 2,
+    order: 102,
     phase: 'orientation',
     week: 'Start',
     title: 'Program Schedule',
@@ -88,10 +98,10 @@ export const LEP_STATIC_TASKS = [
   /* ------------------------------------------------- Pre-Program Prep */
   {
     id: 'lep-via-survey',
-    order: 3,
+    order: 0,
     phase: 'pre-program',
     week: 'Prep',
-    title: 'Complete your VIA Survey',
+    title: 'Complete your VIA Survey and Submit your 3 Photographs',
     type: TASK_TYPES.FILE_UPLOAD,
     requiresWatch: false,
     videoUrl: '',
@@ -105,10 +115,59 @@ export const LEP_STATIC_TASKS = [
     uploadKind: 'file',
   },
 
+  {
+    /*
+     * The CoDeSeF sheet is filled before the programme opens and worked again on
+     * Day 2 — the outline lists it in both places. Separate ids, because they
+     * are separate submissions.
+     */
+    id: 'lep-prep-codesef-sheet',
+    order: 1,
+    phase: 'pre-program',
+    week: 'Prep',
+    title: 'Fill the CoDeSeF Sheet',
+    /* The same four-step sheet as Day 2, filled in on the page. Was an upload. */
+    type: TASK_TYPES.EDITABLE_TEMPLATE,
+    templateId: 'codesef',
+    previousType: TASK_TYPES.FILE_UPLOAD,
+    requiresWatch: false,
+    videoUrl: '',
+    unlockDate: null,
+    reviewRequired: false,
+    description:
+      'Fill in your CoDeSeF sheet before Day 1. Work through the four steps in order — each one builds on the step above it.',
+    /* Page 1 of the handout explains CoDeSeF; pages 2–3 are the activity below. */
+    readingDocument: {
+      label: 'What CoDeSeF is',
+      url: T('codesef-guidelines-template.pdf'),
+      pages: [1],
+    },
+    resourceLinks: [
+      { label: 'CoDeSeF Guidelines and Template', url: T('codesef-guidelines-template.pdf') },
+    ],
+    uploadSubmitLabel: 'Submit CoDeSeF sheet',
+  },
+  {
+    id: 'lep-prep-nsdc',
+    order: 2,
+    phase: 'pre-program',
+    week: 'Prep',
+    title: 'Complete NSDC Registration',
+    type: TASK_TYPES.LINK,
+    requiresWatch: false,
+    videoUrl: '',
+    unlockDate: null,
+    reviewRequired: false,
+    /* No registration URL in the outline, so none is invented here — the link
+       belongs in `resourceLinks` once Iron Lady supplies it. */
+    description: 'Complete your NSDC registration and submit the confirmation link.',
+    uploadSubmitLabel: 'Submit registration link',
+  },
+
   /* --------------------------------------- Day 1 — Personal Transformation */
   {
     id: 'lep-day1-promises',
-    order: 4,
+    order: 200,
     phase: 'day-1',
     week: 'Day 1',
     title: 'Promises and Agreements',
@@ -122,11 +181,13 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-day1-beliefs',
-    order: 5,
+    order: 201,
     phase: 'day-1',
     week: 'Day 1',
     title: 'A-Game Self Awareness — Beliefs',
-    type: TASK_TYPES.TEXT,
+    type: TASK_TYPES.EDITABLE_TEMPLATE,
+    templateId: 'agame-beliefs',
+    previousType: TASK_TYPES.TEXT,
     requiresWatch: false,
     videoUrl: '',
     unlockDate: null,
@@ -140,22 +201,25 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-day1-agame-table',
-    order: 6,
+    order: 202,
     phase: 'day-1',
     week: 'Day 1',
     title: 'A-Game Table — daily ritual',
-    type: TASK_TYPES.CHECKLIST,
+    type: TASK_TYPES.EDITABLE_TEMPLATE,
+    templateId: 'agame-table',
+    previousType: TASK_TYPES.CHECKLIST,
     requiresWatch: false,
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Set up your A-Game table and start the daily ritual.',
+    description:
+      'Fill in your A-Game table for today: the moments you were at your best, and the moments you were not.',
     resourceLinks: [{ label: 'A-Game Table Template', url: T('a-game-table.pdf') }],
-    checklistItems: ['I have set up my A-Game table', 'I have started the daily ritual'],
+    uploadSubmitLabel: 'Submit A-Game table',
   },
   {
     id: 'lep-day1-errc',
-    order: 7,
+    order: 203,
     phase: 'day-1',
     week: 'Day 1',
     title: 'ERRC Table',
@@ -178,7 +242,7 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-day1-crucible',
-    order: 8,
+    order: 204,
     phase: 'day-1',
     week: 'Day 1',
     title: 'Crucibles of Leadership',
@@ -200,7 +264,7 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-day1-assignment',
-    order: 9,
+    order: 205,
     phase: 'day-1',
     week: 'Day 1',
     title: 'Day 1 Assignment',
@@ -211,7 +275,10 @@ export const LEP_STATIC_TASKS = [
     reviewRequired: true,
     description:
       'Download the Day 1 assignment, answer all questions and upload your completed work.',
-    resourceLinks: [{ label: 'Standard Affirmations', url: T('standard-affirmations.pdf') }],
+    readingDocument: {
+      label: 'Affirmations — Sense of Internal Confidence',
+      url: T('standard-affirmations.pdf'),
+    },
     accept: '.pdf,.doc,.docx',
     uploadSubmitLabel: 'Submit Day 1 assignment',
     uploadKind: 'file',
@@ -220,7 +287,7 @@ export const LEP_STATIC_TASKS = [
   /* ------------------------------------- Day 2 — Strategies and Tactics */
   {
     id: 'lep-day2-codesef',
-    order: 10,
+    order: 300,
     phase: 'day-2',
     week: 'Day 2',
     title: 'CoDeSeF',
@@ -236,6 +303,11 @@ export const LEP_STATIC_TASKS = [
     reviewRequired: false,
     description:
       'Iron Lady’s technique for strategising towards your BHAG. Work through the four steps in order — each one builds on the step above it.',
+    readingDocument: {
+      label: 'What CoDeSeF is',
+      url: T('codesef-guidelines-template.pdf'),
+      pages: [1],
+    },
     resourceLinks: [
       { label: 'CoDeSeF Guidelines and Template', url: T('codesef-guidelines-template.pdf') },
     ],
@@ -243,31 +315,33 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-day2-responding',
-    order: 11,
+    order: 301,
     phase: 'day-2',
     week: 'Day 2',
     title: 'Powerful Extreme Responding',
-    type: TASK_TYPES.CHECKLIST,
+    type: TASK_TYPES.EDITABLE_TEMPLATE,
+    templateId: 'responding',
+    previousType: TASK_TYPES.CHECKLIST,
     requiresWatch: false,
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description: 'Study the responding tactics and practise them.',
+    description:
+      'For each situation, mark whether you respond or react. The total shows your pattern.',
     resourceLinks: [
-      { label: 'Powerful Responding Tactics', url: T('powerful-responding-tactics.pdf') },
+      { label: 'Respond vs React questionnaire', url: T('powerful-responding-tactics.pdf') },
     ],
-    checklistItems: [
-      'I have read the responding tactics',
-      'I have practised at least one tactic',
-    ],
+    uploadSubmitLabel: 'Submit your answers',
   },
   {
     id: 'lep-day2-relationships',
-    order: 12,
+    order: 302,
     phase: 'day-2',
     week: 'Day 2',
     title: 'Maximise Key Relationships',
-    type: TASK_TYPES.TEXT,
+    type: TASK_TYPES.EDITABLE_TEMPLATE,
+    templateId: 'key-relationships',
+    previousType: TASK_TYPES.TEXT,
     requiresWatch: false,
     videoUrl: '',
     unlockDate: null,
@@ -280,11 +354,13 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-day2-purpose-peg',
-    order: 13,
+    order: 303,
     phase: 'day-2',
     week: 'Day 2',
     title: 'Purpose Peg Table',
-    type: TASK_TYPES.TEXT,
+    type: TASK_TYPES.EDITABLE_TEMPLATE,
+    templateId: 'purpose-peg',
+    previousType: TASK_TYPES.TEXT,
     requiresWatch: false,
     videoUrl: '',
     unlockDate: null,
@@ -298,7 +374,7 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-day2-assignment',
-    order: 14,
+    order: 304,
     phase: 'day-2',
     week: 'Day 2',
     title: 'Day 2 Assignment',
@@ -316,12 +392,13 @@ export const LEP_STATIC_TASKS = [
   /* --------------------------------- Day 3 — Consolidation and Closure */
   {
     id: 'lep-day3-27-principles',
-    order: 15,
-    phase: 'day-3',
+    order: 500,
+    phase: 'week-2',
     week: 'Day 3',
     title: '27 Principles',
     type: TASK_TYPES.CHECKLIST,
-    requiresWatch: false,
+    /* The video is served by getLessonAsset (functions/lessonAssets.js), never from here. */
+    requiresWatch: true,
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
@@ -330,25 +407,23 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-day3-5-rituals',
-    order: 16,
-    phase: 'day-3',
+    order: 501,
+    phase: 'week-2',
     week: 'Day 3',
     title: 'Practising the 5 Rituals',
     type: TASK_TYPES.CHECKLIST,
-    requiresWatch: false,
+    /* The video is served by getLessonAsset (functions/lessonAssets.js), never from here. */
+    requiresWatch: true,
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
     description: 'Start the five daily rituals and keep them going.',
-    checklistItems: [
-      'I know all five rituals',
-      'I have started practising them daily',
-    ],
+    checklistItems: ['I know all five rituals', 'I have started practising them daily'],
   },
   {
     id: 'lep-day3-brand-roadmap',
-    order: 17,
-    phase: 'day-3',
+    order: 502,
+    phase: 'week-2',
     week: 'Day 3',
     title: 'Differentiated Brand and the 0.5% League Roadmap',
     type: TASK_TYPES.CHECKLIST,
@@ -362,8 +437,8 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-day3-mentors',
-    order: 18,
-    phase: 'day-3',
+    order: 503,
+    phase: 'week-2',
     week: 'Day 3',
     title: 'Finding and Working with Mentors',
     type: TASK_TYPES.TEXT,
@@ -376,8 +451,8 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-day3-max-value',
-    order: 19,
-    phase: 'day-3',
+    order: 504,
+    phase: 'week-2',
     week: 'Day 3',
     title: 'Getting Maximum Value from LEP',
     type: TASK_TYPES.CHECKLIST,
@@ -390,10 +465,10 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-day3-feedback',
-    order: 20,
-    phase: 'day-3',
+    order: 305,
+    phase: 'day-2',
     week: 'Day 3',
-    title: 'Feedback — Days 1 to 3',
+    title: 'Feedback for Days 1–2',
     type: TASK_TYPES.LINK,
     requiresWatch: false,
     videoUrl: '',
@@ -406,8 +481,8 @@ export const LEP_STATIC_TASKS = [
   /* ------------------------------- Day 4 — Strength Based Excellence */
   {
     id: 'lep-day4-roadmap-sample',
-    order: 21,
-    phase: 'day-4',
+    order: 400,
+    phase: 'week-1',
     week: 'Day 4',
     title: '0.5% League Roadmap — worked sample',
     type: TASK_TYPES.CHECKLIST,
@@ -416,32 +491,36 @@ export const LEP_STATIC_TASKS = [
     unlockDate: null,
     reviewRequired: false,
     description: 'Study the worked sample before building your own roadmap.',
-    resourceLinks: [{ label: '0.5% League Roadmap Sample', url: T('league-roadmap-sample.pdf') }],
+    readingDocument: {
+      label: 'Differentiated Strength — worked sample',
+      url: T('league-roadmap-sample.pdf'),
+    },
     checklistItems: ['I have studied the sample roadmap'],
   },
   {
     id: 'lep-day4-roadmap',
-    order: 22,
-    phase: 'day-4',
+    order: 401,
+    phase: 'week-1',
     week: 'Day 4',
     title: 'Your 0.5% League Roadmap',
-    type: TASK_TYPES.FILE_UPLOAD,
+    type: TASK_TYPES.EDITABLE_TEMPLATE,
+    templateId: 'league-roadmap',
+    previousType: TASK_TYPES.FILE_UPLOAD,
     requiresWatch: false,
     videoUrl: '',
     unlockDate: null,
     reviewRequired: true,
-    description: 'Build and upload your own 0.5% League roadmap.',
+    description:
+      'Build your own 0.5% League roadmap. The worked sample shows the level of detail expected.',
     resourceLinks: [{ label: '0.5% League Roadmap Sample', url: T('league-roadmap-sample.pdf') }],
-    accept: '.pdf,.doc,.docx,.ppt,.pptx',
     uploadSubmitLabel: 'Submit your roadmap',
-    uploadKind: 'file',
   },
   {
     id: 'lep-day4-feedback',
-    order: 23,
-    phase: 'day-4',
+    order: 402,
+    phase: 'week-1',
     week: 'Day 4',
-    title: 'Feedback — Strength Based Excellence',
+    title: 'Feedback — Differentiated Brand Statement',
     type: TASK_TYPES.LINK,
     requiresWatch: false,
     videoUrl: '',
@@ -454,8 +533,8 @@ export const LEP_STATIC_TASKS = [
   /* ------------------------------------- Build your Profile / Resume */
   {
     id: 'lep-resume-linkedin',
-    order: 24,
-    phase: 'resume',
+    order: 505,
+    phase: 'week-2',
     week: 'Week 2',
     title: 'Build your LinkedIn Profile',
     type: TASK_TYPES.LINK,
@@ -468,8 +547,8 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-resume-template-study',
-    order: 25,
-    phase: 'resume',
+    order: 506,
+    phase: 'week-2',
     week: 'Week 2',
     title: 'Resume Template and Samples',
     type: TASK_TYPES.CHECKLIST,
@@ -486,8 +565,8 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-resume-bootcamp',
-    order: 26,
-    phase: 'resume',
+    order: 507,
+    phase: 'week-2',
     week: 'Week 2',
     title: 'Jobseekers Bootcamp',
     type: TASK_TYPES.CHECKLIST,
@@ -500,8 +579,8 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-resume-prepare',
-    order: 27,
-    phase: 'resume',
+    order: 508,
+    phase: 'week-2',
     week: 'Week 2',
     title: 'Prepare your Resume',
     type: TASK_TYPES.FILE_UPLOAD,
@@ -519,8 +598,8 @@ export const LEP_STATIC_TASKS = [
   /* ------------------------------------------ Day 5 — Shameless Pitch */
   {
     id: 'lep-day5-instructions',
-    order: 28,
-    phase: 'day-5',
+    order: 509,
+    phase: 'week-2',
     week: 'Day 5',
     title: 'Shameless Pitch — preparation',
     type: TASK_TYPES.CHECKLIST,
@@ -529,18 +608,16 @@ export const LEP_STATIC_TASKS = [
     unlockDate: null,
     reviewRequired: false,
     description: 'Read the preparation instructions and the key points before you pitch.',
-    resourceLinks: [
-      { label: 'Shameless Pitch Preparation Instructions', url: T('shameless-pitch-instructions.pdf') },
-    ],
-    checklistItems: [
-      'I have read the preparation instructions',
-      'I have read the key points',
-    ],
+    readingDocument: {
+      label: 'Shameless Pitch Preparation Instructions',
+      url: T('shameless-pitch-instructions.pdf'),
+    },
+    checklistItems: ['I have read the preparation instructions', 'I have read the key points'],
   },
   {
     id: 'lep-day5-pitch',
-    order: 29,
-    phase: 'day-5',
+    order: 510,
+    phase: 'week-2',
     week: 'Day 5',
     title: 'Your Shameless Pitch',
     type: TASK_TYPES.VIDEO_RECORD,
@@ -554,8 +631,8 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-day5-feedback',
-    order: 30,
-    phase: 'day-5',
+    order: 511,
+    phase: 'week-2',
     week: 'Day 5',
     title: 'Feedback — Shameless Pitching',
     type: TASK_TYPES.LINK,
@@ -570,8 +647,8 @@ export const LEP_STATIC_TASKS = [
   /* ---------------------------------------------- Day 6 — Guiding Stars */
   {
     id: 'lep-day6-guiding-stars',
-    order: 31,
-    phase: 'day-6',
+    order: 601,
+    phase: 'week-3',
     week: 'Day 6',
     title: 'Guiding Stars',
     type: TASK_TYPES.TEXT,
@@ -580,13 +657,13 @@ export const LEP_STATIC_TASKS = [
     unlockDate: null,
     reviewRequired: false,
     description: 'Identify your guiding stars and what each one means for your next step.',
-    resourceLinks: [{ label: 'Guiding Stars', url: T('guiding-stars.pdf') }],
+    readingDocument: { label: 'Guiding Stars Poster', url: T('guiding-stars.pdf') },
     uploadSubmitLabel: 'Submit your guiding stars',
   },
   {
     id: 'lep-day6-feedback',
-    order: 32,
-    phase: 'day-6',
+    order: 602,
+    phase: 'week-3',
     week: 'Day 6',
     title: 'Feedback — Guiding Stars',
     type: TASK_TYPES.LINK,
@@ -601,8 +678,9 @@ export const LEP_STATIC_TASKS = [
   /* --------------------------------------------- Day 7 — Progress Review */
   {
     id: 'lep-day7-review',
-    order: 33,
-    phase: 'day-7',
+    /* Ahead of Guiding Stars — the order the outline gives Week 3. */
+    order: 600,
+    phase: 'week-3',
     week: 'Day 7',
     title: 'Progress Review',
     type: TASK_TYPES.TEXT,
@@ -618,8 +696,8 @@ export const LEP_STATIC_TASKS = [
   /* --------------------------------------------- Day 8 — Graduation Day */
   {
     id: 'lep-day8-preparation',
-    order: 34,
-    phase: 'day-8',
+    order: 700,
+    phase: 'week-4',
     week: 'Day 8',
     title: 'Graduation Preparations',
     type: TASK_TYPES.CHECKLIST,
@@ -632,8 +710,8 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-day8-alumni',
-    order: 35,
-    phase: 'day-8',
+    order: 701,
+    phase: 'week-4',
     week: 'Day 8',
     title: 'Join the Iron Lady Alumni',
     type: TASK_TYPES.LINK,
@@ -641,14 +719,13 @@ export const LEP_STATIC_TASKS = [
     videoUrl: '',
     unlockDate: null,
     reviewRequired: false,
-    description:
-      'Join the Iron Lady Alumni network on LinkedIn and share your profile link.',
+    description: 'Join the Iron Lady Alumni network on LinkedIn and share your profile link.',
     uploadSubmitLabel: 'Submit LinkedIn URL',
   },
   {
     id: 'lep-day8-feedback',
-    order: 36,
-    phase: 'day-8',
+    order: 702,
+    phase: 'week-4',
     week: 'Day 8',
     title: 'Graduation Feedback',
     type: TASK_TYPES.LINK,
@@ -660,13 +737,24 @@ export const LEP_STATIC_TASKS = [
     uploadSubmitLabel: 'Submit feedback link',
   },
 
-  /* --------------------------------------------- Weekly Progress Updates */
+  /*
+   * Weekly engagement forms and challenges.
+   *
+   * These used to sit together in a "Weekly Progress Updates" section of their
+   * own. The outline puts each one inside its week, beside that week's work,
+   * which is where a learner looks for it.
+   *
+   * Week 5 has no week of its own — the programme runs four. Its form is kept
+   * in Week 4 rather than dropped: `lep-weekly-5` is a live submission key, and
+   * removing it would strand whatever has already been submitted against it.
+   */
   ...[1, 2, 3, 4, 5].map((week, i) => ({
     id: `lep-weekly-${week}`,
-    order: 37 + i,
-    phase: 'weekly-progress',
+    /* Sits at the end of its own week — see the order bands below. */
+    order: 400 + (Math.min(week, 4) - 1) * 100 + 80 + (week === 5 ? 1 : 0),
+    phase: `week-${Math.min(week, 4)}`,
     week: `Week ${week}`,
-    title: `Weekly Engagement — Week ${week}`,
+    title: `Week ${week} Engagement Form`,
     type: TASK_TYPES.LINK,
     requiresWatch: false,
     videoUrl: '',
@@ -676,10 +764,31 @@ export const LEP_STATIC_TASKS = [
     uploadSubmitLabel: 'Submit form link',
   })),
 
+  /*
+   * Challenge for each week — the Game of Excellence.
+   *
+   * New in this outline, so new ids. The type is a written submission because
+   * the outline names the challenge without saying what is handed in; if these
+   * turn out to be a link or an upload, only the `type` changes.
+   */
+  ...[1, 2, 3, 4].map((week, i) => ({
+    id: `lep-challenge-${week}`,
+    order: 400 + (week - 1) * 100 + 90,
+    phase: `week-${week}`,
+    week: `Week ${week}`,
+    title: `Challenge for Week ${week}`,
+    type: TASK_TYPES.TEXT,
+    requiresWatch: false,
+    videoUrl: '',
+    unlockDate: null,
+    reviewRequired: true,
+    description: `Game of Excellence — complete the week ${week} challenge and tell us how it went.`,
+  })),
+
   /* ------------------------------------------------- Community Sessions */
   {
     id: 'lep-community-schedule',
-    order: 42,
+    order: 800,
     phase: 'community',
     week: 'Ongoing',
     title: 'Community Sessions Schedule',
@@ -694,7 +803,7 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-community-handholding',
-    order: 43,
+    order: 801,
     phase: 'community',
     week: 'Ongoing',
     title: 'Weekly Handholding Sessions',
@@ -710,7 +819,7 @@ export const LEP_STATIC_TASKS = [
   /* ---------------------------------------------------- Final Evaluation */
   {
     id: 'lep-quiz-5-rituals',
-    order: 44,
+    order: 900,
     phase: 'evaluation',
     week: 'Week 4',
     title: '5 Daily Rituals — Quiz',
@@ -724,7 +833,7 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-quiz-27-principles',
-    order: 45,
+    order: 901,
     phase: 'evaluation',
     week: 'Week 4',
     title: '27 Principles — Quiz',
@@ -740,7 +849,7 @@ export const LEP_STATIC_TASKS = [
   /* --------------------------------------------------------- Certificate */
   {
     id: 'lep-attendance',
-    order: 46,
+    order: 1000,
     phase: 'certificate',
     week: 'Close',
     title: 'Attendance',
@@ -754,7 +863,7 @@ export const LEP_STATIC_TASKS = [
   },
   {
     id: 'lep-certification',
-    order: 47,
+    order: 1001,
     phase: 'certificate',
     week: 'Close',
     title: 'LEP Certification',

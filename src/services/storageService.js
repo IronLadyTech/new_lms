@@ -120,6 +120,23 @@ export async function uploadFile(file, folder, meta = {}, options = {}) {
   return result;
 }
 
+/**
+ * A learner's profile photo.
+ *
+ * Foldered by uid because the storage rule keys on it — `avatars/{userId}` is
+ * writable only by that user. Kept small deliberately: this is a 44px avatar,
+ * not an album.
+ */
+export const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+
+export async function uploadAvatar(userId, file, meta = {}) {
+  if (!userId) throw new Error('Sign in to change your photo.');
+  if (!file?.type?.startsWith('image/')) throw new Error('Choose an image file.');
+  if (file.size > MAX_AVATAR_BYTES)
+    throw new Error('That image is over 5MB. Choose a smaller one.');
+  return uploadFile(file, `avatars/${userId}`, { source: 'avatar', uploadedBy: userId, ...meta });
+}
+
 export async function uploadResourceFile(file, meta = {}) {
   return uploadFile(file, 'resources', { source: 'resource', ...meta });
 }

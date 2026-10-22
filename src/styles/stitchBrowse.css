@@ -1,0 +1,925 @@
+/* ============================================================
+   IRON LADY — BROWSE COURSES
+   A filmstrip picks the programme; one card below carries its
+   detail. No numbering — these are not taken in a fixed order.
+
+   Scoping note: the supplied stylesheet put its tokens on :root and styled
+   bare elements (h1, table, th, td) plus very generic classes (.page, .card,
+   .btn, .tag, .dot). `.page` and `.btn` both already exist in index.css, and a
+   bare `table` rule would restyle every table in the product. Everything is
+   therefore scoped to `.il-browse`, including the focus ring and the
+   reduced-motion reset, which were global.
+   ============================================================ */
+
+.il-browse {
+  --red: #f52929;
+  --red-hover: #d41f1f;
+  --red-deep: #c8102e;
+  --gold: #f5b301;
+  --cream: #f7f6e4;
+  --charcoal: #231f20;
+  --surface: #ffffff;
+  --tint-red: #fdebeb;
+  --line: #e8e5d6;
+  --line-soft: #f3f1e6;
+  --field: #fbfaf2;
+  --ink: var(--charcoal);
+  --ink-2: #6e6963;
+  --ink-3: #9c968e;
+  --ok: #1f5c3d;
+  --ok-soft: #e4efe9;
+
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --s8: 64px;
+  --r-card: 18px;
+  --r-tile: 12px;
+  --r-pill: 999px;
+  --shadow: 0 1px 2px rgba(35, 31, 32, 0.04), 0 10px 28px -16px rgba(35, 31, 32, 0.16);
+  --ease: cubic-bezier(0.22, 0.72, 0.24, 1);
+  --poster: 'Gemunu Libre', 'Anton', Impact, sans-serif;
+
+  --gap: 230px;
+  --turn: 36deg;
+  --depth: 200px;
+
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Dark. Only the neutrals move — the brand red, gold and charcoal are the
+   brand, and `--charcoal` stays put because it is also the fill of chips that
+   are meant to be dark in both themes; `--ink` is overridden instead. */
+:root[data-theme='dark'] .il-browse {
+  --cream: #17161a;
+  --surface: #1d1c21;
+  --tint-red: #3a2326;
+  --line: rgb(255 255 255 / 0.1);
+  --line-soft: rgb(255 255 255 / 0.06);
+  --field: #232227;
+  --ink: #f2efe6;
+  --ink-2: #a9a29c;
+  --ink-3: #8b847e;
+  --ok: #6fcf97;
+  --ok-soft: rgb(111 207 151 / 0.15);
+}
+
+.il-browse *,
+.il-browse *::before,
+.il-browse *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.il-browse svg {
+  display: block;
+}
+
+.il-browse button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+/* ---------- shell ---------- */
+.il-browse .sheet {
+  max-width: 1020px;
+  margin: 0 auto;
+}
+
+.il-browse .ph {
+  margin-bottom: var(--s5);
+}
+
+.il-browse .ph h1 {
+  font-size: clamp(22px, 2.6vw, 28px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+/* ============================================================
+   FILMSTRIP
+   ============================================================ */
+.il-browse .strip {
+  position: relative;
+  height: clamp(320px, 36vw, 376px);
+  perspective: 1450px;
+  perspective-origin: 50% 44%;
+  touch-action: pan-y;
+  user-select: none;
+  cursor: grab;
+}
+
+.il-browse .strip.dragging {
+  cursor: grabbing;
+}
+
+/* a ground line, so the posters read as standing rather than floating */
+.il-browse .strip::before {
+  content: '';
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 16%;
+  height: 1px;
+  z-index: 0;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(35, 31, 32, 0.12) 24%,
+    rgba(35, 31, 32, 0.12) 76%,
+    transparent
+  );
+}
+
+.il-browse .rail {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.il-browse .pcard {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(168px, 19vw, 204px);
+  aspect-ratio: 3 / 4;
+  margin-top: calc(-1 * clamp(168px, 19vw, 204px) * 4 / 3 / 2);
+  margin-left: calc(-1 * clamp(168px, 19vw, 204px) / 2);
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(150deg, #fcf8ec 0%, #f4eedc 62%, #ede4cd 100%);
+  padding: var(--s4);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0 18px 34px -16px rgba(35, 31, 32, 0.45);
+  transition:
+    transform 0.6s var(--ease),
+    opacity 0.45s ease,
+    filter 0.45s ease,
+    box-shadow 0.45s;
+  will-change: transform;
+}
+
+.il-browse .pcard.front {
+  box-shadow: 0 26px 50px -18px rgba(35, 31, 32, 0.55);
+}
+
+.il-browse .pcard::after {
+  content: '';
+  position: absolute;
+  right: -16%;
+  bottom: -46%;
+  width: 78%;
+  height: 150%;
+  background: linear-gradient(100deg, var(--cc) 0 46%, var(--charcoal) 46% 100%);
+  transform: rotate(38deg);
+}
+
+.il-browse .c-t {
+  position: relative;
+  z-index: 1;
+  font-family: var(--poster);
+  font-size: 19px;
+  line-height: 0.94;
+  text-transform: uppercase;
+  color: #141414;
+  text-shadow:
+    1px 1px 0 #b3a78b,
+    2px 2px 0 #a3987c,
+    0 5px 11px rgba(46, 38, 24, 0.3);
+}
+
+.il-browse .c-p {
+  position: relative;
+  z-index: 1;
+  font-family: var(--poster);
+  font-size: 11.5px;
+  text-transform: uppercase;
+  color: var(--cc);
+  margin-top: 5px;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.18);
+}
+
+.il-browse .c-tag {
+  position: relative;
+  z-index: 1;
+  align-self: flex-start;
+  flex: none;
+  margin-top: var(--s3);
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: var(--cc);
+  color: #fff;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.il-browse .pcard.lep .c-tag {
+  color: var(--charcoal);
+}
+
+.il-browse .c-pip {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: var(--r-pill);
+  background: var(--charcoal);
+  color: #f4eee4;
+}
+
+/* Upcoming and Locked still label the card, but must not compete with the two
+   states the learner can act on. Grey rather than charcoal; 6.29:1 on the
+   cream, which this chip needs at 8px. */
+.il-browse .c-pip.q {
+  background: #5c5557;
+}
+
+.il-browse .arm {
+  position: absolute;
+  z-index: 7;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow);
+  transition:
+    background 0.2s,
+    color 0.2s,
+    box-shadow 0.2s;
+}
+
+.il-browse .arm:hover {
+  background: var(--red);
+  color: #fff;
+  border-color: var(--red);
+}
+
+.il-browse .arm svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.2;
+}
+
+.il-browse .arm.p {
+  left: var(--s4);
+}
+
+.il-browse .arm.n {
+  right: var(--s4);
+}
+
+.il-browse .dots {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  margin-top: var(--s4);
+  margin-bottom: var(--s7);
+}
+
+/* 26x3 is far under the 44px minimum, so the hit area is padded out around
+   the visible bar rather than the bar being enlarged. */
+.il-browse .dot {
+  position: relative;
+  width: 26px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--line);
+  transition:
+    background 0.25s,
+    width 0.25s var(--ease);
+}
+
+.il-browse .dot::after {
+  content: '';
+  position: absolute;
+  inset: -20px -6px;
+}
+
+.il-browse .dot.on {
+  width: 42px;
+}
+
+/* ============================================================
+   THE ONE CARD
+   ============================================================ */
+.il-browse .ladder {
+  position: relative;
+}
+
+.il-browse .prog {
+  position: relative;
+  display: grid;
+  grid-template-columns: 172px minmax(0, 1fr);
+  gap: var(--s6);
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow);
+  padding: var(--s6);
+  overflow: hidden;
+  transition:
+    box-shadow 0.4s var(--ease),
+    border-color 0.4s,
+    opacity 0.3s ease,
+    transform 0.3s var(--ease);
+}
+
+.il-browse .prog.swap {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.il-browse .prog > * {
+  position: relative;
+  z-index: 1;
+}
+
+.il-browse .mini {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--r-tile);
+  background: linear-gradient(150deg, #fcf8ec 0%, #f4eedc 62%, #ede4cd 100%);
+  padding: var(--s3);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0 8px 20px -10px rgba(35, 31, 32, 0.45);
+  box-shadow: 0 6px 16px -10px rgba(35, 31, 32, 0.35);
+}
+
+.il-browse .prog:hover .mini {
+  box-shadow: 0 16px 34px -12px rgba(35, 31, 32, 0.55);
+}
+
+/* the type rides against the tilt — that opposition reads as depth */
+
+.il-browse .mini::after {
+  content: '';
+  position: absolute;
+  right: -16%;
+  bottom: -46%;
+  width: 78%;
+  height: 150%;
+  background: linear-gradient(100deg, var(--pc) 0 46%, var(--charcoal) 46% 100%);
+  transform: rotate(38deg);
+}
+
+.il-browse .mini-t {
+  position: relative;
+  z-index: 1;
+  font-family: var(--poster);
+  font-size: 13px;
+  line-height: 0.95;
+  text-transform: uppercase;
+  color: #141414;
+  text-shadow:
+    1px 1px 0 #b3a78b,
+    0 3px 7px rgba(46, 38, 24, 0.26);
+}
+
+.il-browse .mini-p {
+  position: relative;
+  z-index: 1;
+  font-family: var(--poster);
+  font-size: 8.5px;
+  text-transform: uppercase;
+  color: var(--pc);
+  margin-top: 4px;
+}
+
+.il-browse .mini-c {
+  position: relative;
+  z-index: 1;
+  align-self: flex-start;
+  margin-top: var(--s2);
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--pc);
+  color: #fff;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.il-browse .prog.lep .mini-c {
+  color: var(--charcoal);
+}
+
+/* Sentence case. Six letterspaced micro-caps on one screen is what makes an
+   interface look generated; the ones that survive are labels for a value. */
+.il-browse .stage-l {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin-left: auto;
+}
+
+.il-browse .stage-l i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--pc);
+}
+
+.il-browse .tags {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  margin-bottom: var(--s2);
+  flex-wrap: wrap;
+}
+
+.il-browse .tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: var(--line-soft);
+  color: var(--ink-2);
+}
+
+.il-browse .tag.on {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.il-browse .tag.rec {
+  background: var(--tint-red);
+  color: var(--red-deep);
+}
+
+.il-browse .p-n {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+/*
+ * One measure for the whole column.
+ *
+ * The blurb was capped at 46ch while the facts table, the resume block and the
+ * actions row each ran to a different width, so the panel had four ragged right
+ * edges and the paragraph stopped a third of the way short of everything under
+ * it. The cap belongs on the column, not on the paragraph alone: the line
+ * length stays readable and every element lines up.
+ */
+.il-browse .pbody {
+  max-width: 62ch;
+}
+
+.il-browse .p-o {
+  font-size: 14px;
+  color: var(--ink-2);
+  margin-top: 7px;
+}
+
+.il-browse .facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--r-tile);
+  overflow: hidden;
+  margin-top: var(--s4);
+}
+
+.il-browse .fact {
+  background: var(--surface);
+  padding: var(--s3);
+}
+
+.il-browse .fact dt {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.il-browse .fact dd {
+  font-size: 12.5px;
+  font-weight: 600;
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.il-browse .resume {
+  margin-top: var(--s4);
+}
+
+.il-browse .resume-l {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.il-browse .resume-t {
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.il-browse .bar {
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: #edead9;
+  overflow: hidden;
+  margin-top: 9px;
+}
+
+.il-browse .bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: var(--r-pill);
+  background: var(--pc);
+  transition: width 1s var(--ease) 0.15s;
+}
+
+/* fixed-width digits, so the number does not jitter while it counts */
+.il-browse .cnt {
+  font-variant-numeric: tabular-nums;
+}
+
+.il-browse .resume small {
+  display: block;
+  font-size: 11px;
+  color: var(--ink-2);
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.il-browse .why {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s2);
+  margin-top: var(--s4);
+  padding: var(--s3) var(--s4);
+  background: color-mix(in srgb, var(--pc) 9%, transparent);
+  border-radius: var(--r-tile);
+  font-size: 12.5px;
+  max-width: 48ch;
+}
+
+.il-browse .why svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+  flex: none;
+  margin-top: 2px;
+  color: var(--pc);
+}
+
+.il-browse .acts {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  margin-top: var(--s5);
+  flex-wrap: wrap;
+}
+
+.il-browse .bbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  padding: var(--s3) var(--s5);
+  border-radius: var(--r-pill);
+  min-height: 44px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  transition:
+    box-shadow 0.2s var(--ease),
+    background 0.2s;
+}
+
+/*
+ * The supplied rules lifted these on hover with translateY(-2px). The project
+ * design system forbids layout-shifting transforms on hover, so the lift is a
+ * deeper shadow instead — same read, nothing moves.
+ */
+/* The raised red — same recipe as the nav's active item and every other
+   primary action. Tokens come from .stitch-home, which this page sits in. */
+.il-browse .bbtn-primary {
+  background: var(--sh-raise-bg);
+  color: #fff;
+  box-shadow: var(--sh-raise-shadow);
+}
+
+.il-browse .bbtn-primary:hover {
+  filter: brightness(1.03);
+  box-shadow: var(--sh-raise-shadow-hover);
+}
+
+.il-browse .bbtn-primary:active {
+  filter: brightness(0.97);
+  transform: translateY(1px);
+  box-shadow: var(--sh-raise-shadow-press);
+}
+
+.il-browse .bbtn-primary svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.4;
+}
+
+.il-browse .bbtn-ghost {
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.il-browse .bbtn-ghost:hover {
+  background: var(--line-soft);
+}
+
+.il-browse .entry {
+  font-size: 11.5px;
+  color: var(--ink-2);
+  margin-left: auto;
+}
+
+/* ---------- compare ---------- */
+.il-browse .cmp {
+  margin-top: var(--s8);
+}
+
+.il-browse .sec-h {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s4);
+  margin-bottom: var(--s4);
+}
+
+.il-browse .sec-t {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.il-browse .sec-r {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.il-browse .cmp-lead {
+  margin: 0 0 var(--s5);
+  max-width: 52ch;
+  color: var(--ink-2);
+}
+
+/* ---------- commitment scale ---------- */
+
+/* The end markers are centred on the axis ends, so half of each label sits
+   outside it — the inset has to clear the widest label, not just the dot. */
+.il-browse .scale {
+  position: relative;
+  height: 66px;
+  margin: 0 44px var(--s5);
+}
+
+.il-browse .scale__axis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+/*
+ * Markers are positioned by percentage, so each is centred on its own point
+ * with a translate rather than by nudging the left offset — that keeps the
+ * first and last sitting exactly on the ends of the axis.
+ */
+.il-browse .scale__mark {
+  position: absolute;
+  bottom: 0;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 0;
+  min-height: 44px;
+  border-radius: 8px;
+}
+
+.il-browse .scale__len {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.il-browse .scale__mark.on .scale__len {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.il-browse .scale__dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2.5px var(--mc);
+}
+
+/* The selected programme fills; the rest are outlined. Weight, not colour
+   alone, carries which one is current. */
+.il-browse .scale__mark.on .scale__dot {
+  background: var(--mc);
+  transform: scale(1.2);
+}
+
+.il-browse .scale__mark:hover .scale__len {
+  color: var(--ink);
+}
+
+.il-browse .scale__key {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  overflow: hidden;
+}
+
+.il-browse .scale__key-btn {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    'dot name'
+    '.   meta'
+    '.   status';
+  align-items: center;
+  gap: 2px var(--s2);
+  width: 100%;
+  padding: var(--s4);
+  background: var(--surface);
+  transition: background 0.15s ease;
+}
+
+.il-browse .scale__key-btn:hover {
+  background: var(--line-soft);
+}
+
+.il-browse .scale__key-btn.on {
+  background: var(--field);
+}
+
+.il-browse .scale__key-dot {
+  grid-area: dot;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.il-browse .scale__key-name {
+  grid-area: name;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.il-browse .scale__key-meta {
+  grid-area: meta;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.il-browse .scale__key-status {
+  grid-area: status;
+  font-size: 11.5px;
+  color: var(--ink-2);
+  margin-top: 2px;
+}
+
+@media (max-width: 680px) {
+  .il-browse {
+    --gap: 146px;
+    --turn: 42deg;
+    --depth: 160px;
+  }
+
+  .il-browse .prog {
+    grid-template-columns: 1fr;
+    gap: var(--s4);
+    padding: var(--s5);
+  }
+
+  /*
+   * The poster is capped rather than stretched.
+   *
+   * Stacked, it filled the column at 289x385 — half a phone screen of artwork,
+   * pushing the title and the actions below the fold. Its type is a fixed size,
+   * so growing the poster also shrank the programme name relative to it: the
+   * ratio fell from 0.076 on desktop to 0.045 here, which is why the name read
+   * as an afterthought on its own poster.
+   */
+  .il-browse .mini {
+    max-width: 132px;
+  }
+
+  /* Sized back to the desktop proportion against the narrower poster. */
+  .il-browse .mini-t {
+    font-size: 10.5px;
+  }
+
+  .il-browse .mini-p {
+    font-size: 7px;
+  }
+
+  .il-browse .mini-c {
+    font-size: 6.5px;
+  }
+
+  .il-browse .entry {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .il-browse .bbtn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .il-browse .arm.p {
+    left: 6px;
+  }
+
+  .il-browse .arm.n {
+    right: 6px;
+  }
+
+  /* Three duration labels will not fit across a phone; the axis keeps the
+     markers and the key underneath carries the reading. */
+  .il-browse .scale {
+    height: 44px;
+    margin-inline: var(--s3);
+  }
+
+  .il-browse .scale__len {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .il-browse *,
+  .il-browse *::before,
+  .il-browse *::after {
+    transition-duration: 0.01ms !important;
+    animation: none !important;
+  }
+
+  .il-browse .prog {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .il-browse .mini {
+    transform: none !important;
+  }
+}
+
+.il-browse :focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}

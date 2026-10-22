@@ -101,16 +101,26 @@ export default function MBWProgramSection({
   const ctaLabel = isDoneSection ? 'Review' : progress.done > 0 ? 'Continue' : 'Start';
 
   const lessonTotal = progress.total || (usesEngine ? taskStates.length : 0);
+  /*
+   * When the card is shut, say why on the face of it — not only after expand.
+   * Q2+ look "stuck" after finishing Q1 if payment is the real gate and the
+   * subtitle only said "17 lessons".
+   */
+  const lockedReasonLabel = paymentLocked
+    ? 'Full payment needed'
+    : lockDisplay?.expired
+      ? 'Access ended'
+      : lockDisplay?.message
+        ? 'Complete earlier section'
+        : 'Locked';
   const moduleStats = railMode
     ? !progress.unlocked
-      ? lessonTotal > 0
-        ? `${lessonTotal} lessons`
-        : section.subtitle || 'Locked'
+      ? lockedReasonLabel
       : lessonTotal > 0
         ? `${lessonTotal} lessons · ${progress.done}/${lessonTotal} done`
         : section.subtitle
     : !progress.unlocked
-      ? 'Locked'
+      ? lockedReasonLabel
       : progress.total > 0
         ? `${progress.total} lessons · ${progress.done}/${progress.total} done`
         : section.subtitle;

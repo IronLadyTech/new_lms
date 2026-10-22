@@ -210,8 +210,13 @@ export function getTaskTypeIcon(type) {
       return 'document';
     case TASK_TYPES.VIDEO_RECORD:
       return 'recording';
+    /* Its own symbol. Sharing `link` meant a one-off URL and a repeated weekly
+       post were indistinguishable in the list. */
     case TASK_TYPES.RECURRING_POST:
-      return 'link';
+      return 'post';
+    /* Previously fell through to the default, which rendered a play button. */
+    case TASK_TYPES.CHECKLIST:
+      return 'checklist';
     default:
       return 'lesson';
   }

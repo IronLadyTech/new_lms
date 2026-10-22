@@ -1,3 +1,4 @@
+import { isFieldValueFilled } from '../data/formTemplates/registry';
 /** Human-readable MBW labels for UI (week codes like Wk1-12 stay secondary). */
 
 import { SUBMISSION_STATUS } from '../services/mbwService';
@@ -64,9 +65,8 @@ export function submissionPreview(sub, task) {
       return `ERRC grid (${sub.templateData.rows.length} rows)`;
     }
     if (sub.templateData?.fields) {
-      const filled = Object.values(sub.templateData.fields).filter((v) =>
-        String(v || '').trim()
-      ).length;
+      // A table answer is an array of rows, and `String(array)` is never blank.
+      const filled = Object.values(sub.templateData.fields).filter(isFieldValueFilled).length;
       return `Form submitted (${filled} fields)`;
     }
     return `Table submitted (${sub.templateData.rows.length} rows)`;

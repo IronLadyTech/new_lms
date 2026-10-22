@@ -43,4 +43,19 @@ describe('parseLeadEntitlements — the statuses Zoho actually holds', () => {
     expect(entitlement('').program).toBeNull();
     expect(entitlement('Junk Value').program).toBeNull();
   });
+
+  it('does not let Payment_Status Completed demote a started lead', () => {
+    /*
+     * Live shape for yaswanthgrandhi2580@gmail.com: Lead_Status "MBW started"
+     * (full fee) while Payment_Status still reads "Completed" (registration
+     * transaction). The payment field alone used to win and lock Q2+.
+     */
+    const ent = parseLeadEntitlements({
+      Lead_Status: 'MBW started',
+      Payment_Status: 'Completed',
+      Email: 'learner@example.com',
+    });
+    expect(ent.program).toBe('mbw');
+    expect(ent.paymentStatus).toBe('paid');
+  });
 });

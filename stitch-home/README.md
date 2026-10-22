@@ -105,9 +105,10 @@ what is due, how far along, then everything else.
 | Continue | The one thing most visits are for. Real source: `getContinueProgram`. |
 | Hours spent | A week of study time with the trend named. Real source would be `useStreakAnalytics`. |
 | Your progress | Segmented bars, labelled with counts — honest about granularity in a way a smooth bar is not. |
+| Announcement | Notice and announcement merged — two cards for "things staff wrote" is one card. Sits above payment so cohort notices are not buried. |
 | Registration | **Conditional.** Renders only for a registered-but-unpaid tier — a real state in this system. Unconditional, it is an ad. |
-| Programmes | Real covers from `public/programs/`, at `aspect-video` so the 800x450 art is never cropped at any width. Duration and format come from `COURSE_PROGRAM_META` in `src/utils/courseDisplay.js`, with the clock and layers icons the real card uses. Locked keeps its cover (dimmed, greyscaled, badged) and offers **Enroll** — the one thing a learner can actually do from there. |
-| Announcement | Notice and announcement merged — two cards for "things staff wrote" is one card. |
+| Programmes | **Full width** under the top band (not beside the Events rail), so three equal cards fill the content row with no blank column on the right. |
+| Practice Streak | Full-width card under programmes. Sample activity for layout only; production should wire `StreakAnalyticsModule` / `SubmissionHeatmap`. |
 | Recent activity | **In the right rail, under Upcoming Events** — it is reference, and the rail is where reference lives. Timeline with typed markers and a connecting rule. Filters stack at 288px. |
 
 Sample data, like the rest of the page — but the programmes, tiers and access
@@ -155,8 +156,9 @@ The export was static markup with `href="#"` on everything. Two things now work:
 - **Selection follows the click.** `Dashboard` was hard-coded as selected. A
   delegated handler moves `aria-current="page"`, and the red pill is styled off
   that attribute — so the visual state and the accessible name stay in step.
-- **The collapse control collapses.** Clicking it takes the rail from 224px to
-  72px, icons only; clicking again restores it. The button stays reachable while
+- **The collapse control collapses.** Clicking it takes the rail from 200px to
+  72px, icons only; the main panel’s `margin-left` follows so content expands into
+  the freed space. Clicking again restores both. The button stays reachable while
   collapsed, or there would be no way back.
 
 ## Still open — decisions, not defects

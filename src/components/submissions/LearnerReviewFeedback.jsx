@@ -5,7 +5,14 @@ import {
   isLearnerActionRequired,
 } from '../../utils/submissionReview';
 
-function ReviewRound({ entry, round, total, isLatest, actionRequired }) {
+/* How a LEP lesson words each decision: who reviewed, and what they decided. */
+const FACILITATOR_TITLES = {
+  approved: 'Approved by your facilitator',
+  needs_improvement: 'Your facilitator requested changes',
+  rejected: 'Your facilitator requested changes',
+};
+
+function ReviewRound({ entry, round, total, isLatest, actionRequired, variant = 'default' }) {
   const meta = getReviewOutcomeMeta(entry.outcome);
   const tone = meta?.tone || 'pending';
   const label = meta?.learnerLabel || meta?.label || 'Reviewed';
@@ -19,7 +26,16 @@ function ReviewRound({ entry, round, total, isLatest, actionRequired }) {
       }`}
     >
       <div className="submission-review__head">
-        <strong>{total > 1 ? `Review ${round} of ${total}` : 'Review feedback'}</strong>
+        {variant === 'facilitator' && total > 1 && (
+          <span className="submission-review__round-label muted">{`Review ${round} of ${total}`}</span>
+        )}
+        <strong>
+          {variant === 'facilitator'
+            ? FACILITATOR_TITLES[entry.outcome] || 'Feedback from your facilitator'
+            : total > 1
+              ? `Review ${round} of ${total}`
+              : 'Review feedback'}
+        </strong>
         <span className={`mbw-status-pill mbw-status-pill--${tone}`}>{label}</span>
         {reviewedLabel && <span className="muted submission-review__date">{reviewedLabel}</span>}
       </div>
@@ -39,7 +55,7 @@ function ReviewRound({ entry, round, total, isLatest, actionRequired }) {
 /**
  * Shows every CX review round on the learner task page.
  */
-export default function LearnerReviewFeedback({ submission }) {
+export default function LearnerReviewFeedback({ submission, variant = 'default' }) {
   if (!submission) return null;
 
   const reviews = getSubmissionReviewHistory(submission);
@@ -70,6 +86,7 @@ export default function LearnerReviewFeedback({ submission }) {
           <ReviewRound
             key={`${entry.outcome}-${entry.reviewedAt}-${index}`}
             entry={entry}
+            variant={variant}
             round={index + 1}
             total={reviews.length}
             isLatest={index === reviews.length - 1}
@@ -80,7 +97,9 @@ export default function LearnerReviewFeedback({ submission }) {
 
       {actionRequired && (
         <p className="submission-review__hint muted">
-          Review received — please review the feedback and resubmit when you are ready.
+          {variant === 'facilitator'
+            ? 'Update your work above and submit it again.'
+            : 'Review received — please review the feedback and resubmit when you are ready.'}
         </p>
       )}
     </div>

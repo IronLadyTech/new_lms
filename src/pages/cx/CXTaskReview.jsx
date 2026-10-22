@@ -6,6 +6,7 @@ import { useProgramAdapter } from '../../hooks/useProgramAdapter';
 import { SUBMISSION_STATUS } from '../../services/mbwService';
 import { getUserProfile } from '../../services/userService';
 import SubmissionReviewView from '../../components/cx/SubmissionReviewView';
+import { getSubmissionVersions } from '../../utils/submissionVersions';
 import DashboardSkeleton from '../../components/ui/DashboardSkeleton';
 import {
   REVIEW_OUTCOME,
@@ -72,6 +73,22 @@ export default function CXTaskReview() {
         setLearner(profile);
         setTasks(taskList);
         setSubmission(sub);
+        /*
+         * LEP: opening a handed-in submission starts its review, which ends the
+         * learner's chance to edit it. Other programmes have no such step.
+         */
+        if (adapter.markReviewStarted && sub?.status === SUBMISSION_STATUS.SUBMITTED && user?.uid) {
+          adapter
+            .markReviewStarted(adapter.submissionDocId(userId, taskId), user.uid)
+            .then((started) => {
+              if (started && !cancelled) {
+                setSubmission((prev) =>
+                  prev ? { ...prev, status: SUBMISSION_STATUS.UNDER_REVIEW } : prev
+                );
+              }
+            })
+            .catch((err) => console.warn('Could not mark the review as started', err));
+        }
         setFeedback(sub?.feedback || '');
         setOutcome(sub?.reviewOutcome || REVIEW_OUTCOME.APPROVED);
       } catch (e) {
@@ -87,6 +104,7 @@ export default function CXTaskReview() {
 
   const task = useMemo(() => tasks.find((t) => t.id === taskId), [tasks, taskId]);
   const reviewDisplay = getSubmissionReviewDisplay(submission);
+  const versions = getSubmissionVersions(submission);
   const hasSubmission = Boolean(
     submission &&
     submission.status !== SUBMISSION_STATUS.LOCKED &&
@@ -206,6 +224,29 @@ export default function CXTaskReview() {
             <h2>Submission</h2>
             <SubmissionReviewView submission={submission} task={task} />
           </section>
+
+          {versions.length > 1 && (
+            <section className="cx-section cx-review-versions">
+              <h2>Earlier versions</h2>
+              <p className="muted">
+                {`Above is version ${versions.length}. Earlier hand-ins are kept here.`}
+              </p>
+              {versions
+                .slice(0, -1)
+                .reverse()
+                .map((v) => (
+                  <details key={v.version} className="cx-review-versions__item">
+                    <summary>
+                      {`v${v.version} · ${formatReviewedAt(v.submittedAt) || 'date not recorded'}`}
+                    </summary>
+                    <SubmissionReviewView
+                      submission={{ ...v.data, status: submission.status, submittedAt: v.submittedAt }}
+                      task={task}
+                    />
+                  </details>
+                ))}
+            </section>
+          )}
 
           <section className="cx-section cx-review-form">
             <h2>Your review</h2>

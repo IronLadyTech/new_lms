@@ -49,32 +49,18 @@ function groupByDate(eventList) {
   }, {});
 }
 
-function useMobileDefaultAgenda() {
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== 'undefined' ? window.matchMedia('(max-width: 640px)').matches : false
-  );
-
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 640px)');
-    const onChange = (e) => setIsMobile(e.matches);
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
-  }, []);
-
-  return isMobile;
-}
-
 export default function LearnerCalendar({ events, initialDate = '', focusEventId = '' }) {
   const today = new Date();
   const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
   const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDate, setSelectedDate] = useState(todayStr);
-  const isMobile = useMobileDefaultAgenda();
+  /*
+   * Month on every screen. A phone used to be switched to the agenda list on
+   * load, which meant tapping Calendar never showed a calendar — and because
+   * the switch was tied to the breakpoint, it also reset the view whenever the
+   * screen crossed 640px. Agenda is still one tap away in the view toggle.
+   */
   const [viewMode, setViewMode] = useState('month');
-
-  useEffect(() => {
-    setViewMode(isMobile ? 'agenda' : 'month');
-  }, [isMobile]);
 
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();

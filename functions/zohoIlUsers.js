@@ -150,6 +150,33 @@ async function searchIlUserByEmail(email, deps) {
   return searchIlUserByCriteria(`(${emailField}:equals:${trimmed})`, deps);
 }
 
+/** Every IL_Users row sharing this email (same person, multiple program logins). */
+async function searchAllIlUsersByEmail(email, deps) {
+  const trimmed = email?.trim();
+  if (!trimmed) return [];
+
+  const token = await deps.getAccessToken();
+  if (!token) return [];
+
+  const module = getIlUsersModule();
+  const res = await fetch(
+    `${deps.getApiDomain()}/crm/v2/${module}/search?email=${encodeURIComponent(trimmed)}`,
+    { headers: { Authorization: `Zoho-oauthtoken ${token}` } }
+  );
+
+  if (!res.ok || res.status === 204) return [];
+  const body = await res.json().catch(() => ({}));
+  const rows = body?.data || [];
+
+  const hydrated = [];
+  for (const row of rows) {
+    if (!row?.id) continue;
+    const full = await getIlUserById(row.id, deps);
+    hydrated.push(full || row);
+  }
+  return hydrated;
+}
+
 async function searchIlUserByUsername(username, deps) {
   const trimmed = username?.trim();
   if (!trimmed) return null;
@@ -640,6 +667,7 @@ module.exports = {
   hasUsableIlPassword,
   hydrateIlUserFull,
   searchIlUserByEmail,
+  searchAllIlUsersByEmail,
   searchIlUserByUsername,
   findIlUserRecord,
   diagnoseIlUserLookup,

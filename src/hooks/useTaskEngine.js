@@ -17,6 +17,9 @@ import {
   clearReviewFieldsForResubmit,
 } from '../utils/submissionReview';
 import { needsCloudUploadRetry } from '../utils/submissionMedia';
+import { getUnlockedPhaseIds } from '../utils/mbwProgramUtils';
+import { buildPhaseLockReason } from '../utils/phaseLock';
+import { PROGRAMS } from '../data/programTypes';
 
 export const WATCH_THRESHOLD = 0.9;
 
@@ -53,7 +56,10 @@ function isDateUnlocked(unlockDate) {
   return today >= d;
 }
 
-function computeTaskStates(tasks, submissions, watchProgress) {
+/**
+ * Pass 1: lesson order only — each task opens when the one before it is done.
+ */
+function computeSequentialTaskStates(tasks, submissions, watchProgress) {
   return tasks.map((task, index) => {
     const sub = submissions[task.id];
     const prevTask = index > 0 ? tasks[index - 1] : null;
@@ -79,6 +85,7 @@ function computeTaskStates(tasks, submissions, watchProgress) {
       sub?.watchCompleted;
 
     const isWatchOnly = task.type === TASK_TYPES.WATCH_ONLY;
+    const complete = isTaskComplete(status);
 
     return {
       task,
@@ -87,10 +94,47 @@ function computeTaskStates(tasks, submissions, watchProgress) {
       watched,
       watchPercent: watchProgress[task.id] ?? sub?.watchProgress ?? 0,
       canSubmit: learnerCanSubmit(status, watched, isWatchOnly, task, sub),
-      isComplete: isTaskComplete(status),
+      isComplete: complete,
       prevTaskId: prevTask?.id || null,
+      phaseLocked: false,
+      lockedBy: null,
     };
   });
+}
+
+/**
+ * Pass 2: quarter / payment gates — same rules as the MBW journey cards.
+ *
+ * Without this, finishing the last Quarter 1 lesson unlocked Quarter 2 tasks in
+ * the player (Next lesson) while the overview still showed Q2 locked for
+ * registration-only payment. LEP and 100BM already had this second pass.
+ */
+function applyPhaseGates(sequentialStates, profile) {
+  const unlockedPhases = getUnlockedPhaseIds(sequentialStates, profile);
+  const reasonFor = buildPhaseLockReason(
+    getUnlockedPhaseIds,
+    sequentialStates,
+    profile,
+    PROGRAMS.MBW
+  );
+
+  return sequentialStates.map((ts) => {
+    if (unlockedPhases.has(ts.task.phase) || ts.isComplete) {
+      return { ...ts, phaseLocked: false, lockedBy: null };
+    }
+    return {
+      ...ts,
+      status: SUBMISSION_STATUS.LOCKED,
+      canSubmit: false,
+      phaseLocked: true,
+      lockedBy: reasonFor(ts.task.phase),
+    };
+  });
+}
+
+function computeTaskStates(tasks, submissions, watchProgress, profile) {
+  const sequential = computeSequentialTaskStates(tasks, submissions, watchProgress);
+  return applyPhaseGates(sequential, profile);
 }
 
 export function useTaskEngine(userId) {
@@ -203,8 +247,8 @@ export function useTaskEngine(userId) {
   }, [reload]);
 
   const taskStates = useMemo(
-    () => computeTaskStates(tasks, submissions, watchProgress),
-    [tasks, submissions, watchProgress]
+    () => computeTaskStates(tasks, submissions, watchProgress, profile),
+    [tasks, submissions, watchProgress, profile]
   );
 
   const completedCount = taskStates.filter((t) => t.isComplete).length;

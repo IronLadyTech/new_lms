@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import WatchGatedVideo from './WatchGatedVideo';
 import TextSubmission from './submissions/TextSubmission';
@@ -15,6 +16,7 @@ import { getTaskDurationHint } from '../../utils/mbwProgramUtils';
 import LearnerReviewFeedback from '../submissions/LearnerReviewFeedback';
 import LearnerSubmissionPreview from '../submissions/LearnerSubmissionPreview';
 import { useLessonAsset } from '../../hooks/useLessonAsset';
+import useMediaQuery from '../../hooks/useMediaQuery';
 
 function SubmissionBody({
   task,
@@ -131,13 +133,29 @@ export default function TaskContent({
   variant = 'default',
   courseContent = null,
 }) {
-  const { task, submission, status, watched, canSubmit, isComplete, prevTaskId } = taskState;
+  const {
+    task,
+    submission,
+    status,
+    watched,
+    canSubmit,
+    isComplete,
+    prevTaskId,
+    phaseLocked,
+    lockedBy,
+  } = taskState;
   const lessonAsset = useLessonAsset(taskState?.task?.id);
   const isLesson = variant === 'lesson';
+  /*
+   * Tabs are for narrow screens only. On web, Overview + Your work stack open;
+   * Course content lives in the sticky side rail (not a third tab).
+   */
+  const stacked = useMediaQuery('(min-width: 1024px)');
   const [tab, setTab] = useState('overview');
   const hasCourseTab = Boolean(courseContent);
 
   const locked = status === SUBMISSION_STATUS.LOCKED;
+  const lockedByPayment = phaseLocked && lockedBy === 'payment';
   const showVideo = task.requiresWatch || task.type === TASK_TYPES.WATCH_ONLY;
   const primary = getPrimaryStatus(status, isComplete);
   const showSubmittedPreview =
@@ -210,15 +228,28 @@ export default function TaskContent({
 
         {locked && (
           <div className="alert alert-warning mbw-task__locked">
-            <p>Complete the previous task to unlock this one.</p>
-            {prevTaskId && (
-              <button
-                type="button"
-                className="btn btn-outline btn-sm"
-                onClick={() => onGoToPrevious?.(prevTaskId)}
-              >
-                Go to previous task <ChevronRight size={14} />
-              </button>
+            {lockedByPayment ? (
+              <>
+                <p>This section needs full program payment.</p>
+                <Link to="/app/support" className="btn btn-outline btn-sm">
+                  Payment support
+                </Link>
+              </>
+            ) : phaseLocked ? (
+              <p>Finish the phase before this one and it opens on its own.</p>
+            ) : (
+              <>
+                <p>Complete the previous task to unlock this one.</p>
+                {prevTaskId && (
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={() => onGoToPrevious?.(prevTaskId)}
+                  >
+                    Go to previous task <ChevronRight size={14} />
+                  </button>
+                )}
+              </>
             )}
           </div>
         )}
@@ -232,50 +263,56 @@ export default function TaskContent({
 
         {!locked && (
           <>
-            <div className="mbw-task__tabs" role="tablist" aria-label="Lesson sections">
-              <button
-                type="button"
-                role="tab"
-                id="mbw-tab-overview"
-                aria-selected={tab === 'overview'}
-                aria-controls="mbw-panel-overview"
-                className={`mbw-task__tab${tab === 'overview' ? ' is-active' : ''}`}
-                onClick={() => setTab('overview')}
-              >
-                Overview
-              </button>
-              <button
-                type="button"
-                role="tab"
-                id="mbw-tab-work"
-                aria-selected={tab === 'work'}
-                aria-controls="mbw-panel-work"
-                className={`mbw-task__tab${tab === 'work' ? ' is-active' : ''}`}
-                onClick={() => setTab('work')}
-              >
-                Your work
-              </button>
-              {hasCourseTab && (
+            {!stacked && (
+              <div className="mbw-task__tabs" role="tablist" aria-label="Lesson sections">
                 <button
                   type="button"
                   role="tab"
-                  id="mbw-tab-course"
-                  aria-selected={tab === 'course'}
-                  aria-controls="mbw-panel-course"
-                  className={`mbw-task__tab mbw-task__tab--course${tab === 'course' ? ' is-active' : ''}`}
-                  onClick={() => setTab('course')}
+                  id="mbw-tab-overview"
+                  aria-selected={tab === 'overview'}
+                  aria-controls="mbw-panel-overview"
+                  className={`mbw-task__tab${tab === 'overview' ? ' is-active' : ''}`}
+                  onClick={() => setTab('overview')}
                 >
-                  Course content
+                  Overview
                 </button>
-              )}
-            </div>
+                <button
+                  type="button"
+                  role="tab"
+                  id="mbw-tab-work"
+                  aria-selected={tab === 'work'}
+                  aria-controls="mbw-panel-work"
+                  className={`mbw-task__tab${tab === 'work' ? ' is-active' : ''}`}
+                  onClick={() => setTab('work')}
+                >
+                  Your work
+                </button>
+                {hasCourseTab && (
+                  <button
+                    type="button"
+                    role="tab"
+                    id="mbw-tab-course"
+                    aria-selected={tab === 'course'}
+                    aria-controls="mbw-panel-course"
+                    className={`mbw-task__tab mbw-task__tab--course${tab === 'course' ? ' is-active' : ''}`}
+                    onClick={() => setTab('course')}
+                  >
+                    Course content
+                  </button>
+                )}
+              </div>
+            )}
 
-            {tab === 'overview' && (
+            {(stacked || tab === 'overview') && (
               <section
                 className="mbw-task__panel"
-                role="tabpanel"
-                id="mbw-panel-overview"
-                aria-labelledby="mbw-tab-overview"
+                {...(stacked
+                  ? {}
+                  : {
+                      role: 'tabpanel',
+                      id: 'mbw-panel-overview',
+                      'aria-labelledby': 'mbw-tab-overview',
+                    })}
               >
                 <h2 className="mbw-task__panel-title">About this task</h2>
                 {task.description ? (
@@ -288,12 +325,16 @@ export default function TaskContent({
               </section>
             )}
 
-            {tab === 'work' && (
+            {(stacked || tab === 'work') && (
               <section
                 className="mbw-task__panel mbw-task__submission"
-                role="tabpanel"
-                id="mbw-panel-work"
-                aria-labelledby="mbw-tab-work"
+                {...(stacked
+                  ? {}
+                  : {
+                      role: 'tabpanel',
+                      id: 'mbw-panel-work',
+                      'aria-labelledby': 'mbw-tab-work',
+                    })}
               >
                 <h2 className="mbw-task__panel-title">Your submission</h2>
                 <SubmissionBody {...submissionProps} />
@@ -301,7 +342,7 @@ export default function TaskContent({
               </section>
             )}
 
-            {hasCourseTab && tab === 'course' && (
+            {!stacked && hasCourseTab && tab === 'course' && (
               <section
                 className="mbw-task__panel mbw-task__panel--course"
                 role="tabpanel"
@@ -349,15 +390,28 @@ export default function TaskContent({
 
       {locked && (
         <div className="alert alert-warning mbw-task__locked">
-          <p>Complete the previous task to unlock this one.</p>
-          {prevTaskId && (
-            <button
-              type="button"
-              className="btn btn-outline btn-sm"
-              onClick={() => onGoToPrevious?.(prevTaskId)}
-            >
-              Go to previous task <ChevronRight size={14} />
-            </button>
+          {lockedByPayment ? (
+            <>
+              <p>This section needs full program payment.</p>
+              <Link to="/app/support" className="btn btn-outline btn-sm">
+                Payment support
+              </Link>
+            </>
+          ) : phaseLocked ? (
+            <p>Finish the phase before this one and it opens on its own.</p>
+          ) : (
+            <>
+              <p>Complete the previous task to unlock this one.</p>
+              {prevTaskId && (
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => onGoToPrevious?.(prevTaskId)}
+                >
+                  Go to previous task <ChevronRight size={14} />
+                </button>
+              )}
+            </>
           )}
         </div>
       )}

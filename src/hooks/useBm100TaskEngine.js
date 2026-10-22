@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { buildPhaseLockReason, LOCKED_BY } from '../utils/phaseLock';
+import { PROGRAMS } from '../data/programTypes';
 import { useAuth } from '../context/AuthContext';
 import {
   getStaticTasks,
@@ -93,6 +95,7 @@ function computeSequentialTaskStates(tasks, submissions, watchProgress) {
       isComplete: complete,
       prevTaskId: prevTask?.id || null,
       phaseLocked: false,
+      lockedBy: null,
     };
   });
 }
@@ -103,16 +106,24 @@ function computeSequentialTaskStates(tasks, submissions, watchProgress) {
  */
 function applyPhaseGates(sequentialStates, profile) {
   const unlockedPhases = getUnlockedPhaseIds(sequentialStates, profile);
+  /* Why a phase is shut, not merely that it is — see utils/phaseLock. */
+  const reasonFor = buildPhaseLockReason(
+    getUnlockedPhaseIds,
+    sequentialStates,
+    profile,
+    PROGRAMS.BM100
+  );
 
   return sequentialStates.map((ts) => {
     if (unlockedPhases.has(ts.task.phase) || ts.isComplete) {
-      return { ...ts, phaseLocked: false };
+      return { ...ts, phaseLocked: false, lockedBy: null };
     }
     return {
       ...ts,
       status: SUBMISSION_STATUS.LOCKED,
       canSubmit: false,
       phaseLocked: true,
+      lockedBy: reasonFor(ts.task.phase),
     };
   });
 }
@@ -261,13 +272,19 @@ export default function useBm100TaskEngine(userId) {
     (taskId) => {
       const ts = getTaskState(taskId);
       if (ts?.phaseLocked) {
+        /*
+         * Both reasons used to come out as "pay up". A learner who had paid in
+         * full but had not finished the phase before it was told to pay again.
+         */
+        const byPayment = ts.lockedBy === LOCKED_BY.PAYMENT;
         return {
-          message:
-            'Phase 2 and beyond need full program payment. Registration covers Onboarding and Phase 1 only — contact Payment support to continue.',
+          message: byPayment
+            ? 'This section needs full program payment. Registration covers Onboarding and Phase 1. Completing payment opens the rest.'
+            : 'Finish the phase before this one and it opens on its own.',
           reviewRequired: false,
           taskId,
           blocked: true,
-          paymentRequired: true,
+          paymentRequired: byPayment,
         };
       }
       if (ts?.status === SUBMISSION_STATUS.LOCKED) {

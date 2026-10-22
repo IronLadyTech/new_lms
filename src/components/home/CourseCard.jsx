@@ -19,7 +19,13 @@ export default function CourseCard({ course, access = null, progress = null, dem
   const tasksPath = getProgramTasksPath(course.code);
   const courseHref = `/app/course/${course.id}`;
   const state = access?.state || (access?.canAccess ? PROGRAM_ACCESS.OPEN : PROGRAM_ACCESS.LOCKED);
-  const canAccess = access?.canAccess ?? false;
+  /*
+   * Enrolment alone used to decide this, which handed the full task list to a
+   * learner who was enrolled but had not paid. `canOpenTasks` asks both
+   * questions and is computed by `getProgramAccessState`, so this card and the
+   * programme panel cannot disagree about the same learner.
+   */
+  const canAccess = access?.canOpenTasks ?? access?.canAccess ?? false;
   const locked = !canAccess;
   const hasBrandCover = Boolean(getProgramCoverSrc(course.code));
   const marketingUrl = getProgramMarketingUrl(course.code);

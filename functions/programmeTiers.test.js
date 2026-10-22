@@ -123,3 +123,25 @@ describe('malformed input', () => {
     }
   });
 });
+
+describe('enrichRecordWithAllZohoEnrollments keeps IL Users lists separate', () => {
+  const { enrichRecordWithAllZohoEnrollments } = provisioning;
+
+  it('puts IL Users enrolment into enrolment, not registration', () => {
+    const enriched = enrichRecordWithAllZohoEnrollments(
+      { Program_Registration_Details: 'Leadership Essentials Program' },
+      {
+        ilUsers: [
+          {
+            Program_Registration_Details: 'Leadership Essentials Program',
+            Program_Enrollment_Details: 'Master of Business Warfare',
+          },
+        ],
+      }
+    );
+    expect(tiersFromProgrammeLists(enriched)).toEqual({
+      lep: 'register',
+      mbw: 'paid',
+    });
+  });
+});

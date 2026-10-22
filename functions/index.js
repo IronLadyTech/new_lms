@@ -5,10 +5,8 @@
  *   1. cd functions && npm install
  *   2. Zoho CRM credentials — copy functions/.env.example → functions/.env
  *      (deploy loads this automatically). Optional: firebase functions:secrets:set …
- *   3. SMTP secrets (optional — weekly MBW reminder):
- *        firebase functions:secrets:set SMTP_HOST
- *        firebase functions:secrets:set SMTP_USER
- *        firebase functions:secrets:set SMTP_PASS
+ *   3. Optional SMTP / OpenAI / Razorpay keys live in functions/.env
+ *      (Secret Manager needs billing — this project uses .env instead).
  *   4. Deploy: firebase deploy --only functions
  *
  * Zoho sync runs automatically on user profile changes and new activities.
@@ -17,11 +15,11 @@
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { onDocumentWritten, onDocumentCreated } = require('firebase-functions/v2/firestore');
 const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
-const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
 const zoho = require('./zoho');
 const zohoBudget = require('./zohoBudget');
+const phoneAccess = require('./phoneAccess');
 const { parseWebhookBody, hasWebhookCredentials } = require('./webhookBody');
 const {
   needsEntitlementBackfill,
@@ -33,10 +31,6 @@ const { FAILURES, buildFailureDigest } = require('./syncAlerts');
 
 admin.initializeApp();
 const db = admin.firestore();
-
-const SMTP_HOST = defineSecret('SMTP_HOST');
-const SMTP_USER = defineSecret('SMTP_USER');
-const SMTP_PASS = defineSecret('SMTP_PASS');
 
 /** Bulk push can run for many users — default 60s timeout surfaces as a browser CORS error. */
 const ZOHO_BULK_SYNC_OPTS = {
@@ -163,7 +157,6 @@ exports.zohoSyncFailureDigest = onSchedule(
   {
     schedule: '15 * * * *',
     timeZone: 'Asia/Kolkata',
-    secrets: [SMTP_HOST, SMTP_USER, SMTP_PASS],
   },
   async () => {
     const snap = await db
@@ -178,14 +171,14 @@ exports.zohoSyncFailureDigest = onSchedule(
     if (!digest) return;
 
     const transport = nodemailer.createTransport({
-      host: SMTP_HOST.value(),
+      host: process.env.SMTP_HOST,
       port: 465,
       secure: true,
-      auth: { user: SMTP_USER.value(), pass: SMTP_PASS.value() },
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
     });
 
     await transport.sendMail({
-      from: `"Iron Lady LMS" <${SMTP_USER.value()}>`,
+      from: `"Iron Lady LMS" <${process.env.SMTP_USER}>`,
       to: digest.to,
       subject: digest.subject,
       text: digest.text,
@@ -209,17 +202,16 @@ exports.weeklyLinkedInReminder = onSchedule(
   {
     schedule: '30 2 * * 1', // Monday 02:30 UTC = 08:00 IST
     timeZone: 'Asia/Kolkata',
-    secrets: [SMTP_HOST, SMTP_USER, SMTP_PASS],
   },
   async () => {
     const weekLabel = currentWeekLabel();
     console.log(`Running LinkedIn reminders for ${weekLabel}`);
 
     const transport = nodemailer.createTransport({
-      host: SMTP_HOST.value(),
+      host: process.env.SMTP_HOST,
       port: 587,
       secure: false,
-      auth: { user: SMTP_USER.value(), pass: SMTP_PASS.value() },
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
     });
 
     const taskIds = await getRecurringPostTaskIds();
@@ -1169,6 +1161,88 @@ exports.zohoListIlRegistration = onCall(async (request) => {
   return zoho.listIlRegistrationPage({ page, perPage });
 });
 
+async function assertCmsStaff(db, uid) {
+  const snap = await db.collection('users').doc(uid).get();
+  const role = snap.data()?.role;
+  if (!['admin', 'superadmin', 'pl', 'cem', 'moderator'].includes(role)) {
+    throw new HttpsError('permission-denied', 'Staff CMS access required');
+  }
+}
+
+/** Mobile staff CMS — unique Leads LEP_Batch values (LEP Delivery Desk cohort list). */
+exports.cmsListLepBatchesFromZoho = onCall(ZOHO_BULK_SYNC_OPTS, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', 'Sign in required');
+  }
+  await assertCmsStaff(db, request.auth.uid);
+
+  if (!zoho.isConfigured()) {
+    return { ok: false, reason: 'Zoho secrets are not configured' };
+  }
+
+  try {
+    const batches = await zoho.listCmsLepBatchKeys();
+    return { ok: true, batches, count: batches.length };
+  } catch (err) {
+    console.error('cmsListLepBatchesFromZoho failed:', err);
+    return { ok: false, reason: err.message || String(err) };
+  }
+});
+
+/** Mobile staff CMS — part paid / full paid / late joiner counts for one batch (numbers only). */
+exports.cmsBatchLearnerCounts = onCall({ region: 'us-central1' }, async (request) => {
+  const { runCmsBatchLearnerCounts } = require('./cmsBatchLearners');
+  return runCmsBatchLearnerCounts(db, request);
+});
+
+/** Every night 2:00 AM IST: bring all Zoho batches (LEP, 100BM, MBW) into the LMS, gently on the Zoho quota. */
+exports.zohoCmsNightlySync = onSchedule(
+  { schedule: '0 2 * * *', timeZone: 'Asia/Kolkata', region: 'us-central1', ...ZOHO_BULK_SYNC_OPTS },
+  async () => {
+    if (!zoho.isConfigured()) return;
+    const { runZohoCmsSync } = require('./zohoCmsSync');
+    const result = await runZohoCmsSync(db, zoho.buildBatchSyncDeps(db), { trigger: 'nightly' });
+    console.log('zohoCmsNightlySync', result);
+  }
+);
+
+/** Mobile staff CMS — Zoho sync status in plain words, and "Sync now" (at most hourly). */
+exports.cmsZohoSync = onCall({ region: 'us-central1', ...ZOHO_BULK_SYNC_OPTS }, async (request) => {
+  if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in required');
+  await assertCmsStaff(db, request.auth.uid);
+  const sync = require('./zohoCmsSync');
+  if (request.data?.action === 'run') {
+    if (!zoho.isConfigured()) return { ok: false, message: 'Zoho is not connected on the server.' };
+    return sync.runZohoCmsSyncNow(db, zoho.buildBatchSyncDeps(db), request.auth.uid);
+  }
+  const status = await sync.readStatus(db);
+  return { ok: true, status: status || null };
+});
+
+/** CMS batch calendar → web LMS calendar: every change to a batch's sessions shows in the LMS too. */
+exports.cmsBatchCalendarSync = onDocumentWritten(
+  { document: 'cms_batches/{batchId}', region: 'us-central1' },
+  async (event) => {
+    const after = event.data?.after;
+    const batch = after?.exists ? after.data() : null;
+    const { syncBatchCalendar } = require('./cmsCalendarSync');
+    const result = await syncBatchCalendar(db, event.params.batchId, batch);
+    if (result.written) console.log('cmsBatchCalendarSync', event.params.batchId, result);
+  }
+);
+
+/** Mobile staff CMS — app analytics (opens, activity, practice, videos) for a batch or a program. */
+exports.cmsAppAnalytics = onCall({ region: 'us-central1', timeoutSeconds: 120, memory: '512MiB' }, async (request) => {
+  const { runCmsAppAnalytics } = require('./cmsAppAnalytics');
+  return runCmsAppAnalytics(db, request);
+});
+
+/** Mobile staff CMS — the real LMS batches (synced from Zoho) for LEP, 100BM or MBW. */
+exports.cmsListProgramBatches = onCall({ region: 'us-central1' }, async (request) => {
+  const { runCmsListProgramBatches } = require('./cmsBatchLearners');
+  return runCmsListProgramBatches(db, request);
+});
+
 // ── Zoho CRM — first login: create Firebase user from IL_Users credentials ─
 exports.ensureZohoUserOnLogin = onCall(LOGIN_FN_OPTS, async (request) => {
   if (!zoho.isConfigured()) {
@@ -1186,6 +1260,37 @@ exports.ensureZohoUserOnLogin = onCall(LOGIN_FN_OPTS, async (request) => {
 
   return zoho.provisionFromLoginCredentials(db, email, password);
 });
+
+/**
+ * Phone login — look up mobile in Zoho IL_Users.
+ * Returns { ok, guest, token? }. Guest = no seat (explore mode).
+ * Token is a Firebase custom token for demo OTP / post-verify sign-in.
+ */
+exports.resolvePhoneAccess = onCall(async (request) => {
+  const phone = request.data?.phone;
+  if (!phone || typeof phone !== 'string') {
+    throw new HttpsError('invalid-argument', 'phone is required');
+  }
+  return phoneAccess.resolvePhoneAccess(db, phone, {
+    isConfigured: () => zoho.isConfigured(),
+    getAccessToken: zoho.getAccessToken,
+    getApiDomain: zoho.getApiDomain,
+    syncEntitlementsFromZoho: (firestore, email) =>
+      zoho.syncEntitlementsFromZoho(firestore, email, null),
+  });
+});
+
+/** First-login welcome — city / domain / B-HAG on profile (+ Zoho Lead when mapped). */
+exports.updateMyWelcomeProfile = onCall(
+  { timeoutSeconds: 120, memory: '256MiB' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required');
+    return phoneAccess.updateMyWelcomeProfile(db, uid, request.data || {}, {
+      updateLeadWelcomeFields: zoho.updateLeadWelcomeFields,
+    });
+  }
+);
 
 exports.zohoDiagnoseIlUser = onCall(async (request) => {
   if (!request.auth?.uid) {
@@ -1405,4 +1510,82 @@ exports.adminDeleteUser = onCall(async (request) => {
   if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in required');
   const { userId } = request.data || {};
   return userAdmin.deleteUserAccount(db, { callerUid: request.auth.uid, userId });
+});
+
+// ── CMS notification test (mobile in-app + FCM) ─────────────────
+exports.sendParticipantNotificationTest = onCall({ region: 'us-central1' }, async (request) => {
+  const { runSendParticipantNotificationTest } = require('./sendParticipantNotificationTest');
+  return runSendParticipantNotificationTest(request);
+});
+
+exports.lepNotificationScheduler = onSchedule(
+  { schedule: 'every 15 minutes', timeZone: 'Asia/Kolkata', region: 'us-central1' },
+  async () => {
+    const { runLepNotificationScheduler } = require('./lepNotificationScheduler');
+    return runLepNotificationScheduler();
+  }
+);
+
+// ── IL Guide — mobile app only (no web LMS UI) ─────────────────
+const ilGuideHandler = require('./ilGuide/handler');
+
+/**
+ * Callable for the Expo app. Not wired into web LMS screens.
+ * OPENAI_API_KEY lives in functions/.env
+ */
+exports.ilGuideWhisper = onCall(
+  {
+    timeoutSeconds: 30,
+    memory: '256MiB',
+  },
+  async (request) => {
+    const apiKey = process.env.OPENAI_API_KEY || '';
+    const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+    return ilGuideHandler.handleWhisper(request, db, apiKey, model);
+  }
+);
+
+// ── Razorpay — mobile programme balance payments ───────────────
+// Keys live in functions/.env (same as Zoho). Lazy-require so deploy discovery
+// does not load the Razorpay SDK during the 10s analysis window.
+const RAZORPAY_FN_OPTS = {
+  timeoutSeconds: 60,
+  memory: '256MiB',
+};
+
+function razorpayPayments() {
+  return require('./razorpayPayments');
+}
+
+exports.createRazorpayOrder = onCall(RAZORPAY_FN_OPTS, async (request) => {
+  return razorpayPayments().createOrder(
+    request,
+    db,
+    process.env.RAZORPAY_KEY_ID,
+    process.env.RAZORPAY_KEY_SECRET
+  );
+});
+
+exports.verifyRazorpayPayment = onCall(RAZORPAY_FN_OPTS, async (request) => {
+  return razorpayPayments().verifyPayment(
+    request,
+    db,
+    process.env.RAZORPAY_KEY_ID,
+    process.env.RAZORPAY_KEY_SECRET
+  );
+});
+
+exports.razorpayWebhook = onRequest({ cors: false }, async (req, res) => {
+  try {
+    const result = await razorpayPayments().handleWebhook(
+      req,
+      db,
+      process.env.RAZORPAY_KEY_SECRET,
+      process.env.RAZORPAY_WEBHOOK_SECRET
+    );
+    res.status(result.status).send(result.body);
+  } catch (err) {
+    console.error('razorpayWebhook:', err);
+    res.status(500).send('error');
+  }
 });

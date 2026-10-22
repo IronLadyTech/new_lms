@@ -33,6 +33,25 @@ const LESSON_ASSETS = {
   },
 };
 
+/*
+ * LEP, Week 2 — the 27 Principles and 5 Rituals sessions.
+ *
+ * The 27 Principles recording is the one MBW already serves, referenced rather
+ * than copied so the two programmes can never drift onto different links.
+ * Week 2 is a paid LEP phase, so both are paid lessons here; the MBW entry keeps
+ * its own setting.
+ */
+LESSON_ASSETS['lep-day3-27-principles'] = {
+  program: 'lep',
+  requiresPaid: true,
+  url: LESSON_ASSETS['mbw-principles'].url,
+};
+LESSON_ASSETS['lep-day3-5-rituals'] = {
+  program: 'lep',
+  requiresPaid: true,
+  url: 'https://d3jv3ztk062m9h.cloudfront.net/videos/LEP%205%20Rituals/output/Practicing%20the%205%20Daily%20Rituals%20of%20Iron%20Lady.m3u8',
+};
+
 /** Firestore collection holding per-batch overrides. Staff write, learners never read. */
 const LESSON_MEDIA = 'lesson_media';
 

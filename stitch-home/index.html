@@ -123,15 +123,360 @@
           /* Right corners only — the left edge stays square against the
              viewport, so the pink reaches the screen edge cleanly. */
           border-radius: 0 24px 24px 0;
+          transition: width 0.2s ease;
         }
 
         .app-card > .shell__panel {
           margin-left: 200px;
+          transition: margin-left 0.2s ease;
+          min-width: 0;
+        }
+
+        /* When the rail collapses to icons, reclaim the freed width for content. */
+        .app-card:has(> .shell__aside.is-collapsed) > .shell__panel {
+          margin-left: 72px;
         }
       }
 
 
-      /* ---------- Hours spent ---------- */
+      /* ---------- Programmes — fill the main column, no leftover ledge ---------- */
+
+      .dashboard-primary {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        width: 100%;
+      }
+
+      @media (min-width: 1024px) {
+        .dashboard-primary {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 18rem;
+          gap: 1.5rem 2rem;
+          align-items: start;
+        }
+      }
+
+      .dashboard-primary__main {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        min-width: 0;
+      }
+
+      .dashboard-full {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .programmes-grid {
+        display: grid;
+        width: 100%;
+        gap: 1rem;
+        grid-template-columns: 1fr;
+      }
+
+      .programmes-grid > * {
+        min-width: 0;
+        width: 100%;
+      }
+
+      @media (min-width: 640px) {
+        .programmes-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .programmes-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      /* ---------- Practice Streak (GitHub-style activity) ---------- */
+
+      .practice-streak {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 1.25rem 1.35rem 1.1rem;
+        border-radius: 20px;
+        border: 1px solid #ebeadc;
+        background: #fff;
+        box-shadow: 0 1px 2px rgb(35 31 32 / 0.04);
+      }
+
+      .practice-streak__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+      }
+
+      .practice-streak__title {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #231f20;
+      }
+
+      .practice-streak__share {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border: none;
+        border-radius: 10px;
+        background: transparent;
+        color: #5c5557;
+        cursor: pointer;
+      }
+
+      .practice-streak__share:hover,
+      .practice-streak__share:focus-visible {
+        background: #f3f1e4;
+        color: #231f20;
+        outline: none;
+      }
+
+      .practice-streak__share:focus-visible {
+        box-shadow: 0 0 0 2px #fff, 0 0 0 4px #f52929;
+      }
+
+      .practice-streak__metrics {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+        margin-bottom: 1.15rem;
+      }
+
+      @media (min-width: 640px) {
+        .practice-streak__metrics {
+          grid-template-columns: auto repeat(2, minmax(0, 1fr));
+          align-items: center;
+          gap: 0;
+        }
+
+        .practice-streak__metric {
+          padding: 0 1.15rem;
+          border-left: 1px solid #ebeadc;
+        }
+
+        .practice-streak__metric--current {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding-left: 0;
+          border-left: none;
+          padding-right: 1.15rem;
+        }
+      }
+
+      .practice-streak__flame {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: #fff4d6;
+        color: #e67e22;
+        flex-shrink: 0;
+      }
+
+      .practice-streak__value {
+        margin: 0;
+        font-size: 1.65rem;
+        font-weight: 800;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+        color: #231f20;
+      }
+
+      .practice-streak__label {
+        margin: 0.2rem 0 0;
+        font-size: 0.78rem;
+        color: #5c5557;
+      }
+
+      .practice-streak__toolbar {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 0.65rem;
+      }
+
+      .practice-streak__years {
+        display: inline-flex;
+        padding: 3px;
+        border-radius: 999px;
+        background: #f3f1e4;
+        gap: 2px;
+      }
+
+      .practice-streak__year {
+        border: none;
+        background: transparent;
+        border-radius: 999px;
+        padding: 0.35rem 0.7rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #5c5557;
+        cursor: pointer;
+        min-height: 32px;
+      }
+
+      .practice-streak__year.is-active {
+        background: #fff;
+        color: #231f20;
+        box-shadow: 0 1px 2px rgb(35 31 32 / 0.08);
+      }
+
+      .practice-streak__year:focus-visible {
+        outline: 2px solid #f52929;
+        outline-offset: 1px;
+      }
+
+      .practice-streak__chart {
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        padding-bottom: 0.35rem;
+      }
+
+      .practice-streak__chart-inner {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.35rem 0.5rem;
+        min-width: 640px;
+      }
+
+      .practice-streak__months {
+        grid-column: 2;
+        display: grid;
+        grid-template-columns: repeat(53, minmax(0, 1fr));
+        font-size: 0.65rem;
+        color: #5c5557;
+        margin-bottom: 0.15rem;
+      }
+
+      .practice-streak__month {
+        white-space: nowrap;
+      }
+
+      .practice-streak__weekdays {
+        display: grid;
+        grid-template-rows: repeat(7, 11px);
+        gap: 3px;
+        align-content: start;
+        padding-top: 0;
+        font-size: 0.65rem;
+        color: #5c5557;
+        line-height: 11px;
+      }
+
+      .practice-streak__grid {
+        display: grid;
+        grid-template-columns: repeat(53, minmax(0, 1fr));
+        gap: 3px;
+      }
+
+      .practice-streak__week {
+        display: grid;
+        grid-template-rows: repeat(7, 11px);
+        gap: 3px;
+      }
+
+      .practice-streak__cell {
+        width: 100%;
+        min-width: 11px;
+        height: 11px;
+        border-radius: 2px;
+        border: none;
+        padding: 0;
+        background: #ebedf0;
+        cursor: default;
+      }
+
+      .practice-streak__cell--l1 { background: #c6e48b; }
+      .practice-streak__cell--l2 { background: #7bc96f; }
+      .practice-streak__cell--l3 { background: #239a3b; }
+      .practice-streak__cell--l4 { background: #196127; }
+
+      .practice-streak__cell--today {
+        outline: 1.5px dashed #e67e22;
+        outline-offset: 0;
+      }
+
+      .practice-streak__foot {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem 1.25rem;
+        margin-top: 0.9rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #f0eee3;
+      }
+
+      .practice-streak__status {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.55rem 0.85rem;
+        font-size: 0.8rem;
+        color: #c47a1a;
+      }
+
+      .practice-streak__dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #e67e22;
+        flex-shrink: 0;
+      }
+
+      .practice-streak__help {
+        color: #5b8def;
+        text-underline-offset: 2px;
+        font-size: 0.8rem;
+      }
+
+      .practice-streak__help:hover,
+      .practice-streak__help:focus-visible {
+        color: #f52929;
+      }
+
+      .practice-streak__legend {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.7rem;
+        color: #5c5557;
+        margin-left: auto;
+      }
+
+      .practice-streak__legend-scale {
+        display: inline-flex;
+        gap: 3px;
+      }
+
+      .practice-streak__legend-scale .practice-streak__cell {
+        width: 11px;
+        min-width: 11px;
+      }
+
+      @media (max-width: 639px) {
+        .practice-streak__metric--current {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .practice-streak__legend {
+          margin-left: 0;
+          width: 100%;
+          justify-content: flex-start;
+        }
+      }
 
       .hours-bar {
         flex: 1;
@@ -490,7 +835,9 @@
         border: 1px solid #f0dcdc;
         border-radius: 20px;
         padding: 14px;
-        align-self: flex-start;
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
       }
 
       .events-rail .rail-head {
@@ -629,6 +976,7 @@
 
       @media (prefers-reduced-motion: reduce) {
         .shell__aside,
+        .shell__panel,
         .nav-item,
         .nav-toggle {
           transition: none;
@@ -1000,9 +1348,14 @@
       <!-- END: Header -->
 
       <!-- BEGIN: Scrollable Content Area -->
-      <main class="shell__main flex-1 flex flex-col lg:flex-row gap-8 px-8 py-6">
-        <!-- Left Column (Main Dashboard Stats & Courses) -->
-        <div class="flex-1 min-w-0 flex flex-col gap-5">
+      <main class="shell__main flex-1 flex flex-col gap-5 px-8 py-6">
+        <!--
+          Top band: main stack + Events rail side by side.
+          Programmes and Practice Streak sit BELOW as full-width rows so they
+          do not leave a blank column beside a short rail.
+        -->
+        <div class="dashboard-primary">
+        <div class="dashboard-primary__main">
           <!--
             PROTOTYPE CONTENT. Sample data, like the rest of this page — but the
             programmes, tiers and access states are the real ones, so the shapes
@@ -1032,15 +1385,14 @@
             Sample figures, like the rest of this prototype. Several of these
             have no source in the product yet — the README records which.
           -->
-          <div class="grid grid-cols-1 gap-5 lg:grid-cols-[1.35fr_1fr]">
-            <section class="flex flex-col">
-              <div class="mb-3 flex items-center justify-between">
+          <div class="grid grid-cols-1 gap-5 lg:grid-cols-[1.35fr_1fr] items-stretch">
+            <!--
+              Shared header row pattern: both titles sit outside their cards so
+              "My statistics" and "Achievements" land on one horizontal line.
+            -->
+            <section class="flex flex-col min-h-0">
+              <div class="mb-3 flex items-center justify-between min-h-7">
                 <h2 class="text-[13px] font-bold text-black">My statistics</h2>
-                <!--
-                  A "This week" chip sat here and filtered nothing. Three of the
-                  four measures are lifetime totals, so the control was claiming
-                  a scope the numbers underneath it did not have.
-                -->
               </div>
 
               <div class="stats-card">
@@ -1078,20 +1430,21 @@
                   <span class="stat__icon" aria-hidden><i class="fa-solid fa-award"></i></span>
                   <div>
                     <p class="stat__figure">
-                      <span class="stat__value">1</span><span class="stat__unit">earned</span>
+                      <span class="stat__value">1</span><span class="stat__unit">certificate</span>
                     </p>
-                    <p class="stat__label">Certificates</p>
+                    <p class="stat__label">Earned</p>
                   </div>
                 </div>
               </div>
             </section>
 
-            <section class="rounded-2xl border border-[#ebeadc] bg-white p-5 shadow-sm">
-              <div class="mb-3 flex items-center justify-between">
+            <section class="flex flex-col min-h-0">
+              <div class="mb-3 flex items-center justify-between min-h-7">
                 <h2 class="text-[13px] font-bold text-black">Achievements</h2>
                 <a class="text-xs font-medium text-brand hover:underline" href="#">View all</a>
               </div>
 
+              <div class="achievements-card flex-1 rounded-2xl border border-[#ebeadc] bg-white p-5 shadow-sm">
               <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#5c5557]">
                 Badges earned
               </p>
@@ -1112,6 +1465,7 @@
                   <span class="leader__meta">Leadership Essentials &middot; 12 of 12</span>
                 </span>
                 <i class="fa-solid fa-chevron-right text-[10px] text-[#5c5557]" aria-hidden></i>
+              </div>
               </div>
             </section>
           </div>
@@ -1188,7 +1542,20 @@
             </section>
           </div>
 
-          <!-- 4. REGISTRATION — renders ONLY for a registered-but-unpaid tier -->
+          <!-- 4. ANNOUNCEMENT — above payment so staff notices aren't buried under billing -->
+          <section class="rounded-2xl border border-[#ebeadc] bg-white p-4 shadow-sm">
+            <div class="flex items-start justify-between gap-3">
+              <span class="flex flex-col">
+                <span class="text-[13px] font-bold text-black">March cohort timings have moved</span>
+                <span class="mt-0.5 text-xs text-[#5c5557]">Sessions now start 30 minutes later. &middot; 2 days ago</span>
+              </span>
+              <span class="shrink-0 rounded-full bg-brand-light px-2 py-0.5 text-[10px] font-bold text-brand-dark">
+                +2 more
+              </span>
+            </div>
+          </section>
+
+          <!-- 5. REGISTRATION — renders ONLY for a registered-but-unpaid tier -->
           <section class="rounded-2xl border border-[#f5b301] bg-[#fbeecc] p-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <span class="flex flex-col">
@@ -1201,123 +1568,15 @@
             </div>
           </section>
 
-          <!-- 5. PROGRAMMES — meta and action both follow the real data -->
-          <section>
-            <h2 class="mb-3 text-[13px] font-bold text-black">Your programmes</h2>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              <!--
-                The covers are 800x450. `aspect-video` matches that exactly, so
-                nothing is cropped at any width — a fixed pixel height crops the
-                top and bottom, and the programme name sits in the middle of the
-                artwork.
-              -->
-              <article class="flex flex-col overflow-hidden rounded-2xl border border-[#ebeadc] bg-white shadow-sm">
-                <img
-                  class="aspect-video w-full object-cover"
-                  src="programs/lep.png"
-                  alt="Leadership Essentials Program"
-                />
-                <div class="flex flex-1 flex-col p-4">
-                  <h3 class="text-[13px] font-bold text-black">Leadership Essentials</h3>
-                  <ul class="mt-2 mb-3 space-y-1 text-xs text-[#5c5557]">
-                    <li class="flex items-center gap-1.5">
-                      <i class="fa-regular fa-clock w-3.5 text-[11px]"></i>
-                      4 weeks
-                    </li>
-                    <li class="flex items-center gap-1.5">
-                      <i class="fa-solid fa-layer-group w-3.5 text-[11px]"></i>
-                      2 live days + weekly sessions
-                    </li>
-                  </ul>
-                  <button class="mt-auto w-full rounded-lg bg-brand py-1.5 text-xs font-semibold text-white">
-                    Review
-                  </button>
-                </div>
-              </article>
-
-              <article class="flex flex-col overflow-hidden rounded-2xl border border-[#ebeadc] bg-white shadow-sm">
-                <img
-                  class="aspect-video w-full object-cover"
-                  src="programs/100bm.png"
-                  alt="100 Board Members Program"
-                />
-                <div class="flex flex-1 flex-col p-4">
-                  <h3 class="text-[13px] font-bold text-black">100 Board Members</h3>
-                  <ul class="mt-2 mb-3 space-y-1 text-xs text-[#5c5557]">
-                    <li class="flex items-center gap-1.5">
-                      <i class="fa-regular fa-clock w-3.5 text-[11px]"></i>
-                      6 months
-                    </li>
-                    <li class="flex items-center gap-1.5">
-                      <i class="fa-solid fa-layer-group w-3.5 text-[11px]"></i>
-                      Online cohort
-                    </li>
-                  </ul>
-                  <button class="mt-auto w-full rounded-lg bg-brand py-1.5 text-xs font-semibold text-white">
-                    Open tasks
-                  </button>
-                </div>
-              </article>
-
-              <!--
-                Locked, but not a dead end. The cover stays recognisable and the
-                action is the one thing a learner can actually do from here —
-                enrol — rather than a disabled button telling them to wait.
-              -->
-              <article class="flex flex-col overflow-hidden rounded-2xl border border-[#ebeadc] bg-white shadow-sm">
-                <span class="relative block">
-                  <img
-                    class="aspect-video w-full object-cover opacity-45 grayscale"
-                    src="programs/mbw.png"
-                    alt="Master of Business Warfare Program"
-                  />
-                  <span
-                    class="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-[#5c5557]"
-                  >
-                    <i class="fa-solid fa-lock text-[9px]"></i>
-                    Locked
-                  </span>
-                </span>
-                <div class="flex flex-1 flex-col p-4">
-                  <h3 class="text-[13px] font-bold text-black">Master of Business Warfare</h3>
-                  <ul class="mt-2 mb-3 space-y-1 text-xs text-[#5c5557]">
-                    <li class="flex items-center gap-1.5">
-                      <i class="fa-regular fa-clock w-3.5 text-[11px]"></i>
-                      1 year
-                    </li>
-                    <li class="flex items-center gap-1.5">
-                      <i class="fa-solid fa-layer-group w-3.5 text-[11px]"></i>
-                      Quarterly weekends + online
-                    </li>
-                  </ul>
-                  <button class="mt-auto w-full rounded-lg bg-brand py-1.5 text-xs font-semibold text-white">
-                    Enroll
-                  </button>
-                </div>
-              </article>
-            </div>
-          </section>
-
-          <!-- 6. ANNOUNCEMENT — notice and announcement merged into one slot -->
-          <section class="rounded-2xl border border-[#ebeadc] bg-white p-4 shadow-sm">
-            <div class="flex items-start justify-between gap-3">
-              <span class="flex flex-col">
-                <span class="text-[13px] font-bold text-black">March cohort timings have moved</span>
-                <span class="mt-0.5 text-xs text-[#5c5557]">Sessions now start 30 minutes later. &middot; 2 days ago</span>
-              </span>
-              <span class="shrink-0 rounded-full bg-brand-light px-2 py-0.5 text-[10px] font-bold text-brand-dark">
-                +2 more
-              </span>
-            </div>
-          </section>
         </div>
+        <!-- end dashboard-primary__main -->
 
         <!--
           Right column, held in one tinted container so it reads as a place
           rather than three cards adrift. The reference uses light purple; this
           uses the brand's soft pink, purple not being in the palette.
         -->
-        <aside class="events-rail w-full lg:w-72 shrink-0 flex flex-col gap-4">
+        <aside class="events-rail w-full flex flex-col gap-4">
           <!--
             One heading for the column, with its link beside it. "Upcoming
             Events" sat inside the card directly under "Events" and named the
@@ -1619,8 +1878,168 @@
               </button>
             </div>
           </section>
-        </div>
         </aside>
+        </div>
+        <!-- end dashboard-primary -->
+
+        <!-- 6. PROGRAMMES — full width under the top band (no empty rail column beside them) -->
+        <section class="programmes-section dashboard-full">
+          <h2 class="mb-3 text-[13px] font-bold text-black">Your programmes</h2>
+          <div class="programmes-grid">
+            <article class="flex flex-col overflow-hidden rounded-2xl border border-[#ebeadc] bg-white shadow-sm">
+              <img
+                class="aspect-video w-full object-cover"
+                src="programs/lep.png"
+                alt="Leadership Essentials Program"
+              />
+              <div class="flex flex-1 flex-col p-4">
+                <h3 class="text-[13px] font-bold text-black">Leadership Essentials</h3>
+                <ul class="mt-2 mb-3 space-y-1 text-xs text-[#5c5557]">
+                  <li class="flex items-center gap-1.5">
+                    <i class="fa-regular fa-clock w-3.5 text-[11px]"></i>
+                    4 weeks
+                  </li>
+                  <li class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-layer-group w-3.5 text-[11px]"></i>
+                    2 live days + weekly sessions
+                  </li>
+                </ul>
+                <button class="mt-auto w-full rounded-lg bg-brand py-1.5 text-xs font-semibold text-white">
+                  Review
+                </button>
+              </div>
+            </article>
+
+            <article class="flex flex-col overflow-hidden rounded-2xl border border-[#ebeadc] bg-white shadow-sm">
+              <img
+                class="aspect-video w-full object-cover"
+                src="programs/100bm.png"
+                alt="100 Board Members Program"
+              />
+              <div class="flex flex-1 flex-col p-4">
+                <h3 class="text-[13px] font-bold text-black">100 Board Members</h3>
+                <ul class="mt-2 mb-3 space-y-1 text-xs text-[#5c5557]">
+                  <li class="flex items-center gap-1.5">
+                    <i class="fa-regular fa-clock w-3.5 text-[11px]"></i>
+                    6 months
+                  </li>
+                  <li class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-layer-group w-3.5 text-[11px]"></i>
+                    Online cohort
+                  </li>
+                </ul>
+                <button class="mt-auto w-full rounded-lg bg-brand py-1.5 text-xs font-semibold text-white">
+                  Open tasks
+                </button>
+              </div>
+            </article>
+
+            <article class="flex flex-col overflow-hidden rounded-2xl border border-[#ebeadc] bg-white shadow-sm">
+              <span class="relative block">
+                <img
+                  class="aspect-video w-full object-cover opacity-45 grayscale"
+                  src="programs/mbw.png"
+                  alt="Master of Business Warfare Program"
+                />
+                <span
+                  class="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-[#5c5557]"
+                >
+                  <i class="fa-solid fa-lock text-[9px]"></i>
+                  Locked
+                </span>
+              </span>
+              <div class="flex flex-1 flex-col p-4">
+                <h3 class="text-[13px] font-bold text-black">Master of Business Warfare</h3>
+                <ul class="mt-2 mb-3 space-y-1 text-xs text-[#5c5557]">
+                  <li class="flex items-center gap-1.5">
+                    <i class="fa-regular fa-clock w-3.5 text-[11px]"></i>
+                    1 year
+                  </li>
+                  <li class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-layer-group w-3.5 text-[11px]"></i>
+                    Quarterly weekends + online
+                  </li>
+                </ul>
+                <button class="mt-auto w-full rounded-lg bg-brand py-1.5 text-xs font-semibold text-white">
+                  Enroll
+                </button>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- 7. PRACTICE STREAK — full content width -->
+        <section class="practice-streak dashboard-full" aria-label="Practice streak">
+          <div class="practice-streak__head">
+            <h2 class="practice-streak__title">Practice Streak</h2>
+            <button type="button" class="practice-streak__share" aria-label="Share practice streak">
+              <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+            </button>
+          </div>
+
+          <div class="practice-streak__metrics">
+            <div class="practice-streak__metric practice-streak__metric--current">
+              <span class="practice-streak__flame" aria-hidden="true">
+                <i class="fa-solid fa-fire"></i>
+              </span>
+              <div>
+                <p class="practice-streak__value">1</p>
+                <p class="practice-streak__label">Current streak</p>
+              </div>
+            </div>
+            <div class="practice-streak__metric">
+              <p class="practice-streak__value">12</p>
+              <p class="practice-streak__label">Longest streak</p>
+            </div>
+            <div class="practice-streak__metric">
+              <p class="practice-streak__value">28</p>
+              <p class="practice-streak__label">Total Correct submissions</p>
+            </div>
+          </div>
+
+          <div class="practice-streak__toolbar">
+            <div class="practice-streak__years" role="tablist" aria-label="Select year">
+              <button type="button" class="practice-streak__year" data-year="2026" role="tab">2026</button>
+              <button type="button" class="practice-streak__year" data-year="2025" role="tab">2025</button>
+              <button type="button" class="practice-streak__year is-active" data-year="2024" role="tab" aria-selected="true">2024</button>
+            </div>
+          </div>
+
+          <div class="practice-streak__chart" role="img" aria-label="Practice activity for the selected year">
+            <div class="practice-streak__chart-inner">
+              <div class="practice-streak__months" id="practice-streak-months" aria-hidden="true"></div>
+              <div class="practice-streak__weekdays" aria-hidden="true">
+                <span></span>
+                <span>Mon</span>
+                <span></span>
+                <span>Wed</span>
+                <span></span>
+                <span>Fri</span>
+                <span></span>
+              </div>
+              <div class="practice-streak__grid" id="practice-streak-grid"></div>
+            </div>
+          </div>
+
+          <div class="practice-streak__foot">
+            <div class="practice-streak__status">
+              <span class="practice-streak__dot" aria-hidden="true"></span>
+              <span>No practice yet today</span>
+              <a class="practice-streak__help" href="#">How we count</a>
+            </div>
+            <div class="practice-streak__legend" aria-hidden="true">
+              <span>Less</span>
+              <span class="practice-streak__legend-scale">
+                <span class="practice-streak__cell"></span>
+                <span class="practice-streak__cell practice-streak__cell--l1"></span>
+                <span class="practice-streak__cell practice-streak__cell--l2"></span>
+                <span class="practice-streak__cell practice-streak__cell--l3"></span>
+                <span class="practice-streak__cell practice-streak__cell--l4"></span>
+              </span>
+              <span>More</span>
+            </div>
+          </div>
+        </section>
       </main>
       <!-- END: Scrollable Content Area -->
     </div>
@@ -1685,6 +2104,93 @@
           toggle.setAttribute('aria-expanded', String(!collapsed));
           toggle.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
         });
+
+        /* Practice streak — sample year grid for the prototype layout. */
+        (function initPracticeStreak() {
+          var grid = document.getElementById('practice-streak-grid');
+          var monthsEl = document.getElementById('practice-streak-months');
+          if (!grid || !monthsEl) return;
+
+          var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+          function startOfWeekSunday(d) {
+            var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            x.setDate(x.getDate() - x.getDay());
+            return x;
+          }
+
+          function ymd(d) {
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+          }
+
+          function sampleLevel(dateStr, year) {
+            /* Sparse deterministic sample — layout only, not live analytics. */
+            var n = 0;
+            for (var i = 0; i < dateStr.length; i++) n = (n * 31 + dateStr.charCodeAt(i) + year) % 997;
+            if (n % 17 === 0) return 1 + (n % 4);
+            if (n % 41 === 0) return 2;
+            return 0;
+          }
+
+          function renderYear(year) {
+            var today = new Date();
+            var todayKey = ymd(today);
+            var end = year === today.getFullYear() ? today : new Date(year, 11, 31);
+            var start = new Date(end);
+            start.setDate(start.getDate() - 52 * 7 + 1);
+            start = startOfWeekSunday(start);
+
+            grid.innerHTML = '';
+            monthsEl.innerHTML = '';
+
+            var cursor = new Date(start);
+            var lastMonth = -1;
+            for (var w = 0; w < 53; w++) {
+              var week = document.createElement('div');
+              week.className = 'practice-streak__week';
+              var monthLabel = document.createElement('span');
+              monthLabel.className = 'practice-streak__month';
+
+              for (var d = 0; d < 7; d++) {
+                var cellDate = new Date(cursor);
+                var key = ymd(cellDate);
+                var inYear = cellDate.getFullYear() === year;
+                var level = inYear ? sampleLevel(key, year) : 0;
+                var cell = document.createElement('span');
+                cell.className = 'practice-streak__cell' + (level ? ' practice-streak__cell--l' + level : '');
+                if (key === todayKey) cell.className += ' practice-streak__cell--today';
+                cell.title = inYear
+                  ? (level ? level + ' submission' + (level > 1 ? 's' : '') + ' on ' + key : 'No practice on ' + key)
+                  : '';
+                week.appendChild(cell);
+
+                if (d === 0 && inYear && cellDate.getMonth() !== lastMonth) {
+                  monthLabel.textContent = MONTHS[cellDate.getMonth()];
+                  lastMonth = cellDate.getMonth();
+                }
+                cursor.setDate(cursor.getDate() + 1);
+              }
+              monthsEl.appendChild(monthLabel);
+              grid.appendChild(week);
+            }
+          }
+
+          var yearBtns = document.querySelectorAll('.practice-streak__year');
+          yearBtns.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              yearBtns.forEach(function (b) {
+                b.classList.remove('is-active');
+                b.setAttribute('aria-selected', 'false');
+              });
+              btn.classList.add('is-active');
+              btn.setAttribute('aria-selected', 'true');
+              renderYear(Number(btn.getAttribute('data-year')));
+            });
+          });
+
+          var active = document.querySelector('.practice-streak__year.is-active');
+          renderYear(Number((active && active.getAttribute('data-year')) || 2024));
+        })();
       })();
     </script>
   </body>

@@ -1,6 +1,7 @@
 import MBWProgramLessonRow from './MBWProgramLessonRow';
 import { buildLessonGroups } from '../../../utils/programOutline';
 import { getWeekCode } from '../../../utils/mbwDisplay';
+import { fileResources } from '../../../utils/lessonResources';
 
 /**
  * Timeline outline for a program section — shared by 100BM and MBW.
@@ -16,6 +17,9 @@ export default function ProgramLessonList({
   getDurationHint,
   getKindLabel,
   onSelectLesson,
+  getTag,
+  iconInMeta = false,
+  hideLockReason = false,
 }) {
   const groups = buildLessonGroups(taskStates);
   const rowStates = new Map(taskStates.map((ts) => [ts.task.id, getRowState(ts)]));
@@ -57,10 +61,13 @@ export default function ProgramLessonList({
                     durationHint={getDurationHint(ts.task)}
                     rowState={rowStates.get(ts.task.id)}
                     isActive={ts.task.id === activeTaskId}
-                    showLockReason={ts.task.id === firstLockedId}
+                    showLockReason={!hideLockReason && ts.task.id === firstLockedId}
                     spineStart={!hasGroupLabels && groupIndex === 0 && rowIndex === 0}
                     spineEnd={ts.task.id === lastTaskId}
                     onSelect={() => onSelectLesson(ts.task.id)}
+                    tag={getTag?.(ts) || null}
+                    iconInMeta={iconInMeta}
+                    resources={iconInMeta ? fileResources(ts.task) : []}
                   />
                 </li>
               ))}

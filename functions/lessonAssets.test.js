@@ -250,3 +250,26 @@ describe('asset gate · permanent links and per-batch uploads together', () => {
     expect(r.source).toBe('default-stored');
   });
 });
+
+describe('asset gate · LEP Week 2 videos', () => {
+  const LEP_VIDEOS = ['lep-day3-27-principles', 'lep-day3-5-rituals'];
+
+  it('serves both as paid LEP lessons', () => {
+    for (const id of LEP_VIDEOS) {
+      expect(LESSON_ASSETS[id].program, id).toBe('lep');
+      expect(LESSON_ASSETS[id].requiresPaid, id).toBe(true);
+    }
+  });
+
+  it('plays the same 27 Principles recording MBW does', () => {
+    expect(LESSON_ASSETS['lep-day3-27-principles'].url).toBe(LESSON_ASSETS['mbw-principles'].url);
+  });
+
+  it('gives an unknown learner neither video, and no link in the refusal', () => {
+    for (const id of LEP_VIDEOS) {
+      const result = resolveLessonAsset({}, id);
+      expect(result.ok, id).toBe(false);
+      expect(JSON.stringify(result), id).not.toContain('http');
+    }
+  });
+});

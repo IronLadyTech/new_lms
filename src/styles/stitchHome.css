@@ -1,0 +1,2809 @@
+/*
+ * Stitch home dashboard — Apple-inspired floating UI (Iron Lady).
+ * Scoped under .stitch-home (sh-* classes). Does not alter global index.css.
+ * Body UI type: Inter. Wordmark only: Gemunu Libre.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.stitch-home {
+  /* Brand */
+  --sh-brand: #f52929;
+  --sh-brand-btn: #d41f1f;
+  --sh-brand-deep: #c8102e;
+  --sh-brand-light: #f2dede;
+  --sh-ink: #231f20;
+  --sh-muted: #5c5557;
+  --sh-cream: #f7f6e4;
+  --sh-beige: #ebeadc;
+  --sh-gold: #f5b301;
+  --sh-font: 'Inter', system-ui, sans-serif;
+  --sh-font-heading: 'Gemunu Libre', 'Inter', sans-serif;
+
+  /* Layer hierarchy */
+  --sh-bg: #f7f6e4;
+  --sh-surface: #ffffff;
+  --sh-elevated: rgb(255 255 255 / 0.82);
+  --sh-border: rgb(35 31 32 / 0.06);
+  --sh-border-faint: rgb(35 31 32 / 0.04);
+  --sh-shadow-sm: 0 1px 2px rgb(35 31 32 / 0.04), 0 4px 16px rgb(35 31 32 / 0.05);
+  --sh-shadow-md: 0 2px 4px rgb(35 31 32 / 0.04), 0 12px 32px rgb(35 31 32 / 0.08);
+  --sh-shadow-lg: 0 4px 8px rgb(35 31 32 / 0.04), 0 20px 48px rgb(35 31 32 / 0.1);
+  /*
+   * The raised red. One recipe for every primary action: a gradient lit from
+   * above, a coloured glow, a tight contact shadow and an inset white highlight
+   * along the top edge — then it presses in rather than only changing colour.
+   *
+   * Tokens rather than a shared class on purpose. `.stitch-home .il-programs
+   * button` sets `background: none` at (0,2,1) and outranks any two-class rule,
+   * so a `.sh-btn-primary` added to that button would be stripped silently.
+   * Each button keeps whatever selector it needs to win locally and pulls the
+   * same values from here.
+   */
+  --sh-raise-bg: linear-gradient(180deg, #ff5555 0%, #f52929 50%, #d41f1f 100%);
+  --sh-raise-shadow:
+    0 4px 14px rgb(245 41 41 / 0.28), 0 1px 2px rgb(200 16 46 / 0.12),
+    inset 0 1px 0 rgb(255 255 255 / 0.22);
+  --sh-raise-shadow-hover:
+    0 6px 18px rgb(245 41 41 / 0.32), 0 1px 3px rgb(200 16 46 / 0.14),
+    inset 0 1px 0 rgb(255 255 255 / 0.28);
+  --sh-raise-shadow-press: 0 2px 8px rgb(245 41 41 / 0.22), inset 0 1px 2px rgb(100 10 15 / 0.18);
+
+  --sh-radius: 18px;
+  --sh-radius-sm: 12px;
+  --sh-radius-lg: 20px;
+  --sh-aside-w: 200px;
+  --sh-aside-w-collapsed: 72px;
+  --sh-aside-inset: 12px;
+
+  min-height: 100vh;
+  background:
+    radial-gradient(120% 80% at 12% -10%, rgb(242 222 222 / 0.55) 0%, transparent 55%),
+    radial-gradient(90% 60% at 100% 0%, rgb(245 179 1 / 0.08) 0%, transparent 45%), var(--sh-bg);
+  color: var(--sh-ink);
+  font-family: var(--sh-font);
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * Dark.
+ *
+ * ThemeContext has always written `data-theme` on <html>, but no Stitch
+ * stylesheet read it — so the Light/Dark control in Settings changed the old
+ * pages and left every new one untouched, which read as a dead button.
+ *
+ * Only the tokens are restated. The layer order is kept: the page ground is the
+ * darkest, surfaces sit above it, elevated things above those — inverting the
+ * ramp rather than lightening everything by the same amount is what keeps the
+ * cards reading as cards.
+ */
+:root[data-theme='dark'] .stitch-home {
+  --sh-ink: #f2efe6;
+  --sh-muted: #a9a29c;
+  --sh-cream: #17161a;
+  --sh-beige: #201f24;
+  --sh-bg: #131215;
+  --sh-surface: #1d1c21;
+  --sh-elevated: rgb(38 36 43 / 0.86);
+  --sh-border: rgb(255 255 255 / 0.09);
+  --sh-border-faint: rgb(255 255 255 / 0.06);
+  --sh-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 16px rgb(0 0 0 / 0.3);
+  --sh-shadow-md: 0 2px 4px rgb(0 0 0 / 0.4), 0 12px 32px rgb(0 0 0 / 0.42);
+  --sh-shadow-lg: 0 4px 8px rgb(0 0 0 / 0.4), 0 20px 48px rgb(0 0 0 / 0.5);
+  /* The brand red is unchanged: it is the brand, not a neutral. */
+  --sh-brand-light: #3a2326;
+
+  background:
+    radial-gradient(120% 80% at 12% -10%, rgb(120 30 34 / 0.28) 0%, transparent 55%),
+    radial-gradient(90% 60% at 100% 0%, rgb(245 179 1 / 0.06) 0%, transparent 45%), var(--sh-bg);
+  color: var(--sh-ink);
+}
+
+/* Poster tokens, hoisted to the shell earlier, follow it down. */
+:root[data-theme='dark'] .stitch-home {
+  --il-prog-cream: #17161a;
+  --il-prog-surface: #1d1c21;
+  --il-prog-line: rgb(255 255 255 / 0.1);
+  --il-prog-line-soft: rgb(255 255 255 / 0.06);
+  --il-prog-ink: #f2efe6;
+  --il-prog-ink-2: #a9a29c;
+  --il-prog-ink-3: #8b847e;
+}
+
+/*
+ * Surfaces painted with a gradient rather than a colour.
+ *
+ * These are the ones a background-colour audit cannot see — `backgroundColor`
+ * reads transparent when the paint is in `background-image`, so the sidebar sat
+ * there in pale pink with unreadable labels while every check came back clean.
+ */
+:root[data-theme='dark'] .stitch-home .sh-aside {
+  background: linear-gradient(180deg, #232128 0%, #1c1b20 45%, #1c1b20 100%);
+}
+
+/* The four statistic tiles keep their hues, at a weight that belongs on a dark
+   ground instead of glowing off it. */
+:root[data-theme='dark'] .stitch-home .sh-stat--blue {
+  --sh-stat-top: #1e2836;
+  --sh-stat-bottom: #18202c;
+  --sh-stat-edge: rgb(120 150 190 / 0.28);
+  --sh-stat-disc: #223046;
+}
+
+:root[data-theme='dark'] .stitch-home .sh-stat--green {
+  --sh-stat-top: #1b2c24;
+  --sh-stat-bottom: #16241d;
+  --sh-stat-edge: rgb(105 160 130 / 0.28);
+  --sh-stat-disc: #1e3529;
+}
+
+:root[data-theme='dark'] .stitch-home .sh-stat--rose {
+  --sh-stat-top: #2f1f24;
+  --sh-stat-bottom: #26191e;
+  --sh-stat-edge: rgb(190 125 135 / 0.28);
+  --sh-stat-disc: #3a252c;
+}
+
+:root[data-theme='dark'] .stitch-home .sh-stat--amber {
+  --sh-stat-top: #2e2519;
+  --sh-stat-bottom: #251e15;
+  --sh-stat-edge: rgb(180 145 100 / 0.3);
+  --sh-stat-disc: #382c1c;
+}
+
+:root[data-theme='dark'] .stitch-home .sh-stat__value,
+:root[data-theme='dark'] .stitch-home .sh-stat__unit {
+  color: #f2efe6;
+}
+
+/* The art on those tiles is black line-work, invisible on a dark disc. */
+:root[data-theme='dark'] .stitch-home .sh-stat__art {
+  filter: invert(1) drop-shadow(0 2px 2px rgb(0 0 0 / 0.5));
+}
+
+:root[data-theme='dark'] .stitch-home .sh-stat__halo {
+  background: linear-gradient(180deg, #2b2933 0%, var(--sh-stat-disc) 100%);
+}
+
+:root[data-theme='dark'] .stitch-home .sh-hours-bar {
+  background: linear-gradient(180deg, #f52929 0%, #a8353c 55%, #4a2529 100%);
+}
+
+/* Panels that name their own white or cream rather than reading a token. */
+:root[data-theme='dark'] .stitch-home .sh-filter,
+:root[data-theme='dark'] .stitch-home .sh-streak {
+  background: var(--sh-surface);
+}
+
+:root[data-theme='dark'] .stitch-home .sh-streak__years {
+  background: rgb(255 255 255 / 0.06);
+}
+
+:root[data-theme='dark'] .stitch-home .sh-leader {
+  background: rgb(255 255 255 / 0.05);
+}
+
+.stitch-home h1,
+.stitch-home h2,
+.stitch-home h3,
+.stitch-home button,
+.stitch-home a,
+.stitch-home label,
+.stitch-home input,
+.stitch-home p,
+.stitch-home span,
+.stitch-home li {
+  font-family: inherit;
+}
+
+.stitch-home *,
+.stitch-home *::before,
+.stitch-home *::after {
+  box-sizing: border-box;
+}
+
+.stitch-home button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.stitch-home a:focus-visible,
+.stitch-home button:focus-visible {
+  outline: 2px solid var(--sh-brand);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* ---------- Shell ---------- */
+
+.stitch-home .sh-shell {
+  min-height: 100vh;
+  background: transparent;
+}
+
+.stitch-home .sh-app {
+  background: transparent;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.stitch-home .sh-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: rgb(35 31 32 / 0.32);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.stitch-home .sh-aside {
+  /* Previous Stitch nav: solid pink rail, flush to the left edge */
+  background: linear-gradient(180deg, #fdf3f3 0%, #f2dede 45%, #f2dede 100%);
+  border: none;
+  border-top: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow:
+    6px 0 18px rgb(120 20 24 / 0.1),
+    2px 0 4px rgb(120 20 24 / 0.06),
+    inset -1px 0 0 rgb(120 20 24 / 0.05);
+  width: 100%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 10;
+}
+
+.stitch-home .sh-navwrap {
+  padding: 14px 10px 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.stitch-home .sh-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.stitch-home .sh-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+  padding: 1.15rem 2rem 1.75rem;
+}
+
+@media (min-width: 768px) and (min-height: 560px) {
+  .stitch-home .sh-shell {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .stitch-home .sh-panel {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .stitch-home .sh-main {
+    overflow-y: auto;
+  }
+}
+
+@media (min-width: 768px) {
+  .stitch-home .sh-app {
+    flex-direction: row;
+    height: 100vh;
+  }
+
+  .stitch-home .sh-aside {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: auto;
+    width: var(--sh-aside-w);
+    height: 100vh;
+    margin: 0;
+    border-radius: 0 24px 24px 0;
+    border: none;
+    transition: width 0.2s ease;
+  }
+
+  .stitch-home .sh-panel {
+    margin-left: var(--sh-aside-w);
+    transition: margin-left 0.2s ease;
+  }
+
+  .stitch-home .sh-app:has(> .sh-aside.is-collapsed) > .sh-panel {
+    margin-left: var(--sh-aside-w-collapsed);
+  }
+
+  .stitch-home .sh-backdrop {
+    display: none;
+  }
+}
+
+/* ---------- Brand / nav ---------- */
+
+.stitch-home .sh-brand {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 18px;
+  padding: 0 6px;
+  flex-shrink: 0;
+}
+
+.stitch-home .sh-brand__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+
+.stitch-home .sh-brand__logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.stitch-home .sh-wordmark {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--sh-font-heading);
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-caption {
+  margin: 6px 0 0;
+  font-size: 10px;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: var(--sh-muted);
+}
+
+.stitch-home .sh-toggle,
+.stitch-home .sh-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 0;
+  background: rgb(255 255 255 / 0.45);
+  color: var(--sh-ink);
+  transition: background-color 0.15s ease;
+}
+
+.stitch-home .sh-toggle {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+.stitch-home .sh-toggle:hover {
+  background: rgb(242 222 222 / 0.85);
+}
+
+.stitch-home .sh-close {
+  display: none;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  border-radius: 12px;
+  background: transparent;
+}
+
+.stitch-home .sh-nav-list,
+.stitch-home .sh-nav-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stitch-home .sh-nav-footer {
+  padding: 6px 10px 14px;
+  flex-shrink: 0;
+}
+
+.stitch-home .sh-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 12px;
+  color: var(--sh-ink);
+  font-family: var(--sh-font);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  background: transparent;
+  border: 0;
+  width: 100%;
+  text-align: left;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.stitch-home .sh-nav-item:hover {
+  background: rgb(237 28 36 / 0.08);
+  color: var(--sh-brand-deep);
+  border-radius: 10px;
+}
+
+.stitch-home .sh-aside .sh-nav-item[aria-current='page'] {
+  background: linear-gradient(180deg, #f5484d 0%, #f52929 55%, #a30f26 100%);
+  box-shadow:
+    0 2px 6px rgb(180 20 25 / 0.35),
+    0 1px 2px rgb(180 20 25 / 0.25),
+    inset 0 1px 0 rgb(255 255 255 / 0.25);
+  color: #fff;
+  font-weight: 600;
+  border-radius: 10px;
+}
+
+.stitch-home .sh-aside .sh-nav-item[aria-current='page']:active {
+  transform: translateY(1px);
+  box-shadow:
+    0 2px 8px rgb(245 41 41 / 0.22),
+    inset 0 1px 2px rgb(100 10 15 / 0.2);
+}
+
+.stitch-home .sh-aside .sh-nav-item[aria-current='page'] .sh-nav-icon {
+  color: #fff;
+}
+
+.stitch-home .sh-nav-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.stitch-home .sh-nav-item--logout {
+  margin-top: 4px;
+}
+
+@media (min-width: 768px) {
+  .stitch-home .sh-aside.is-collapsed {
+    width: var(--sh-aside-w-collapsed);
+  }
+
+  .stitch-home .sh-aside.is-collapsed .sh-nav-label,
+  .stitch-home .sh-aside.is-collapsed .sh-wordmark,
+  .stitch-home .sh-aside.is-collapsed .sh-caption {
+    display: none;
+  }
+
+  .stitch-home .sh-aside.is-collapsed .sh-nav-item {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .stitch-home .sh-aside.is-collapsed .sh-brand {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .stitch-home .sh-aside.is-collapsed .sh-brand__row {
+    justify-content: center;
+    min-height: 24px;
+  }
+
+  .stitch-home .sh-aside.is-collapsed .sh-toggle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .stitch-home .sh-aside.is-collapsed:hover .sh-brand__logo,
+  .stitch-home .sh-aside.is-collapsed:has(.sh-toggle:focus-visible) .sh-brand__logo {
+    opacity: 0;
+  }
+
+  .stitch-home .sh-aside.is-collapsed:hover .sh-toggle,
+  .stitch-home .sh-aside.is-collapsed:has(.sh-toggle:focus-visible) .sh-toggle {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @media (hover: none) {
+    .stitch-home .sh-aside.is-collapsed .sh-brand__logo {
+      opacity: 0;
+    }
+
+    .stitch-home .sh-aside.is-collapsed .sh-toggle {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+}
+
+/* ---------- Header ---------- */
+
+.stitch-home .sh-header {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 2rem 0.65rem;
+  flex-shrink: 0;
+}
+
+/* Extremely subtle edge — no hard divider */
+.stitch-home .sh-header::after {
+  content: '';
+  position: absolute;
+  left: 32px;
+  right: 32px;
+  bottom: 0;
+  height: 1px;
+  background: rgb(35 31 32 / 0.04);
+}
+
+.stitch-home .sh-header-logo {
+  display: none;
+}
+
+.stitch-home .sh-header-logo img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.stitch-home .sh-menu-btn {
+  display: none;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--sh-ink);
+  transition: background-color 0.15s ease;
+}
+
+.stitch-home .sh-menu-btn:hover {
+  background: rgb(255 255 255 / 0.6);
+}
+
+.stitch-home .sh-greeting h1 {
+  margin: 0;
+  font-family: var(--sh-font);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-subline {
+  margin: 0.125rem 0 0;
+  font-family: var(--sh-font);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--sh-muted);
+}
+
+.stitch-home .sh-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-left: auto;
+  padding-right: 0.5rem;
+}
+
+.stitch-home .sh-bell {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--sh-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sh-surface);
+  box-shadow: var(--sh-shadow-sm);
+  color: var(--sh-muted);
+  transition:
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.stitch-home .sh-bell:hover {
+  background: #fff;
+  box-shadow: var(--sh-shadow-md);
+}
+
+.stitch-home .sh-bell:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgb(35 31 32 / 0.06);
+}
+
+.stitch-home .sh-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.stitch-home .sh-header-rule {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 1px;
+  height: 22px;
+  background: rgb(35 31 32 / 0.08);
+}
+
+.stitch-home .sh-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem 0.35rem 0.35rem;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.stitch-home .sh-profile:hover {
+  background: rgb(255 255 255 / 0.7);
+}
+
+.stitch-home .sh-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--sh-brand-btn);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgb(212 31 31 / 0.25);
+}
+
+.stitch-home .sh-profile-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-profile-role {
+  font-size: 12px;
+  color: var(--sh-muted);
+  line-height: 1.25;
+}
+
+.stitch-home .sh-profile-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.stitch-home .sh-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ---------- Dashboard layout ---------- */
+
+.stitch-home .sh-primary {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .stitch-home .sh-primary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 18rem;
+    gap: 1.5rem 1.75rem;
+    align-items: start;
+  }
+}
+
+.stitch-home .sh-primary__main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+  min-width: 0;
+}
+
+.stitch-home .sh-full {
+  width: 100%;
+  min-width: 0;
+}
+
+.stitch-home .sh-card {
+  border-radius: var(--sh-radius);
+  border: 1px solid var(--sh-border-faint);
+  background: var(--sh-surface);
+  padding: 1.25rem;
+  box-shadow: var(--sh-shadow-sm);
+}
+
+.stitch-home .sh-card--sm {
+  padding: 1rem;
+}
+
+.stitch-home .sh-eyebrow {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sh-brand-btn);
+}
+
+.stitch-home .sh-card-title {
+  margin: 0.25rem 0 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-card-sub {
+  margin: 0.125rem 0 0;
+  font-size: 13px;
+  color: var(--sh-muted);
+}
+
+.stitch-home .sh-progress-row {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stitch-home .sh-progress-track {
+  height: 6px;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(35 31 32 / 0.06);
+}
+
+.stitch-home .sh-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--sh-brand) 0%, var(--sh-brand-btn) 100%);
+}
+
+.stitch-home .sh-progress-label {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sh-muted);
+}
+
+/*
+ * The one primary button. Lit from above — a top-light to bottom-dark gradient,
+ * a coloured glow, a tight contact shadow and an inset white highlight along
+ * the top edge — and it presses in on :active rather than only changing colour.
+ *
+ * Spacing is the caller's business, not the button's: `margin-top` used to live
+ * here, which meant every new use had to undo it.
+ */
+.stitch-home .sh-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 44px: the touch-target floor for a primary action. */
+  min-height: 44px;
+  border: 0;
+  border-radius: 13px;
+  background: var(--sh-raise-bg);
+  box-shadow: var(--sh-raise-shadow);
+  color: #fff;
+  padding: 0.55rem 1.1rem;
+  font-family: var(--sh-font);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+}
+
+.stitch-home .sh-btn-primary:hover {
+  filter: brightness(1.03);
+  box-shadow: var(--sh-raise-shadow-hover);
+}
+
+.stitch-home .sh-btn-primary:active {
+  filter: brightness(0.97);
+  transform: translateY(1px);
+  box-shadow: var(--sh-raise-shadow-press);
+}
+
+/* The spacing the Continue Learning card used to get from the button itself. */
+/*
+ * The app's own primary button, raised to match everything else in this shell.
+ *
+ * Settings and Help & Support are the existing pages rendered inside the Stitch
+ * chrome, so they bring index.css's flat `.btn-primary` with them — "Save
+ * changes" sat next to a raised sidebar item and looked unfinished. Scoped to
+ * `.stitch-home` so every page outside this design keeps the button it has.
+ *
+ * `:not(:disabled)` also lifts these to four classes, over index.css's three.
+ */
+.stitch-home .btn-primary:not(:disabled) {
+  background: var(--sh-raise-bg);
+  box-shadow: var(--sh-raise-shadow);
+}
+
+.stitch-home .btn-primary:hover:not(:disabled) {
+  filter: brightness(1.03);
+  box-shadow: var(--sh-raise-shadow-hover);
+}
+
+.stitch-home .btn-primary:active:not(:disabled) {
+  filter: brightness(0.97);
+  transform: translateY(1px);
+  box-shadow: var(--sh-raise-shadow-press);
+}
+
+.stitch-home .sh-continue__cta {
+  margin-top: 1rem;
+}
+
+.stitch-home .sh-btn-primary--block {
+  width: 100%;
+  margin-top: auto;
+  padding: 0.55rem 0.75rem;
+  font-size: 12px;
+}
+
+.stitch-home .sh-section-title {
+  margin: 0;
+  font-family: var(--sh-font);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-section-head {
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 1.75rem;
+}
+
+.stitch-home .sh-link {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--sh-brand-btn);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.stitch-home .sh-link:hover {
+  text-decoration: underline;
+  opacity: 0.9;
+}
+
+.stitch-home .sh-stats-achievements {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.35rem;
+  align-items: stretch;
+}
+
+@media (min-width: 1024px) {
+  .stitch-home .sh-stats-achievements {
+    grid-template-columns: 1.35fr 1fr;
+  }
+}
+
+.stitch-home .sh-stack-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.stitch-home .sh-stats-card {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.55rem;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+  align-content: stretch;
+  min-height: 0;
+}
+
+@media (min-width: 640px) {
+  .stitch-home .sh-stats-card {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Match Achievements height when the two columns sit side by side */
+@media (min-width: 1024px) {
+  .stitch-home .sh-stats-card {
+    grid-template-rows: 1fr 1fr;
+  }
+}
+
+.stitch-home .sh-stat {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 72px;
+  height: 100%;
+  padding: 14px 14px;
+  border-radius: 16px;
+  /* Lit from above: lighter top edge, shaded floor, contact + ambient cast. */
+  background-image: linear-gradient(180deg, var(--sh-stat-top) 0%, var(--sh-stat-bottom) 100%);
+  border: 1px solid var(--sh-stat-edge);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    inset 0 -12px 20px -14px var(--sh-stat-shade),
+    0 1px 1px rgb(35 31 32 / 0.05),
+    0 6px 14px -6px var(--sh-stat-cast),
+    0 18px 30px -20px rgb(35 31 32 / 0.22);
+}
+
+.stitch-home .sh-stat--blue {
+  --sh-stat-top: #f2f7ff;
+  --sh-stat-bottom: #dfeafb;
+  --sh-stat-edge: rgb(120 150 190 / 0.3);
+  --sh-stat-shade: rgb(78 110 160 / 0.5);
+  --sh-stat-cast: rgb(60 90 140 / 0.2);
+  --sh-stat-disc: #e9f1fd;
+}
+
+.stitch-home .sh-stat--green {
+  --sh-stat-top: #f0fbf5;
+  --sh-stat-bottom: #dcf1e6;
+  --sh-stat-edge: rgb(105 160 130 / 0.3);
+  --sh-stat-shade: rgb(60 130 95 / 0.5);
+  --sh-stat-cast: rgb(45 110 80 / 0.2);
+  --sh-stat-disc: #e6f6ed;
+}
+
+.stitch-home .sh-stat--rose {
+  --sh-stat-top: #fff1f3;
+  --sh-stat-bottom: #fadfe3;
+  --sh-stat-edge: rgb(190 125 135 / 0.3);
+  --sh-stat-shade: rgb(165 80 95 / 0.45);
+  --sh-stat-cast: rgb(150 65 80 / 0.2);
+  --sh-stat-disc: #fdebee;
+}
+
+.stitch-home .sh-stat--amber {
+  --sh-stat-top: #fff8ef;
+  --sh-stat-bottom: #f7e6d2;
+  --sh-stat-edge: rgb(180 145 100 / 0.32);
+  --sh-stat-shade: rgb(160 115 55 / 0.45);
+  --sh-stat-cast: rgb(145 105 50 / 0.2);
+  --sh-stat-disc: #fdf1e3;
+}
+
+.stitch-home .sh-stat__copy {
+  min-width: 0;
+}
+
+.stitch-home .sh-stat__figure {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.stitch-home .sh-stat__value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--sh-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.stitch-home .sh-stat__unit {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-stat__label {
+  margin: 0 0 2px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--sh-muted);
+}
+
+.stitch-home .sh-stat__visual {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 58px;
+  height: 58px;
+}
+
+/* The art sits on a raised disc rather than a blurred smudge, so it reads as
+   an object on the tile instead of a sticker printed flat onto it. */
+.stitch-home .sh-stat__halo {
+  position: absolute;
+  width: 54px;
+  height: 54px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  background: linear-gradient(180deg, #ffffff 0%, var(--sh-stat-disc) 100%);
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    inset 0 -3px 6px -3px var(--sh-stat-shade),
+    0 1px 1px rgb(35 31 32 / 0.06),
+    0 7px 13px -6px var(--sh-stat-cast);
+}
+
+.stitch-home .sh-stat__art {
+  position: relative;
+  z-index: 1;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 2px 2px rgb(35 31 32 / 0.28));
+}
+
+.stitch-home .sh-achievements-card {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: var(--sh-radius);
+  border: 1px solid var(--sh-border-faint);
+  background: var(--sh-surface);
+  padding: 1.25rem;
+  box-shadow: var(--sh-shadow-sm);
+  min-height: 0;
+}
+
+.stitch-home .sh-badge-label {
+  margin: 0 0 0.5rem;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sh-muted);
+}
+
+.stitch-home .sh-badges {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.stitch-home .sh-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  color: #fff;
+  box-shadow: 0 2px 6px rgb(35 31 32 / 0.12);
+}
+
+.stitch-home .sh-badge--gold {
+  background: var(--sh-gold);
+  color: #4a3400;
+}
+
+.stitch-home .sh-badge--red {
+  background: var(--sh-brand-btn);
+}
+
+.stitch-home .sh-badge--charcoal {
+  background: var(--sh-ink);
+}
+
+.stitch-home .sh-badge--muted {
+  background: var(--sh-beige);
+  color: var(--sh-muted);
+  box-shadow: none;
+}
+
+.stitch-home .sh-leader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgb(247 246 228 / 0.65);
+  border: 1px solid var(--sh-border-faint);
+}
+
+.stitch-home .sh-leader__rank {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--sh-brand-btn);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgb(212 31 31 / 0.25);
+}
+
+.stitch-home .sh-leader__who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.stitch-home .sh-leader__name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-leader__meta {
+  font-size: 11px;
+  color: var(--sh-muted);
+}
+
+.stitch-home .sh-two-col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.35rem;
+}
+
+@media (min-width: 1024px) {
+  .stitch-home .sh-two-col {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.stitch-home .sh-hours-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stitch-home .sh-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 999px;
+  border: 1px solid var(--sh-border);
+  padding: 0.35rem 0.7rem;
+  min-height: 32px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--sh-muted);
+  background: var(--sh-surface);
+  box-shadow: var(--sh-shadow-sm);
+  transition: box-shadow 0.15s ease;
+  cursor: pointer;
+}
+
+.stitch-home .sh-chip:hover {
+  box-shadow: var(--sh-shadow-md);
+}
+
+.stitch-home .sh-chip:focus-visible {
+  outline: 2px solid var(--sh-brand);
+  outline-offset: 2px;
+}
+
+.stitch-home .sh-chip:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgb(35 31 32 / 0.06);
+}
+
+.stitch-home .sh-hours-period {
+  position: relative;
+  z-index: 5;
+}
+
+.stitch-home .sh-hours-bars--day {
+  justify-content: flex-start;
+  gap: 0.5rem;
+}
+
+.stitch-home .sh-hours-bars--day .sh-hours-bar {
+  width: 28px;
+  flex: 0 0 auto;
+}
+
+.stitch-home .sh-hours-bars--month {
+  gap: 2px;
+}
+
+.stitch-home .sh-hours-days--month {
+  font-size: 0.6rem;
+  letter-spacing: -0.02em;
+}
+
+.stitch-home .sh-hours-total {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.stitch-home .sh-hours-total strong {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  font-size: 12px;
+  font-weight: 600;
+  color: #059669;
+}
+
+.stitch-home .sh-hours-bars {
+  margin-top: 1rem;
+  display: flex;
+  height: 6rem;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.stitch-home .sh-hours-bar {
+  flex: 1;
+  min-width: 0;
+  border-radius: 8px 8px 4px 4px;
+  background: linear-gradient(180deg, #f52929 0%, #f88a8f 55%, #f7d6d6 100%);
+  opacity: 0.92;
+}
+
+.stitch-home .sh-hours-days {
+  margin-top: 0.375rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--sh-muted);
+}
+
+.stitch-home .sh-track {
+  margin-top: 0.75rem;
+}
+
+.stitch-home .sh-track + .sh-track {
+  margin-top: 0.75rem;
+}
+
+.stitch-home .sh-track__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.stitch-home .sh-track__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-track__label {
+  font-size: 11px;
+  color: var(--sh-muted);
+}
+
+.stitch-home .sh-track__segs {
+  margin-top: 0.375rem;
+  display: flex;
+  gap: 0.25rem;
+}
+
+.stitch-home .sh-track__seg {
+  height: 8px;
+  flex: 1;
+  border-radius: 4px;
+  background: rgb(35 31 32 / 0.07);
+}
+
+.stitch-home .sh-track__seg.is-filled {
+  background: var(--sh-brand-btn);
+}
+
+.stitch-home .sh-announce {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.stitch-home .sh-announce__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-announce__sub {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 12px;
+  color: var(--sh-muted);
+}
+
+.stitch-home .sh-pill {
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--sh-brand-light);
+  padding: 0.2rem 0.55rem;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--sh-brand-deep);
+}
+
+.stitch-home .sh-payment {
+  border-radius: var(--sh-radius);
+  border: 1px solid rgb(245 179 1 / 0.35);
+  background: linear-gradient(135deg, #fff8e8 0%, #fbeecc 100%);
+  padding: 1rem 1.15rem;
+  box-shadow: var(--sh-shadow-sm);
+}
+
+.stitch-home .sh-payment__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.stitch-home .sh-payment__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-payment__sub {
+  display: block;
+  font-size: 12px;
+  color: var(--sh-muted);
+}
+
+.stitch-home .sh-btn-payment {
+  border-radius: 13px;
+  border: 1px solid rgb(224 168 0 / 0.55);
+  background: linear-gradient(180deg, #fffdf5 0%, #fff3d0 100%);
+  box-shadow:
+    0 3px 10px rgb(107 76 0 / 0.12),
+    inset 0 1px 0 rgb(255 255 255 / 0.85);
+  padding: 0.45rem 0.85rem;
+  font-family: var(--sh-font);
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b4c00;
+  min-height: 40px;
+  transition:
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+}
+
+.stitch-home .sh-btn-payment:hover {
+  filter: brightness(1.02);
+  box-shadow:
+    0 5px 14px rgb(107 76 0 / 0.16),
+    inset 0 1px 0 rgb(255 255 255 / 0.9);
+}
+
+.stitch-home .sh-btn-payment:active {
+  transform: translateY(1px);
+  box-shadow:
+    0 1px 3px rgb(107 76 0 / 0.14),
+    inset 0 1px 2px rgb(107 76 0 / 0.1);
+}
+
+/* ---------- Events rail ---------- */
+
+.stitch-home .sh-rail {
+  background: linear-gradient(
+    165deg,
+    rgb(255 255 255 / 0.72) 0%,
+    rgb(249 237 237 / 0.9) 45%,
+    rgb(242 222 222 / 0.75) 100%
+  );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgb(255 255 255 / 0.5);
+  border-radius: var(--sh-radius-lg);
+  padding: 1rem 1.05rem 1.1rem;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  box-shadow: var(--sh-shadow-sm);
+}
+
+.stitch-home .sh-rail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+}
+
+.stitch-home .sh-rail-heading {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-rail-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--sh-brand-deep);
+  text-decoration: none;
+}
+
+.stitch-home .sh-rail-link:hover {
+  text-decoration: underline;
+}
+
+/* Calendar white card (matches Stitch nested surface) */
+.stitch-home .sh-cal-card {
+  background: var(--sh-surface);
+  border-radius: 24px;
+  box-shadow: var(--sh-shadow-sm);
+  border: 1px solid var(--sh-border-faint);
+  padding: 1rem;
+}
+
+.stitch-home .sh-cal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.stitch-home .sh-cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.15rem;
+}
+
+.stitch-home .sh-cal-nav {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid var(--sh-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sh-surface);
+  box-shadow: var(--sh-shadow-sm);
+  color: var(--sh-muted);
+  transition: box-shadow 0.15s ease;
+}
+
+.stitch-home .sh-cal-nav:hover {
+  box-shadow: var(--sh-shadow-md);
+  background: #fff;
+}
+
+.stitch-home .sh-cal-nav:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgb(35 31 32 / 0.06);
+}
+
+.stitch-home .sh-cal-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-cal-title span {
+  font-weight: 500;
+}
+
+.stitch-home .sh-cal-grid {
+  margin-top: 0.35rem;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem 0;
+  text-align: center;
+}
+
+.stitch-home .sh-cal-dow {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sh-muted);
+  text-transform: uppercase;
+}
+
+.stitch-home .sh-cal-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--sh-ink);
+  min-height: 28px;
+}
+
+.stitch-home .sh-cal-dots {
+  display: flex;
+  gap: 2px;
+}
+
+.stitch-home .sh-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+}
+
+.stitch-home .sh-dot--lg {
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.stitch-home .sh-dot--mbw {
+  background: #c8102e;
+}
+
+.stitch-home .sh-dot--lep {
+  background: #f5b301;
+}
+
+.stitch-home .sh-dot--bm100 {
+  background: #231f20;
+}
+
+.stitch-home .sh-event-list {
+  margin-top: 0.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  /* Show ~2 event rows; scroll for the rest */
+  max-height: 7.25rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.25rem;
+  scrollbar-gutter: stable;
+}
+
+.stitch-home .sh-event-list::-webkit-scrollbar,
+.stitch-home .sh-activity-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.stitch-home .sh-event-list::-webkit-scrollbar-thumb,
+.stitch-home .sh-activity-scroll::-webkit-scrollbar-thumb {
+  background: rgb(35 31 32 / 0.18);
+  border-radius: 999px;
+}
+
+.stitch-home .sh-event-list::-webkit-scrollbar-track,
+.stitch-home .sh-activity-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.stitch-home .sh-event {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.stitch-home .sh-event__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-event__date {
+  font-size: 12px;
+  color: var(--sh-muted);
+}
+
+/* Recent activity — solid white card (same surface as calendar) */
+.stitch-home .sh-rail > .sh-card {
+  background: var(--sh-surface);
+  border: 1px solid var(--sh-border-faint);
+  box-shadow: var(--sh-shadow-sm);
+  border-radius: 24px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.stitch-home .sh-activity-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  /* Show ~2 activity rows; scroll for the rest */
+  max-height: 8.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0.75rem 0 0;
+  padding-right: 0.25rem;
+  scrollbar-gutter: stable;
+}
+
+.stitch-home .sh-activity-feed {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stitch-home .sh-activity-item {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding-bottom: 18px;
+}
+
+.stitch-home .sh-activity-item:last-child {
+  padding-bottom: 0;
+}
+
+.stitch-home .sh-activity-item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 13px;
+  top: 28px;
+  bottom: 4px;
+  width: 1px;
+  background: rgb(35 31 32 / 0.08);
+}
+
+.stitch-home .sh-activity-marker {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 9px;
+}
+
+.stitch-home .sh-activity-marker--done {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.stitch-home .sh-activity-marker--submit {
+  background: #f2dede;
+  color: #c8102e;
+}
+
+.stitch-home .sh-activity-marker--live {
+  background: #fbe9bf;
+  color: #6b4c00;
+}
+
+.stitch-home .sh-activity-text {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-activity-when {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+  font-size: 11px;
+  color: var(--sh-muted);
+}
+
+.stitch-home .sh-filters {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px solid rgb(35 31 32 / 0.06);
+  padding-top: 0.75rem;
+  flex-shrink: 0;
+}
+
+.stitch-home .sh-filter-wrap {
+  position: relative;
+}
+
+.stitch-home .sh-filter {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 12px;
+  border: 1px solid var(--sh-border);
+  padding: 0.45rem 0.75rem;
+  min-height: 40px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--sh-muted);
+  background: rgb(255 255 255 / 0.7);
+  box-shadow: var(--sh-shadow-sm);
+  transition:
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.stitch-home .sh-filter:hover {
+  box-shadow: var(--sh-shadow-md);
+  background: #fff;
+}
+
+.stitch-home .sh-filter:focus-visible {
+  outline: 2px solid var(--sh-brand);
+  outline-offset: 2px;
+}
+
+.stitch-home .sh-filter-wrap.is-open .sh-filter {
+  background: #fff;
+  box-shadow: var(--sh-shadow-md);
+}
+
+.stitch-home .sh-filter-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 20;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  background: var(--sh-surface);
+  border: 1px solid var(--sh-border-faint);
+  border-radius: 12px;
+  box-shadow: var(--sh-shadow-md);
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
+.stitch-home .sh-filter-option {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  min-height: 36px;
+  padding: 0.4rem 0.65rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--sh-ink);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.stitch-home .sh-filter-option:hover {
+  background: rgb(245 41 41 / 0.08);
+}
+
+.stitch-home .sh-filter-option.is-active {
+  background: var(--sh-brand-light);
+  color: var(--sh-brand-deep);
+  font-weight: 600;
+}
+
+.stitch-home .sh-filter:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgb(35 31 32 / 0.06);
+}
+
+/* Hours spent period menu — must follow .sh-filter-menu so it opens downward */
+.stitch-home .sh-hours-period .sh-filter-menu,
+.stitch-home .sh-hours-period__menu {
+  top: calc(100% + 6px);
+  bottom: auto;
+  left: auto;
+  right: 0;
+  width: max-content;
+  min-width: 9.5rem;
+  z-index: 50;
+}
+
+.stitch-home .sh-hours-head {
+  position: relative;
+  z-index: 6;
+  overflow: visible;
+}
+
+.stitch-home .sh-two-col > .sh-card:first-child {
+  overflow: visible;
+}
+
+/* ---------- Programmes ---------- */
+
+.stitch-home .sh-programmes-grid {
+  display: grid;
+  width: 100%;
+  gap: 1.1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .stitch-home .sh-programmes-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .stitch-home .sh-programmes-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.stitch-home .sh-programme {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--sh-radius);
+  border: 1px solid var(--sh-border-faint);
+  background: var(--sh-surface);
+  box-shadow: var(--sh-shadow-sm);
+  min-width: 0;
+  width: 100%;
+  transition: box-shadow 0.2s ease;
+}
+
+.stitch-home .sh-programme:hover {
+  box-shadow: var(--sh-shadow-md);
+}
+
+.stitch-home .sh-programme__media {
+  position: relative;
+  display: block;
+}
+
+.stitch-home .sh-programme__img {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: var(--sh-radius) var(--sh-radius) 0 0;
+}
+
+.stitch-home .sh-programme__img--locked {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+
+.stitch-home .sh-programme__lock {
+  position: absolute;
+  right: 0.5rem;
+  top: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.92);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 0.2rem 0.55rem;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--sh-muted);
+  box-shadow: var(--sh-shadow-sm);
+}
+
+.stitch-home .sh-programme__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+.stitch-home .sh-programme__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-programme__meta {
+  margin: 0.5rem 0 0.75rem;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 12px;
+  color: var(--sh-muted);
+}
+
+.stitch-home .sh-programme__meta li {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* ---------- Practice streak (matches Progress streak board, mobile-first) ---------- */
+
+.stitch-home .sh-streak {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1.15rem 1.1rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgb(35 31 32 / 0.08);
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(35 31 32 / 0.05);
+}
+
+.stitch-home .sh-streak__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.stitch-home .sh-streak__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-streak__share {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--sh-muted);
+}
+
+.stitch-home .sh-streak__share:hover,
+.stitch-home .sh-streak__share:focus-visible {
+  background: #f3f1e4;
+  color: var(--sh-ink);
+  outline: none;
+}
+
+/* Three bordered metric cards — same pattern as the live streak board screenshot */
+.stitch-home .sh-streak__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.stitch-home .sh-streak__metric {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: 0.7rem 0.45rem;
+  border: 1px solid rgb(35 31 32 / 0.1);
+  border-radius: 12px;
+  background: #fff;
+  text-align: left;
+}
+
+.stitch-home .sh-streak__flame {
+  display: none;
+}
+
+.stitch-home .sh-streak__value {
+  margin: 0;
+  font-size: clamp(1.15rem, 4.5vw, 1.65rem);
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-streak__label {
+  margin: 0.3rem 0 0;
+  font-size: 0.7rem;
+  line-height: 1.25;
+  color: var(--sh-muted);
+}
+
+@media (min-width: 640px) {
+  .stitch-home .sh-streak__metrics {
+    gap: 0.75rem;
+  }
+
+  .stitch-home .sh-streak__metric {
+    padding: 0.85rem 1rem;
+  }
+
+  .stitch-home .sh-streak__label {
+    font-size: 0.78rem;
+  }
+}
+
+.stitch-home .sh-streak__toolbar {
+  display: flex;
+  justify-content: stretch;
+  margin-bottom: 0.75rem;
+}
+
+.stitch-home .sh-streak__years {
+  display: flex;
+  width: 100%;
+  padding: 3px;
+  border-radius: 999px;
+  background: #f3f1e4;
+  gap: 2px;
+}
+
+.stitch-home .sh-streak__year {
+  flex: 1;
+  border: none;
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--sh-muted);
+  min-height: 36px;
+  cursor: pointer;
+}
+
+.stitch-home .sh-streak__year.is-active {
+  background: #fff;
+  color: var(--sh-ink);
+  box-shadow: 0 1px 2px rgb(35 31 32 / 0.08);
+}
+
+.stitch-home .sh-streak__chart {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0.35rem;
+}
+
+.stitch-home .sh-streak__chart-inner {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 0.5rem;
+  min-width: 640px;
+}
+
+.stitch-home .sh-streak__months {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(var(--sh-streak-weeks, 53), minmax(0, 1fr));
+  font-size: 0.65rem;
+  color: var(--sh-muted);
+  margin-bottom: 0.15rem;
+}
+
+.stitch-home .sh-streak__month {
+  overflow: visible;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.stitch-home .sh-streak__weekdays {
+  display: grid;
+  grid-template-rows: repeat(7, 11px);
+  gap: 3px;
+  align-content: start;
+  font-size: 0.65rem;
+  color: var(--sh-muted);
+  line-height: 11px;
+}
+
+.stitch-home .sh-streak__grid {
+  display: grid;
+  grid-template-columns: repeat(var(--sh-streak-weeks, 53), minmax(0, 1fr));
+  gap: 3px;
+}
+
+.stitch-home .sh-streak__week {
+  display: grid;
+  grid-template-rows: repeat(7, 11px);
+  gap: 3px;
+}
+
+.stitch-home .sh-streak__cell {
+  width: 100%;
+  min-width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  border: none;
+  padding: 0;
+  background: #ebedf0;
+  cursor: pointer;
+  transition:
+    outline-color 0.15s ease,
+    outline-offset 0.15s ease;
+}
+
+.stitch-home .sh-streak__cell:disabled,
+.stitch-home .sh-streak__cell--empty {
+  cursor: default;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.stitch-home .sh-streak__cell:focus-visible {
+  outline: 1.5px dashed #e67e22;
+  outline-offset: 1px;
+}
+
+.stitch-home .sh-streak__cell:hover:not(:disabled) {
+  outline: 1.5px dashed #e67e22;
+  outline-offset: 1px;
+  z-index: 1;
+}
+
+.stitch-home .sh-streak__cell--l1 {
+  background: #c6e48b;
+}
+
+.stitch-home .sh-streak__cell--l2 {
+  background: #7bc96f;
+}
+
+.stitch-home .sh-streak__cell--l3 {
+  background: #239a3b;
+}
+
+.stitch-home .sh-streak__cell--l4 {
+  background: #196127;
+}
+
+.stitch-home .sh-streak__cell--today {
+  outline: 1.5px dashed #e67e22;
+}
+
+.stitch-home .sh-streak__tooltip {
+  position: fixed;
+  z-index: 80;
+  transform: translate(-50%, calc(-100% - 10px));
+  max-width: 16rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: 8px;
+  background: #231f20;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.3;
+  pointer-events: none;
+  box-shadow: 0 8px 24px rgb(35 31 32 / 0.25);
+  white-space: nowrap;
+}
+
+.stitch-home .sh-streak__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgb(35 31 32 / 0.08);
+}
+
+.stitch-home .sh-streak__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #c47a1a;
+}
+
+.stitch-home .sh-streak__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e67e22;
+  flex-shrink: 0;
+}
+
+.stitch-home .sh-streak__foot-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  margin-left: auto;
+}
+
+.stitch-home .sh-streak__help {
+  color: #5c5557;
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 3px;
+  font-size: 0.8rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.stitch-home .sh-streak__help:hover {
+  color: var(--sh-brand);
+}
+
+.stitch-home .sh-streak__help:focus-visible {
+  outline: 2px solid var(--sh-brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.stitch-home .sh-streak__legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  color: var(--sh-muted);
+  margin-left: 0;
+}
+
+.stitch-home .sh-streak__legend-scale {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.stitch-home .sh-streak__legend-scale .sh-streak__cell {
+  width: 11px;
+  min-width: 11px;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* How we count modal */
+.stitch-home .sh-streak-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.stitch-home .sh-streak-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgb(35 31 32 / 0.45);
+  cursor: pointer;
+}
+
+.stitch-home .sh-streak-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 420px);
+  border-radius: 16px;
+  background: var(--sh-surface);
+  border: 1px solid var(--sh-border-faint);
+  box-shadow: var(--sh-shadow-lg);
+  padding: 1.15rem 1.2rem 1.1rem;
+}
+
+.stitch-home .sh-streak-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.stitch-home .sh-streak-modal__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--sh-ink);
+  line-height: 1.3;
+}
+
+.stitch-home .sh-streak-modal__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sh-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.stitch-home .sh-streak-modal__close:hover {
+  background: rgb(35 31 32 / 0.06);
+  color: var(--sh-ink);
+}
+
+.stitch-home .sh-streak-modal__close:focus-visible {
+  outline: 2px solid var(--sh-brand);
+  outline-offset: 2px;
+}
+
+.stitch-home .sh-streak-modal__list {
+  margin: 0;
+  padding: 0 0 0 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  color: var(--sh-ink);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.stitch-home .sh-streak-modal__list strong {
+  font-weight: 700;
+}
+
+.stitch-home .sh-streak-modal__tip {
+  margin: 1rem 0 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  background: #fff4e5;
+  color: #6b4c00;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+@media (max-width: 479px) {
+  .stitch-home .sh-streak__metrics {
+    gap: 0.4rem;
+  }
+
+  .stitch-home .sh-streak__metric {
+    padding: 0.6rem 0.35rem;
+  }
+
+  .stitch-home .sh-streak__value {
+    font-size: 1.1rem;
+  }
+
+  .stitch-home .sh-streak__label {
+    font-size: 0.62rem;
+  }
+
+  .stitch-home .sh-streak__foot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stitch-home .sh-streak__foot-end {
+    align-items: flex-start;
+    margin-left: 0;
+  }
+}
+
+/* ---------- Mobile drawer ---------- */
+
+@media (max-width: 767px) {
+  .stitch-home .sh-menu-btn {
+    display: inline-flex;
+  }
+
+  .stitch-home .sh-header-logo {
+    display: inline-flex;
+    order: 1;
+  }
+
+  .stitch-home .sh-header-actions {
+    order: 2;
+    margin-left: auto;
+    gap: 4px;
+    padding-right: 0;
+  }
+
+  .stitch-home .sh-menu-btn {
+    order: 3;
+  }
+
+  .stitch-home .sh-greeting {
+    order: 4;
+    width: 100%;
+  }
+
+  .stitch-home .sh-close {
+    display: inline-flex;
+  }
+
+  .stitch-home .sh-profile-meta,
+  .stitch-home .sh-profile-row svg {
+    display: none;
+  }
+
+  .stitch-home .sh-aside {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 60;
+    width: 100%;
+    max-width: none;
+    height: 100vh;
+    height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+  }
+
+  .stitch-home .sh-aside.is-open {
+    transform: translateX(0);
+  }
+
+  .stitch-home .sh-nav-item {
+    min-height: 44px;
+    font-size: 15px;
+  }
+
+  .stitch-home .sh-nav-list,
+  .stitch-home .sh-nav-footer {
+    gap: 4px;
+  }
+
+  .stitch-home .sh-caption {
+    font-size: 12px;
+    white-space: normal;
+  }
+
+  .stitch-home .sh-wordmark {
+    font-size: 22px;
+  }
+
+  .stitch-home .sh-toggle {
+    display: none;
+  }
+
+  .stitch-home .sh-main {
+    padding: 1rem 1.15rem 1.5rem;
+  }
+
+  .stitch-home .sh-header {
+    padding: 0.625rem 1.15rem;
+  }
+
+  .stitch-home .sh-header::after {
+    left: 1.15rem;
+    right: 1.15rem;
+  }
+}
+
+@media (pointer: coarse) {
+  .stitch-home .sh-nav-item {
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  .stitch-home .sh-subline {
+    font-size: 12px;
+  }
+
+  .stitch-home .sh-cal-dow,
+  .stitch-home .sh-cal-day {
+    font-size: 12px;
+  }
+
+  .stitch-home .sh-menu-btn,
+  .stitch-home .sh-toggle,
+  .stitch-home .sh-bell,
+  .stitch-home .sh-streak__share,
+  .stitch-home .sh-cal-nav {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .stitch-home .sh-btn-primary,
+  .stitch-home .sh-btn-payment,
+  .stitch-home .sh-filter {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stitch-home .sh-aside,
+  .stitch-home .sh-panel,
+  .stitch-home .sh-nav-item,
+  .stitch-home .sh-toggle,
+  .stitch-home .sh-btn-primary,
+  .stitch-home .sh-btn-payment,
+  .stitch-home .sh-chip,
+  .stitch-home .sh-filter,
+  .stitch-home .sh-cal-nav,
+  .stitch-home .sh-programme,
+  .stitch-home .sh-streak__year,
+  .stitch-home .sh-bell,
+  .stitch-home .sh-brand__logo {
+    transition: none;
+  }
+
+  .stitch-home .sh-btn-primary:active,
+  .stitch-home .sh-btn-payment:active,
+  .stitch-home .sh-chip:active,
+  .stitch-home .sh-filter:active,
+  .stitch-home .sh-cal-nav:active,
+  .stitch-home .sh-bell:active,
+  .stitch-home .sh-aside .sh-nav-item[aria-current='page']:active {
+    transform: none;
+  }
+}
+
+/*
+ * Stitch preview: collapse the course-layout grid.
+ * Leaving `grid-template-rows: var(--header-h) 1fr` with a hidden header
+ * reserved ~56px of empty space above Welcome — that was the top gap.
+ * The empty sidebar column also left a dead strip beside the pink rail.
+ */
+.student-layout.student-layout--course.student-layout--stitch-preview {
+  display: block;
+  grid-template-columns: none;
+  grid-template-rows: none;
+  grid-template-areas: none;
+  padding-bottom: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.student-layout--stitch-preview .app-header,
+.student-layout--stitch-preview .bottom-nav,
+.student-layout--stitch-preview .skip-link {
+  display: none !important;
+}
+
+.student-layout.student-layout--course.student-layout--stitch-preview .student-main,
+.student-layout--stitch-preview .student-main--stitch-preview {
+  display: block;
+  padding: 0;
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* ---- Events rail: today, and days you can open ---- */
+
+/*
+ * A day with sessions is now an anchor, so it needs the link colour reset and a
+ * hit target that reads as pressable. Empty days stay plain divs.
+ */
+.stitch-home .sh-cal-day {
+  border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.stitch-home .sh-cal-day.has-events {
+  cursor: pointer;
+  font-weight: 700;
+  transition: background-color 0.15s ease;
+}
+
+.stitch-home .sh-cal-day.has-events:hover {
+  background: color-mix(in srgb, var(--sh-brand, #f52929) 10%, transparent);
+}
+
+.stitch-home .sh-cal-day.has-events:focus-visible {
+  outline: 2px solid var(--sh-brand, #f52929);
+  outline-offset: 1px;
+}
+
+/*
+ * Today marks the number, not the cell.
+ *
+ * A ring around the whole cell enclosed the dots row as well as the digit, so
+ * it drew a tall box that read as a selected region rather than a date. Sizing
+ * the digit into its own circle is what every calendar app does, and it leaves
+ * the dots underneath free to keep meaning "sessions".
+ */
+.stitch-home .sh-cal-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  line-height: 1;
+}
+
+.stitch-home .sh-cal-day.is-today .sh-cal-num {
+  /* The deeper red, not --sh-brand: white on #f52929 measures 4.01:1, and this
+     digit is 11px, which needs 4.5:1. #c8102e gives 5.9:1 at the same weight. */
+  background: #c8102e;
+  color: #fff;
+  font-weight: 700;
+}
+
+.stitch-home .sh-event {
+  border-radius: 8px;
+}
+
+/* The title and time: the row's primary action. */
+.stitch-home .sh-event__main {
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+}
+
+.stitch-home .sh-event__main:hover {
+  background: color-mix(in srgb, var(--sh-brand, #f52929) 7%, transparent);
+}
+
+.stitch-home .sh-event__main:focus-visible,
+.stitch-home .sh-event__gcal:focus-visible {
+  outline: 2px solid var(--sh-brand, #f52929);
+  outline-offset: 2px;
+}
+
+/*
+ * Secondary, and sized to stay so: a 28px icon next to a two-line title reads
+ * as a helper, where a labelled button would compete with the session itself.
+ * 28px is under the 44px touch minimum, so the row keeps generous padding
+ * around it rather than shrinking to the icon.
+ */
+.stitch-home .sh-event__gcal {
+  flex: none;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-left: auto;
+  border-radius: 8px;
+  color: var(--sh-ink-muted, #6e6963);
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.stitch-home .sh-event__gcal:hover {
+  background: color-mix(in srgb, var(--sh-brand, #f52929) 12%, transparent);
+  color: #c8102e;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stitch-home .sh-event__main,
+  .stitch-home .sh-event__gcal {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stitch-home .sh-cal-day.has-events,
+  .stitch-home .sh-event {
+    transition: none;
+  }
+}
+
+/* ---- Day hover card: time and topic ---- */
+
+.stitch-home .sh-cal-day.has-events {
+  position: relative;
+}
+
+/*
+ * Shown below the cell, not above it. Three ancestors clip (`sh-main`,
+ * `sh-panel`, `sh-shell`), and above the grid is the month header — below sits
+ * the event list, which is inside the card and safe to overlay.
+ */
+.stitch-home .sh-cal-tip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  width: max-content;
+  max-width: 190px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #231f20;
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.35;
+  text-align: left;
+  font-weight: 500;
+  box-shadow: 0 10px 26px -12px rgb(0 0 0 / 0.55);
+  pointer-events: none;
+}
+
+/* Nudged inward at the ends of a row so the card stays inside the panel. */
+.stitch-home .sh-cal-tip--start {
+  left: 0;
+  transform: none;
+}
+
+.stitch-home .sh-cal-tip--end {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.stitch-home .sh-cal-day.has-events:hover .sh-cal-tip,
+.stitch-home .sh-cal-day.has-events:focus-visible .sh-cal-tip {
+  display: flex;
+}
+
+.stitch-home .sh-cal-tip__row {
+  display: flex;
+  flex-direction: column;
+}
+
+.stitch-home .sh-cal-tip__time {
+  font-weight: 700;
+  color: #f7f6e4;
+}
+
+.stitch-home .sh-cal-tip__title {
+  color: rgb(255 255 255 / 0.82);
+}
+
+/* No hover on touch — the card would need a tap, and a tap opens the day. */
+@media (hover: none) {
+  .stitch-home .sh-cal-tip {
+    display: none !important;
+  }
+}

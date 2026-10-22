@@ -31,127 +31,94 @@ export const LEP_GATE_TYPES = {
 
 export const LEP_PROGRAM_SECTIONS = [
   {
-    id: 'orientation',
-    title: 'Program Orientation',
+    /*
+     * Pre-Program Preparation leads, ahead of Orientation. That is the order in
+     * the course outline: the VIA survey, the CoDeSeF sheet and the NSDC
+     * registration are done before the programme opens, not after reading the
+     * framework.
+     */
+    id: 'pre-program',
+    title: 'Pre-Program Preparation',
     subtitle: '3 lessons · before Day 1',
     usesTaskEngine: true,
     gate: null,
   },
   {
-    id: 'pre-program',
-    title: 'Pre-Program Preparation',
-    subtitle: '1 lesson · before Day 1',
+    id: 'orientation',
+    title: 'Program Orientation',
+    subtitle: '3 lessons · before Day 1',
     usesTaskEngine: true,
-    gate: { type: LEP_GATE_TYPES.PREPARATION, requiresSectionId: 'orientation' },
-    lockedMessage: 'Complete Program Orientation to unlock Pre-Program Preparation.',
+    gate: { type: LEP_GATE_TYPES.PREPARATION, requiresSectionId: 'pre-program' },
+    lockedMessage: 'Complete Pre-Program Preparation to unlock Program Orientation.',
   },
   {
     id: 'day-1',
     title: 'Day 1 — Personal Transformation',
     subtitle: '6 lessons · Week 1',
     usesTaskEngine: true,
-    gate: { type: LEP_GATE_TYPES.SEQUENCE, requiresSectionId: 'pre-program' },
-    lockedMessage: 'Complete the VIA Survey to unlock Day 1.',
+    gate: { type: LEP_GATE_TYPES.SEQUENCE, requiresSectionId: 'orientation' },
+    lockedMessage: 'Complete Program Orientation to unlock Day 1.',
   },
   {
     id: 'day-2',
     title: 'Day 2 — Strategies and Tactics',
-    subtitle: '5 lessons · Week 1',
+    subtitle: '6 lessons · Week 1',
     usesTaskEngine: true,
     gate: { type: LEP_GATE_TYPES.SEQUENCE, requiresSectionId: 'day-1' },
     lockedMessage: 'Complete Day 1 to unlock Day 2.',
   },
   {
-    id: 'day-3',
-    title: 'Day 3 — Consolidation and Closure',
-    subtitle: '6 lessons · Week 1',
-    usesTaskEngine: true,
-    gate: { type: LEP_GATE_TYPES.SEQUENCE, requiresSectionId: 'day-2' },
-    lockedMessage: 'Complete Day 2 to unlock Day 3.',
-  },
-  {
-    id: 'day-4',
-    title: 'Day 4 — Strength Based Excellence',
-    subtitle: '3 lessons · Week 2',
-    usesTaskEngine: true,
-    gate: {
-      type: LEP_GATE_TYPES.SEQUENCE,
-      requiresSectionId: 'day-3',
-      requiresPaid: true,
-    },
-    lockedMessage: 'Complete Day 3 and full program payment to unlock Day 4.',
-  },
-  {
-    id: 'resume',
-    title: 'Build your Profile / Resume',
-    subtitle: '4 lessons · Week 2',
-    usesTaskEngine: true,
-    gate: {
-      type: LEP_GATE_TYPES.SEQUENCE,
-      requiresSectionId: 'day-4',
-      requiresPaid: true,
-    },
-    lockedMessage: 'Complete Day 4 and full program payment to unlock this section.',
-  },
-  {
-    id: 'day-5',
-    title: 'Day 5 — Shameless Pitch',
-    subtitle: '3 lessons · Week 3',
-    usesTaskEngine: true,
-    gate: {
-      type: LEP_GATE_TYPES.SEQUENCE,
-      requiresSectionId: 'resume',
-      requiresPaid: true,
-    },
-    lockedMessage: 'Complete Build your Profile and full program payment to unlock Day 5.',
-  },
-  {
-    id: 'day-6',
-    title: 'Day 6 — Guiding Stars',
-    subtitle: '2 lessons · Week 3',
-    usesTaskEngine: true,
-    gate: {
-      type: LEP_GATE_TYPES.SEQUENCE,
-      requiresSectionId: 'day-5',
-      requiresPaid: true,
-    },
-    lockedMessage: 'Complete Day 5 and full program payment to unlock Day 6.',
-  },
-  {
-    id: 'day-7',
-    title: 'Day 7 — Progress Review',
-    subtitle: '1 lesson · Week 4',
-    usesTaskEngine: true,
-    gate: {
-      type: LEP_GATE_TYPES.SEQUENCE,
-      requiresSectionId: 'day-6',
-      requiresPaid: true,
-    },
-    lockedMessage: 'Complete Day 6 and full program payment to unlock Day 7.',
-  },
-  {
-    id: 'day-8',
-    title: 'Day 8 — Graduation Day',
-    subtitle: '3 lessons · Week 4',
-    usesTaskEngine: true,
-    gate: {
-      type: LEP_GATE_TYPES.SEQUENCE,
-      requiresSectionId: 'day-7',
-      requiresPaid: true,
-    },
-    lockedMessage: 'Complete Day 7 and full program payment to unlock Graduation.',
-  },
-  {
     /*
-     * Moodle gates each week's form on the previous one being marked complete,
-     * which is a sequence within the section rather than against a teaching day.
+     * The teaching days give way to weeks here, as the outline does. What used
+     * to be Day 4 is the Strength Based Excellence work inside Week 1, and each
+     * week now carries its own engagement form and challenge.
      */
-    id: 'weekly-progress',
-    title: 'Weekly Progress Updates',
-    subtitle: '5 lessons · Weeks 1–5',
+    id: 'week-1',
+    title: 'Week 1 — Consolidation and Closure',
+    subtitle: '5 lessons · Week 1',
     usesTaskEngine: true,
-    gate: { type: LEP_GATE_TYPES.SEQUENCE, requiresSectionId: 'day-1', requiresPaid: true },
-    lockedMessage: 'Start Day 1 and complete full program payment to unlock weekly updates.',
+    gate: {
+      type: LEP_GATE_TYPES.SEQUENCE,
+      requiresSectionId: 'day-2',
+      requiresPaid: true,
+    },
+    lockedMessage: 'Complete Day 2 and full program payment to unlock Week 1.',
+  },
+  {
+    id: 'week-2',
+    title: 'Week 2 — Profile, Resume and Pitch',
+    subtitle: '14 lessons · Week 2',
+    usesTaskEngine: true,
+    gate: {
+      type: LEP_GATE_TYPES.SEQUENCE,
+      requiresSectionId: 'week-1',
+      requiresPaid: true,
+    },
+    lockedMessage: 'Complete Week 1 and full program payment to unlock Week 2.',
+  },
+  {
+    id: 'week-3',
+    title: 'Week 3 — Progress Review and Guiding Stars',
+    subtitle: '5 lessons · Week 3',
+    usesTaskEngine: true,
+    gate: {
+      type: LEP_GATE_TYPES.SEQUENCE,
+      requiresSectionId: 'week-2',
+      requiresPaid: true,
+    },
+    lockedMessage: 'Complete Week 2 and full program payment to unlock Week 3.',
+  },
+  {
+    id: 'week-4',
+    title: 'Week 4 — Graduation',
+    subtitle: '6 lessons · Week 4',
+    usesTaskEngine: true,
+    gate: {
+      type: LEP_GATE_TYPES.SEQUENCE,
+      requiresSectionId: 'week-3',
+      requiresPaid: true,
+    },
+    lockedMessage: 'Complete Week 3 and full program payment to unlock Week 4.',
   },
   {
     id: 'community',
@@ -168,10 +135,10 @@ export const LEP_PROGRAM_SECTIONS = [
     usesTaskEngine: true,
     gate: {
       type: LEP_GATE_TYPES.SEQUENCE,
-      requiresSectionId: 'day-8',
+      requiresSectionId: 'week-4',
       requiresPaid: true,
     },
-    lockedMessage: 'Complete Graduation Day and full program payment to unlock Final Evaluation.',
+    lockedMessage: 'Complete Week 4 and full program payment to unlock Final Evaluation.',
   },
   {
     id: 'certificate',

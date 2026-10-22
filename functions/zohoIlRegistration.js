@@ -511,6 +511,43 @@ async function searchIlRegistrationByEmail(email, deps) {
   return full || { id: foundId, _module: foundModule };
 }
 
+/** All IL_Registration rows for one email (learners often have one per program). */
+async function searchAllIlRegistrationsByEmail(email, deps) {
+  const normalized = normalizeEmail(email);
+  if (!normalized) return [];
+
+  const token = await deps.getAccessToken();
+  if (!token) return [];
+
+  const f = getRegistrationFieldNames();
+  const byId = new Map();
+
+  for (const module of getRegistrationModuleCandidates()) {
+    const params = new URLSearchParams({
+      criteria: `(${f.email}:equals:${normalized})`,
+      page: '1',
+      per_page: '200',
+    });
+
+    const searchRes = await fetch(`${deps.getApiDomain()}/crm/v2/${module}/search?${params}`, {
+      headers: { Authorization: `Zoho-oauthtoken ${token}` },
+    });
+
+    if (!searchRes.ok || searchRes.status === 204) continue;
+    const searchBody = await searchRes.json().catch(() => ({}));
+    (searchBody?.data || []).forEach((row) => {
+      if (row?.id) byId.set(row.id, row);
+    });
+  }
+
+  const hydrated = [];
+  for (const row of byId.values()) {
+    const full = await hydrateRegistrationRecord(row, deps);
+    if (full) hydrated.push(full);
+  }
+  return hydrated;
+}
+
 module.exports = {
   getIlRegistrationModule,
   getRegistrationFieldNames,
@@ -525,4 +562,5 @@ module.exports = {
   listIlRegistrationPage,
   registrationToSummaryRow,
   searchIlRegistrationByEmail,
+  searchAllIlRegistrationsByEmail,
 };

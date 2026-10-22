@@ -23,6 +23,7 @@ export default function FileUpload({
   userId,
   onSubmit,
   program = 'mbw',
+  submitLabel: submitLabelOverride = '',
 }) {
   const { storageEnabled, uploadFile } = getSubmissionProgramConfig(program);
   const [file, setFile] = useState(null);
@@ -33,7 +34,7 @@ export default function FileUpload({
 
   const skipped = submission?.storageSkipped;
   const saved = submission?.fileUrl || (submission?.fileName && !skipped);
-  const submitLabel = task.uploadSubmitLabel || 'Submit file';
+  const submitLabel = submitLabelOverride || task.uploadSubmitLabel || 'Submit file';
   const skipLabel = task.uploadSkipLabel || 'Continue without uploading';
   const uploadKind = task.uploadKind || 'file';
 

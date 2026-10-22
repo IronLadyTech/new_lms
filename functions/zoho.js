@@ -378,8 +378,138 @@ async function searchLeadByEmail(email) {
   return body?.data?.[0]?.id || null;
 }
 
+/** Digits-only and common India variants for Lead Phone / Mobile search. */
+function phoneSearchVariants(raw) {
+  const digits = String(raw || '').replace(/\D/g, '');
+  if (!digits) return [];
+  const out = new Set();
+  out.add(digits);
+  if (digits.length === 10) {
+    out.add(`91${digits}`);
+    out.add(`+91${digits}`);
+  }
+  if (digits.length === 12 && digits.startsWith('91')) {
+    out.add(digits.slice(2));
+    out.add(`+${digits}`);
+  }
+  if (String(raw || '').startsWith('+')) out.add(String(raw).trim());
+  return [...out];
+}
+
+async function searchLeadByFirebaseUid(uid) {
+  const token = await getAccessToken();
+  if (!token || !uid) return null;
+
+  const criteria = encodeURIComponent(`(Firebase_UID:equals:${String(uid).trim()})`);
+  const res = await zohoApiFetch(
+    `${getApiDomain()}/crm/v2/${getModule()}/search?criteria=${criteria}`,
+    { headers: { Authorization: `Zoho-oauthtoken ${token}` } }
+  );
+  if (res.status === 204) return null;
+  if (!res.ok) return null;
+  const body = await res.json();
+  return body?.data?.[0]?.id || null;
+}
+
+async function searchLeadByPhone(phone) {
+  const token = await getAccessToken();
+  if (!token || !phone) return null;
+
+  for (const variant of phoneSearchVariants(phone)) {
+    const criteria = encodeURIComponent(
+      `((Phone:equals:${variant})or(Mobile:equals:${variant}))`
+    );
+    const res = await zohoApiFetch(
+      `${getApiDomain()}/crm/v2/${getModule()}/search?criteria=${criteria}`,
+      { headers: { Authorization: `Zoho-oauthtoken ${token}` } }
+    );
+    if (res.status === 204) continue;
+    if (!res.ok) continue;
+    const body = await res.json();
+    const id = body?.data?.[0]?.id || null;
+    if (id) return id;
+  }
+  return null;
+}
+
+async function updateLeadById(leadId, fields) {
+  const token = await getAccessToken();
+  if (!token || !leadId) throw new Error('Unable to update Zoho lead');
+
+  const res = await zohoApiFetch(`${getApiDomain()}/crm/v2/${getModule()}/${leadId}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Zoho-oauthtoken ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ data: [fields] }),
+  });
+
+  const body = await res.json();
+  if (!res.ok) {
+    throw new Error(body?.message || JSON.stringify(body));
+  }
+  const row = body?.data?.[0];
+  if (row?.status === 'error') {
+    const detail = row.details ? ` (${JSON.stringify(row.details)})` : '';
+    throw new Error(`${row.message || 'Zoho update failed'}${detail}`);
+  }
+  return leadId;
+}
+
+/** Drop invalid layout fields until Zoho accepts the Lead update (welcome fields). */
+async function updateLeadByIdResilient(leadId, fields) {
+  const payload = { ...fields };
+  const keys = Object.keys(payload);
+  for (let attempt = 0; attempt <= keys.length + 2; attempt++) {
+    try {
+      return await updateLeadById(leadId, payload);
+    } catch (err) {
+      const msg = String(err.message || '');
+      const match = msg.match(/"api_name":"([^"]+)"/) || msg.match(/api_name[":\s]+([A-Za-z0-9_]+)/);
+      const badKey = match?.[1];
+      if (!badKey || !(badKey in payload)) throw err;
+      delete payload[badKey];
+      if (!Object.keys(payload).length) throw err;
+      console.warn(`updateLeadByIdResilient: dropped invalid field ${badKey}`);
+    }
+  }
+  throw new Error('Zoho lead update failed');
+}
+
+function welcomeFieldsToLeadPayload(fields = {}) {
+  const payload = {};
+  if (fields.city) {
+    payload.City = fields.city;
+    payload.Current_City = fields.city;
+  }
+  if (fields.domain) {
+    payload.Industry = fields.domain;
+    payload.Industry_Field_of_Work = fields.domain;
+    payload.LMS_Domain = fields.domain;
+  }
+  if (fields.bhag) {
+    payload.Month_B_HAG = fields.bhag;
+    payload.B_HAG_Next_3_month = fields.bhag;
+    payload.LMS_BHAG = fields.bhag;
+  }
+  if (fields.lepBatch) {
+    payload.LEP_Batch = fields.lepBatch;
+  }
+  return payload;
+}
+
 async function searchIlUserByEmail(email) {
   return ilUsers.searchIlUserByEmail(email, { getAccessToken, getApiDomain });
+}
+
+function zohoEnrollmentDeps() {
+  const api = { getAccessToken, getApiDomain };
+  return {
+    searchAllIlRegistrationsByEmail: (addr) =>
+      ilRegistration.searchAllIlRegistrationsByEmail(addr, api),
+    searchAllIlUsersByEmail: (addr) => ilUsers.searchAllIlUsersByEmail(addr, api),
+  };
 }
 
 async function getLeadById(leadId) {
@@ -1045,7 +1175,50 @@ async function runUserBatchSync(db, email, opts = {}) {
   );
 }
 
+/**
+ * First-login welcome / batch fields → Lead.
+ * Accepts legacy email string, or `{ email, phone, leadId }` for phone-login learners.
+ */
+async function updateLeadWelcomeFields(emailOrIdentity, fields = {}) {
+  let email = '';
+  let phone = '';
+  let leadId = null;
+  let uid = null;
+  if (typeof emailOrIdentity === 'string') {
+    email = emailOrIdentity.trim();
+  } else if (emailOrIdentity && typeof emailOrIdentity === 'object') {
+    email = String(emailOrIdentity.email || '').trim();
+    phone = String(emailOrIdentity.phone || '').trim();
+    leadId = emailOrIdentity.leadId || emailOrIdentity.zohoLeadId || null;
+    uid = emailOrIdentity.uid || null;
+  }
+
+  const payload = welcomeFieldsToLeadPayload(fields);
+  if (!Object.keys(payload).length) return null;
+
+  if (!leadId && uid) {
+    leadId = await searchLeadByFirebaseUid(uid);
+  }
+  if (!leadId && email) {
+    leadId = await searchLeadByEmail(email);
+  }
+  if (!leadId && phone) {
+    leadId = await searchLeadByPhone(phone);
+  }
+
+  if (leadId) {
+    return updateLeadByIdResilient(leadId, payload);
+  }
+
+  if (!email) {
+    return null;
+  }
+  return upsertLead({ Email: email, ...payload });
+}
+
 module.exports = {
+  /** Zoho + Firestore helpers the batch syncs share (used by zohoCmsSync). */
+  buildBatchSyncDeps,
   runZohoReconcile: (db, options) => runZohoReconcile(db, options),
   /** Exported for the outbound-payload test — see zohoOutbound.test.js. */
   profileToLeadFields,
@@ -1053,6 +1226,8 @@ module.exports = {
   leadPasswordPayload,
   isConfigured,
   getAccessToken,
+  getApiDomain,
+  updateLeadWelcomeFields,
   getLeadByEmail,
   getLeadById,
   syncUserToZoho,
@@ -1061,18 +1236,27 @@ module.exports = {
   syncStoredCredentialBeforeReset,
   provisionUserFromLead: (db, lead, opts) => provisioning.provisionFromRecord(db, lead, opts),
   provisionUserFromEmail: (db, email) =>
-    provisioning.provisionUserFromEmail(db, getLeadByEmail, searchIlUserByEmail, email),
+    provisioning.provisionUserFromEmail(
+      db,
+      getLeadByEmail,
+      searchIlUserByEmail,
+      email,
+      null,
+      zohoEnrollmentDeps()
+    ),
   /** Lead Status changed in Zoho — refresh entitlements, create nothing. */
   syncEntitlementsFromZoho: (db, email, body) =>
     provisioning.syncEntitlementsFromZoho(db, getLeadByEmail, searchIlUserByEmail, email, body, {
       // Reads IL_Registration as well as Leads and IL_Users, so a status change
       // can create the account the registration webhook never did.
       provisionMissing: (addr) => provisionUserForBatchSync(db, addr),
+      ...zohoEnrollmentDeps(),
     }),
   provisionFromRegistrationWebhook: async (db, body) => {
     const result = await provisioning.provisionFromRegistrationWebhook(db, body, {
       getLeadByEmail,
       searchIlUserByEmail,
+      ...zohoEnrollmentDeps(),
     });
 
     if (result.ok && result.uid && isConfigured()) {
@@ -1157,5 +1341,8 @@ module.exports = {
     }),
   /** Sync one learner's batch from Zoho into Firestore groups. */
   syncUserBatchFromZoho: (firestore, email, opts = {}) => runUserBatchSync(firestore, email, opts),
+  /** Unique Leads LEP_Batch strings for mobile staff CMS (Delivery Desk cohort list). */
+  listCmsLepBatchKeys: () =>
+    leadsCohort.listUniqueLepBatchValues({ getAccessToken, getApiDomain, getModule }),
   userProfileChanged,
 };

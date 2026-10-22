@@ -2,12 +2,15 @@ import { describe, expect, it } from 'vitest';
 import {
   PROGRAM_ACCESS,
   canAccessProgram,
+  canOpenProgramTasks,
+  getProgramAccessState,
   courseCodeToProgramId,
   getEnrolledProgramIds,
   getEnrolledProgramEntries,
   getProgramAccessState,
 } from './programAccess.js';
 import { PROGRAMS } from '../data/programTypes.js';
+import { PAYMENT_STATUS } from '../data/accessTiers.js';
 
 describe('courseCodeToProgramId', () => {
   it('maps known course codes', () => {
@@ -70,5 +73,52 @@ describe('canAccessProgram / getProgramAccessState', () => {
     const profile = { enrolledCourses: ['mbw1'] };
     expect(canAccessProgram('MBW', profile, courses)).toBe(true);
     expect(getProgramAccessState('MBW', profile, courses).state).toBe(PROGRAM_ACCESS.OPEN);
+  });
+});
+
+
+describe('canOpenProgramTasks', () => {
+  const enrolledWith = (paymentStatus) => ({
+    programs: [PROGRAMS.MBW],
+    programAccess: { [PROGRAMS.MBW]: { paymentStatus } },
+  });
+
+  it('opens tasks for a fully paid learner', () => {
+    expect(canOpenProgramTasks(PROGRAMS.MBW, enrolledWith(PAYMENT_STATUS.PAID))).toBe(true);
+  });
+
+  it('opens tasks for a registration-tier learner, who owns phase one', () => {
+    expect(canOpenProgramTasks(PROGRAMS.MBW, enrolledWith(PAYMENT_STATUS.REGISTER))).toBe(true);
+  });
+
+  it('refuses a learner who is enrolled but unpaid', () => {
+    const profile = enrolledWith(PAYMENT_STATUS.UNPAID);
+    // The distinction this helper exists for: enrolment alone said yes.
+    expect(canAccessProgram(PROGRAMS.MBW, profile)).toBe(true);
+    expect(canOpenProgramTasks(PROGRAMS.MBW, profile)).toBe(false);
+  });
+
+  it('refuses a learner who is not enrolled at all', () => {
+    expect(canOpenProgramTasks(PROGRAMS.MBW, { programs: [] })).toBe(false);
+  });
+
+  it('refuses an unknown programme', () => {
+    expect(canOpenProgramTasks('not-a-programme', enrolledWith(PAYMENT_STATUS.PAID))).toBe(false);
+  });
+
+  it('is surfaced on the access state, so both surfaces read one answer', () => {
+    const unpaid = getProgramAccessState(PROGRAMS.MBW, enrolledWith(PAYMENT_STATUS.UNPAID));
+    expect(unpaid.canAccess).toBe(true);
+    expect(unpaid.canOpenTasks).toBe(false);
+
+    const paid = getProgramAccessState(PROGRAMS.MBW, enrolledWith(PAYMENT_STATUS.PAID));
+    expect(paid.canOpenTasks).toBe(true);
+  });
+
+  it('reports canOpenTasks false on every non-enrolled branch', () => {
+    for (const state of [getProgramAccessState(PROGRAMS.MBW, { programs: [] }),
+                         getProgramAccessState(PROGRAMS.LEP, { programs: [] })]) {
+      expect(state.canOpenTasks).toBe(false);
+    }
   });
 });

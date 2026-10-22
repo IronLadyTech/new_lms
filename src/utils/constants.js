@@ -1,5 +1,6 @@
 export const SUPER_ADMIN_EMAIL = 'ironladytech@gmail.com';
-export const IRON_LADY_CONTACT_EMAIL = SUPER_ADMIN_EMAIL;
+/** Learner-facing support — brand contact (COMPANY_CONTEXT.md) */
+export const IRON_LADY_CONTACT_EMAIL = 'admin@iamironlady.com';
 
 export function isSuperAdminEmail(email) {
   if (typeof email !== 'string') return false;

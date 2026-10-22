@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { PanelRightOpen, Search } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import useLepTaskEngine from '../../hooks/useLepTaskEngine';
 import useLepEnrollment from '../../hooks/useLepEnrollment';
@@ -19,6 +19,19 @@ import BM100LessonTopbar from '../../components/bm100/program/BM100LessonTopbar'
 import BM100LessonCurriculumDrawer from '../../components/bm100/program/BM100LessonCurriculumDrawer';
 import BM100ProgramJourney from '../../components/bm100/program/BM100ProgramJourney';
 import LessonCourseContentRail from '../../components/mbw/program/LessonCourseContentRail';
+import LessonHeaderBar from '../../components/lessons/LessonHeaderBar';
+import { lessonFilterCounts } from '../../utils/lessonFilters';
+import { splitSectionTitle } from '../../components/lessons/lessonContext';
+import useMediaQuery from '../../hooks/useMediaQuery';
+
+/*
+ * Course contents beside the lesson instead of behind a tab — the layout the
+ * Udemy player uses, in Iron Lady's palette. On by default; set
+ * VITE_LESSON_SPLIT=false to fall back to the tab and the Outline drawer.
+ */
+const LESSON_SPLIT = import.meta.env.VITE_LESSON_SPLIT !== 'false';
+/* A viewing preference for this browser, not something stored against the learner. */
+const LESSON_EXPANDED_KEY = 'lep-lesson-expanded';
 import BM100OverviewView from '../../components/bm100/views/BM100OverviewView';
 import BM100LessonView from '../../components/bm100/views/BM100LessonView';
 import { countSavedSubmissions } from '../../utils/mbwSubmissionUtils';
@@ -42,7 +55,10 @@ import {
   estimateCurriculumMinutes,
   formatCurriculumDuration,
 } from '../../utils/curriculumDuration';
-import { TASK_TYPES as LEP_TASK_TYPES } from '../../services/lepService';
+import {
+  TASK_TYPES as LEP_TASK_TYPES,
+  SUBMISSION_STATUS as LEP_SUBMISSION_STATUS,
+} from '../../services/lepService';
 
 const LEP_UI = PROGRAM_UI[PROGRAMS.LEP];
 
@@ -62,11 +78,49 @@ export default function LEPPage() {
   const [successBanner, setSuccessBanner] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [railSearch, setRailSearch] = useState('');
+  const [railFilter, setRailFilter] = useState('all');
+  /* Below 900px the course content column becomes a drawer, opened by Outline. */
+  const railDrawer = useMediaQuery('(max-width: 900px)');
+  /*
+   * Expand: the lesson takes the page's full width and the course content steps
+   * aside, as on Udemy. Remembered across lessons and visits in this browser.
+   */
+  const [lessonExpanded, setLessonExpanded] = useState(() => {
+    try {
+      return window.localStorage.getItem(LESSON_EXPANDED_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const toggleLessonExpanded = useCallback(() => {
+    setLessonExpanded((was) => {
+      const next = !was;
+      try {
+        window.localStorage.setItem(LESSON_EXPANDED_KEY, next ? '1' : '0');
+      } catch {
+        /* Storage blocked, as in a private window: it still works for this visit. */
+      }
+      return next;
+    });
+  }, []);
 
   const openSearch = useCallback(() => setSearchOpen(true), []);
   useLessonSearchShortcut(openSearch);
 
   const lessonIdFromUrl = searchParams.get('lesson');
+
+  /* The drawer closes when a lesson is picked, and on Escape. */
+  useEffect(() => {
+    setOutlineOpen(false);
+  }, [lessonIdFromUrl]);
+  useEffect(() => {
+    if (!outlineOpen) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setOutlineOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [outlineOpen]);
 
   const engine = useLepTaskEngine(user?.uid);
   const {
@@ -128,6 +182,52 @@ export default function LEPPage() {
   const nextLessonState = useMemo(
     () => (nextFromCurrent ? mergedTaskStates.find((t) => t.task.id === nextFromCurrent) : null),
     [nextFromCurrent, mergedTaskStates]
+  );
+  const railFilterCounts = useMemo(() => lessonFilterCounts(mergedTaskStates), [mergedTaskStates]);
+
+  /*
+   * The next lesson in course order, when it is still locked, and what opens it.
+   * `getNextTaskId` skips locked lessons, which is right for the Next button and
+   * wrong here: the card is about the lesson that is waiting. The wording follows
+   * that lesson's own lock, so payment is never described as unfinished work.
+   */
+  const lockedNext = useMemo(() => {
+    const next = activeTaskId ? getNextSequentialTaskState(activeTaskId) : null;
+    if (!next || next.status !== LEP_SUBMISSION_STATUS.LOCKED) return null;
+    const note =
+      next.phaseLocked && next.lockedBy === 'payment'
+        ? 'Opens with full program payment'
+        : next.phaseLocked
+          ? 'Opens when this section is finished'
+          : 'Unlocks when you finish this lesson';
+    return { title: next.task.title, note };
+  }, [activeTaskId, getNextSequentialTaskState]);
+
+  /* The lesson's place in the course: its day or week, and "Lesson 3 of 6". */
+  const lessonContext = useMemo(() => {
+    if (!activeState) return null;
+    const section = LEP_PROGRAM_SECTIONS.find((s) => s.id === activeState.task.phase);
+    const { eyebrow, name } = splitSectionTitle(section?.title || '');
+    const inSection = mergedTaskStates.filter((t) => t.task.phase === activeState.task.phase);
+    const index = inSection.findIndex((t) => t.task.id === activeState.task.id);
+    return {
+      programTitle: LEP_UI.meta.title,
+      sectionLabel: [eyebrow, name].filter(Boolean).join(' · '),
+      position: index >= 0 ? { index: index + 1, total: inSection.length } : null,
+    };
+  }, [activeState, mergedTaskStates]);
+
+  /* Lessons, counted as lessons: the column header says "15 of 20 lessons". */
+  const lessonsDone = useMemo(
+    () => mergedTaskStates.filter((t) => t.isComplete).length,
+    [mergedTaskStates]
+  );
+  const prevLessonTitle = useMemo(
+    () =>
+      prevFromCurrent
+        ? mergedTaskStates.find((t) => t.task.id === prevFromCurrent)?.task.title || ''
+        : '',
+    [prevFromCurrent, mergedTaskStates]
   );
 
   useEffect(() => {
@@ -277,7 +377,7 @@ export default function LEPPage() {
 
   return (
     <div
-      className={`page mbw-program-page mbw-program-page--fade${
+      className={`page mbw-program-page mbw-program-page--lep mbw-program-page--fade${
         lessonMode ? ' mbw-program-page--lesson' : ' mbw-program-page--overview'
       }`}
     >
@@ -292,17 +392,38 @@ export default function LEPPage() {
       ) : (
         <>
           {lessonMode && activeState ? (
-            <BM100LessonTopbar
-              program={LEP_UI}
-              cohortLabel={getCohortLabel(profile)}
-              lessonTitle={getModuleLabel(activeState.task)}
-              sectionPhase={activeState.task.phase}
-              completedMilestones={completedMilestones}
-              totalMilestones={totalMilestones}
-              onBack={closeLesson}
-              onOpenOutline={() => setOutlineOpen(true)}
-              showOutlineButton
-            />
+            <>
+              {LESSON_SPLIT && (
+                <LessonHeaderBar
+                  title={LEP_UI.meta.title}
+                  onBack={closeLesson}
+                  crumbs={[
+                    { label: 'Programs', href: '/app/home' },
+                    { label: LEP_UI.meta.title, href: LEP_UI.basePath },
+                    ...(LEP_UI.sections.find((s) => s.id === activeState.task.phase)
+                      ? [
+                          {
+                            label: LEP_UI.sections.find((s) => s.id === activeState.task.phase)
+                              .title,
+                          },
+                        ]
+                      : []),
+                    { label: getModuleLabel(activeState.task) },
+                  ]}
+                />
+              )}
+              <BM100LessonTopbar
+                program={LEP_UI}
+                cohortLabel={getCohortLabel(profile)}
+                lessonTitle={getModuleLabel(activeState.task)}
+                sectionPhase={activeState.task.phase}
+                completedMilestones={completedMilestones}
+                totalMilestones={totalMilestones}
+                onBack={closeLesson}
+                onOpenOutline={() => setOutlineOpen(true)}
+                showOutlineButton
+              />
+            </>
           ) : (
             <>
               <BM100ProgramHero
@@ -353,6 +474,10 @@ export default function LEPPage() {
           <div
             className={`mbw-program-layout${
               lessonMode ? ' mbw-program-layout--lesson' : ' mbw-program-layout--overview'
+            }${lessonMode && LESSON_SPLIT && activeState ? ' mbw-program-layout--split' : ''}${
+              lessonMode && LESSON_SPLIT && activeState && lessonExpanded
+                ? ' mbw-program-layout--expanded'
+                : ''
             }`}
           >
             <div className="mbw-program-layout__main">
@@ -378,33 +503,44 @@ export default function LEPPage() {
                   onGoToPrevious={openTask}
                   onPrevious={goToPreviousTask}
                   onNext={goToNextTask}
+                  lockedNext={lockedNext}
+                  lessonContext={lessonContext ? { ...lessonContext, onBack: closeLesson } : null}
+                  prevLessonTitle={prevLessonTitle}
+                  assignmentGuidance
+                  playerControls={
+                    LESSON_SPLIT
+                      ? { expanded: lessonExpanded, onToggleExpand: toggleLessonExpanded }
+                      : null
+                  }
                   courseContent={
-                    <LessonCourseContentRail
-                      className="lesson-course-rail--tab"
-                      completed={completedMilestones}
-                      total={totalMilestones}
-                      moduleCount={LEP_PROGRAM_SECTIONS.length}
-                      modulesDone={modulesDone}
-                      durationLabel={durationLabel}
-                      searchQuery={railSearch}
-                      onSearchChange={setRailSearch}
-                    >
-                      <BM100ProgramJourney
-                        program={LEP_UI}
-                        sectionProgress={sectionProgress}
-                        profile={profile}
-                        expandedSectionId={expandedSectionId ?? activeState.task.phase}
-                        currentSectionId={currentSectionId}
-                        onToggleSection={handleToggleSection}
-                        taskStates={mergedTaskStates}
-                        activeTaskId={activeTaskId}
-                        nextTaskId={nextTaskId}
-                        onSelectLesson={openTask}
-                        autoScroll
-                        embedded
+                    LESSON_SPLIT ? null : (
+                      <LessonCourseContentRail
+                        className="lesson-course-rail--tab"
+                        completed={completedMilestones}
+                        total={totalMilestones}
+                        moduleCount={LEP_PROGRAM_SECTIONS.length}
+                        modulesDone={modulesDone}
+                        durationLabel={durationLabel}
                         searchQuery={railSearch}
-                      />
-                    </LessonCourseContentRail>
+                        onSearchChange={setRailSearch}
+                      >
+                        <BM100ProgramJourney
+                          program={LEP_UI}
+                          sectionProgress={sectionProgress}
+                          profile={profile}
+                          expandedSectionId={expandedSectionId ?? activeState.task.phase}
+                          currentSectionId={currentSectionId}
+                          onToggleSection={handleToggleSection}
+                          taskStates={mergedTaskStates}
+                          activeTaskId={activeTaskId}
+                          nextTaskId={nextTaskId}
+                          onSelectLesson={openTask}
+                          autoScroll
+                          embedded
+                          searchQuery={railSearch}
+                        />
+                      </LessonCourseContentRail>
+                    )
                   }
                 />
               ) : (
@@ -433,38 +569,75 @@ export default function LEPPage() {
                 />
               )}
             </div>
-
-            {lessonMode && activeState && (
-              <LessonCourseContentRail
-                className="lesson-course-rail--aside"
-                completed={completedMilestones}
-                total={totalMilestones}
-                moduleCount={LEP_PROGRAM_SECTIONS.length}
-                modulesDone={modulesDone}
-                durationLabel={durationLabel}
-                searchQuery={railSearch}
-                onSearchChange={setRailSearch}
+            {lessonMode && LESSON_SPLIT && activeState && (
+              <aside
+                className={`mbw-program-layout__rail${railDrawer ? ' is-drawer' : ''}${
+                  railDrawer && outlineOpen ? ' is-open' : ''
+                }`}
+                aria-label="Course content"
               >
-                <BM100ProgramJourney
-                  program={LEP_UI}
-                  sectionProgress={sectionProgress}
-                  profile={profile}
-                  expandedSectionId={expandedSectionId ?? activeState.task.phase}
-                  currentSectionId={currentSectionId}
-                  onToggleSection={handleToggleSection}
-                  taskStates={mergedTaskStates}
-                  activeTaskId={activeTaskId}
-                  nextTaskId={nextTaskId}
-                  onSelectLesson={openTask}
-                  autoScroll
-                  embedded
+                <LessonCourseContentRail
+                  variant="column"
+                  filter={railFilter}
+                  onFilterChange={setRailFilter}
+                  filterCounts={railFilterCounts}
+                  onHide={railDrawer ? () => setOutlineOpen(false) : toggleLessonExpanded}
+                  completed={lessonsDone}
+                  total={mergedTaskStates.length}
+                  moduleCount={LEP_PROGRAM_SECTIONS.length}
+                  modulesDone={modulesDone}
+                  durationLabel={durationLabel}
                   searchQuery={railSearch}
-                />
-              </LessonCourseContentRail>
+                  onSearchChange={setRailSearch}
+                >
+                  <BM100ProgramJourney
+                    program={LEP_UI}
+                    sectionProgress={sectionProgress}
+                    profile={profile}
+                    expandedSectionId={expandedSectionId ?? activeState.task.phase}
+                    currentSectionId={currentSectionId}
+                    onToggleSection={handleToggleSection}
+                    taskStates={mergedTaskStates}
+                    activeTaskId={activeTaskId}
+                    nextTaskId={nextTaskId}
+                    onSelectLesson={openTask}
+                    autoScroll
+                    embedded
+                    searchQuery={railSearch}
+                    statusFilter={railFilter}
+                    showSubmissionTags
+                    outline="list"
+                  />
+                </LessonCourseContentRail>
+              </aside>
+            )}
+            {/*
+              Course content hidden: a tab on the right edge brings it back. The
+              control used to live in the player bar, which a lesson without a
+              video or a reading does not have.
+            */}
+            {lessonMode && LESSON_SPLIT && activeState && !railDrawer && lessonExpanded && (
+              <button
+                type="button"
+                className="lesson-rail-reopen"
+                onClick={toggleLessonExpanded}
+                title="Show course content"
+              >
+                <PanelRightOpen size={18} aria-hidden="true" />
+                <span>Course content</span>
+              </button>
+            )}
+            {lessonMode && LESSON_SPLIT && activeState && railDrawer && outlineOpen && (
+              <button
+                type="button"
+                className="lesson-rail-backdrop"
+                aria-label="Close course content"
+                onClick={() => setOutlineOpen(false)}
+              />
             )}
           </div>
 
-          {lessonMode && activeState && (
+          {lessonMode && activeState && !LESSON_SPLIT && (
             <BM100LessonCurriculumDrawer
               program={LEP_UI}
               open={outlineOpen}

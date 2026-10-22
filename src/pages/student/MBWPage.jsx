@@ -396,34 +396,6 @@ export default function MBWPage() {
                 />
               )}
             </div>
-
-            {lessonMode && activeState && (
-              <LessonCourseContentRail
-                className="lesson-course-rail--aside"
-                completed={completedMilestones}
-                total={totalMilestones}
-                moduleCount={MBW_PROGRAM_SECTIONS.length}
-                modulesDone={modulesDone}
-                durationLabel={durationLabel}
-                searchQuery={railSearch}
-                onSearchChange={setRailSearch}
-              >
-                <MBWProgramJourney
-                  sectionProgress={sectionProgress}
-                  profile={profile}
-                  expandedSectionId={expandedSectionId ?? activeState.task.phase}
-                  currentSectionId={currentSectionId}
-                  onToggleSection={handleToggleSection}
-                  taskStates={mergedTaskStates}
-                  activeTaskId={activeTaskId}
-                  nextTaskId={nextTaskId}
-                  onSelectLesson={openTask}
-                  autoScroll
-                  embedded
-                  searchQuery={railSearch}
-                />
-              </LessonCourseContentRail>
-            )}
           </div>
 
           {lessonMode && activeState && (

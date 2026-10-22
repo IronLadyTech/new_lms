@@ -155,9 +155,7 @@ export function getLessonRowState(taskState, activeTaskId, nextTaskId) {
        * lessons of a section merely waiting on earlier work. The section header
        * carries the real reason; this stays neutral.
        */
-      reason: phaseLocked
-        ? 'This section is not open yet'
-        : 'Complete the previous lesson first',
+      reason: phaseLocked ? 'This section is not open yet' : 'Complete the previous lesson first',
       clickable: false,
     };
   }
@@ -200,8 +198,13 @@ export function getTaskTypeIcon(type) {
       return 'document';
     case TASK_TYPES.VIDEO_RECORD:
       return 'recording';
+    /* Its own symbol. Sharing `link` meant a one-off URL and a repeated weekly
+       post were indistinguishable in the list. */
     case TASK_TYPES.RECURRING_POST:
-      return 'link';
+      return 'post';
+    /* Previously fell through to the default, which rendered a play button. */
+    case TASK_TYPES.CHECKLIST:
+      return 'checklist';
     default:
       return 'lesson';
   }

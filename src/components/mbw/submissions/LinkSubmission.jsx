@@ -1,4 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import {
+  clearTemplateDraft,
+  readTemplateDraft,
+  writeTemplateDraft,
+} from '../../../utils/templateDrafts';
 
 function isValidUrl(str) {
   try {
@@ -9,12 +14,39 @@ function isValidUrl(str) {
   }
 }
 
-export default function LinkSubmission({ task, submission, canSubmit, onSubmit }) {
-  const [link, setLink] = useState('');
+export default function LinkSubmission({
+  task,
+  submission,
+  canSubmit,
+  onSubmit,
+  submitLabel = '',
+  draftKey = '',
+  onDraftChange,
+}) {
+  /* As with a written answer: a draft on this device, or the saved link. */
+  const startingLink = () =>
+    readTemplateDraft(draftKey)?.fields?.link ?? submission?.linkValue ?? '';
+  const [link, setLink] = useState(startingLink);
+  const draftTimer = useRef(null);
+  const onDraftChangeRef = useRef(onDraftChange);
+  onDraftChangeRef.current = onDraftChange;
 
   useEffect(() => {
-    setLink(submission?.linkValue || '');
-  }, [task.id, submission?.linkValue]);
+    setLink(startingLink());
+    onDraftChangeRef.current?.(readTemplateDraft(draftKey)?.savedAt || null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task.id, submission?.linkValue, draftKey]);
+
+  useEffect(() => () => clearTimeout(draftTimer.current), []);
+
+  const keepDraft = (value) => {
+    if (!draftKey) return;
+    clearTimeout(draftTimer.current);
+    draftTimer.current = setTimeout(() => {
+      const at = writeTemplateDraft(draftKey, { link: value });
+      if (at) onDraftChangeRef.current?.(at);
+    }, 800);
+  };
 
   const saved = submission?.linkValue;
 
@@ -25,7 +57,10 @@ export default function LinkSubmission({ task, submission, canSubmit, onSubmit }
         id={`link-${task.id}`}
         type="url"
         value={link}
-        onChange={(e) => setLink(e.target.value)}
+        onChange={(e) => {
+          setLink(e.target.value);
+          keepDraft(e.target.value);
+        }}
         placeholder="https://linkedin.com/in/…"
         disabled={!canSubmit && saved}
       />
@@ -41,9 +76,14 @@ export default function LinkSubmission({ task, submission, canSubmit, onSubmit }
         type="button"
         className="btn btn-primary"
         disabled={!canSubmit || !isValidUrl(link)}
-        onClick={() => onSubmit({ linkValue: link.trim() })}
+        onClick={() => {
+          clearTimeout(draftTimer.current);
+          clearTemplateDraft(draftKey);
+          onDraftChangeRef.current?.(null);
+          onSubmit({ linkValue: link.trim() });
+        }}
       >
-        Submit link
+        {submitLabel || 'Submit link'}
       </button>
     </div>
   );

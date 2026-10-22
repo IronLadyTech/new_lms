@@ -1,0 +1,951 @@
+/*
+ * Iron Lady — Your programmes (home-next)
+ * Closed poster cards + overlay panel / mobile sheet.
+ * Scoped under .stitch-home so tokens don't leak app-wide.
+ */
+
+/*
+ * The poster tokens sit on the shell, not on `.il-programs`.
+ *
+ * ProgrammePoster is drawn on the dashboard, on the programme panel and in the
+ * Track Progress headings. Scoped one level deeper, every `var(--il-prog-*)`
+ * resolved to nothing outside "Your programmes" — and an undefined custom
+ * property invalidates the whole declaration, so the poster lost its diagonal
+ * band and its code tag rendered white on cream. Nothing was logged; it simply
+ * came out blank.
+ */
+.stitch-home {
+  --il-prog-red: #f52929;
+  --il-prog-red-deep: #c8102e;
+  --il-prog-gold: #f5b301;
+  --il-prog-cream: #f7f6e4;
+  --il-prog-charcoal: #231f20;
+  --il-prog-surface: #ffffff;
+  --il-prog-line: #e8e5d6;
+  --il-prog-line-soft: #f3f1e6;
+  --il-prog-ink: #231f20;
+  --il-prog-ink-2: #6e6963;
+  --il-prog-ink-3: #9c968e;
+  --il-prog-s1: 4px;
+  --il-prog-s2: 8px;
+  --il-prog-s3: 12px;
+  --il-prog-s4: 16px;
+  --il-prog-s5: 24px;
+  --il-prog-s6: 32px;
+  --il-prog-s7: 48px;
+  --il-prog-r-card: 16px;
+  --il-prog-r-pill: 999px;
+  --il-prog-ease: cubic-bezier(0.2, 0.8, 0.25, 1);
+  --il-prog-poster: 'Gemunu Libre', 'Inter', system-ui, sans-serif;
+  --il-prog-accent: var(--il-prog-red-deep);
+  --il-prog-accent-soft: #fbe7ea;
+}
+
+/* The accent tint is a pink wash built for a cream page. */
+:root[data-theme='dark'] .stitch-home .il-programs {
+  --il-prog-accent-soft: rgb(245 41 41 / 0.18);
+  --il-prog-accent: #ff8d9b;
+}
+
+.stitch-home .il-programs {
+  color: var(--il-prog-ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.stitch-home .il-programs button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.stitch-home .il-programs__wrap {
+  max-width: 1060px;
+}
+
+.stitch-home .il-programs__kicker {
+  margin: 0 0 var(--il-prog-s2);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--il-prog-ink-3);
+}
+
+.stitch-home .il-programs__title {
+  margin: 0;
+  font-family: var(--il-prog-poster);
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--il-prog-ink);
+}
+
+.stitch-home .il-programs__dek {
+  margin: var(--il-prog-s2) 0 var(--il-prog-s6);
+  max-width: 52ch;
+  color: var(--il-prog-ink-2);
+}
+
+.stitch-home .il-programs__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+  gap: var(--il-prog-s5);
+}
+
+/* —— Poster —— */
+.stitch-home .il-poster {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--il-prog-r-card);
+  background: linear-gradient(150deg, #fcf8ec 0%, #f4eedc 62%, #ede4cd 100%);
+  padding: var(--il-prog-s5);
+}
+
+.stitch-home .il-poster::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-width: 0 78px 78px 0;
+  border-style: solid;
+  border-color: transparent #e6dcc2 transparent transparent;
+  z-index: 0;
+}
+
+.stitch-home .il-poster::after {
+  content: '';
+  position: absolute;
+  right: -14%;
+  bottom: -46%;
+  width: 74%;
+  height: 150%;
+  background: linear-gradient(100deg, var(--il-prog-red) 0 46%, var(--il-prog-charcoal) 46% 100%);
+  transform: rotate(38deg);
+  z-index: 0;
+}
+
+.stitch-home .il-poster__line {
+  display: block;
+}
+
+.stitch-home .il-poster__t {
+  position: relative;
+  z-index: 1;
+  font-family: var(--il-prog-poster);
+  /* Gemunu Libre ships 400/600/700/800 here and defaults to 400 — its light
+     cut. A silkscreen poster headline needs the heavy one, or the tan
+     extrusion below reads as a smudge rather than a raised edge. */
+  font-weight: 800;
+  font-size: clamp(21px, 3.2vw, 34px);
+  line-height: 0.94;
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
+  color: #141414;
+  /* The extrusion belongs on the programme NAME. The word PROGRAM below it
+     stays flat, so the name is the thing that lifts off the poster. */
+  text-shadow:
+    1px 1px 0 #b3a78b,
+    2px 2px 0 #b3a78b,
+    3px 3px 0 #aba084,
+    4px 4px 0 #a3987c,
+    5px 5px 0 #9b9074,
+    7px 8px 14px rgb(46 38 24 / 0.34);
+}
+
+.stitch-home .il-poster__p {
+  position: relative;
+  z-index: 1;
+  margin-top: 6px;
+  font-family: var(--il-prog-poster);
+  font-weight: 800;
+  font-size: clamp(14px, 2vw, 21px);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--il-prog-red);
+}
+
+.stitch-home .il-poster__s {
+  position: relative;
+  z-index: 1;
+  margin-top: 8px;
+  max-width: 22ch;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #5e574a;
+}
+
+.stitch-home .il-poster__tag {
+  position: relative;
+  z-index: 1;
+  align-self: flex-start;
+  flex: none;
+  margin-top: var(--il-prog-s3);
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: var(--il-prog-red);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.stitch-home .il-poster__rule {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  height: 1px;
+  margin-top: 6px;
+  background: rgba(200, 16, 46, 0.42);
+}
+
+/* Thumbnail size, for a list heading rather than a card.
+   The headline clamps at 21px, so the full poster cannot simply be made
+   narrower — it clips inside its own `overflow: hidden`. The extrusion drops to
+   two layers as well: five of them at this size read as a smudge. */
+.stitch-home .il-poster--sm {
+  aspect-ratio: 4 / 3;
+  border-radius: 9px;
+  padding: 9px 10px;
+}
+
+.stitch-home .il-poster--sm::before {
+  border-width: 0 26px 26px 0;
+}
+
+/* Pushed clear of the wordmark. The band's offsets are percentages of the
+   poster, but the type is not — at 116px the headline fills proportionally more
+   of the card, so the band that sits beside it on the full poster runs straight
+   through "ESSENTIALS" here. */
+.stitch-home .il-poster--sm::after {
+  right: -38%;
+  bottom: -46%;
+  width: 72%;
+}
+
+.stitch-home .il-poster--sm .il-poster__t {
+  font-size: 12px;
+  line-height: 1;
+  text-shadow:
+    1px 1px 0 #b3a78b,
+    2px 2px 0 #aba084;
+}
+
+.stitch-home .il-poster--sm .il-poster__p {
+  margin-top: 3px;
+  font-size: 8px;
+}
+
+.stitch-home .il-poster--sm .il-poster__tag {
+  margin-top: 5px;
+  padding: 1px 5px;
+  font-size: 7px;
+  letter-spacing: 0.06em;
+}
+
+.stitch-home .il-poster--sm .il-poster__rule {
+  margin-top: 4px;
+}
+
+.stitch-home .il-poster__lock {
+  position: absolute;
+  z-index: 2;
+  top: 10px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--il-prog-r-pill);
+  background: rgb(35 31 32 / 0.82);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* —— Closed card —— */
+/*
+ * Three classes on purpose.
+ *
+ * `.stitch-home .il-programs button` resets `background: none; border: 0` for
+ * every button in the section — and at (0,2,1) that beats a two-class rule, so
+ * the card silently lost its white fill and hairline and showed the page's
+ * cream through instead. Everything else in this rule applied, which is why it
+ * read as a colour choice rather than a cascade bug.
+ */
+.stitch-home .il-programs .il-prog-card {
+  --rx: 0deg;
+  --ry: 0deg;
+  display: block;
+  width: 100%;
+  padding: var(--il-prog-s2) var(--il-prog-s2) 0;
+  border: 1px solid var(--il-prog-line);
+  border-radius: var(--il-prog-r-card);
+  background: var(--il-prog-surface);
+  box-shadow:
+    0 1px 2px rgb(35 31 32 / 0.04),
+    0 10px 26px -16px rgb(35 31 32 / 0.18);
+  transform: perspective(1000px) rotateX(var(--rx)) rotateY(var(--ry)) scale(var(--press, 1))
+    translateY(var(--enter-y, 0));
+  transition:
+    transform 0.5s var(--il-prog-ease),
+    box-shadow 0.4s var(--il-prog-ease);
+  will-change: transform;
+}
+
+.stitch-home .il-prog-card.is-tilting {
+  transition: box-shadow 0.4s var(--il-prog-ease);
+}
+
+.stitch-home .il-prog-card:hover {
+  box-shadow:
+    0 3px 8px rgb(35 31 32 / 0.07),
+    0 26px 48px -22px rgb(35 31 32 / 0.34);
+}
+
+.stitch-home .il-prog-card:focus-visible {
+  outline: 2px solid var(--il-prog-red);
+  outline-offset: 3px;
+}
+
+/*
+ * Touch gets its own press response.
+ *
+ * The desktop card tilts to follow the cursor, which is gated to
+ * `(hover: hover) and (pointer: fine)` — a pointer-follow effect a finger
+ * cannot drive. The result was that on a phone the cards did not react to
+ * being touched at all. A press dip is the touch-native equivalent: it
+ * confirms the tap on the way into the panel.
+ */
+/*
+ * The scroll reveal. `has-reveal` is set by JS, so a card is only ever hidden
+ * when something is guaranteed to reveal it.
+ */
+.stitch-home .il-programs .il-prog-card.has-reveal {
+  --enter-y: 22px;
+  opacity: 0;
+  transition:
+    transform 0.55s var(--il-prog-ease),
+    opacity 0.45s var(--il-prog-ease),
+    box-shadow 0.4s var(--il-prog-ease);
+}
+
+.stitch-home .il-programs .il-prog-card.has-reveal.is-in {
+  --enter-y: 0px;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stitch-home .il-programs .il-prog-card.has-reveal {
+    --enter-y: 0px;
+    opacity: 1;
+  }
+}
+
+/*
+ * Touch gets the whole hover ensemble, not a substitute for it.
+ *
+ * Everything the desktop card does on hover — the lift, the poster's slight
+ * zoom, the label going red — is behind `:hover`, which a finger never fires.
+ * The tilt itself now runs off `pointermove`, but the press state has to be a
+ * custom property rather than a `transform`: writing `transform: scale()` here
+ * REPLACED the tilt's `perspective(...) rotateX/Y(...)`, and since touch only
+ * tilts while the finger is down, the press was cancelling the tilt outright.
+ * `--press` multiplies into the same transform instead.
+ */
+@media (hover: none), (pointer: coarse) {
+  .stitch-home .il-programs .il-prog-card:active {
+    --press: 0.985;
+    box-shadow:
+      0 3px 8px rgb(35 31 32 / 0.07),
+      0 26px 48px -22px rgb(35 31 32 / 0.34);
+  }
+
+  .stitch-home .il-prog-card:active .il-poster {
+    transform: scale(1.012);
+  }
+
+  .stitch-home .il-prog-card:active .il-prog-tap {
+    color: var(--il-prog-red-deep);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stitch-home .il-programs .il-prog-card:active {
+    --press: 1;
+  }
+}
+
+.stitch-home .il-prog-card .il-poster {
+  transition: transform 0.5s var(--il-prog-ease);
+}
+
+.stitch-home .il-prog-card:hover .il-poster {
+  transform: scale(1.012);
+}
+
+.stitch-home .il-prog-tap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: var(--il-prog-s3) 0 var(--il-prog-s4);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--il-prog-ink-3);
+  transition: color 0.25s ease;
+}
+
+.stitch-home .il-prog-card:hover .il-prog-tap {
+  color: var(--il-prog-red-deep);
+}
+
+.stitch-home .il-prog-tap i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--il-prog-red);
+  animation: il-prog-pulse 2s ease-in-out infinite;
+}
+
+@keyframes il-prog-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+/* —— Overlay panel —— */
+.stitch-home .il-prog-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: var(--il-prog-s5);
+  background: rgb(24 20 18 / 0.58);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.35s var(--il-prog-ease),
+    visibility 0.35s;
+}
+
+.stitch-home .il-prog-scrim.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+/*
+ * The unfolded panel runs dark.
+ *
+ * Every element inside it already paints from the ink/line tokens, so the flip
+ * is a token override in one place rather than fifteen edited rules — and
+ * anything added to the panel later inherits the dark treatment for free
+ * instead of arriving as black-on-black.
+ */
+.stitch-home .il-prog-panel {
+  --il-prog-surface: var(--il-prog-charcoal);
+  --il-prog-ink: #ffffff;
+  --il-prog-ink-2: rgb(255 255 255 / 0.8);
+  --il-prog-ink-3: rgb(255 255 255 / 0.62);
+  --il-prog-line: rgb(255 255 255 / 0.18);
+  --il-prog-line-soft: rgb(255 255 255 / 0.1);
+  /* The deep red drops to ~2.3:1 on charcoal, so accents on this panel use the
+     brighter red instead. */
+  --il-prog-accent: var(--il-prog-red);
+
+  color: var(--il-prog-ink);
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  align-items: center;
+  gap: var(--il-prog-s6);
+  width: min(880px, 100%);
+  padding: var(--il-prog-s7) var(--il-prog-s6);
+  border-radius: 22px;
+  background: var(--il-prog-surface);
+  box-shadow: 0 40px 90px -30px rgb(0 0 0 / 0.6);
+  overflow: visible;
+  opacity: 0;
+  transform: scale(0.9) translateY(18px);
+  transition:
+    transform 0.45s var(--il-prog-ease),
+    opacity 0.3s ease;
+}
+
+.stitch-home .il-prog-scrim.is-open .il-prog-panel {
+  opacity: 1;
+  transform: none;
+}
+
+.stitch-home .il-prog-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 22px;
+  /* Plain white. This used to carry a radial wash in the programme's accent
+     colour, which tinted the whole panel differently per programme — the same
+     colour-as-identity idea the swatch switcher was built on. Both are gone. */
+  background: var(--il-prog-surface);
+}
+
+.stitch-home .il-prog-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.stitch-home .il-prog-panel__top {
+  display: flex;
+  align-items: center;
+  gap: var(--il-prog-s3);
+  margin-bottom: var(--il-prog-s5);
+}
+
+.stitch-home .il-prog-panel__brand {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--il-prog-ink);
+}
+
+.stitch-home .il-prog-panel__chip {
+  margin-left: auto;
+  padding: 4px 10px;
+  border-radius: var(--il-prog-r-pill);
+  background: var(--il-prog-accent-soft);
+  color: var(--il-prog-accent);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.stitch-home .il-prog-panel__code {
+  margin: 0 0 var(--il-prog-s2);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--il-prog-accent);
+}
+
+.stitch-home .il-prog-panel__name {
+  margin: 0;
+  font-family: var(--il-prog-poster);
+  font-size: clamp(30px, 4.4vw, 48px);
+  line-height: 0.96;
+  letter-spacing: 0.004em;
+  text-transform: uppercase;
+  /* Cream, not white — the name is the one thing on the panel that is not
+     body text, and the poster it came from is cream too. */
+  color: var(--il-prog-cream);
+  font-weight: 800;
+  transform: perspective(700px) rotateX(11deg);
+  transform-origin: 0 100%;
+  text-shadow:
+    1px 1px 0 var(--il-prog-accent),
+    2px 2px 0 var(--il-prog-accent),
+    3px 3px 0 color-mix(in srgb, var(--il-prog-accent) 72%, #000),
+    4px 4px 0 color-mix(in srgb, var(--il-prog-accent) 58%, #000),
+    6px 8px 16px rgb(35 31 32 / 0.3);
+}
+
+.stitch-home .il-prog-panel__line {
+  margin: var(--il-prog-s4) 0 0;
+  max-width: 38ch;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--il-prog-ink-2);
+  transform: perspective(700px) rotateX(6deg);
+  transform-origin: 0 100%;
+}
+
+.stitch-home .il-prog-panel__spec {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--il-prog-s2) var(--il-prog-s4);
+  margin-top: var(--il-prog-s4);
+  font-size: 12.5px;
+  color: var(--il-prog-ink-2);
+}
+
+.stitch-home .il-prog-panel__spec span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stitch-home .il-prog-panel__spec svg {
+  color: var(--il-prog-accent);
+  flex-shrink: 0;
+}
+
+.stitch-home .il-prog-panel__desc {
+  margin: var(--il-prog-s3) 0 0;
+  /* Two lines, then an ellipsis — the blurbs are course copy of unpredictable
+     length and a third line pushes the CTAs off a phone screen. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--il-prog-ink-2);
+}
+
+.stitch-home .il-prog-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--il-prog-s3);
+  margin-top: var(--il-prog-s4);
+}
+
+.stitch-home .il-prog-progress__track {
+  position: relative;
+  flex: 1;
+  height: 7px;
+  border-radius: var(--il-prog-r-pill);
+  background: var(--il-prog-line);
+  overflow: hidden;
+}
+
+.stitch-home .il-prog-progress__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--il-prog-red-deep), var(--il-prog-red));
+  transition: width 0.6s var(--il-prog-ease);
+}
+
+.stitch-home .il-prog-progress__label {
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--il-prog-cream);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stitch-home .il-prog-progress__fill {
+    transition: none;
+  }
+}
+
+.stitch-home .il-prog-panel__cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--il-prog-s3);
+  margin-top: var(--il-prog-s5);
+}
+
+/*
+ * Three classes, for the sixth time in this stylesheet.
+ *
+ * `.stitch-home .il-programs button` sets `background: none; border: 0` at
+ * (0,2,1), which outranks any two-class rule. It had silently stripped the
+ * primary button's red fill — leaving a transparent pill that only read as a
+ * button because of its glow — and the close button's backing, which is why
+ * the X vanished wherever it crossed the cream poster art.
+ *
+ * The two-class rules further down are left alone deliberately: one sets only
+ * `flex`, the other only reduced-motion `!important` durations, so neither
+ * competes with anything declared here.
+ */
+.stitch-home .il-programs .il-prog-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--il-prog-s2);
+  min-height: 44px;
+  padding: var(--il-prog-s4) var(--il-prog-s6);
+  border-radius: var(--il-prog-r-pill);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  transition:
+    transform 0.2s var(--il-prog-ease),
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease;
+}
+
+/* The raised red — same recipe as the nav's active item and every other
+   primary action. Three classes deep because `.stitch-home .il-programs button`
+   sets `background: none` at (0,2,1). */
+.stitch-home .il-programs .il-prog-btn--primary {
+  background: var(--sh-raise-bg);
+  color: #fff;
+  box-shadow: var(--sh-raise-shadow);
+}
+
+.stitch-home .il-programs .il-prog-btn--primary:hover {
+  filter: brightness(1.03);
+  box-shadow: var(--sh-raise-shadow-hover);
+}
+
+/* Presses in, rather than lifting away from the pointer. */
+.stitch-home .il-programs .il-prog-btn--primary:active {
+  filter: brightness(0.97);
+  transform: translateY(1px);
+  box-shadow: var(--sh-raise-shadow-press);
+}
+
+.stitch-home .il-programs .il-prog-btn--ghost {
+  border: 1px solid var(--il-prog-line);
+  color: var(--il-prog-ink);
+}
+
+.stitch-home .il-programs .il-prog-btn--ghost:hover {
+  background: var(--il-prog-line-soft);
+  transform: translateY(-2px);
+}
+
+.stitch-home .il-programs .il-prog-btn:focus-visible {
+  outline: 2px solid var(--il-prog-red);
+  outline-offset: 2px;
+}
+
+.stitch-home .il-prog-panel__art {
+  position: relative;
+  transform: perspective(1100px) rotateY(-15deg) rotateX(7deg) scale(1.24);
+  transform-origin: center left;
+  filter: drop-shadow(-18px 30px 40px rgb(0 0 0 / 0.42));
+  transition:
+    transform 0.55s var(--il-prog-ease),
+    filter 0.55s var(--il-prog-ease);
+}
+
+.stitch-home .il-prog-scrim.is-open .il-prog-panel__art {
+  animation: il-prog-art-in 0.8s var(--il-prog-ease) 0.1s both;
+}
+
+@keyframes il-prog-art-in {
+  from {
+    opacity: 0;
+    transform: perspective(1100px) rotateY(-32deg) rotateX(14deg) scale(0.86) translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1100px) rotateY(-15deg) rotateX(7deg) scale(1.24);
+  }
+}
+
+.stitch-home .il-prog-panel__art .il-poster {
+  aspect-ratio: 3 / 4;
+}
+
+.stitch-home .il-programs .il-prog-close {
+  position: absolute;
+  top: var(--il-prog-s4);
+  right: var(--il-prog-s4);
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  /* Solid, not a translucent wash: this button sits over the cream poster art,
+     where 10% white is invisible. */
+  background: var(--il-prog-charcoal);
+  color: var(--il-prog-cream);
+  border: 1px solid rgb(255 255 255 / 0.22);
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.stitch-home .il-programs .il-prog-close:hover {
+  background: var(--il-prog-accent);
+  color: #fff;
+  transform: rotate(90deg);
+}
+
+.stitch-home .il-programs .il-prog-close:focus-visible {
+  outline: 2px solid var(--il-prog-red);
+  outline-offset: 2px;
+}
+
+/* —— Mobile sheet —— */
+@media (max-width: 760px) {
+  .stitch-home .il-prog-scrim {
+    padding: 0;
+    align-items: end;
+    justify-items: stretch;
+  }
+
+  .stitch-home .il-prog-panel {
+    width: 100%;
+    max-height: 88dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    grid-template-columns: 1fr;
+    gap: var(--il-prog-s4);
+    border-radius: 24px 24px 0 0;
+    /* Was 122px, reserving room for the poster that used to overhang the top
+       edge. With the art gone that was dead space — but the top still has to
+       clear the 44px close button and the drag handle, or the status chip
+       slides under the X. */
+    padding: 64px var(--il-prog-s5) calc(var(--il-prog-s6) + env(safe-area-inset-bottom, 0px));
+    transform: translateY(100%);
+    touch-action: pan-y;
+  }
+
+  .stitch-home .il-prog-scrim.is-open .il-prog-panel {
+    transform: translateY(0);
+  }
+
+  .stitch-home .il-prog-panel::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    z-index: 2;
+    width: 38px;
+    height: 4px;
+    border-radius: var(--il-prog-r-pill);
+    background: #d8d2c0;
+    transform: translateX(-50%);
+  }
+
+  .stitch-home .il-prog-panel__art {
+    /*
+     * Hidden, not repositioned. It sat at `top: -88px` so it would peek above
+     * the sheet, but the sheet scrolls, and `overflow-y: auto` clips whatever
+     * leaves its box — so the poster was always sliced off at the top edge.
+     * Showing it whole would cost most of a phone screen for decoration the
+     * heading already states, so the sheet goes without it.
+     */
+    display: none;
+    position: absolute;
+    top: -88px;
+    left: 50%;
+    z-index: 2;
+    width: 168px;
+    margin: 0;
+    transform: translateX(-50%) rotate(-6deg);
+    transform-origin: center bottom;
+    filter: drop-shadow(0 20px 30px rgb(0 0 0 / 0.5));
+  }
+
+  .stitch-home .il-prog-scrim.is-open .il-prog-panel__art {
+    animation: il-prog-art-up 0.6s var(--il-prog-ease) 0.08s both;
+  }
+
+  @keyframes il-prog-art-up {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) rotate(-6deg) translateY(26px) scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) rotate(-6deg);
+    }
+  }
+
+  .stitch-home .il-prog-panel__name {
+    font-size: clamp(27px, 7.6vw, 36px);
+    line-height: 1;
+    transform: none;
+    text-shadow:
+      1px 1px 0 var(--il-prog-accent),
+      0 4px 10px rgb(35 31 32 / 0.2);
+  }
+
+  .stitch-home .il-prog-panel__line {
+    transform: none;
+    font-size: 14.5px;
+  }
+
+  .stitch-home .il-prog-btn {
+    flex: 1;
+  }
+
+  .stitch-home .il-poster__t {
+    font-size: clamp(26px, 7.4vw, 40px);
+    text-shadow:
+      1px 1px 0 #b3a78b,
+      2px 2px 0 #a3987c,
+      0 5px 12px rgb(46 38 24 / 0.26);
+  }
+
+  .stitch-home .il-poster__p {
+    font-size: clamp(17px, 4.6vw, 26px);
+    text-shadow:
+      1px 1px 0 #a50e22,
+      0 4px 9px rgb(120 10 24 / 0.24);
+  }
+
+  .stitch-home .il-prog-card:active {
+    transform: scale(0.975);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stitch-home .il-prog-card,
+  .stitch-home .il-prog-panel,
+  .stitch-home .il-prog-panel__art,
+  .stitch-home .il-prog-btn,
+  .stitch-home .il-prog-close {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+
+  .stitch-home .il-prog-card {
+    transform: none !important;
+  }
+
+  .stitch-home .il-prog-panel__art {
+    transform: none !important;
+    filter: none;
+  }
+
+  .stitch-home .il-prog-tap i {
+    animation: none;
+  }
+}
+
+/* Visible to screen readers only — tells a non-sighted user the link leaves
+   the app, which the icon alone conveys only visually. */
+.stitch-home .il-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Inline-flex so the anchor sizes to its label rather than the wrap width. */
+.stitch-home .il-programs__browse {
+  display: inline-flex;
+  margin-top: var(--il-prog-s4);
+  text-decoration: none;
+}

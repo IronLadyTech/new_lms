@@ -1,0 +1,698 @@
+/* ============================================================
+   IRON LADY — TRACK PROGRESS
+   Grouped module rows, the next specific item surfaced on the
+   module in progress, activity rail.
+
+   Everything is scoped under .il-learning and the class names are
+   prefixed. Bare .btn / .card / .row / .tabs / .day would each be
+   overridden by index.css, which owns those names app-wide — the
+   same collision that ate .btn-primary on Browse Courses.
+   ============================================================ */
+.il-learning {
+  --l-red: #f52929;
+  --l-red-hover: #d41f1f;
+  --l-red-deep: #c8102e;
+  --l-gold: #f5b301;
+  --l-cream: #f7f6e4;
+  --l-charcoal: #231f20;
+  --l-surface: #ffffff;
+  --l-tint-gold: #fdf3dc;
+  --l-line: #e8e5d6;
+  --l-line-soft: #f3f1e6;
+  --l-field: #fbfaf2;
+  --l-ink: var(--l-charcoal);
+  --l-ink-2: #6e6963;
+  --l-ink-3: #857f78;
+  --l-ok: #1f5c3d;
+  --l-ok-soft: #e4efe9;
+
+  --l-s1: 4px;
+  --l-s2: 8px;
+  --l-s3: 12px;
+  --l-s4: 16px;
+  --l-s5: 24px;
+  --l-s6: 32px;
+  --l-s8: 64px;
+  --l-r-card: 14px;
+  --l-r-tile: 10px;
+  --l-r-pill: 999px;
+  --l-shadow: 0 1px 2px rgb(35 31 32 / 0.04), 0 8px 24px -16px rgb(35 31 32 / 0.16);
+  --l-ease: cubic-bezier(0.22, 0.72, 0.24, 1);
+  --l-poster: 'Anton', 'Archivo Black', Impact, sans-serif;
+
+  color: var(--l-ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Dark. Only the neutrals move — the brand red, gold and charcoal are the
+   brand, and `--charcoal` stays put because it is also the fill of chips that
+   are meant to be dark in both themes; `--ink` is overridden instead. */
+:root[data-theme='dark'] .il-learning {
+  --l-cream: #17161a;
+  --l-surface: #1d1c21;
+  --l-tint-gold: #3a2f18;
+  --l-line: rgb(255 255 255 / 0.1);
+  --l-line-soft: rgb(255 255 255 / 0.06);
+  --l-field: #232227;
+  --l-ink: #f2efe6;
+  --l-ink-2: #a9a29c;
+  --l-ink-3: #8b847e;
+  --l-ok: #6fcf97;
+  --l-ok-soft: rgb(111 207 151 / 0.15);
+}
+
+/* The completed shelf and the row hover both name a cream that only exists in
+   the light theme. */
+:root[data-theme='dark'] .il-learning .lfold--done,
+:root[data-theme='dark'] .il-learning .lrow:hover {
+  background: rgb(255 255 255 / 0.04);
+}
+
+.il-learning *,
+.il-learning *::before,
+.il-learning *::after {
+  box-sizing: border-box;
+}
+
+.il-learning h1,
+.il-learning p {
+  margin: 0;
+}
+
+.il-learning svg {
+  display: block;
+}
+
+.il-learning button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.il-learning .lpage {
+  padding-bottom: var(--l-s8);
+}
+
+/* ---------- heading ---------- */
+.il-learning .lhead {
+  margin-bottom: var(--l-s4);
+}
+
+.il-learning .lkicker {
+  display: flex;
+  align-items: center;
+  gap: var(--l-s2);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--l-ink-3);
+}
+
+.il-learning .lkicker svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.8;
+}
+
+.il-learning .lhead h1 {
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  margin-top: var(--l-s2);
+}
+
+/* ---------- tabs ---------- */
+.il-learning .ltabs {
+  display: flex;
+  gap: var(--l-s6);
+  border-bottom: 1px solid var(--l-line);
+  margin-bottom: var(--l-s5);
+}
+
+.il-learning .ltab {
+  display: flex;
+  align-items: center;
+  gap: var(--l-s2);
+  padding: 0 0 var(--l-s3);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--l-ink-2);
+  position: relative;
+}
+
+.il-learning .ltab:hover {
+  color: var(--l-ink);
+}
+
+.il-learning .ltab.on {
+  color: var(--l-ink);
+}
+
+.il-learning .ltab.on::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--l-red);
+}
+
+.il-learning .lcount {
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--l-ink-2);
+  background: var(--l-line-soft);
+  border-radius: var(--l-r-pill);
+  padding: 1px 7px;
+}
+
+.il-learning .lcols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--l-s5);
+  align-items: start;
+}
+
+.il-learning .lempty {
+  color: var(--l-ink-2);
+  background: var(--l-surface);
+  border: 1px solid var(--l-line);
+  border-radius: var(--l-r-card);
+  padding: var(--l-s5);
+}
+
+/* ============================================================
+   PROGRAMME GROUP
+   ============================================================ */
+.il-learning .lgrp {
+  margin-bottom: var(--l-s6);
+}
+
+.il-learning .lgrp-h {
+  display: flex;
+  align-items: center;
+  gap: var(--l-s3);
+  margin-bottom: var(--l-s3);
+}
+
+.il-learning .lgrp-art {
+  display: block;
+  width: 116px;
+  flex: none;
+}
+
+.il-learning .lgrp-c {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--l-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.il-learning .lgrp-n {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.il-learning .lstack {
+  background: var(--l-surface);
+  border: 1px solid var(--l-line);
+  border-radius: var(--l-r-card);
+  box-shadow: var(--l-shadow);
+  overflow: hidden;
+}
+
+/* one module row */
+.il-learning .lrow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 372px;
+  gap: var(--l-s4);
+  align-items: center;
+  padding: var(--l-s5);
+  border-bottom: 1px solid var(--l-line);
+}
+
+.il-learning .lrow:last-child {
+  border-bottom: 0;
+}
+
+.il-learning .lrow.idle {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.il-learning .lrow:hover {
+  background: #fdfcf6;
+}
+
+.il-learning .lr-t {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+/* same size and colour — only the meta greys */
+.il-learning .lrow.idle .lr-t {
+  font-weight: 500;
+}
+
+.il-learning .lr-m {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--l-ink-2);
+}
+
+.il-learning .lsep {
+  color: var(--l-ink-3);
+}
+
+.il-learning .lr-m b {
+  color: var(--l-ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.il-learning .lr-bar {
+  height: 6px;
+  border-radius: var(--l-r-pill);
+  background: #edead9;
+  overflow: hidden;
+  margin-top: var(--l-s3);
+  max-width: 420px;
+}
+
+.il-learning .lr-bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: var(--l-r-pill);
+  background: var(--pc);
+  transition: width 0.9s var(--l-ease);
+}
+
+/* the exact next thing, and one button to do it */
+.il-learning .lnext {
+  display: flex;
+  align-items: center;
+  gap: var(--l-s4);
+  background: var(--l-field);
+  border: 1px solid var(--l-line);
+  border-radius: var(--l-r-tile);
+  padding: var(--l-s3) var(--l-s4);
+}
+
+.il-learning .lnext--none {
+  color: var(--l-ink-2);
+}
+
+.il-learning .lnext-b {
+  flex: 1;
+  min-width: 0;
+}
+
+.il-learning .lnext-t {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.il-learning .lnext-m {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--l-ink-2);
+}
+
+.il-learning .lnext-m svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 1.8;
+  color: var(--l-ink-3);
+}
+
+/*
+ * Layout only. The look comes from `.sh-btn-primary`, the same primary button
+ * the dashboard uses — a second 3D treatment defined here would be one more
+ * thing to keep in step, which is exactly what the poster duplication cost.
+ * Nothing below overlaps a property that class sets.
+ */
+.il-learning .lbtn {
+  flex: none;
+  white-space: nowrap;
+}
+
+.il-learning .lstate {
+  font-size: 11.5px;
+  color: var(--l-ink-2);
+}
+
+.il-learning .lstate.done {
+  color: var(--l-ok);
+  font-weight: 600;
+}
+
+/* Both shelves — "more ahead" and "completed" — collapse to one line at the
+   foot of the programme. She is here for the module she is on. */
+.il-learning .lfold {
+  border-top: 1px solid var(--l-line);
+}
+
+.il-learning .lfold--done {
+  background: #fdfcf6;
+}
+
+.il-learning .lfold-h {
+  display: flex;
+  align-items: center;
+  gap: var(--l-s3);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--l-s3) var(--l-s5);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--l-ink-2);
+}
+
+.il-learning .lfold-h:hover {
+  color: var(--l-ink);
+}
+
+.il-learning .ltick {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--l-ok-soft);
+  color: var(--l-ok);
+  display: grid;
+  place-items: center;
+}
+
+.il-learning .ltick svg {
+  width: 11px;
+  height: 11px;
+  stroke-width: 3;
+}
+
+.il-learning .lchev {
+  margin-left: auto;
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.2;
+  color: var(--l-ink-3);
+  transition: transform 0.3s var(--l-ease);
+}
+
+.il-learning .lfold.open .lchev {
+  transform: rotate(180deg);
+}
+
+.il-learning .lfold-b {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s var(--l-ease);
+}
+
+.il-learning .lfold.open .lfold-b {
+  grid-template-rows: 1fr;
+}
+
+.il-learning .lfold-i {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* The way back, at the end of what was opened. Mirrors the shelf header so the
+   pair reads as one control with two ends. */
+.il-learning .lfold-f {
+  display: flex;
+  align-items: center;
+  gap: var(--l-s2);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--l-s3) var(--l-s5);
+  border-top: 1px solid var(--l-line);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--l-ink-2);
+}
+
+.il-learning .lfold-f:hover {
+  color: var(--l-ink);
+}
+
+.il-learning .lfold-f svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.2;
+  color: var(--l-ink-3);
+  transform: rotate(180deg);
+}
+
+.il-learning .lfold-i .lrow {
+  border-top: 1px solid var(--l-line);
+  border-bottom: 0;
+  background: transparent;
+}
+
+/* ============================================================
+   RIGHT RAIL
+   ============================================================ */
+.il-learning .lrail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--l-s4);
+  position: sticky;
+  top: var(--l-s5);
+}
+
+.il-learning .lcard {
+  background: var(--l-surface);
+  border: 1px solid var(--l-line);
+  border-radius: var(--l-r-card);
+  box-shadow: var(--l-shadow);
+  padding: var(--l-s5);
+}
+
+.il-learning .lcal-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--l-s4);
+}
+
+.il-learning .lcal-m {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.il-learning .lcal-nav {
+  display: flex;
+  gap: var(--l-s1);
+}
+
+.il-learning .lcal-nav button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--l-line);
+  display: grid;
+  place-items: center;
+  color: var(--l-ink-2);
+}
+
+.il-learning .lcal-nav button:hover {
+  background: var(--l-line-soft);
+  color: var(--l-ink);
+}
+
+.il-learning .lcal-nav svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 2.2;
+}
+
+.il-learning .ldow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.il-learning .ldow span {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--l-ink-2);
+}
+
+.il-learning .ldays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.il-learning .lday {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  border-radius: 50%;
+  font-variant-numeric: tabular-nums;
+  color: var(--l-ink);
+}
+
+.il-learning .lday.pad {
+  color: var(--l-ink-3);
+  opacity: 0.45;
+}
+
+.il-learning .lday.today {
+  box-shadow: inset 0 0 0 1.5px var(--l-red);
+  font-weight: 700;
+  color: var(--l-red-deep);
+}
+
+.il-learning .lday em {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--l-gold);
+}
+
+.il-learning .lday em.busy {
+  width: 11px;
+  height: 2.5px;
+  border-radius: 2px;
+  background: var(--l-red);
+}
+
+.il-learning .lcal-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--l-s2) var(--l-s4);
+  margin-top: var(--l-s4);
+  font-size: 11px;
+  color: var(--l-ink-2);
+}
+
+.il-learning .lcal-key span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.il-learning .lcal-key i {
+  width: 11px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--l-red);
+}
+
+.il-learning .lcal-key i.d {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--l-gold);
+}
+
+.il-learning .lfour-t {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: var(--l-s4);
+}
+
+.il-learning .lfour {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--l-s3);
+}
+
+.il-learning .lfour .n {
+  font-family: var(--l-poster);
+  font-size: 24px;
+  line-height: 1;
+  color: var(--l-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.il-learning .lfour .l {
+  font-size: 10.5px;
+  color: var(--l-ink-2);
+  margin-top: 5px;
+  line-height: 1.35;
+}
+
+.il-learning .lfour-note {
+  margin-top: var(--l-s4);
+  font-size: 11.5px;
+  color: var(--l-ink-2);
+  background: var(--l-field);
+  border-left: 3px solid var(--l-gold);
+  border-radius: 0 var(--l-r-tile) var(--l-r-tile) 0;
+  padding: var(--l-s2) var(--l-s3);
+}
+
+@media (max-width: 1080px) {
+  .il-learning .lcols {
+    grid-template-columns: 1fr;
+  }
+
+  .il-learning .lrail {
+    position: static;
+  }
+}
+
+@media (max-width: 720px) {
+  .il-learning .lrow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--l-s3);
+  }
+
+  .il-learning .lnext {
+    flex-wrap: wrap;
+  }
+
+  .il-learning .lbtn {
+    width: 100%;
+  }
+
+  /* Body text stays readable on a phone. */
+  .il-learning .lr-m,
+  .il-learning .lnext-t {
+    font-size: 13px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .il-learning *,
+  .il-learning *::before,
+  .il-learning *::after {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.il-learning :focus-visible {
+  outline: 2px solid var(--l-red);
+  outline-offset: 2px;
+}

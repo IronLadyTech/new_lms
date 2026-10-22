@@ -1,15 +1,22 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { ExternalLink, Play, Video } from 'lucide-react';
+import { Maximize, Play, Video } from 'lucide-react';
 
 function isYouTube(url) {
   return /youtube\.com|youtu\.be/i.test(url || '');
 }
 
-function isHls(url) {
+export function isHls(url) {
   return /\.m3u8(\?|$)/i.test(url || '');
 }
 
-function youtubeVideoId(url) {
+export function youtubeVideoId(url) {
+  /*
+   * A manifest is never a YouTube video, and this pattern matches `v=` anywhere
+   * in a string — so an HLS URL carrying any `v=` query parameter (a signed
+   * CloudFront link, say) would otherwise be read as a YouTube id and handed to
+   * the wrong player. Checking HLS first closes that off.
+   */
+  if (!url || isHls(url)) return null;
   const match = url.match(/(?:youtu\.be\/|v=|embed\/)([\w-]+)/);
   return match ? match[1] : null;
 }
@@ -37,9 +44,133 @@ function youtubeThumbnail(id) {
   return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
 }
 
-function youtubeWatchUrl(url) {
-  const id = youtubeVideoId(url);
-  return id ? `https://www.youtube.com/watch?v=${id}` : url;
+/*
+ * Keeps the file inside the LMS as far as the browser allows.
+ *
+ * `nodownload` removes the download item from the native menu,
+ * `noremoteplayback` stops it being cast to another device,
+ * `disablePictureInPicture` stops it being popped into a floating window
+ * outside the page, and the context-menu handler removes "Save video as...".
+ *
+ * This is deterrence, not protection: the file is still fetched over the
+ * network and anyone who opens devtools can read its URL. Real protection needs
+ * short-lived signed URLs from Storage, which is a backend change.
+ */
+const GUARD_PROPS = {
+  controlsList: 'nodownload noremoteplayback',
+  disablePictureInPicture: true,
+  onContextMenu: (e) => e.preventDefault(),
+};
+
+const SPEEDS = [0.75, 1, 1.25, 1.5, 2];
+
+/**
+ * The controls under a player: playback speed, and fullscreen/rotate.
+ *
+ * One row, not two, and one speed control rather than five buttons. Five pills
+ * plus a labelled button took more vertical space on a phone than the "I
+ * finished watching" action they sat above, and read as heavier than the video
+ * itself.
+ *
+ * Speed is a native <select> on purpose: on a phone it opens the OS picker,
+ * which is bigger, familiar and accessible for free — a custom menu here would
+ * be more code for a worse result.
+ *
+ * @param {object} props
+ * @param {(rate: number) => void} props.onSpeed
+ * @param {() => void} props.onFullscreen
+ */
+function PlayerControls({ onSpeed, onFullscreen }) {
+  const [speed, setSpeed] = useState(1);
+
+  const change = (e) => {
+    const rate = Number(e.target.value);
+    setSpeed(rate);
+    onSpeed(rate);
+  };
+
+  return (
+    <div className="mbw-video__controls">
+      <label className="mbw-video__speed">
+        <span className="sr-only">Playback speed</span>
+        <select value={speed} onChange={change}>
+          {SPEEDS.map((rate) => (
+            <option key={rate} value={rate}>
+              {rate}&times;
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <button
+        type="button"
+        className="mbw-video__fs"
+        onClick={onFullscreen}
+        aria-label="Play fullscreen"
+        title="Fullscreen"
+      >
+        <Maximize size={16} strokeWidth={2} aria-hidden />
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Fullscreen, then landscape where the browser allows it.
+ *
+ * Orientation can only be locked while fullscreen, and iOS Safari does not
+ * implement the lock at all — so fullscreen is requested first and the lock
+ * attempted after, with its rejection swallowed. On a device that refuses, the
+ * learner still gets fullscreen and can turn the phone themselves.
+ */
+async function goFullscreen(el) {
+  if (!el) return;
+  try {
+    if (!document.fullscreenElement) {
+      if (el.requestFullscreen) await el.requestFullscreen();
+      else if (el.webkitEnterFullscreen) el.webkitEnterFullscreen();
+    }
+    await window.screen?.orientation?.lock?.('landscape');
+  } catch {
+    /* Locking is best-effort; fullscreen alone is a usable outcome. */
+  }
+}
+
+/** Controls for a hosted video, driving the element through its ref. */
+function VideoExtras({ videoRef }) {
+  return (
+    <PlayerControls
+      onSpeed={(rate) => {
+        const v = videoRef.current;
+        if (v) v.playbackRate = rate;
+      }}
+      onFullscreen={() => goFullscreen(videoRef.current)}
+    />
+  );
+}
+
+/**
+ * Controls for the YouTube embed.
+ *
+ * The embed already sets `enablejsapi=1`, so it accepts commands by postMessage
+ * and there is no need to pull in YouTube's IFrame API script for one control.
+ * Messages are addressed to the nocookie origin the iframe is served from
+ * rather than "*".
+ */
+function YouTubeExtras({ frameRef }) {
+  return (
+    <PlayerControls
+      onSpeed={(rate) => {
+        const win = frameRef.current?.contentWindow;
+        if (!win) return;
+        win.postMessage(
+          JSON.stringify({ event: 'command', func: 'setPlaybackRate', args: [rate] }),
+          'https://www.youtube-nocookie.com'
+        );
+      }}
+      onFullscreen={() => goFullscreen(frameRef.current)}
+    />
+  );
 }
 
 function NativeVideoPlayer({
@@ -70,6 +201,7 @@ function NativeVideoPlayer({
       crossOrigin={captionsUrl ? 'anonymous' : undefined}
       onTimeUpdate={onTimeUpdate}
       onEnded={onEnded}
+      {...GUARD_PROPS}
     >
       {captionsUrl ? (
         <track
@@ -130,6 +262,7 @@ function HlsVideoPlayer({ videoUrl, videoRef, onTimeUpdate, onEnded, captionsUrl
       crossOrigin={captionsUrl ? 'anonymous' : undefined}
       onTimeUpdate={onTimeUpdate}
       onEnded={onEnded}
+      {...GUARD_PROPS}
     >
       {captionsUrl ? (
         <track
@@ -156,6 +289,7 @@ export default function WatchGatedVideo({
   captionsLabel = 'English',
 }) {
   const videoRef = useRef(null);
+  const frameRef = useRef(null);
   const lastProgressEmit = useRef(0);
   const [started, setStarted] = useState(() => watchPercent >= threshold);
   const [youtubeStarted, setYoutubeStarted] = useState(false);
@@ -229,6 +363,7 @@ export default function WatchGatedVideo({
             </button>
           ) : (
             <iframe
+              ref={frameRef}
               title={title}
               src={youtubeEmbed(videoUrl, { autoplay: true })}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -242,16 +377,13 @@ export default function WatchGatedVideo({
           YouTube cannot track watch time automatically. When you have finished watching, tap
           &ldquo;I finished watching&rdquo; below to unlock submission.
         </p>
+        <YouTubeExtras frameRef={frameRef} />
+        {/*
+         * "Open in YouTube" used to sit here. It handed the learner the video's
+         * public URL and took them out of the LMS to watch it — the opposite of
+         * keeping this content inside the product.
+         */}
         <div className="mbw-video__embed-actions">
-          <a
-            href={youtubeWatchUrl(videoUrl)}
-            target="_blank"
-            rel="noreferrer"
-            className="btn btn-outline btn-sm mbw-video__youtube-link"
-          >
-            <ExternalLink size={14} aria-hidden />
-            Open in YouTube
-          </a>
           <button
             type="button"
             className="btn btn-outline btn-sm"
@@ -274,7 +406,10 @@ export default function WatchGatedVideo({
     emitProgress(v.currentTime / v.duration);
   };
 
-  const VideoPlayer = isHls(videoUrl) ? HlsVideoPlayer : NativeVideoPlayer;
+  /* Two sources in use: unlisted YouTube, and HLS served from CloudFront. The
+     manifest path also covers any other .m3u8 host. */
+  const playbackUrl = videoUrl;
+  const VideoPlayer = isHls(playbackUrl) ? HlsVideoPlayer : NativeVideoPlayer;
   const pct = Math.min(100, Math.round(watchPercent * 100));
 
   return (
@@ -294,7 +429,7 @@ export default function WatchGatedVideo({
           </button>
         ) : (
           <VideoPlayer
-            videoUrl={videoUrl}
+            videoUrl={playbackUrl}
             videoRef={videoRef}
             onTimeUpdate={handleTimeUpdate}
             onEnded={() => emitProgress(1)}
@@ -303,6 +438,7 @@ export default function WatchGatedVideo({
           />
         )}
       </div>
+      {started ? <VideoExtras videoRef={videoRef} /> : null}
       <p className="muted mbw-video__hint">
         Watch the full video to unlock submission. Progress is tracked automatically and saved as
         you watch.

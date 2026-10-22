@@ -1,4 +1,4 @@
-import { CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 import BM100TaskContent from '../BM100TaskContent';
 import { DEFAULT_PROGRAM_UI } from '../../../data/programUiAdapters';
 
@@ -22,6 +22,11 @@ export default function BM100LessonView({
   onPrevious,
   onNext,
   courseContent = null,
+  playerControls = null,
+  assignmentGuidance = false,
+  lockedNext = null,
+  lessonContext = null,
+  prevLessonTitle = '',
 }) {
   const taskComplete = activeState?.isComplete;
 
@@ -45,6 +50,9 @@ export default function BM100LessonView({
         showInlineSuccess={false}
         variant="lesson"
         courseContent={courseContent}
+        playerControls={playerControls}
+        assignmentGuidance={assignmentGuidance}
+        lessonContext={lessonContext}
         onWatchProgress={onWatchProgress}
         onWatchComplete={onWatchComplete}
         onSubmit={onSubmit}
@@ -55,7 +63,9 @@ export default function BM100LessonView({
       />
 
       {showLessonNav && (
-        <footer className="mbw-lesson-nav mbw-lesson-nav--sticky">
+        <footer
+          className={`mbw-lesson-nav mbw-lesson-nav--sticky${lessonContext ? ' mbw-lesson-nav--cards' : ''}`}
+        >
           {successBanner && (
             <div className="mbw-lesson-complete" role="status" aria-live="polite">
               <CheckCircle2 size={20} className="mbw-lesson-complete__icon" aria-hidden />
@@ -75,10 +85,26 @@ export default function BM100LessonView({
                 type="button"
                 className="btn btn-outline mbw-lesson-nav__prev"
                 onClick={onPrevious}
-                aria-label="Previous lesson"
+                aria-label={
+                  lessonContext && prevLessonTitle
+                    ? `Previous lesson: ${prevLessonTitle}`
+                    : 'Previous lesson'
+                }
               >
-                <ChevronLeft size={18} aria-hidden />
-                <span className="mbw-lesson-nav__prev-label">Previous</span>
+                {lessonContext && prevLessonTitle ? (
+                  <>
+                    <span className="mbw-lesson-nav__prev-label">
+                      <ChevronLeft size={14} aria-hidden />
+                      Previous
+                    </span>
+                    <span className="mbw-lesson-nav__prev-title">{prevLessonTitle}</span>
+                  </>
+                ) : (
+                  <>
+                    <ChevronLeft size={18} aria-hidden />
+                    <span className="mbw-lesson-nav__prev-label">Previous</span>
+                  </>
+                )}
               </button>
             ) : null}
 
@@ -114,7 +140,21 @@ export default function BM100LessonView({
               folds both together — and a dead button on the last lesson of a
               programme would be a worse lie than a sentence.
             */}
-            {showNextHint ? (
+            {/*
+              LEP names the lesson that is waiting, shown locked, and what opens
+              it. The page words the reason from that lesson's own lock, so the
+              card never says "finish this lesson" when payment is what stands in
+              the way. Not a button, because there is nowhere to go yet.
+            */}
+            {showNextHint && lockedNext ? (
+              <div className="mbw-lesson-nav__locked">
+                <span className="mbw-lesson-nav__locked-note">
+                  <Lock size={14} aria-hidden />
+                  {lockedNext.note}
+                </span>
+                <strong className="mbw-lesson-nav__locked-title">{lockedNext.title}</strong>
+              </div>
+            ) : showNextHint ? (
               <p className="mbw-lesson-nav__hint">Finish this lesson to continue.</p>
             ) : null}
           </div>

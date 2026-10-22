@@ -228,23 +228,24 @@ export function computeStreakSummary(events = [], options = {}) {
   };
 }
 
-/** Heatmap intensity level 0–5 from daily correct count (Tap-style gradient). */
+/** Heatmap intensity 0–4 from daily correct count (1 · 3+ · 5+ · 8+). */
 export function heatmapLevel(count) {
   if (!count || count <= 0) return 0;
-  if (count === 1) return 1;
-  if (count === 2) return 2;
-  if (count === 3) return 3;
-  if (count === 4) return 4;
-  return 5;
+  if (count >= 8) return 4;
+  if (count >= 5) return 3;
+  if (count >= 3) return 2;
+  return 1;
 }
 
 export const HEATMAP_LEGEND = [
-  { level: 1, label: 'Low' },
-  { level: 2, label: '' },
-  { level: 3, label: '' },
-  { level: 4, label: '' },
-  { level: 5, label: 'High' },
+  { level: 1, label: '1' },
+  { level: 2, label: '3+' },
+  { level: 3, label: '5+' },
+  { level: 4, label: '8+' },
 ];
+
+export const HEATMAP_SHADE_RULE =
+  'Cell shades show how many correct submissions you made that day: 1, 3+, 5+, or 8+.';
 
 /** Build GitHub-style weeks for the last ~52 weeks. */
 export function buildHeatmapWeeks(dailyCounts, weeks = 52) {

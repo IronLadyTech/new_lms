@@ -9,6 +9,7 @@ const {
   normalizeProgram,
   accessTierFromPaymentStatus,
   normalizePaymentStatus,
+  maxPaymentStatus,
   PAYMENT_STATUS,
 } = require('./accessTiers');
 
@@ -193,9 +194,18 @@ function parseLeadEntitlements(lead) {
   const paymentRaw = readPaymentStatusFromLead(lead);
   const lmsUsername = readUsernameFromLead(lead);
 
-  const paymentStatus = paymentRaw
-    ? normalizePaymentStatus(paymentRaw)
-    : fromStatus?.paymentStatus || PAYMENT_STATUS.UNPAID;
+  /*
+   * Payment_Status / LMS_Payment_Status often still say "Completed" after the
+   * registration fee — that maps to register. Lead Status "MBW started" means
+   * the full fee cleared. Taking the payment field alone demoted fully-paid
+   * learners back to register and left Q2+ locked. Ratchet the two readings.
+   */
+  const fromPaymentField = paymentRaw ? normalizePaymentStatus(paymentRaw) : null;
+  const fromStatusPayment = fromStatus?.paymentStatus ?? null;
+  const paymentStatus =
+    fromPaymentField && fromStatusPayment
+      ? maxPaymentStatus(fromPaymentField, fromStatusPayment)
+      : fromPaymentField || fromStatusPayment || PAYMENT_STATUS.UNPAID;
 
   const accessTier =
     accessTierFromPaymentStatus(paymentStatus) ||

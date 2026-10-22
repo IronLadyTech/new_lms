@@ -1,0 +1,814 @@
+/* ============================================================
+   IRON LADY — SCHEDULE
+   A page you use, not a list you read: join the next session,
+   click a date to filter, and reach past recordings.
+
+   Scoping note: the supplied stylesheet declared its tokens on :root and used
+   generic selectors (.btn, .card, .row, .wrap). Both are hazards here —
+   `--surface`, `--line` and `--ink` are names this app already uses, and `.btn`
+   exists in index.css. Everything below is therefore scoped to `.il-schedule`,
+   including the focus ring and the reduced-motion reset, which were global.
+   ============================================================ */
+
+.il-schedule {
+  --red: #f52929;
+  --red-deep: #c8102e;
+  --gold: #f5b301;
+  --cream: #f7f6e4;
+  --charcoal: #231f20;
+  --surface: #ffffff;
+  --line: #e8e5d6;
+  --line-soft: #f3f1e6;
+  --field: #fbfaf2;
+  --ink: var(--charcoal);
+  --ink-2: #6e6963;
+  --ink-3: #9c968e;
+  --live: #1f5c3d;
+  --live-soft: #e4efe9;
+
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --r-card: 16px;
+  --r-tile: 12px;
+  --r-pill: 999px;
+  --shadow: 0 1px 2px rgba(35, 31, 32, 0.04), 0 10px 28px -16px rgba(35, 31, 32, 0.16);
+  --ease: cubic-bezier(0.2, 0.8, 0.25, 1);
+
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Dark. Only the neutrals move — the brand red, gold and charcoal are the
+   brand, and `--charcoal` stays put because it is also the fill of chips that
+   are meant to be dark in both themes; `--ink` is overridden instead. */
+:root[data-theme='dark'] .il-schedule {
+  --cream: #17161a;
+  --surface: #1d1c21;
+  --line: rgb(255 255 255 / 0.1);
+  --line-soft: rgb(255 255 255 / 0.06);
+  --field: #232227;
+  --ink: #f2efe6;
+  --ink-2: #a9a29c;
+  --ink-3: #8b847e;
+  --live: #6fcf97;
+  --live-soft: rgb(111 207 151 / 0.15);
+}
+
+.il-schedule *,
+.il-schedule *::before,
+.il-schedule *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.il-schedule svg {
+  display: block;
+}
+
+.il-schedule button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.il-schedule .wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.il-schedule .head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s4);
+  margin-bottom: var(--s5);
+}
+
+.il-schedule .kicker {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: var(--s2);
+}
+
+.il-schedule .kicker svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 2;
+}
+
+.il-schedule h1 {
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
+.il-schedule .tz {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+/* ---------- filter chips ---------- */
+.il-schedule .filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin-bottom: var(--s5);
+}
+
+.il-schedule .chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  min-height: 36px;
+  transition:
+    background 0.18s,
+    border-color 0.18s,
+    color 0.18s;
+}
+
+.il-schedule .chip i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+/*
+ * On is the normal state and off is the dimmed one, rather than on being a
+ * filled charcoal pill. Charcoal is 100BM's colour; using it for UI structure
+ * too meant black stopped identifying a programme and started meaning
+ * "selected", in a place where both readings were plausible.
+ */
+.il-schedule .chip[aria-pressed='true'] {
+  background: var(--surface);
+  border-color: var(--ink-3);
+  color: var(--ink);
+}
+
+/* --ink-3 on the soft fill measured 2.59:1. This is a live toggle, not a
+   disabled control, so its label still has to be readable — --ink-2 clears the
+   4.5:1 line while staying visibly quieter than the on state. */
+.il-schedule .chip[aria-pressed='false'] {
+  background: var(--line-soft);
+  color: var(--ink-2);
+}
+
+/* The swatch hollows out when the programme is filtered away, so the state does
+   not rest on colour alone. */
+.il-schedule .chip[aria-pressed='false'] i {
+  background: transparent !important;
+  box-shadow: inset 0 0 0 1.5px var(--ink-3);
+}
+
+.il-schedule .chip:hover {
+  border-color: var(--ink-2);
+}
+
+/* ============================================================
+   NEXT SESSION — the one row that outranks everything
+   ============================================================ */
+.il-schedule .next {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow);
+  padding: var(--s5);
+  margin-bottom: var(--s5);
+  display: flex;
+  align-items: center;
+  gap: var(--s5);
+  flex-wrap: wrap;
+}
+
+.il-schedule .next::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--red);
+}
+
+.il-schedule .next-l {
+  flex: 1;
+  min-width: 240px;
+}
+
+.il-schedule .next-k {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--red-deep);
+  margin-bottom: var(--s2);
+}
+
+.il-schedule .next-t {
+  font-size: clamp(18px, 2.2vw, 23px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.il-schedule .next-m {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s4);
+  margin-top: var(--s3);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.il-schedule .next-m span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.il-schedule .next-m svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.8;
+  color: var(--ink-3);
+}
+
+.il-schedule .next-r {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s3);
+}
+
+.il-schedule .count {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.il-schedule .count b {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.il-schedule .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  padding: var(--s4) var(--s6);
+  border-radius: var(--r-pill);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  transition:
+    box-shadow 0.2s var(--ease),
+    background 0.2s,
+    opacity 0.2s;
+  white-space: nowrap;
+}
+
+/*
+ * The supplied rule lifted this on hover with translateY(-2px). The project
+ * design system forbids layout-shifting transforms on hover, so the lift is
+ * expressed as a deeper shadow instead — same read, nothing moves.
+ */
+/* The raised red — same recipe as the nav's active item and every other
+   primary action. Tokens come from .stitch-home, which this page sits in. */
+.il-schedule .btn-join {
+  background: var(--sh-raise-bg);
+  color: #fff;
+  box-shadow: var(--sh-raise-shadow);
+}
+
+.il-schedule .btn-join:hover {
+  filter: brightness(1.03);
+  box-shadow: var(--sh-raise-shadow-hover);
+}
+
+.il-schedule .btn-join:active {
+  filter: brightness(0.97);
+  transform: translateY(1px);
+  box-shadow: var(--sh-raise-shadow-press);
+}
+
+.il-schedule .btn-join svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2.4;
+}
+
+.il-schedule .btn-join[disabled] {
+  background: var(--line-soft);
+  color: var(--ink-2);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.il-schedule .btn-ghost {
+  border: 1px solid var(--line);
+  color: var(--ink);
+  padding: var(--s3) var(--s5);
+}
+
+.il-schedule .btn-ghost:hover {
+  background: var(--line-soft);
+}
+
+/* live pulse when the session is actually running */
+.il-schedule .live-now {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--live);
+  background: var(--live-soft);
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+}
+
+.il-schedule .live-now i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--live);
+  animation: il-sched-blip 1.6s ease-in-out infinite;
+}
+
+@keyframes il-sched-blip {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ============================================================
+   CALENDAR + LIST
+   ============================================================ */
+.il-schedule .cols {
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr);
+  gap: var(--s5);
+  align-items: start;
+}
+
+.il-schedule .card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow);
+}
+
+.il-schedule .cal {
+  padding: var(--s5);
+}
+
+.il-schedule .cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  margin-bottom: var(--s4);
+}
+
+.il-schedule .cal-m {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.il-schedule .nav {
+  display: flex;
+  gap: var(--s1);
+}
+
+.il-schedule .nav button {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+  color: var(--ink-2);
+}
+
+.il-schedule .nav button:hover {
+  background: var(--line-soft);
+  color: var(--ink);
+}
+
+.il-schedule .nav svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.2;
+}
+
+.il-schedule .dow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: var(--s2);
+}
+
+.il-schedule .dow span {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}
+
+.il-schedule .days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.il-schedule .day {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  transition:
+    background 0.16s,
+    color 0.16s;
+}
+
+.il-schedule .day.pad {
+  color: var(--ink-3);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.il-schedule .day:hover:not(.pad) {
+  background: var(--line-soft);
+}
+
+/*
+ * Both marks sit on the number rather than the cell. Ringing the cell enclosed
+ * the dots row underneath, so it drew a tall box that read as a selected region
+ * instead of a date.
+ */
+.il-schedule .day .n {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  line-height: 1;
+}
+
+.il-schedule .day.today .n {
+  box-shadow: inset 0 0 0 1.5px var(--red-deep);
+  font-weight: 700;
+  color: var(--red-deep);
+}
+
+/* Selected fills; today outlines. Two questions, two marks, so a day can be
+   both without the meanings colliding. */
+.il-schedule .day.sel .n {
+  background: var(--red-deep);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.il-schedule .day.sel {
+  background: color-mix(in srgb, var(--red-deep) 8%, transparent);
+}
+
+.il-schedule .dots {
+  display: flex;
+  gap: 2.5px;
+  height: 5px;
+}
+
+.il-schedule .dots i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.il-schedule .cal-foot {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--s4);
+}
+
+.il-schedule .today-btn {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  padding: 9px 16px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+}
+
+.il-schedule .today-btn:hover {
+  background: var(--line-soft);
+  color: var(--ink);
+}
+
+.il-schedule .list {
+  padding: var(--s5);
+}
+
+.il-schedule .list-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s3);
+  margin-bottom: var(--s4);
+}
+
+.il-schedule .list-t {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.il-schedule .list-c {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.il-schedule .clear {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--red-deep);
+  padding: 6px 10px;
+  border-radius: var(--r-pill);
+}
+
+.il-schedule .clear:hover {
+  background: #fdebeb;
+}
+
+.il-schedule .rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.il-schedule .row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s4);
+  padding: var(--s4) var(--s2);
+  border-bottom: 1px solid var(--line);
+}
+
+.il-schedule .row:last-child {
+  border-bottom: 0;
+}
+
+/* 0.72 keeps the dimmed title above 4.5:1 on this surface. */
+.il-schedule .row.past {
+  opacity: 0.72;
+}
+
+.il-schedule .row-time {
+  width: 104px;
+  flex: none;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  padding-top: 1px;
+}
+
+.il-schedule .row-time small {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-2);
+  margin-top: 2px;
+}
+
+.il-schedule .row-b {
+  flex: 1;
+  min-width: 0;
+}
+
+.il-schedule .row-t {
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.il-schedule .row-m {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.il-schedule .prog {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+  font-size: 11.5px;
+}
+
+.il-schedule .prog i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.il-schedule .sep {
+  color: var(--ink-3);
+}
+
+.il-schedule .soon {
+  color: var(--red-deep);
+  font-weight: 600;
+}
+
+.il-schedule .row-a {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.il-schedule .icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+}
+
+.il-schedule .icon-btn:hover {
+  background: var(--line-soft);
+  color: var(--ink);
+}
+
+.il-schedule .icon-btn svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 1.8;
+}
+
+.il-schedule .rec {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.il-schedule .rec:hover {
+  background: var(--line-soft);
+}
+
+.il-schedule .rec svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 2;
+}
+
+.il-schedule .ended {
+  font-size: 12px;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+/* an empty month is information, not a failure */
+.il-schedule .empty {
+  padding: var(--s7) var(--s5);
+  text-align: center;
+}
+
+.il-schedule .empty-i {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto var(--s4);
+  border-radius: 50%;
+  background: var(--line-soft);
+  display: grid;
+  place-items: center;
+  color: var(--ink-2);
+}
+
+.il-schedule .empty-i svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.7;
+}
+
+.il-schedule .empty-t {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.il-schedule .empty-s {
+  color: var(--ink-2);
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.il-schedule .empty-b {
+  margin-top: var(--s4);
+}
+
+@media (max-width: 900px) {
+  .il-schedule .cols {
+    grid-template-columns: 1fr;
+  }
+
+  .il-schedule .next {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .il-schedule .next-r {
+    align-items: stretch;
+  }
+
+  .il-schedule .btn-join {
+    width: 100%;
+  }
+
+  .il-schedule .row-time {
+    width: auto;
+  }
+
+  .il-schedule .row {
+    flex-wrap: wrap;
+    gap: var(--s2) var(--s3);
+  }
+
+  .il-schedule .row-a {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .il-schedule *,
+  .il-schedule *::before,
+  .il-schedule *::after {
+    transition-duration: 0.01ms !important;
+    animation: none !important;
+  }
+}
+
+.il-schedule :focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}

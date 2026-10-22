@@ -192,6 +192,12 @@ export async function saveSubmission(userId, taskId, payload, { batchId = 'defau
       }
       return { id: subId, ...payload, taskId, userId, batchId };
     } catch (err) {
+      /*
+       * A refusal is an answer, not an outage. Keeping it on the device would
+       * tell the learner their change was saved when the rules turned it away,
+       * as they do once a facilitator has started reviewing.
+       */
+      if (err?.code === 'permission-denied') throw err;
       console.warn('Firestore save failed, using localStorage', err?.code, err?.message || err);
     }
   }
@@ -257,6 +263,27 @@ export async function reviewSubmission(subId, { outcome, feedback, reviewerId })
     completedAt: approved ? serverTimestamp() : null,
     updatedAt: serverTimestamp(),
   });
+}
+
+/**
+ * CX opening a handed-in submission starts its review, which closes the
+ * learner's chance to edit it. Only a plain "submitted" moves: work already
+ * reviewed, approved or sent back keeps its status.
+ */
+export async function markReviewStarted(subId, reviewerId) {
+  if (!db) return false;
+  const ref = doc(db, LEP_SUBMISSIONS, subId);
+  const snap = await getDoc(ref);
+  if (!snap.exists() || snap.data().status !== SUBMISSION_STATUS.SUBMITTED) return false;
+  // A weekly post stays open for next week's entry; reviewing it closes nothing.
+  if (snap.data().type === TASK_TYPES.RECURRING_POST) return false;
+  await updateDoc(ref, {
+    status: SUBMISSION_STATUS.UNDER_REVIEW,
+    reviewStartedAt: serverTimestamp(),
+    reviewStartedBy: reviewerId || '',
+    updatedAt: serverTimestamp(),
+  });
+  return true;
 }
 
 export async function updateTaskUnlockDate(taskId, unlockDate) {

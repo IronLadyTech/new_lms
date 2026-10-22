@@ -15,6 +15,7 @@ const {
 } = require('./accessTiers');
 const { parseLeadEntitlements, inferFromLeadStatus } = require('./zohoFieldMap');
 const { ilUserToCredentialFields } = require('./zohoIlUsers');
+const { registrationToBatchRecord } = require('./zohoIlRegistration');
 
 async function getAuthUserByEmail(email) {
   try {
@@ -113,6 +114,94 @@ function parseEntitlementsFromRecord(record) {
   return ent;
 }
 
+/** Zoho date → YYYY-MM-DD (Leads return ISO or dd/mm/yyyy). */
+function zohoDateToIso(value) {
+  if (value == null || value === '') return '';
+  if (typeof value === 'string') {
+    const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(value.trim());
+    if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+    const dmy = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(value.trim());
+    if (dmy) {
+      return `${dmy[3]}-${String(dmy[2]).padStart(2, '0')}-${String(dmy[1]).padStart(2, '0')}`;
+    }
+  }
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    const m = String(value.getMonth() + 1).padStart(2, '0');
+    const d = String(value.getDate()).padStart(2, '0');
+    return `${value.getFullYear()}-${m}-${d}`;
+  }
+  return '';
+}
+
+/**
+ * Copy LEP / 100BM start·end + Month_B_HAG onto the LMS user doc so the app
+ * can read them after refreshMyAccess (without a full Lead snapshot).
+ *
+ * LEP: LEP_Reg_Date (start), LEP_End_Date, LEP_Batch, Month_B_HAG
+ * 100BM: BM_Reg_Date1, BM_End_Date, BM_Batch
+ */
+function applyZohoProgramDatesToUpdates(updates, record, profile = {}) {
+  if (!record || typeof record !== 'object') return;
+
+  const lepBatch = String(record.LEP_Batch || '').trim();
+  const lepStart = zohoDateToIso(record.LEP_Reg_Date);
+  const lepEnd = zohoDateToIso(record.LEP_End_Date);
+  if (lepBatch || lepStart || lepEnd) {
+    const prev = profile.programAccess?.lep || {};
+    if (isValidBatchName(lepBatch)) {
+      updates['programAccess.lep.zohoRawBatch'] = lepBatch;
+      updates['programAccess.lep.zohoBatchKey'] = lepBatch;
+      updates['programAccess.lep.batchName'] = lepBatch;
+    }
+    if (lepStart) updates['programAccess.lep.day1Date'] = lepStart;
+    if (lepEnd) updates['programAccess.lep.endDate'] = lepEnd;
+    // Keep a small Lead bag for app readLeadField (Month_B_HAG / LEP_Reg_Date).
+    updates.zohoLead = {
+      ...(profile.zohoLead || {}),
+      ...(lepBatch ? { LEP_Batch: lepBatch } : {}),
+      ...(lepStart ? { LEP_Reg_Date: lepStart } : {}),
+      ...(lepEnd ? { LEP_End_Date: lepEnd } : {}),
+      id: record.id || profile.zohoLeadId || prev.zohoLeadId || null,
+    };
+  }
+
+  const bmBatch = String(record.BM_Batch || '').trim();
+  const bmStart = zohoDateToIso(record.BM_Reg_Date1);
+  const bmEnd = zohoDateToIso(record.BM_End_Date);
+  if (bmBatch || bmStart || bmEnd) {
+    if (isValidBatchName(bmBatch)) {
+      updates['programAccess.100bm.zohoRawBatch'] = bmBatch;
+      updates['programAccess.100bm.zohoBatchKey'] = bmBatch;
+      updates['programAccess.100bm.batchName'] = bmBatch;
+    }
+    if (bmStart) updates['programAccess.100bm.startDate'] = bmStart;
+    if (bmEnd) updates['programAccess.100bm.endDate'] = bmEnd;
+    updates.zohoLead = {
+      ...(updates.zohoLead || profile.zohoLead || {}),
+      ...(bmBatch ? { BM_Batch: bmBatch } : {}),
+      ...(bmStart ? { BM_Reg_Date1: bmStart } : {}),
+      ...(bmEnd ? { BM_End_Date: bmEnd } : {}),
+    };
+  }
+
+  const bhag = String(record.Month_B_HAG || record.LMS_BHAG || '').trim();
+  if (bhag && !/^(yes|no|done|completed)$/i.test(bhag)) {
+    updates.bhag = bhag;
+    updates.zohoLead = {
+      ...(updates.zohoLead || profile.zohoLead || {}),
+      Month_B_HAG: bhag,
+    };
+  }
+
+  const city = String(record.City || '').trim();
+  if (city) updates.city = city;
+  const domain = String(record.Industry || record.LMS_Domain || '').trim();
+  if (domain) {
+    updates.domain = domain;
+    updates.leadershipRole = domain;
+  }
+}
+
 function isValidBatchName(batch) {
   // Returns a boolean, not the trimmed string: a predicate whose false value is
   // '' reads as valid to anything comparing against false.
@@ -151,6 +240,90 @@ function programmesNamedOnRecord(record) {
     .flatMap((v) => String(v || '').split(','))
     .map((v) => normalizeProgram(v.trim()))
     .filter(Boolean);
+}
+
+function paymentFromRegistrationRow(statusRaw, programRaw) {
+  const fromStatus = inferFromLeadStatus(statusRaw);
+  if (fromStatus?.paymentStatus) return normalizePaymentStatus(fromStatus.paymentStatus);
+  if (programRaw && String(programRaw).trim()) return PAYMENT_STATUS.REGISTER;
+  return PAYMENT_STATUS.UNPAID;
+}
+
+function unionCommaPrograms(...lists) {
+  const ids = new Set();
+  for (const list of lists) {
+    String(list || '')
+      .split(',')
+      .map((part) => normalizeProgram(part.trim()))
+      .filter(Boolean)
+      .forEach((id) => ids.add(id));
+  }
+  return [...ids].join(', ');
+}
+
+/** Merge every IL_Registration row for one email into programme lists. */
+function aggregateProgramsFromIlRegistrations(registrations = []) {
+  const registered = new Set();
+  const enrolled = new Set();
+
+  for (const reg of registrations) {
+    const mapped = registrationToBatchRecord(reg);
+    const prog = normalizeProgram(
+      mapped.Program_Registration_Details || mapped.Program || reg.Program
+    );
+    if (!prog) continue;
+
+    const tier = paymentFromRegistrationRow(
+      mapped._status,
+      mapped.Program_Registration_Details || reg.Program
+    );
+    registered.add(prog);
+    if (tier === PAYMENT_STATUS.PAID) enrolled.add(prog);
+  }
+
+  return {
+    Program_Registration_Details: [...registered].join(', '),
+    Program_Enrollment_Details: [...enrolled].join(', '),
+  };
+}
+
+function enrichRecordWithAllZohoEnrollments(
+  record,
+  { ilRegistrations = [], ilUsers = [] } = {}
+) {
+  const fromRegs = aggregateProgramsFromIlRegistrations(ilRegistrations);
+  /*
+   * Keep IL Users registration vs enrolment lists separate. Flattening every
+   * named programme into registration only made fully-enrolled MBW rows look
+   * registration-tier and blocked Q2+ even when Enrollment Details named MBW.
+   */
+  const fromUsersReg = ilUsers
+    .map((user) => user?.Program_Registration_Details)
+    .filter(Boolean)
+    .join(', ');
+  const fromUsersEnr = ilUsers
+    .map((user) => user?.Program_Enrollment_Details)
+    .filter(Boolean)
+    .join(', ');
+
+  const mergedReg = unionCommaPrograms(
+    record?.Program_Registration_Details,
+    fromRegs.Program_Registration_Details,
+    fromUsersReg
+  );
+  const mergedEnr = unionCommaPrograms(
+    record?.Program_Enrollment_Details,
+    fromRegs.Program_Enrollment_Details,
+    fromUsersEnr
+  );
+
+  if (!mergedReg && !mergedEnr) return record;
+
+  return {
+    ...record,
+    ...(mergedReg ? { Program_Registration_Details: mergedReg } : {}),
+    ...(mergedEnr ? { Program_Enrollment_Details: mergedEnr } : {}),
+  };
 }
 
 /**
@@ -244,9 +417,10 @@ async function applyEntitlements(db, uid, record, profile = {}) {
   const namedProgrammes = programmesNamedOnRecord(record);
   if (namedProgrammes.length) {
     const merged = Array.from(new Set([...(profile.programs || []), ...namedProgrammes]));
-    if (merged.length !== (profile.programs || []).length) {
-      updates.programs = merged;
-    }
+    const prev = new Set(profile.programs || []);
+    const changed =
+      merged.length !== prev.size || merged.some((id) => !prev.has(id));
+    if (changed) updates.programs = merged;
   }
 
   const refundedProgram = ent.refund === 'completed' && ent.program ? ent.program : null;
@@ -301,6 +475,18 @@ async function applyEntitlements(db, uid, record, profile = {}) {
    */
   const listedTiers = tiersFromProgrammeLists(record);
   if (listedTiers) {
+    const tierProgramIds = Object.keys(listedTiers).filter((id) => id !== refundedProgram);
+    if (tierProgramIds.length) {
+      const mergedPrograms = Array.from(
+        new Set([...(updates.programs || profile.programs || []), ...tierProgramIds])
+      );
+      const prevPrograms = new Set(profile.programs || []);
+      const programsChanged =
+        mergedPrograms.length !== prevPrograms.size ||
+        mergedPrograms.some((id) => !prevPrograms.has(id));
+      if (programsChanged) updates.programs = mergedPrograms;
+    }
+
     for (const [programId, tier] of Object.entries(listedTiers)) {
       if (programId === refundedProgram) continue;
       const previous = profile.programAccess?.[programId]?.paymentStatus;
@@ -322,9 +508,15 @@ async function applyEntitlements(db, uid, record, profile = {}) {
      * and flattening them into one profile field meant the highest tier leaked
      * everywhere, so paying for LEP unlocked the whole of 100BM.
      *
-     * Still ratchets upward, but only within this programme.
+     * Still ratchets upward, but only within this programme — and against any
+     * tier already written from Programme lists in this same pass, so a
+     * registration-only Payment_Status field cannot overwrite an enrolment
+     * list that already said paid.
      */
-    const previous = profile.programAccess?.[ent.program]?.paymentStatus;
+    const previous = maxPaymentStatus(
+      profile.programAccess?.[ent.program]?.paymentStatus,
+      updates[`programAccess.${ent.program}.paymentStatus`]
+    );
     updates[`programAccess.${ent.program}.paymentStatus`] = maxPaymentStatus(
       previous,
       ent.paymentStatus
@@ -347,8 +539,11 @@ async function applyEntitlements(db, uid, record, profile = {}) {
   if (record?.id) updates.zohoIlUserId = String(record.id);
   if (ent.displayName && !profile.displayName) updates.displayName = ent.displayName;
 
-  const batch = record?.batch || record?.Batch;
+  const batch = record?.batch || record?.Batch || record?.LEP_Batch || record?.BM_Batch;
   if (isValidBatchName(batch)) updates.batchName = batch.toString().trim();
+
+  // Program dates + B-HAG from Zoho Leads (app reads these on refreshMyAccess).
+  applyZohoProgramDatesToUpdates(updates, record, profile);
 
   /*
    * Stamp where this write came from.
@@ -494,21 +689,31 @@ async function provisionUserFromEmail(
   getLeadByEmail,
   searchIlUserByEmail,
   email,
-  webhookBody = null
+  webhookBody = null,
+  deps = {}
 ) {
   const trimmed = email?.trim();
   if (!trimmed) return { ok: false, reason: 'Email is required' };
 
-  const [lead, ilUser] = await Promise.all([
+  const searchAllRegs = deps.searchAllIlRegistrationsByEmail;
+  const searchAllUsers = deps.searchAllIlUsersByEmail;
+
+  const [lead, ilUser, allRegs, allIlUsers] = await Promise.all([
     getLeadByEmail(trimmed).catch(() => null),
     searchIlUserByEmail(trimmed).catch(() => null),
+    searchAllRegs ? searchAllRegs(trimmed).catch(() => []) : Promise.resolve([]),
+    searchAllUsers ? searchAllUsers(trimmed).catch(() => []) : Promise.resolve([]),
   ]);
 
-  if (!lead && !ilUser && !webhookBody?.password) {
+  if (!lead && !ilUser && !allRegs.length && !webhookBody?.password) {
     return { ok: false, reason: 'No Zoho Lead or IL_Users record found for this email' };
   }
 
-  const record = mergeProvisioningRecord(lead, ilUser, webhookBody);
+  let record = mergeProvisioningRecord(lead, ilUser, webhookBody);
+  record = enrichRecordWithAllZohoEnrollments(record, {
+    ilRegistrations: allRegs,
+    ilUsers: allIlUsers.length ? allIlUsers : ilUser ? [ilUser] : [],
+  });
   return provisionFromRecord(db, record);
 }
 
@@ -588,15 +793,24 @@ async function syncEntitlementsFromZoho(db, getLeadByEmail, searchIlUserByEmail,
     return { ok: false, reason: 'No LMS account for this email — nothing to refresh' };
   }
 
-  const [lead, ilUser] = await Promise.all([
+  const searchAllRegs = deps?.searchAllIlRegistrationsByEmail;
+  const searchAllUsers = deps?.searchAllIlUsersByEmail;
+
+  const [lead, ilUser, allRegs, allIlUsers] = await Promise.all([
     getLeadByEmail(trimmed).catch(() => null),
     searchIlUserByEmail(trimmed).catch(() => null),
+    searchAllRegs ? searchAllRegs(trimmed).catch(() => []) : Promise.resolve([]),
+    searchAllUsers ? searchAllUsers(trimmed).catch(() => []) : Promise.resolve([]),
   ]);
-  if (!lead && !ilUser && !body) {
+  if (!lead && !ilUser && !allRegs.length && !body) {
     return { ok: false, reason: 'No Zoho Lead or IL_Users record found for this email' };
   }
 
-  const record = mergeProvisioningRecord(lead, ilUser, body);
+  let record = mergeProvisioningRecord(lead, ilUser, body);
+  record = enrichRecordWithAllZohoEnrollments(record, {
+    ilRegistrations: allRegs,
+    ilUsers: allIlUsers.length ? allIlUsers : ilUser ? [ilUser] : [],
+  });
   const snap = await db.collection('users').doc(existing.uid).get();
   const applied = await applyEntitlements(db, existing.uid, record, snap.data() || {});
   return { ok: true, uid: existing.uid, mode: 'entitlements', ...applied };
@@ -606,7 +820,14 @@ async function provisionFromRegistrationWebhook(db, body, deps) {
   const email = (body?.email || body?.Email || '').trim();
   if (!email) return { ok: false, reason: 'email is required in webhook body' };
 
-  return provisionUserFromEmail(db, deps.getLeadByEmail, deps.searchIlUserByEmail, email, body);
+  return provisionUserFromEmail(
+    db,
+    deps.getLeadByEmail,
+    deps.searchIlUserByEmail,
+    email,
+    body,
+    deps
+  );
 }
 
 /**
@@ -684,6 +905,7 @@ async function provisionFromLoginCredentials(db, email, password, deps) {
 
 module.exports = {
   tiersFromProgrammeLists,
+  enrichRecordWithAllZohoEnrollments,
   /** Used by the reconciler to tell a missing account from an existing one. */
   getAuthUserByEmail,
   mergeProvisioningRecord,

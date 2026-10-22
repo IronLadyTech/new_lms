@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import BM100ProgramSection from './BM100ProgramSection';
 import { DEFAULT_PROGRAM_UI } from '../../../data/programUiAdapters';
+import { matchesLessonFilter } from '../../../utils/lessonFilters';
 
 function sectionMatchesQuery(section, sectionTasks, query) {
   if (!query) return true;
@@ -30,25 +31,40 @@ export default function BM100ProgramJourney({
   autoScroll = true,
   embedded = false,
   searchQuery = '',
+  statusFilter = 'all',
+  showSubmissionTags = false,
+  outline = 'cards',
 }) {
   const currentRef = useRef(null);
   const q = searchQuery.trim().toLowerCase();
 
   const visibleSections = useMemo(() => {
-    return program.sections.map((section, index) => {
-      const sectionTasks = section.usesTaskEngine
-        ? taskStates.filter((t) => t.task.phase === section.id)
-        : [];
-      const titleMatch = q && section.title.toLowerCase().includes(q);
-      const matches = sectionMatchesQuery(section, sectionTasks, q);
-      const filteredTasks = !q
-        ? sectionTasks
-        : titleMatch
+    return program.sections
+      .map((section, index) => {
+        const sectionTasks = section.usesTaskEngine
+          ? taskStates.filter((t) => t.task.phase === section.id)
+          : [];
+        const titleMatch = q && section.title.toLowerCase().includes(q);
+        const matches = sectionMatchesQuery(section, sectionTasks, q);
+        const filteredTasks = !q
           ? sectionTasks
-          : filterTasksByQuery(sectionTasks, q);
-      return { section, index, sectionTasks: filteredTasks, matches };
-    }).filter((row) => row.matches);
-  }, [taskStates, q]);
+          : titleMatch
+            ? sectionTasks
+            : filterTasksByQuery(sectionTasks, q);
+        // A status filter narrows the lessons, and hides a module left with none.
+        const shownTasks =
+          statusFilter === 'all'
+            ? filteredTasks
+            : filteredTasks.filter((ts) => matchesLessonFilter(ts, statusFilter));
+        return {
+          section,
+          index,
+          sectionTasks: shownTasks,
+          matches: matches && (statusFilter === 'all' || shownTasks.length > 0),
+        };
+      })
+      .filter((row) => row.matches);
+  }, [taskStates, q, statusFilter]);
 
   useEffect(() => {
     if (!autoScroll || !currentRef.current) return;
@@ -60,10 +76,15 @@ export default function BM100ProgramJourney({
       {!embedded && <h2 className="mbw-program-journey__title">Your journey</h2>}
       <div className="mbw-program-journey__sections">
         {visibleSections.length === 0 ? (
-          <p className="lesson-course-rail__empty muted">No lessons match your search.</p>
+          <p className="lesson-course-rail__empty muted">
+            {statusFilter !== 'all' && !q
+              ? 'No lessons in this list yet.'
+              : 'No lessons match your search.'}
+          </p>
         ) : (
           visibleSections.map(({ section, index, sectionTasks }) => {
-            const forceExpand = Boolean(q) || expandedSectionId === section.id;
+            const forceExpand =
+              Boolean(q) || statusFilter !== 'all' || expandedSectionId === section.id;
             return (
               <div
                 key={section.id}
@@ -83,6 +104,8 @@ export default function BM100ProgramJourney({
                   onToggle={() => onToggleSection(section.id)}
                   onSelectLesson={onSelectLesson}
                   railMode={embedded}
+                  showSubmissionTags={showSubmissionTags}
+                  outline={outline}
                 />
               </div>
             );

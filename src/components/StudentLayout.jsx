@@ -21,6 +21,14 @@ export default function StudentLayout() {
   const isBm100Route = location.pathname.includes('/100bm');
   const isProgramTaskRoute = isMbwRoute || isBm100Route;
   const isLightShell = isProgramTaskRoute;
+  /* Stitch home preview brings its own sidebar + header; hide app chrome. */
+  /*
+   * Pages that bring their own Stitch chrome. The old header and sidebar are
+   * hidden for these, or the learner sees two of each stacked on one another.
+   * Any new page rendered inside StitchShell has to be listed here.
+   */
+  const STITCH_ROUTES = ['/home-next', '/schedule', '/browse', '/progress', '/profile', '/support'];
+  const isStitchPreview = STITCH_ROUTES.some((r) => location.pathname.includes(r));
   const showAdminLink = isAdminRole(role) && !isGuest;
   const accessBlocked = isBlocked && !isAdminRole(role);
 
@@ -37,7 +45,7 @@ export default function StudentLayout() {
           <div className="app-header__brand">
             <span className="app-header__brand-row">
               <img src="/logo.png" alt="Iron Lady" className="logo-mark" />
-              <span>LMS</span>
+              <span className="app-header__brand-text">LMS</span>
             </span>
           </div>
           <div className="app-header__actions">
@@ -56,53 +64,64 @@ export default function StudentLayout() {
   return (
     <StreakAnalyticsProvider>
       <div
-        className={`student-layout student-layout--course${isLightShell ? ' student-layout--mbw' : ''}`}
+        className={`student-layout student-layout--course${isLightShell ? ' student-layout--mbw' : ''}${isStitchPreview ? ' student-layout--stitch-preview' : ''}`}
       >
-        <SkipLink />
-        <header className="app-header">
-          <div className="app-header__brand">
-            <span className="app-header__brand-row">
-              <img src="/logo.png" alt="Iron Lady" className="logo-mark" />
-              <span>LMS</span>
-            </span>
-          </div>
-          <div className="app-header__actions">
-            {isGuest && <span className="guest-badge">Guest</span>}
-            <WidgetErrorBoundary name="HeaderStreak" resetKey={location.pathname}>
-              <HeaderStreak />
-            </WidgetErrorBoundary>
-            <WidgetErrorBoundary name="ThemeToggle">
-              <ThemeToggle compact />
-            </WidgetErrorBoundary>
-            <WidgetErrorBoundary name="NotificationBell" resetKey={location.pathname}>
-              <NotificationBell />
-            </WidgetErrorBoundary>
-            {showAdminLink && (
-              <Link
-                to={isModeratorOnly(role) ? '/cx/home' : '/portal'}
-                className="app-header__link app-header__link--admin"
-                aria-label={isModeratorOnly(role) ? 'CX portal' : 'Admin portal'}
-              >
-                <Shield size={18} strokeWidth={2} className="app-header__admin-icon" aria-hidden />
-                <span className="app-header__admin-label">
-                  {isModeratorOnly(role) ? 'CX' : 'Admin'}
-                </span>
-              </Link>
-            )}
-          </div>
-        </header>
-        <OfflineBanner />
+        {!isStitchPreview && <SkipLink />}
+        {!isStitchPreview && (
+          <header className="app-header">
+            <div className="app-header__brand">
+              <span className="app-header__brand-row">
+                <img src="/logo.png" alt="Iron Lady" className="logo-mark" />
+                <span className="app-header__brand-text">LMS</span>
+              </span>
+            </div>
+            {/* Filled by a wide lesson page (LessonHeaderBar); empty and hidden elsewhere. */}
+            <div id="app-header-lesson" className="app-header__lesson" />
+            <div className="app-header__actions">
+              {isGuest && <span className="guest-badge">Guest</span>}
+              <WidgetErrorBoundary name="HeaderStreak" resetKey={location.pathname}>
+                <HeaderStreak />
+              </WidgetErrorBoundary>
+              <WidgetErrorBoundary name="ThemeToggle">
+                <ThemeToggle compact />
+              </WidgetErrorBoundary>
+              <WidgetErrorBoundary name="NotificationBell" resetKey={location.pathname}>
+                <NotificationBell />
+              </WidgetErrorBoundary>
+              {showAdminLink && (
+                <Link
+                  to={isModeratorOnly(role) ? '/cx/home' : '/portal'}
+                  className="app-header__link app-header__link--admin"
+                  aria-label={isModeratorOnly(role) ? 'CX portal' : 'Admin portal'}
+                >
+                  <Shield
+                    size={18}
+                    strokeWidth={2}
+                    className="app-header__admin-icon"
+                    aria-hidden
+                  />
+                  <span className="app-header__admin-label">
+                    {isModeratorOnly(role) ? 'CX' : 'Admin'}
+                  </span>
+                </Link>
+              )}
+            </div>
+          </header>
+        )}
+        {!isStitchPreview && <OfflineBanner />}
         <main
           id="main-content"
-          className={`student-main${isLightShell ? ' student-main--mbw' : ''}`}
+          className={`student-main${isLightShell ? ' student-main--mbw' : ''}${isStitchPreview ? ' student-main--stitch-preview' : ''}`}
         >
           <LayoutErrorBoundary name="student-page" resetKey={location.pathname}>
             <Outlet />
           </LayoutErrorBoundary>
         </main>
-        <WidgetErrorBoundary name="BottomNav" resetKey={location.pathname}>
-          <BottomNav />
-        </WidgetErrorBoundary>
+        {!isStitchPreview && (
+          <WidgetErrorBoundary name="BottomNav" resetKey={location.pathname}>
+            <BottomNav />
+          </WidgetErrorBoundary>
+        )}
       </div>
     </StreakAnalyticsProvider>
   );

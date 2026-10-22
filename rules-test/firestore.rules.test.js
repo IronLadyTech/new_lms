@@ -452,3 +452,85 @@ describe('bootstrap superadmin', () => {
     await assertFails(remove(db, 'activities/b2'));
   });
 });
+
+describe('lep_submissions: versions and the review window', () => {
+  const PATH = `lep_submissions/${ROLES.learner.uid}_lep-task`;
+  const V1 = { version: 1, submittedAt: '2026-09-14T10:00:00Z', data: { textValue: 'first' } };
+  const V2 = { version: 2, submittedAt: '2026-09-15T10:00:00Z', data: { textValue: 'second' } };
+  const handedIn = {
+    userId: ROLES.learner.uid,
+    taskId: 'lep-task',
+    status: 'submitted',
+    textValue: 'first',
+    versions: [V1],
+  };
+  const learnerDb = () => dbFor(ROLES.learner.uid);
+
+  it('lets a learner hand in their first version', async () => {
+    await assertSucceeds(write(await learnerDb(), PATH, handedIn));
+  });
+
+  it('lets a learner add the next version', async () => {
+    await seedDoc(PATH, handedIn);
+    await assertSucceeds(
+      patch(await learnerDb(), PATH, { versions: [V1, V2], textValue: 'second', status: 'submitted' })
+    );
+  });
+
+  it('stops a learner rewriting an earlier version', async () => {
+    await seedDoc(PATH, handedIn);
+    await assertFails(
+      patch(await learnerDb(), PATH, {
+        versions: [{ ...V1, data: { textValue: 'rewritten' } }, V2],
+      })
+    );
+  });
+
+  it('stops a learner removing versions', async () => {
+    await seedDoc(PATH, { ...handedIn, versions: [V1, V2] });
+    await assertFails(patch(await learnerDb(), PATH, { versions: [V1] }));
+  });
+
+  it('stops a learner creating a submission with a made-up history', async () => {
+    await assertFails(write(await learnerDb(), PATH, { ...handedIn, versions: [V1, V2] }));
+  });
+
+  it('stops a learner starting their own review', async () => {
+    await seedDoc(PATH, handedIn);
+    await assertFails(patch(await learnerDb(), PATH, { status: 'under_review' }));
+    await assertFails(
+      write(await learnerDb(), `lep_submissions/${ROLES.learner.uid}_lep-other`, {
+        ...handedIn,
+        taskId: 'lep-other',
+        status: 'under_review',
+      })
+    );
+  });
+
+  it('lets CX start the review', async () => {
+    await seedDoc(PATH, handedIn);
+    await assertSucceeds(patch(await dbFor(ROLES.moderator.uid), PATH, { status: 'under_review' }));
+  });
+
+  it('stops a learner changing their answer once review has started', async () => {
+    await seedDoc(PATH, { ...handedIn, status: 'under_review' });
+    await assertFails(
+      patch(await learnerDb(), PATH, { textValue: 'late change', versions: [V1, V2] })
+    );
+    await assertFails(patch(await learnerDb(), PATH, { status: 'submitted' }));
+  });
+
+  it('still lets a learner record video progress during review', async () => {
+    await seedDoc(PATH, { ...handedIn, status: 'under_review' });
+    await assertSucceeds(patch(await learnerDb(), PATH, { watchProgress: 0.5 }));
+  });
+
+  it('stops a learner writing another learner submission', async () => {
+    await assertFails(
+      write(await learnerDb(), `lep_submissions/${ROLES.otherLearner.uid}_lep-task`, {
+        ...handedIn,
+        userId: ROLES.otherLearner.uid,
+      })
+    );
+  });
+});

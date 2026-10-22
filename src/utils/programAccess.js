@@ -5,6 +5,7 @@
  */
 import { PROGRAMS } from '../data/programTypes';
 import { normalizeCourseCode } from './programTaskRoutes';
+import { PAYMENT_STATUS, programPaymentStatus } from '../data/accessTiers';
 
 export const PROGRAM_JOURNEY = [
   {
@@ -88,6 +89,16 @@ export function getEnrolledProgramIds(profile, courses = []) {
   list(profile.programs).forEach((value) => {
     const entry = getJourneyEntry(value);
     if (entry) ids.add(entry.id);
+  });
+
+  // Zoho sync may write tiers here before programs[] catches up.
+  const access = profile.programAccess || {};
+  Object.keys(access).forEach((programId) => {
+    const entry = getJourneyEntry(programId);
+    if (!entry) return;
+    if (programPaymentStatus(profile, entry.id) !== PAYMENT_STATUS.UNPAID) {
+      ids.add(entry.id);
+    }
   });
 
   return ids;
@@ -194,12 +205,34 @@ export function canAccessProgram(programIdOrCode, profile, courses = []) {
   return getEnrolledProgramIds(profile, courses).has(entry.id);
 }
 
+/**
+ * Whether a learner may open a programme's tasks, as opposed to being sent to
+ * its public page.
+ *
+ * Enrolment and payment are two different questions and they come apart: a
+ * learner can be enrolled in a programme while their payment status still says
+ * unpaid, and asking only `canAccessProgram` hands that person the full task
+ * list. Registration tier is deliberately allowed through — they have paid for
+ * phase one and own those tasks.
+ *
+ * This is the single source of truth for that decision. Both the dashboard card
+ * and the programme panel call it, so the same learner cannot be told two
+ * different things by two screens.
+ */
+export function canOpenProgramTasks(programIdOrCode, profile, courses = []) {
+  const entry = getJourneyEntry(programIdOrCode);
+  if (!entry) return false;
+  if (!canAccessProgram(entry.id, profile, courses)) return false;
+  return programPaymentStatus(profile, entry.id) !== PAYMENT_STATUS.UNPAID;
+}
+
 export function getProgramAccessState(programIdOrCode, profile, courses = []) {
   const entry = getJourneyEntry(programIdOrCode);
   if (!entry) {
     return {
       state: PROGRAM_ACCESS.LOCKED,
       canAccess: false,
+      canOpenTasks: false,
       enrolled: false,
       label: 'Locked',
       message: 'This program is not available yet.',
@@ -215,6 +248,8 @@ export function getProgramAccessState(programIdOrCode, profile, courses = []) {
     return {
       state: PROGRAM_ACCESS.OPEN,
       canAccess: true,
+      /* Enrolled is not the same as paid — see canOpenProgramTasks. */
+      canOpenTasks: canOpenProgramTasks(entry.id, profile, courses),
       enrolled: true,
       label: 'Enrolled',
       message: 'You are enrolled in this program.',
@@ -227,6 +262,7 @@ export function getProgramAccessState(programIdOrCode, profile, courses = []) {
     return {
       state: PROGRAM_ACCESS.UPCOMING,
       canAccess: false,
+      canOpenTasks: false,
       enrolled: false,
       label: 'Upcoming',
       message: `Next in your Iron Lady journey after ${
@@ -239,6 +275,7 @@ export function getProgramAccessState(programIdOrCode, profile, courses = []) {
   return {
     state: PROGRAM_ACCESS.LOCKED,
     canAccess: false,
+    canOpenTasks: false,
     enrolled: false,
     label: 'Locked',
     message:

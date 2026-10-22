@@ -1,0 +1,1556 @@
+/* ============================================================
+   IRON LADY — ACCOUNT SURFACES
+   Settings, Help & Support, and the profile panel behind the
+   avatar. Scoped under .ac / .sup / .ac-panel with prefixed
+   names: bare .card / .row / .btn / .tab all belong to
+   index.css and would win against a single class here.
+   ============================================================ */
+.stitch-home .ac {
+  --ac-line: #e8e5d6;
+  --ac-line-soft: #f3f1e6;
+  --ac-surface: #ffffff;
+  --ac-field: #fbfaf2;
+  --ac-ink: #231f20;
+  --ac-ink-2: #6e6963;
+  --ac-ink-3: #857f78;
+  --ac-r: 14px;
+  --ac-r-sm: 10px;
+  --ac-ok: #1f5c3d;
+  --ac-ok-soft: #e4efe9;
+  --ac-bad: #a4162c;
+  --ac-bad-soft: #fbe7ea;
+
+  max-width: 980px;
+  color: var(--ac-ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Dark. Tokens only — see the note in stitchHome.css. The panel keeps its own
+   set because it sits above the page on its own ground. */
+:root[data-theme='dark'] .stitch-home .ac {
+  --ac-line: rgb(255 255 255 / 0.1);
+  --ac-line-soft: rgb(255 255 255 / 0.06);
+  --ac-surface: #1d1c21;
+  --ac-field: #232227;
+  --ac-ink: #f2efe6;
+  --ac-ink-2: #a9a29c;
+  --ac-ink-3: #8b847e;
+  --ac-ok: #6fcf97;
+  --ac-ok-soft: rgb(111 207 151 / 0.15);
+  --ac-bad: #ff8d9b;
+  --ac-bad-soft: rgb(255 141 155 / 0.15);
+}
+
+.stitch-home .ac * {
+  box-sizing: border-box;
+}
+
+/* ---------- page heading ---------- */
+.stitch-home .ac-head {
+  margin-bottom: 22px;
+}
+
+.stitch-home .ac-head h1 {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 30px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
+.stitch-home .ac-head p {
+  margin: 6px 0 0;
+  color: var(--ac-ink-2);
+  max-width: 58ch;
+}
+
+.stitch-home .ac-head--row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* ---------- card ---------- */
+.stitch-home .ac-card {
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-line);
+  border-radius: var(--ac-r);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow:
+    0 1px 2px rgb(35 31 32 / 0.04),
+    0 8px 24px -18px rgb(35 31 32 / 0.18);
+}
+
+.stitch-home .ac-card__h {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.stitch-home .ac-card__i {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--ac-r-sm);
+  background: var(--ac-line-soft);
+  color: var(--ac-ink-2);
+}
+
+.stitch-home .ac-card__h h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.stitch-home .ac-card__h p {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--ac-ink-2);
+}
+
+.stitch-home .ac-foot {
+  margin: 16px 0 0;
+  font-size: 11.5px;
+  color: var(--ac-ink-3);
+}
+
+/* ---------- theme picker ---------- */
+.stitch-home .ac-themes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.stitch-home .ac-theme {
+  display: block;
+  padding: 10px;
+  border: 1px solid var(--ac-line);
+  border-radius: var(--ac-r-sm);
+  background: var(--ac-surface);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.stitch-home .ac-theme.on {
+  border-color: var(--sh-brand);
+  box-shadow: 0 0 0 1px var(--sh-brand);
+}
+
+/* A miniature of the thing being chosen, rather than a word for it. */
+.stitch-home .ac-theme__sw {
+  display: block;
+  height: 54px;
+  border-radius: 7px;
+  padding: 8px;
+  margin-bottom: 9px;
+  border: 1px solid var(--ac-line);
+}
+
+.stitch-home .ac-theme__sw i {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  margin-bottom: 6px;
+}
+
+.stitch-home .ac-theme__sw--light {
+  background: #f7f6e4;
+}
+
+.stitch-home .ac-theme__sw--light i {
+  background: #d9d5bd;
+}
+
+.stitch-home .ac-theme__sw--light i:first-child {
+  background: #231f20;
+  width: 55%;
+}
+
+.stitch-home .ac-theme__sw--dark {
+  background: #232022;
+  border-color: #3a3538;
+}
+
+.stitch-home .ac-theme__sw--dark i {
+  background: #4c4649;
+}
+
+.stitch-home .ac-theme__sw--dark i:first-child {
+  background: #f4eee4;
+  width: 55%;
+}
+
+.stitch-home .ac-theme__l {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ---------- switch rows ---------- */
+.stitch-home .ac-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.stitch-home .ac-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--ac-line-soft);
+}
+
+.stitch-home .ac-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.stitch-home .ac-row__i {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--ac-line-soft);
+  color: var(--ac-ink-2);
+}
+
+.stitch-home .ac-row__t {
+  flex: 1;
+  min-width: 0;
+}
+
+.stitch-home .ac-row__t strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.stitch-home .ac-row__t small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--ac-ink-2);
+}
+
+.stitch-home .ac-sw {
+  flex: none;
+  position: relative;
+  width: 44px;
+  height: 26px;
+  border: 0;
+  border-radius: 999px;
+  background: #d9d5c4;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.stitch-home .ac-sw.on {
+  background: var(--sh-brand);
+}
+
+.stitch-home .ac-sw__k {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(35 31 32 / 0.3);
+  transition: transform 0.18s ease;
+}
+
+.stitch-home .ac-sw.on .ac-sw__k {
+  transform: translateX(18px);
+}
+
+/* ---------- fields ---------- */
+.stitch-home .ac-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stitch-home .ac-f {
+  display: block;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.stitch-home .ac-f > span,
+.stitch-home .ac-f > legend {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ac-ink);
+}
+
+.stitch-home .ac-f input,
+.stitch-home .ac-f select,
+.stitch-home .ac-f textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--ac-line);
+  border-radius: var(--ac-r-sm);
+  background: var(--ac-field);
+  color: var(--ac-ink);
+  font: inherit;
+}
+
+.stitch-home .ac-f textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.stitch-home .ac-f input:focus,
+.stitch-home .ac-f select:focus,
+.stitch-home .ac-f textarea:focus {
+  outline: 2px solid var(--sh-brand);
+  outline-offset: 1px;
+  background: var(--ac-surface);
+}
+
+.stitch-home .ac-f input:disabled {
+  color: var(--ac-ink-3);
+  cursor: not-allowed;
+}
+
+.stitch-home .ac-f small {
+  display: block;
+  margin-top: 5px;
+  font-size: 11.5px;
+  color: var(--ac-ink-3);
+}
+
+/* Where to go instead, while Moodle still owns the password. */
+.stitch-home .ac-pw-note {
+  margin: 0;
+  padding: 11px 13px;
+  border-left: 3px solid var(--sh-gold, #f5b301);
+  border-radius: 0 var(--ac-r-sm) var(--ac-r-sm) 0;
+  background: var(--ac-field);
+  font-size: 12.5px;
+  color: var(--ac-ink-2);
+}
+
+.stitch-home .ac-pw-note a {
+  color: inherit;
+  font-weight: 600;
+}
+
+.stitch-home .ac-check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid var(--ac-line);
+  border-radius: var(--ac-r-sm);
+  background: var(--ac-field);
+  cursor: pointer;
+}
+
+.stitch-home .ac-check input {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  accent-color: var(--sh-brand);
+}
+
+.stitch-home .ac-check strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stitch-home .ac-check small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11.5px;
+  color: var(--ac-ink-2);
+}
+
+/* ---------- buttons ---------- */
+.stitch-home .ac-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 13px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+}
+
+/* The one raised red, from the shell's own tokens. */
+.stitch-home .ac-btn--primary {
+  background: var(--sh-raise-bg);
+  box-shadow: var(--sh-raise-shadow);
+  color: #fff;
+}
+
+.stitch-home .ac-btn--primary:hover:not(:disabled) {
+  filter: brightness(1.03);
+  box-shadow: var(--sh-raise-shadow-hover);
+}
+
+.stitch-home .ac-btn--primary:active:not(:disabled) {
+  filter: brightness(0.97);
+  transform: translateY(1px);
+  box-shadow: var(--sh-raise-shadow-press);
+}
+
+.stitch-home .ac-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.stitch-home .ac-btn--quiet {
+  background: transparent;
+  border: 1px solid var(--ac-line);
+  color: var(--ac-ink);
+}
+
+.stitch-home .ac-btn--quiet:hover {
+  background: var(--ac-line-soft);
+}
+
+.stitch-home .ac-btn--danger {
+  background: transparent;
+  border: 1px solid var(--ac-bad-soft);
+  color: var(--ac-bad);
+  width: 100%;
+}
+
+.stitch-home .ac-btn--danger:hover {
+  background: var(--ac-bad-soft);
+}
+
+/* ---------- notices ---------- */
+.stitch-home .ac-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: var(--ac-r-sm);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.stitch-home .ac-note.ok {
+  background: var(--ac-ok-soft);
+  color: var(--ac-ok);
+}
+
+.stitch-home .ac-note.bad {
+  background: var(--ac-bad-soft);
+  color: var(--ac-bad);
+}
+
+.stitch-home .ac-guest {
+  margin: 0;
+  color: var(--ac-ink-2);
+}
+
+/* ============================================================
+   PROFILE PANEL
+   ============================================================ */
+.stitch-home .ac-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  border: 0;
+  padding: 0;
+  background: rgb(35 31 32 / 0.34);
+  cursor: pointer;
+  animation: ac-fade 0.18s ease;
+}
+
+.stitch-home .ac-panel {
+  position: fixed;
+  z-index: 61;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(420px, 100vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--sh-cream, #f7f6e4);
+  border-left: 1px solid rgb(35 31 32 / 0.08);
+  box-shadow: -24px 0 60px -30px rgb(35 31 32 / 0.5);
+  animation: ac-slide 0.22s cubic-bezier(0.22, 0.72, 0.24, 1);
+  color: #231f20;
+  font-size: 14px;
+  --ac-line: #e2ddc8;
+  --ac-line-soft: #eeead9;
+  --ac-surface: #ffffff;
+  --ac-field: #ffffff;
+  --ac-ink: #231f20;
+  --ac-ink-2: #6e6963;
+  --ac-ink-3: #857f78;
+  --ac-r-sm: 10px;
+  --ac-ok: #1f5c3d;
+  --ac-ok-soft: #e4efe9;
+  --ac-bad: #a4162c;
+  --ac-bad-soft: #fbe7ea;
+}
+
+:root[data-theme='dark'] .stitch-home .ac-panel {
+  --ac-line: rgb(255 255 255 / 0.11);
+  --ac-line-soft: rgb(255 255 255 / 0.07);
+  --ac-surface: #232227;
+  --ac-field: #232227;
+  --ac-ink: #f2efe6;
+  --ac-ink-2: #a9a29c;
+  --ac-ink-3: #8b847e;
+  --ac-ok: #6fcf97;
+  --ac-ok-soft: rgb(111 207 151 / 0.15);
+  --ac-bad: #ff8d9b;
+  --ac-bad-soft: rgb(255 141 155 / 0.15);
+
+  background: #1a191e;
+  border-left-color: rgb(255 255 255 / 0.1);
+  color: #f2efe6;
+}
+
+@keyframes ac-slide {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+
+@keyframes ac-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stitch-home .ac-panel,
+  .stitch-home .ac-scrim {
+    animation: none;
+  }
+}
+
+.stitch-home .ac-panel__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 18px 0;
+}
+
+.stitch-home .ac-ava {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--sh-raise-bg);
+  box-shadow: var(--sh-raise-shadow);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+/* The photo fills the disc it replaces, initial and image alike. */
+.stitch-home .ac-ava img,
+.stitch-home .ac-photo__img img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.stitch-home .ac-photo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 4px;
+}
+
+.stitch-home .ac-photo__img {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--sh-raise-bg);
+  box-shadow: var(--sh-raise-shadow);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.stitch-home .ac-photo__t {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stitch-home .ac-photo__h {
+  margin: 2px 0 8px;
+  font-size: 11.5px;
+  color: var(--ac-ink-3);
+}
+
+.stitch-home .ac-btn--sm {
+  min-height: 34px;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 9px;
+}
+
+.stitch-home .ac-who {
+  flex: 1;
+  min-width: 0;
+}
+
+.stitch-home .ac-who__n {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stitch-home .ac-who__e {
+  margin: 1px 0 0;
+  font-size: 12px;
+  color: var(--ac-ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stitch-home .ac-x {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ac-ink-2);
+  cursor: pointer;
+}
+
+.stitch-home .ac-x:hover {
+  background: rgb(35 31 32 / 0.06);
+  color: var(--ac-ink);
+}
+
+.stitch-home .ac-role {
+  margin: 8px 18px 0;
+  align-self: flex-start;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgb(35 31 32 / 0.06);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ac-ink-2);
+}
+
+.stitch-home .ac-tabs {
+  display: flex;
+  gap: 18px;
+  margin: 18px 18px 0;
+  border-bottom: 1px solid var(--ac-line);
+}
+
+.stitch-home .ac-tab {
+  padding: 0 0 10px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ac-ink-2);
+  cursor: pointer;
+  position: relative;
+}
+
+.stitch-home .ac-tab.on {
+  color: var(--ac-ink);
+}
+
+.stitch-home .ac-tab.on::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--sh-brand);
+}
+
+.stitch-home .ac-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px;
+}
+
+.stitch-home .ac-panel__foot {
+  padding: 14px 18px 18px;
+  border-top: 1px solid var(--ac-line);
+}
+
+/* ============================================================
+   HELP — ANSWERS
+   ============================================================ */
+.stitch-home .sup-tabs {
+  display: flex;
+  gap: 22px;
+  margin: 0 0 18px;
+  border-bottom: 1px solid var(--ac-line);
+}
+
+.stitch-home .sup-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 0 11px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ac-ink-2);
+  cursor: pointer;
+  position: relative;
+}
+
+.stitch-home .sup-tab.on {
+  color: var(--ac-ink);
+}
+
+.stitch-home .sup-tab.on::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--sh-brand);
+}
+
+.stitch-home .sup-tab span {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--ac-line-soft);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.stitch-home .faq-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  margin-bottom: 14px;
+  border: 1px solid var(--ac-line);
+  border-radius: 999px;
+  background: var(--ac-surface);
+  color: var(--ac-ink-3);
+}
+
+.stitch-home .faq-search:focus-within {
+  border-color: var(--sh-brand);
+  box-shadow: 0 0 0 1px var(--sh-brand);
+}
+
+.stitch-home .faq-search input {
+  flex: 1;
+  min-width: 0;
+  min-height: 46px;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--ac-ink);
+}
+
+.stitch-home .faq-search input:focus {
+  outline: none;
+}
+
+.stitch-home .faq-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 16px;
+}
+
+.stitch-home .faq-grid {
+  display: grid;
+  /* Two up on a phone, more as the page widens. The minimum is what decides
+     it: at 240px a 325px screen fits only one, which is why the tiles came out
+     as full-width rows instead of a grid. */
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.stitch-home .faq-grid > li {
+  display: flex;
+}
+
+/* A 148px minimum is what gets two up on a 390px phone, but left to itself it
+   also puts six across a desktop. Capped, so the tiles stay a comfortable size
+   rather than as small as they are allowed to be. */
+@media (min-width: 760px) {
+  .stitch-home .faq-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.stitch-home .faq-card {
+  /* A tile, not a row: the disc sits above the question, so the grid can be
+     read by shape before it is read by text. */
+  display: flex;
+  flex-direction: column;
+  /* Centred: the disc is the thing that identifies the tile, so it sits on the
+     tile's axis rather than hard against one edge. */
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 132px;
+  padding: 16px;
+  border: 1px solid var(--ac-line);
+  border-radius: var(--ac-r);
+  background: var(--faq-tint, var(--ac-surface));
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.stitch-home .faq-card:hover {
+  border-color: #d8d3bd;
+  box-shadow:
+    0 1px 2px rgb(35 31 32 / 0.05),
+    0 10px 24px -18px rgb(35 31 32 / 0.35);
+}
+
+/* Tinted disc per topic, so the grid is scannable by shape as well as text. */
+.stitch-home .faq-card__i {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+}
+
+.stitch-home .faq-card__i--gold {
+  background: #fdf3dc;
+  color: #7a5600;
+}
+
+.stitch-home .faq-card__i--blue {
+  background: #e9f1fd;
+  color: #24507f;
+}
+
+.stitch-home .faq-card__i--rose {
+  background: #fdeaed;
+  color: #a4162c;
+}
+
+.stitch-home .faq-card__i--green {
+  background: #e4efe9;
+  color: #1f5c3d;
+}
+
+/* Tinted wash per tone, a long way below the disc so the glyph stays the
+   loudest thing on the tile. */
+.stitch-home .faq-card--gold {
+  --faq-tint: #fdfaf2;
+}
+
+.stitch-home .faq-card--blue {
+  --faq-tint: #f6f9fe;
+}
+
+.stitch-home .faq-card--rose {
+  --faq-tint: #fdf7f8;
+}
+
+.stitch-home .faq-card--green {
+  --faq-tint: #f5faf7;
+}
+
+.stitch-home .faq-card__q {
+  /* At the foot of the tile, so questions of different lengths still line up
+     with each other across a row. */
+  margin-top: auto;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- one answer ---------- */
+.stitch-home .faq-answer {
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-line);
+  border-radius: var(--ac-r);
+  box-shadow:
+    0 1px 2px rgb(35 31 32 / 0.04),
+    0 8px 24px -18px rgb(35 31 32 / 0.18);
+  overflow: hidden;
+}
+
+.stitch-home .faq-back {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--ac-line);
+  border-radius: 50%;
+  background: var(--ac-surface);
+  color: var(--ac-ink-2);
+  cursor: pointer;
+}
+
+.stitch-home .faq-answer__b {
+  padding: 18px;
+}
+
+.stitch-home .faq-intro {
+  margin: 0 0 14px;
+  color: var(--ac-ink-2);
+  max-width: 62ch;
+}
+
+.stitch-home .faq-steps {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 62ch;
+}
+
+.stitch-home .faq-steps li {
+  padding-left: 4px;
+  line-height: 1.55;
+}
+
+.stitch-home .faq-steps li::marker {
+  font-weight: 700;
+  color: var(--ac-ink-3);
+}
+
+.stitch-home .faq-note {
+  margin: 16px 0 0;
+  padding: 11px 13px;
+  border-left: 3px solid var(--sh-gold, #f5b301);
+  border-radius: 0 var(--ac-r-sm) var(--ac-r-sm) 0;
+  background: var(--ac-field);
+  font-size: 12.5px;
+  color: var(--ac-ink-2);
+  max-width: 62ch;
+}
+
+.stitch-home .faq-answer__f {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  border-top: 1px solid var(--ac-line-soft);
+  background: var(--ac-field);
+}
+
+.stitch-home .faq-answer__f p {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ---------- contact ---------- */
+.stitch-home .con {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.stitch-home .con-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 4px;
+  border-top: 1px solid var(--ac-line-soft);
+  color: inherit;
+  text-decoration: none;
+}
+
+.stitch-home .con li:first-child .con-row {
+  border-top: 0;
+}
+
+.stitch-home .con-row:hover {
+  color: var(--sh-brand-deep, #c8102e);
+}
+
+.stitch-home .con-row__i {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--ac-line-soft);
+  color: var(--ac-ink-2);
+}
+
+.stitch-home .con-row:hover .con-row__i {
+  background: #fdeaed;
+  color: var(--sh-brand-deep, #c8102e);
+}
+
+.stitch-home .con-row__t {
+  flex: 1;
+  min-width: 0;
+}
+
+.stitch-home .con-row__t strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.stitch-home .con-row__t small {
+  display: block;
+  margin-top: 1px;
+  font-size: 12px;
+  color: var(--ac-ink-2);
+}
+
+/* ============================================================
+   SUPPORT
+   ============================================================ */
+/* `hidden` has to be re-stated: the UA's `[hidden] { display: none }` is a
+   single attribute selector, so this rule's own `display: grid` outranks it and
+   the ticket pane stayed on screen underneath the answers. */
+.stitch-home .sup[hidden] {
+  display: none;
+}
+
+.stitch-home .sup {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* The one thing to do, when there is nothing else on the page. */
+.stitch-home .sup-first {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 56px 24px;
+  text-align: center;
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-line);
+  border-radius: var(--ac-r);
+  box-shadow:
+    0 1px 2px rgb(35 31 32 / 0.04),
+    0 8px 24px -18px rgb(35 31 32 / 0.18);
+}
+
+.stitch-home .sup-first__i {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--ac-line-soft);
+  color: var(--ac-ink-2);
+}
+
+.stitch-home .sup-first h2 {
+  margin: 4px 0 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.stitch-home .sup-first p {
+  margin: 0 0 6px;
+  max-width: 46ch;
+  color: var(--ac-ink-2);
+}
+
+.stitch-home .sup-list,
+.stitch-home .sup-pane {
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-line);
+  border-radius: var(--ac-r);
+  box-shadow:
+    0 1px 2px rgb(35 31 32 / 0.04),
+    0 8px 24px -18px rgb(35 31 32 / 0.18);
+}
+
+.stitch-home .sup-list {
+  overflow: hidden;
+}
+
+/* Wraps rather than scrolls. `overflow-x: auto` put a permanent grey scrollbar
+   under a row of four chips that already fitted. */
+.stitch-home .sup-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 10px;
+  border-bottom: 1px solid var(--ac-line-soft);
+}
+
+.stitch-home .sup-filters[hidden] {
+  display: none;
+}
+
+.stitch-home .sup-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ac-ink-2);
+  cursor: pointer;
+}
+
+.stitch-home .sup-filter span {
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.stitch-home .sup-filter:hover {
+  background: var(--ac-line-soft);
+}
+
+.stitch-home .sup-filter.on {
+  background: #231f20;
+  color: #f4eee4;
+}
+
+.stitch-home .sup-threads {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.stitch-home .sup-thread {
+  display: block;
+  width: 100%;
+  padding: 13px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--ac-line-soft);
+  border-left: 3px solid transparent;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.stitch-home .sup-thread:hover {
+  background: #fdfcf6;
+}
+
+.stitch-home .sup-thread.on {
+  background: #fdfcf6;
+  border-left-color: var(--sh-brand);
+}
+
+.stitch-home .sup-thread__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stitch-home .sup-thread__s {
+  font-size: 13.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stitch-home .sup-thread__m {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+  padding-left: 16px;
+  font-size: 11.5px;
+  color: var(--ac-ink-2);
+}
+
+.stitch-home .sup-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ac-ink-3);
+}
+
+.stitch-home .sup-dot--open {
+  background: #f5b301;
+}
+
+.stitch-home .sup-dot--assigned {
+  background: var(--sh-brand);
+}
+
+.stitch-home .sup-dot--resolved {
+  background: var(--ac-ok);
+}
+
+.stitch-home .sup-empty,
+.stitch-home .sup-none {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  padding: 40px 20px;
+  color: var(--ac-ink-2);
+  text-align: center;
+  font-size: 13px;
+}
+
+.stitch-home .sup-empty p,
+.stitch-home .sup-none p {
+  margin: 0;
+}
+
+.stitch-home .sup-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+  padding: 0;
+}
+
+.stitch-home .sup-pane__h {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px;
+  border-bottom: 1px solid var(--ac-line-soft);
+}
+
+.stitch-home .sup-pane__t {
+  flex: 1;
+  min-width: 0;
+}
+
+.stitch-home .sup-pane__h h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.stitch-home .sup-pane__t p {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 5px 0 0;
+  font-size: 11.5px;
+  color: var(--ac-ink-2);
+}
+
+.stitch-home .sup-chip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--ac-line-soft);
+  color: var(--ac-ink-2);
+}
+
+.stitch-home .sup-chip--open {
+  background: #fdf3dc;
+  color: #7a5600;
+}
+
+.stitch-home .sup-chip--assigned {
+  background: var(--ac-bad-soft);
+  color: var(--ac-bad);
+}
+
+.stitch-home .sup-chip--resolved {
+  background: var(--ac-ok-soft);
+  color: var(--ac-ok);
+}
+
+/* The list is always on screen on a wide viewport, so there is nothing to go
+   back to; the control is for the stacked layout. */
+.stitch-home .sup-back {
+  display: none;
+}
+
+/* The answer view always has somewhere to go back to, at any width. */
+.stitch-home .faq-back {
+  display: grid;
+}
+
+.stitch-home .sup-acts {
+  display: flex;
+  gap: 4px;
+  flex: none;
+}
+
+.stitch-home .sup-acts button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ac-ink-3);
+  cursor: pointer;
+}
+
+.stitch-home .sup-acts button:hover {
+  background: var(--ac-line-soft);
+  color: var(--ac-ink);
+}
+
+.stitch-home .sup-edit,
+.stitch-home .sup-compose {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+
+.stitch-home .sup-compose .sup-pane__h {
+  margin: -16px -16px 0;
+}
+
+.stitch-home .sup-edit {
+  border-bottom: 1px solid var(--ac-line-soft);
+  background: var(--ac-field);
+}
+
+.stitch-home .sup-edit__a {
+  display: flex;
+  gap: 8px;
+}
+
+.stitch-home .sup-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.stitch-home .sup-cat {
+  padding: 8px 13px;
+  border: 1px solid var(--ac-line);
+  border-radius: 999px;
+  background: var(--ac-surface);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ac-ink-2);
+  cursor: pointer;
+}
+
+.stitch-home .sup-cat:hover {
+  background: var(--ac-line-soft);
+}
+
+.stitch-home .sup-cat.on {
+  background: #231f20;
+  border-color: #231f20;
+  color: #f4eee4;
+}
+
+.stitch-home .sup-msgs {
+  list-style: none;
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.stitch-home .sup-msg {
+  max-width: 82%;
+  padding: 10px 13px;
+  border-radius: 13px 13px 13px 4px;
+  background: var(--ac-line-soft);
+}
+
+.stitch-home .sup-msg.mine {
+  align-self: flex-end;
+  border-radius: 13px 13px 4px 13px;
+  background: #fdeeee;
+}
+
+.stitch-home .sup-msg__w {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 3px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ac-ink-2);
+}
+
+.stitch-home .sup-msg__w span {
+  font-weight: 500;
+  color: var(--ac-ink-3);
+}
+
+.stitch-home .sup-msg__b {
+  margin: 0;
+  font-size: 13.5px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.stitch-home .sup-reply {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--ac-line-soft);
+}
+
+.stitch-home .sup-reply textarea {
+  flex: 1;
+  min-height: 44px;
+  padding: 11px 12px;
+  border: 1px solid var(--ac-line);
+  border-radius: var(--ac-r-sm);
+  background: var(--ac-field);
+  font: inherit;
+  resize: vertical;
+}
+
+.stitch-home .sup-reply textarea:focus {
+  outline: 2px solid var(--sh-brand);
+  outline-offset: 1px;
+  background: var(--ac-surface);
+}
+
+.stitch-home .sup-reply .ac-btn {
+  flex: none;
+  width: 44px;
+  padding: 0;
+}
+
+/* ---------- stacked ---------- */
+@media (max-width: 860px) {
+  .stitch-home .sup {
+    grid-template-columns: 1fr;
+  }
+
+  /* One at a time on a phone: the list, or the thread that was opened. */
+  .stitch-home .sup--open .sup-list {
+    display: none;
+  }
+
+  .stitch-home .sup:not(.sup--open) .sup-pane {
+    display: none;
+  }
+
+  .stitch-home .sup-back {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--ac-line);
+    border-radius: 50%;
+    background: var(--ac-surface);
+    color: var(--ac-ink-2);
+    cursor: pointer;
+  }
+
+  .stitch-home .sup-threads {
+    max-height: none;
+  }
+
+  .stitch-home .ac-panel {
+    width: 100vw;
+  }
+
+  /* Body text stays readable on a phone. */
+  .stitch-home .ac-f input,
+  .stitch-home .ac-f select,
+  .stitch-home .ac-f textarea,
+  .stitch-home .sup-reply textarea {
+    font-size: 16px;
+  }
+}
+
+.stitch-home .ac :focus-visible,
+.stitch-home .ac-panel :focus-visible {
+  outline: 2px solid var(--sh-brand);
+  outline-offset: 2px;
+}
