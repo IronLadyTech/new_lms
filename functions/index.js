@@ -1275,9 +1275,22 @@ exports.resolvePhoneAccess = onCall(async (request) => {
     isConfigured: () => zoho.isConfigured(),
     getAccessToken: zoho.getAccessToken,
     getApiDomain: zoho.getApiDomain,
+    searchLeadsByPhone: zoho.searchLeadsByPhone,
     syncEntitlementsFromZoho: (firestore, email) =>
       zoho.syncEntitlementsFromZoho(firestore, email, null),
   });
+});
+
+/** App guest typed her name: save it, and create her Zoho Lead if the number was not in Zoho. */
+exports.registerAppGuest = onCall({ region: 'us-central1' }, async (request) => {
+  const { runRegisterAppGuest } = require('./appGuests');
+  return runRegisterAppGuest(db, { createLead: zoho.isConfigured() ? zoho.createLead : null }, request.data || {});
+});
+
+/** App guest activity (opens, challenge, recordings) for the CMS guest list. */
+exports.trackAppGuest = onCall({ region: 'us-central1' }, async (request) => {
+  const { runTrackAppGuest } = require('./appGuests');
+  return runTrackAppGuest(db, request.data || {});
 });
 
 /** First-login welcome — city / domain / B-HAG on profile (+ Zoho Lead when mapped). */

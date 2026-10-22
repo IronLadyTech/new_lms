@@ -5,6 +5,7 @@
 const admin = require('firebase-admin');
 const ilUsers = require('./zohoIlUsers');
 const provisioning = require('./zohoProvisioning');
+const { classifyGuest, recordGuestVisit } = require('./appGuests');
 
 function normalizePhoneE164(raw) {
   const digits = String(raw || '').replace(/\D/g, '');
@@ -25,7 +26,35 @@ function normalizePhoneE164(raw) {
 function emailFromIlUser(ilUser) {
   if (!ilUser) return '';
   const fields = ilUsers.ilUserToCredentialFields(ilUser);
-  return String(fields.Email || ilUser.Email || '').trim();
+  const direct = String(fields.Email || ilUser.Email || '').trim();
+  if (direct) return direct;
+  // Same IL_Users record: some rows keep the email in Username.
+  const username = String(fields.Username || ilUser.Username || '').trim();
+  return /\S+@\S+\.\S+/.test(username) ? username : '';
+}
+
+/**
+ * Guest sign-in: the number has no program seat. Look at every Lead on it to decide
+ * Masterclass (recordings) or explore, remember the guest for the CMS, never create
+ * an account. `needsCx` adds a reason CX should check this number.
+ */
+async function guestAccess(db, phone, deps, needsCx = null) {
+  let leads = [];
+  if (deps.searchLeadsByPhone) {
+    try {
+      leads = await deps.searchLeadsByPhone(phone);
+    } catch (err) {
+      console.warn('guestAccess lead lookup:', err.message);
+    }
+  }
+  const info = classifyGuest(leads);
+  if (needsCx) info.needsCx = needsCx;
+  try {
+    await recordGuestVisit(db, phone, info);
+  } catch (err) {
+    console.warn('guestAccess record:', err.message);
+  }
+  return { ok: true, guest: true, tier: info.tier, phone };
 }
 
 function displayNameFromIlUser(ilUser, email) {
@@ -198,15 +227,18 @@ async function resolvePhoneAccess(db, phoneRaw, deps) {
 
   if (!ilUser) {
     if (cmsEnroll) return provisionFromCmsEnrollment(db, phone, cmsEnroll);
-    return { ok: true, guest: true, phone };
+    return guestAccess(db, phone, deps);
   }
 
   const email = emailFromIlUser(ilUser);
   if (!email) {
-    return {
-      ok: false,
-      reason: 'This number is in Zoho but has no email. Ask CEM to fix the IL_Users record.',
-    };
+    // Do not stop her: guest flow now, and CX sees the number to fix in Zoho.
+    return guestAccess(
+      db,
+      phone,
+      deps,
+      'In IL_Users but with no email — add it so she gets her program.'
+    );
   }
 
   const displayName = displayNameFromIlUser(ilUser, email);

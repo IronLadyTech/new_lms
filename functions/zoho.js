@@ -441,6 +441,54 @@ async function searchLeadByPhone(phone) {
   return null;
 }
 
+/**
+ * Every Lead on this mobile number (Phone or Mobile, any format) — not just the
+ * first — so a shared family number is noticed instead of guessed.
+ * @returns [{ id, status, email, name }]
+ */
+async function searchLeadsByPhone(phone) {
+  const token = await getAccessToken();
+  if (!token || !phone) return [];
+  const byId = new Map();
+  for (const variant of phoneSearchVariants(phone)) {
+    const criteria = encodeURIComponent(`((Phone:equals:${variant})or(Mobile:equals:${variant}))`);
+    const res = await zohoApiFetch(
+      `${getApiDomain()}/crm/v2/${getModule()}/search?criteria=${criteria}`,
+      { headers: { Authorization: `Zoho-oauthtoken ${token}` } }
+    );
+    if (res.status === 204 || !res.ok) continue;
+    const body = await res.json();
+    (body?.data || []).forEach((lead) => {
+      if (!lead?.id || byId.has(lead.id)) return;
+      byId.set(lead.id, {
+        id: lead.id,
+        status: lead.Lead_Status || '',
+        email: lead.Email || '',
+        name: lead.Full_Name || [lead.First_Name, lead.Last_Name].filter(Boolean).join(' '),
+      });
+    });
+    if (byId.size) break;
+  }
+  return [...byId.values()];
+}
+
+/** Create one Lead (no duplicate merge — callers check the number first). Returns its id. */
+async function createLead(fields) {
+  const token = await getAccessToken();
+  if (!token) throw new Error('Unable to obtain Zoho access token');
+  const res = await zohoApiFetch(`${getApiDomain()}/crm/v2/${getModule()}`, {
+    method: 'POST',
+    headers: { Authorization: `Zoho-oauthtoken ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data: [fields], trigger: ['workflow'] }),
+  });
+  const body = await res.json();
+  const row = body?.data?.[0];
+  if (!res.ok || row?.status === 'error') {
+    throw new Error(row?.message || body?.message || 'Zoho lead create failed');
+  }
+  return row?.details?.id || null;
+}
+
 async function updateLeadById(leadId, fields) {
   const token = await getAccessToken();
   if (!token || !leadId) throw new Error('Unable to update Zoho lead');
@@ -1244,6 +1292,9 @@ module.exports = {
   updateLeadWelcomeFields,
   getLeadByEmail,
   getLeadById,
+  searchLeadByPhone,
+  searchLeadsByPhone,
+  createLead,
   syncUserToZoho,
   syncPasswordCredentialToZoho,
   syncCredentialOnAuth,
