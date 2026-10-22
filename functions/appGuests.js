@@ -62,6 +62,7 @@ function classifyGuest(leads = []) {
   return {
     tier: mc ? 'mc' : 'explore',
     leadStatus: primary?.status || '',
+    leadName: primary?.name || '',
     zohoLeadId: primary?.id || null,
     leadCount: leads.length,
     inZoho: leads.length > 0,
@@ -82,6 +83,7 @@ async function recordGuestVisit(db, phone, info = {}) {
       phone: `+91${key}`,
       tier: info.tier || 'explore',
       leadStatus: info.leadStatus || '',
+      ...(info.leadName ? { zohoLeadName: info.leadName } : {}),
       inZoho: Boolean(info.inZoho),
       ...(info.zohoLeadId ? { zohoLeadId: info.zohoLeadId } : {}),
       needsCx: info.needsCx || null,
