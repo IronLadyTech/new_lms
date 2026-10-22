@@ -38,12 +38,24 @@ function generateFallback(ctx, job, lastId) {
 
   if (job === 'nudge') {
     if (ctx.surface === 'home') {
+      // She has not written her 3-month goal yet: one gentle reminder (never asked once it is there).
+      if (Array.isArray(ctx.profileMissing) && ctx.profileMissing.includes('bhag')) {
+        candidates.push({
+          id: 'home-add-bhag',
+          message: name
+            ? `${name}, add your 3-month goal in Profile — I'll shape your next steps around it.`
+            : "Add your 3-month goal in Profile — I'll shape your next steps around it.",
+          job: 'nudge',
+          source: 'fallback',
+        });
+      }
       if (next && pct < 100) {
+        const towardGoal = ctx.goal?.text ? ' One more step toward your goal.' : '';
         candidates.push({
           id: `home-progress-${next.id}`,
           message: name
-            ? `${name}, you're at ${Math.round(pct)}% in ${prog}. Next up: ${next.title}.`
-            : `You're at ${Math.round(pct)}% in ${prog}. Next up: ${next.title}.`,
+            ? `${name}, you're at ${Math.round(pct)}% in ${prog}. Next up: ${next.title}.${towardGoal}`
+            : `You're at ${Math.round(pct)}% in ${prog}. Next up: ${next.title}.${towardGoal}`,
           job: 'nudge',
           source: 'fallback',
         });

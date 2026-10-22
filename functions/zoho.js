@@ -168,7 +168,15 @@ async function loadCourseTitles(db) {
   }
 }
 
-function leadPayload({ uid, email, displayName, enrolledCourses = [], role, blocked, courseTitles }) {
+function leadPayload({
+  uid,
+  email,
+  displayName,
+  enrolledCourses = [],
+  role,
+  blocked,
+  courseTitles,
+}) {
   const titles = courseTitles || {};
   const courses = (Array.isArray(enrolledCourses) ? enrolledCourses : []).map(
     (id) => titles[id] || id
@@ -367,9 +375,12 @@ async function searchLeadByEmail(email) {
   if (!token || !email) return null;
 
   const criteria = encodeURIComponent(`(Email:equals:${email})`);
-  const res = await zohoApiFetch(`${getApiDomain()}/crm/v2/${getModule()}/search?criteria=${criteria}`, {
-    headers: { Authorization: `Zoho-oauthtoken ${token}` },
-  });
+  const res = await zohoApiFetch(
+    `${getApiDomain()}/crm/v2/${getModule()}/search?criteria=${criteria}`,
+    {
+      headers: { Authorization: `Zoho-oauthtoken ${token}` },
+    }
+  );
 
   if (res.status === 204) return null;
   if (!res.ok) return null;
@@ -416,9 +427,7 @@ async function searchLeadByPhone(phone) {
   if (!token || !phone) return null;
 
   for (const variant of phoneSearchVariants(phone)) {
-    const criteria = encodeURIComponent(
-      `((Phone:equals:${variant})or(Mobile:equals:${variant}))`
-    );
+    const criteria = encodeURIComponent(`((Phone:equals:${variant})or(Mobile:equals:${variant}))`);
     const res = await zohoApiFetch(
       `${getApiDomain()}/crm/v2/${getModule()}/search?criteria=${criteria}`,
       { headers: { Authorization: `Zoho-oauthtoken ${token}` } }
@@ -466,7 +475,8 @@ async function updateLeadByIdResilient(leadId, fields) {
       return await updateLeadById(leadId, payload);
     } catch (err) {
       const msg = String(err.message || '');
-      const match = msg.match(/"api_name":"([^"]+)"/) || msg.match(/api_name[":\s]+([A-Za-z0-9_]+)/);
+      const match =
+        msg.match(/"api_name":"([^"]+)"/) || msg.match(/api_name[":\s]+([A-Za-z0-9_]+)/);
       const badKey = match?.[1];
       if (!badKey || !(badKey in payload)) throw err;
       delete payload[badKey];
@@ -495,6 +505,11 @@ function welcomeFieldsToLeadPayload(fields = {}) {
   }
   if (fields.lepBatch) {
     payload.LEP_Batch = fields.lepBatch;
+  }
+  if (fields.salaryRange) {
+    // Zoho "Annual Income" picklist. A value Zoho does not list yet is dropped by
+    // updateLeadByIdResilient and stays saved on the LMS profile.
+    payload.Annual_Income = fields.salaryRange;
   }
   return payload;
 }
@@ -1086,10 +1101,9 @@ async function runZohoReconcile(db, options = {}) {
     },
     writeWatermark: async (value) => {
       if (catchUpFrom) return;
-      await db.doc(reconciler.WATERMARK_DOC).set(
-        { ilUsersModifiedSince: value, lastRunAt: new Date() },
-        { merge: true }
-      );
+      await db
+        .doc(reconciler.WATERMARK_DOC)
+        .set({ ilUsersModifiedSince: value, lastRunAt: new Date() }, { merge: true });
     },
     queryIlUsers: async (since, limit, offset = 0) => {
       const token = await getAccessToken();

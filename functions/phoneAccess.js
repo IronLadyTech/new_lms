@@ -11,7 +11,13 @@ function normalizePhoneE164(raw) {
   if (!digits) return null;
   if (digits.length === 10) return `+91${digits}`;
   if (digits.startsWith('91') && digits.length === 12) return `+${digits}`;
-  if (String(raw || '').trim().startsWith('+') && digits.length >= 11) return `+${digits}`;
+  if (
+    String(raw || '')
+      .trim()
+      .startsWith('+') &&
+    digits.length >= 11
+  )
+    return `+${digits}`;
   if (digits.length >= 11 && digits.length <= 15) return `+${digits}`;
   return null;
 }
@@ -260,18 +266,15 @@ async function resolvePhoneAccess(db, phoneRaw, deps) {
     }
   }
 
-  await db
-    .collection('users')
-    .doc(authUser.uid)
-    .set(
-      {
-        email,
-        phoneNumber: phone,
-        displayName,
-        updatedAt: new Date(),
-      },
-      { merge: true }
-    );
+  await db.collection('users').doc(authUser.uid).set(
+    {
+      email,
+      phoneNumber: phone,
+      displayName,
+      updatedAt: new Date(),
+    },
+    { merge: true }
+  );
 
   let cmsBatchId = null;
   if (cmsEnroll) {
@@ -298,8 +301,12 @@ async function updateMyWelcomeProfile(db, uid, fields, deps) {
 
   const allowed = {};
   if (typeof fields?.city === 'string' && fields.city.trim()) allowed.city = fields.city.trim();
-  if (typeof fields?.domain === 'string' && fields.domain.trim()) allowed.domain = fields.domain.trim();
+  if (typeof fields?.domain === 'string' && fields.domain.trim())
+    allowed.domain = fields.domain.trim();
   if (typeof fields?.bhag === 'string' && fields.bhag.trim()) allowed.bhag = fields.bhag.trim();
+  if (typeof fields?.salaryRange === 'string' && fields.salaryRange.trim()) {
+    allowed.salaryRange = fields.salaryRange.trim().slice(0, 40);
+  }
   if (typeof fields?.lepBatch === 'string' && fields.lepBatch.trim()) {
     allowed.lepBatch = fields.lepBatch.trim();
   }
@@ -323,12 +330,14 @@ async function updateMyWelcomeProfile(db, uid, fields, deps) {
     firestorePatch.leadershipRole = allowed.domain;
   }
   if (allowed.bhag) firestorePatch.bhag = allowed.bhag;
-  if (allowed.city || allowed.domain || allowed.bhag) {
+  if (allowed.salaryRange) firestorePatch.salaryRange = allowed.salaryRange;
+  if (allowed.city || allowed.domain || allowed.bhag || allowed.salaryRange) {
     firestorePatch.zohoLead = {
       ...(prev.zohoLead || {}),
       ...(allowed.city ? { City: allowed.city } : {}),
       ...(allowed.domain ? { Industry: allowed.domain, LMS_Domain: allowed.domain } : {}),
       ...(allowed.bhag ? { Month_B_HAG: allowed.bhag, LMS_BHAG: allowed.bhag } : {}),
+      ...(allowed.salaryRange ? { Annual_Income: allowed.salaryRange } : {}),
       id: prev.zohoLeadId || prev.leadId || prev.zohoLead?.id || null,
     };
   }
