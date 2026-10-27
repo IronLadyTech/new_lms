@@ -4,7 +4,7 @@
  * Used by sendParticipantNotificationTest and lepNotificationScheduler.
  */
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
-const { getMessaging } = require('firebase-admin/messaging');
+const { sendPushToUser } = require('./pushDelivery');
 
 const PUSH_BRAND_IMAGE_URL =
   'https://lmsironlady-app.web.app/notification-logo.png';
@@ -23,35 +23,19 @@ async function writeInAppNotification(db, targetUid, payload) {
   return ref.id;
 }
 
+/** Push to every device she is signed in on (pushDelivery.js). */
 async function sendPush(db, targetUid, { title, body, go, eventCode }) {
-  const user = await db.collection('users').doc(targetUid).get();
-  const token = user.exists ? user.data().fcmToken : null;
-  if (!token) return { sent: false, reason: 'no_fcm_token' };
-
-  const data = {
-    eventCode: eventCode || '',
-    go: JSON.stringify(go || { to: 'myProgram' }),
-  };
-
-  await getMessaging().send({
-    token,
-    notification: {
+  const result = await sendPushToUser(
+    targetUid,
+    {
       title,
       body,
       imageUrl: PUSH_BRAND_IMAGE_URL,
+      data: { eventCode: eventCode || '', go: JSON.stringify(go || { to: 'myProgram' }) },
     },
-    data,
-    android: {
-      priority: 'high',
-      notification: {
-        channelId: 'default',
-        icon: 'notification_icon',
-        color: '#ED1D24',
-        imageUrl: PUSH_BRAND_IMAGE_URL,
-      },
-    },
-  });
-  return { sent: true };
+    db
+  );
+  return result.sent ? { sent: true, devices: result.devices } : { sent: false, reason: result.reason || 'push_failed' };
 }
 
 /**

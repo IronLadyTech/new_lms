@@ -1,5 +1,6 @@
 /**
- * LEP batch notification scheduler (v1 — session reminders only).
+ * LEP batch notification scheduler — session reminders (sessionStart / sessionEnd) and
+ * clock-time reminders (day1 / daily / weekly, see lepTimeAnchors.js).
  *
  * Deploy on lmsironlady (D:\LMS\new_lms\functions):
  *
@@ -16,7 +17,16 @@
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { deliverCmsEventToUser } = require('./lepNotificationDeliver');
 const { sessionAnchorFires } = require('./lepNotificationAnchors');
-const { finishText, reachesLearner, sendableNow } = require('./lepReminderRules');
+const { timeAnchorFires } = require('./lepTimeAnchors');
+const { doneTaskIds, messageForLearner, taskReminderFires, taskReminderKind } = require('./lepTaskReminders');
+const {
+  TIME_ANCHOR_VARS,
+  fillableWith,
+  finishText,
+  reachesLearner,
+  reachesLearnerOnDay,
+  sendableNow,
+} = require('./lepReminderRules');
 const { inAudience } = require('./learnerSegments');
 const { learnersForBatch } = require('./cmsBatchLearners');
 
@@ -128,6 +138,15 @@ async function runLepNotificationScheduler() {
   const sessionEvents = events.filter(
     (e) => (e.anchor?.type === 'sessionStart' || e.anchor?.type === 'sessionEnd') && sendableNow(e)
   );
+  // Clock-time rules whose text needs only name / batch / date (score, task lists wait for data).
+  const timeEvents = events.filter(
+    (e) =>
+      ['day1', 'daily', 'weekly'].includes(e.anchor?.type) &&
+      sendableNow(e) &&
+      fillableWith(e, TIME_ANCHOR_VARS)
+  );
+  // Task open / due / overdue (lepTaskReminders) — "only if not done" is checked per learner there.
+  const taskEvents = events.filter((e) => taskReminderKind(e));
 
   let delivered = 0;
   let skipped = 0;
@@ -135,6 +154,15 @@ async function runLepNotificationScheduler() {
   for (const batch of batches) {
     const learners = await participantsForBatch(db, batch);
     if (!learners.length) continue;
+    // Her handed-in LEP tasks, loaded once per run and only if a due / overdue fire needs them.
+    const doneByUid = new Map();
+    const doneFor = async (uid) => {
+      if (!doneByUid.has(uid)) {
+        const snap = await db.collection('lep_submissions').where('userId', '==', uid).get();
+        doneByUid.set(uid, doneTaskIds(snap.docs.map((d) => d.data())));
+      }
+      return doneByUid.get(uid);
+    };
 
     for (const event of sessionEvents) {
       const fires = sessionAnchorFires(batch, event, windowStartMs, windowEndMs);
@@ -161,6 +189,65 @@ async function runLepNotificationScheduler() {
           batchId: batch.id,
           eventCode: event.code,
           sessionCode: fire.session.code,
+          fireAtMs: fire.fireAtMs,
+          recipientCount: recipients,
+        });
+      }
+    }
+
+    for (const event of timeEvents) {
+      for (const fire of timeAnchorFires(batch, event, windowStartMs, windowEndMs)) {
+        if (await alreadySent(db, fire.dedupeKey)) {
+          skipped += 1;
+          continue;
+        }
+        let recipients = 0;
+        for (const { uid, data } of learners) {
+          if (!reachesLearnerOnDay(fire.offset, data.programAccess?.lep?.paymentStatus)) continue;
+          const name = data.displayName || data.firstName || data.name;
+          const vars = { ...fire.vars, name: name ? String(name).split(' ')[0] : 'there' };
+          await deliverCmsEventToUser(db, uid, fire.event, vars, {
+            title: finishText(fire.event.title || fire.event.name || 'Iron Lady', vars),
+            body: finishText(fire.event.body, vars),
+            go: { to: 'home' },
+          });
+          delivered += 1;
+          recipients += 1;
+        }
+        await markSent(db, fire.dedupeKey, {
+          batchId: batch.id,
+          eventCode: event.code,
+          day: fire.day,
+          fireAtMs: fire.fireAtMs,
+          recipientCount: recipients,
+        });
+      }
+    }
+
+    for (const event of taskEvents) {
+      for (const fire of taskReminderFires(batch, event, windowStartMs, windowEndMs)) {
+        if (await alreadySent(db, fire.dedupeKey)) {
+          skipped += 1;
+          continue;
+        }
+        let recipients = 0;
+        for (const { uid, data } of learners) {
+          const name = data.displayName || data.firstName || data.name;
+          const msg = messageForLearner(fire, event, {
+            paymentStatus: data.programAccess?.lep?.paymentStatus,
+            doneIds: fire.kind === 'open' ? new Set() : await doneFor(uid),
+            name: name ? String(name).split(' ')[0] : 'there',
+          });
+          if (!msg) continue;
+          await deliverCmsEventToUser(db, uid, event, {}, msg);
+          delivered += 1;
+          recipients += 1;
+        }
+        await markSent(db, fire.dedupeKey, {
+          batchId: batch.id,
+          eventCode: event.code,
+          day: fire.day,
+          tasks: fire.tasks.map((t) => t.id),
           fireAtMs: fire.fireAtMs,
           recipientCount: recipients,
         });

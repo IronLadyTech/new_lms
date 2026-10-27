@@ -26,6 +26,28 @@ function reachesLearner(session, paymentStatus) {
   return true;
 }
 
+/**
+ * A clock-time reminder (lepTimeAnchors) on a day `offset` from Day 1. Part-paid
+ * learners hear nothing after Day 2 — the same line as their S0–S2 sessions.
+ */
+function reachesLearnerOnDay(offset, paymentStatus) {
+  if (paymentStatus === 'register') return offset <= 1;
+  return true;
+}
+
+/** Placeholders a clock-time reminder can fill today (no session, task or score data). */
+const TIME_ANCHOR_VARS = new Set(['name', 'batch', 'date']);
+
+/**
+ * True when every {{placeholder}} in the title and body can be filled. "Your score
+ * this week: {{score}}" waits for score data rather than going out as "score: ."
+ */
+function fillableWith(event, available) {
+  const text = `${event?.title || ''} ${event?.body || ''}`;
+  const used = [...text.matchAll(/\{\{(\w+)\}\}/g)].map((m) => m[1]);
+  return used.every((v) => available.has(v));
+}
+
 function fillTemplate(text, vars) {
   return String(text || '').replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? '');
 }
@@ -80,6 +102,9 @@ module.exports = {
   REGISTERED_SESSION_CODES,
   sendableNow,
   reachesLearner,
+  reachesLearnerOnDay,
+  TIME_ANCHOR_VARS,
+  fillableWith,
   finishText,
   adjustFireAt,
 };

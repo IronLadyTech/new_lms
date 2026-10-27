@@ -4,6 +4,7 @@
  */
 const { HttpsError } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
+const { sendPushToUser } = require('./pushDelivery');
 const { FieldValue } = require('firebase-admin/firestore');
 
 function db() {
@@ -43,35 +44,21 @@ async function writeInAppNotification(targetUid, payload) {
   return ref.id;
 }
 
+/** Push to every device the learner is signed in on (pushDelivery.js). */
 async function sendPush(targetUid, { title, body, go, eventCode }) {
-  const user = await db().collection('users').doc(targetUid).get();
-  const token = user.exists ? user.data().fcmToken : null;
-  if (!token) return { sent: false, reason: 'no_fcm_token' };
-
-  const data = {
-    eventCode: eventCode || '',
-    go: JSON.stringify(go || { to: 'myProgram' }),
-  };
-
-  await admin.messaging().send({
-    token,
-    notification: {
+  const result = await sendPushToUser(
+    targetUid,
+    {
       title,
       body,
       imageUrl: PUSH_BRAND_IMAGE_URL,
+      data: { eventCode: eventCode || '', go: JSON.stringify(go || { to: 'myProgram' }) },
     },
-    data,
-    android: {
-      priority: 'high',
-      notification: {
-        channelId: 'default',
-        icon: 'notification_icon',
-        color: '#ED1D24',
-        imageUrl: PUSH_BRAND_IMAGE_URL,
-      },
-    },
-  });
-  return { sent: true };
+    db()
+  );
+  return result.sent
+    ? { sent: true, devices: result.devices }
+    : { sent: false, reason: result.reason || 'push_failed', devices: result.devices };
 }
 
 /** Invoked from index.js — lazy-required so deploy discovery stays under the 10s cap. */
