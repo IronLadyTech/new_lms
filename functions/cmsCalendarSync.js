@@ -7,14 +7,20 @@
  * are removed from the LMS calendar. Only rows this sync created (source 'cms') are
  * ever touched — events staff made by hand in the LMS are left alone.
  */
+const { batchGroupIds } = require('./cmsBatchLearners');
+
 const SOURCE = 'cms';
 
 function eventId(cmsBatchId, code) {
   return `cms_${cmsBatchId}_${String(code).replace(/[^A-Za-z0-9_-]/g, '_')}`;
 }
 
-/** The LMS event for one CMS session — same fields the LMS calendar writes. */
-function eventFor(batch, session) {
+/**
+ * The LMS event for one CMS session — same fields the LMS calendar writes. `groupId` is the
+ * LMS batch it is written for: the batch's main group by default, or one of its other
+ * groups (lmsGroupIds) — learners of the same dates sit in more than one group.
+ */
+function eventFor(batch, session, groupId = batch.lmsGroupId) {
   return {
     title: session.title,
     description: [session.weekLabel, session.kind === 'optional' ? 'Optional' : '']
@@ -26,7 +32,7 @@ function eventFor(batch, session) {
     type: 'session',
     imageUrl: '',
     linkUrl: session.joinLink || '',
-    batchId: batch.lmsGroupId,
+    batchId: groupId,
     batchName: batch.name || '',
     audience: 'batch',
     blocksStaff: true,
@@ -55,11 +61,19 @@ async function syncBatchCalendar(db, cmsBatchId, batch) {
   );
 
   const wanted = new Map();
-  if (batch && batch.lmsGroupId) {
+  const groups = batchGroupIds(batch);
+  if (batch && groups.length) {
+    const main = groups[0];
     (Array.isArray(batch.sessions) ? batch.sessions : [])
       .filter((s) => s?.code && s?.date && s?.title && !s.cancelled)
       .forEach((s) =>
-        wanted.set(eventId(cmsBatchId, s.code), eventFor({ ...batch, id: cmsBatchId }, s))
+        groups.forEach((g) =>
+          // The main group keeps the original ids; other groups get their own copy.
+          wanted.set(
+            g === main ? eventId(cmsBatchId, s.code) : eventId(cmsBatchId, `${s.code}__${g}`),
+            eventFor({ ...batch, id: cmsBatchId }, s, g)
+          )
+        )
       );
   }
 

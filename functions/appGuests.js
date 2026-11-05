@@ -71,6 +71,34 @@ function classifyGuest(leads = []) {
   };
 }
 
+/**
+ * Guest pass number on the guest home ("No. 78,412 — that's you"): 78,000 women trained,
+ * plus her place among app guests. Given once, kept for good. The counter starts from the
+ * guests already recorded, so earlier guests keep a low number when they next open the app.
+ */
+const PASS_BASE = 78000;
+const PASS_COUNTER = ['app_stats', 'guestPass'];
+
+async function ensurePassNo(db, ref) {
+  const counterRef = db.collection(PASS_COUNTER[0]).doc(PASS_COUNTER[1]);
+  let seed = null;
+  if (!(await counterRef.get()).exists) {
+    const agg = await db.collection(COLLECTION).count().get();
+    seed = agg.data().count;
+  }
+  return db.runTransaction(async (tx) => {
+    const [guest, counter] = await Promise.all([tx.get(ref), tx.get(counterRef)]);
+    if (!guest.exists) return null;
+    const have = guest.data().passNo;
+    if (Number.isFinite(have)) return have;
+    const last = counter.exists && Number.isFinite(counter.data().last) ? counter.data().last : seed || 0;
+    const passNo = PASS_BASE + last + 1;
+    tx.set(counterRef, { last: last + 1, updatedAt: new Date() }, { merge: true });
+    tx.set(ref, { passNo }, { merge: true });
+    return passNo;
+  });
+}
+
 /** Called from resolvePhoneAccess for every guest sign-in. */
 async function recordGuestVisit(db, phone, info = {}) {
   const key = phoneKey(phone);
@@ -146,7 +174,8 @@ async function runRegisterAppGuest(db, deps, data = {}) {
     }
   }
   await ref.set(patch, { merge: true });
-  return { ok: true };
+  const passNo = await ensurePassNo(db, ref).catch(() => null);
+  return { ok: true, passNo };
 }
 
 /** Guest activity: app opened, challenge opened or finished. Only for known guests. */
@@ -157,6 +186,11 @@ async function runTrackAppGuest(db, data = {}) {
   const snap = await ref.get();
   if (!snap.exists) return { ok: false };
   const event = String(data.event || 'open');
+  // The guest home asks for her pass number; nothing else to record.
+  if (event === 'pass') {
+    const passNo = await ensurePassNo(db, ref).catch(() => null);
+    return { ok: true, passNo };
+  }
   const now = new Date();
   const patch = { lastSeenAt: now, updatedAt: now };
   if (event === 'open') patch.opens = FieldValue.increment(1);
@@ -179,6 +213,8 @@ module.exports = {
   recordGuestVisit,
   runRegisterAppGuest,
   runTrackAppGuest,
+  ensurePassNo,
+  PASS_BASE,
   phoneKey,
   MC_RECORDING_STATUSES,
 };

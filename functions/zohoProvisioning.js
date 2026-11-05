@@ -193,6 +193,15 @@ function applyZohoProgramDatesToUpdates(updates, record, profile = {}) {
     };
   }
 
+  // Registration payment reference — the app shows its last 4 digits on the fee row and receipt.
+  const lepRegTxn = String(record.LEP_Registration_Transaction_Id || '').trim();
+  if (lepRegTxn) {
+    updates.zohoLead = {
+      ...(updates.zohoLead || profile.zohoLead || {}),
+      LEP_Registration_Transaction_Id: lepRegTxn,
+    };
+  }
+
   const city = String(record.City || '').trim();
   if (city) updates.city = city;
   const domain = String(record.Industry || record.LMS_Domain || '').trim();

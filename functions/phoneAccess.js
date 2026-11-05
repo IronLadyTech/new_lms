@@ -6,6 +6,7 @@ const admin = require('firebase-admin');
 const ilUsers = require('./zohoIlUsers');
 const provisioning = require('./zohoProvisioning');
 const { classifyGuest, recordGuestVisit } = require('./appGuests');
+const { inferFromLeadStatus } = require('./zohoFieldMap');
 
 function normalizePhoneE164(raw) {
   const digits = String(raw || '').replace(/\D/g, '');
@@ -55,6 +56,42 @@ async function guestAccess(db, phone, deps, needsCx = null) {
     console.warn('guestAccess record:', err.message);
   }
   return { ok: true, guest: true, tier: info.tier, phone };
+}
+
+/**
+ * Zoho creates an IL_Users row for every new Lead, so finding one is not a seat.
+ * Treating it as one gave a "Follow Up" lead a learner account at 'register',
+ * with a programme guessed from the Lead. A seat is any of: a programme on the
+ * IL_Users lists, a Lead status that says enrolled or started (the lists can lag),
+ * or a programme the account already holds in the app (paid in the app, or staff).
+ */
+async function hasProgrammeSeat(db, phone, ilUser, deps) {
+  if (provisioning.tiersFromProgrammeLists(ilUser)) return true;
+
+  if (deps.searchLeadsByPhone) {
+    try {
+      const leads = await deps.searchLeadsByPhone(phone);
+      const seated = leads.some((lead) => {
+        const s = inferFromLeadStatus(lead.status);
+        return Boolean(s?.program && s.paymentStatus && s.paymentStatus !== 'unpaid');
+      });
+      if (seated) return true;
+    } catch (err) {
+      // Cannot tell — let her in as before rather than lock out someone who paid.
+      console.warn('hasProgrammeSeat lead lookup:', err.message);
+      return true;
+    }
+  }
+
+  const email = emailFromIlUser(ilUser);
+  const lookupAuthUser = deps.getAuthUserByEmail || provisioning.getAuthUserByEmail;
+  const authUser = email ? await lookupAuthUser(email) : null;
+  if (!authUser) return false;
+  const profile = (await db.collection('users').doc(authUser.uid).get()).data() || {};
+  if (profile.role && profile.role !== 'student') return true;
+  return Object.values(profile.programAccess || {}).some((a) =>
+    ['register', 'paid'].includes(String(a?.paymentStatus || '').toLowerCase())
+  );
 }
 
 function displayNameFromIlUser(ilUser, email) {
@@ -225,7 +262,7 @@ async function resolvePhoneAccess(db, phoneRaw, deps) {
     return { ok: false, reason: 'Could not reach Zoho. Try again in a moment.' };
   }
 
-  if (!ilUser) {
+  if (!ilUser || !(await hasProgrammeSeat(db, phone, ilUser, deps))) {
     if (cmsEnroll) return provisionFromCmsEnrollment(db, phone, cmsEnroll);
     return guestAccess(db, phone, deps);
   }
@@ -298,11 +335,15 @@ async function resolvePhoneAccess(db, phoneRaw, deps) {
     }
   }
 
-  await db.collection('users').doc(authUser.uid).set(
+  // Records made here had no role, and the rules could not read one: she could not hand in work.
+  const userRef = db.collection('users').doc(authUser.uid);
+  const hasRole = Boolean((await userRef.get()).data()?.role);
+  await userRef.set(
     {
       email,
       phoneNumber: phone,
       displayName,
+      ...(hasRole ? {} : { role: 'student' }),
       updatedAt: new Date(),
     },
     { merge: true }
@@ -437,8 +478,34 @@ async function updateMyWelcomeProfile(db, uid, fields, deps) {
   };
 }
 
+/**
+ * After the SMS: the account token, only for the number Firebase verified.
+ * `idToken` is the Firebase ID token of the phone sign-in that just confirmed the code; the
+ * phone number comes from that verified token, never from the request, so nobody can claim
+ * an account for a number they did not receive the SMS on.
+ */
+async function claimPhoneAccess(db, idToken, deps) {
+  if (!idToken || typeof idToken !== 'string') {
+    return { ok: false, reason: 'Verify your number with the SMS code first.' };
+  }
+  let decoded;
+  try {
+    // deps.verifyIdToken: injectable for tests; production uses the Admin SDK check.
+    decoded = await (deps.verifyIdToken || ((t) => admin.auth().verifyIdToken(t)))(idToken);
+  } catch {
+    return { ok: false, reason: 'Your code has expired. Go back and request a new one.' };
+  }
+  const phone = normalizePhoneE164(decoded.phone_number);
+  if (!phone || decoded.firebase?.sign_in_provider !== 'phone') {
+    return { ok: false, reason: 'Verify your number with the SMS code first.' };
+  }
+  return resolvePhoneAccess(db, phone, deps);
+}
+
 module.exports = {
   normalizePhoneE164,
+  hasProgrammeSeat,
   resolvePhoneAccess,
+  claimPhoneAccess,
   updateMyWelcomeProfile,
 };

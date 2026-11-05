@@ -1266,19 +1266,35 @@ exports.ensureZohoUserOnLogin = onCall(LOGIN_FN_OPTS, async (request) => {
  * Returns { ok, guest, token? }. Guest = no seat (explore mode).
  * Token is a Firebase custom token for demo OTP / post-verify sign-in.
  */
+const phoneAccessDeps = () => ({
+  isConfigured: () => zoho.isConfigured(),
+  getAccessToken: zoho.getAccessToken,
+  getApiDomain: zoho.getApiDomain,
+  searchLeadsByPhone: zoho.searchLeadsByPhone,
+  syncEntitlementsFromZoho: (firestore, email) => zoho.syncEntitlementsFromZoho(firestore, email, null),
+});
+
+/**
+ * Before the SMS: learner or guest. The account token is added only while
+ * PHONE_PRECHECK_TOKEN is not 'off' — the switch-over for apps that predate claimPhoneAccess.
+ * Set it to 'off' once every phone runs the new app: then no token leaves the server
+ * without a verified SMS.
+ */
 exports.resolvePhoneAccess = onCall(async (request) => {
   const phone = request.data?.phone;
   if (!phone || typeof phone !== 'string') {
     throw new HttpsError('invalid-argument', 'phone is required');
   }
-  return phoneAccess.resolvePhoneAccess(db, phone, {
-    isConfigured: () => zoho.isConfigured(),
-    getAccessToken: zoho.getAccessToken,
-    getApiDomain: zoho.getApiDomain,
-    searchLeadsByPhone: zoho.searchLeadsByPhone,
-    syncEntitlementsFromZoho: (firestore, email) =>
-      zoho.syncEntitlementsFromZoho(firestore, email, null),
-  });
+  const result = await phoneAccess.resolvePhoneAccess(db, phone, phoneAccessDeps());
+  if (process.env.PHONE_PRECHECK_TOKEN === 'off' && result && typeof result === 'object') {
+    delete result.token;
+  }
+  return result;
+});
+
+/** After the SMS: the account token for the number in the verified Firebase ID token. */
+exports.claimPhoneAccess = onCall(async (request) => {
+  return phoneAccess.claimPhoneAccess(db, request.data?.idToken, phoneAccessDeps());
 });
 
 /** App guest typed her name: save it, and create her Zoho Lead if the number was not in Zoho. */

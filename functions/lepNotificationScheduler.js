@@ -16,6 +16,7 @@
  */
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { deliverCmsEventToUser } = require('./lepNotificationDeliver');
+const { autoStartReadyBatches } = require('./batchAutoStart');
 const { sessionAnchorFires } = require('./lepNotificationAnchors');
 const { timeAnchorFires } = require('./lepTimeAnchors');
 const { doneTaskIds, messageForLearner, taskReminderFires, taskReminderKind } = require('./lepTaskReminders');
@@ -131,6 +132,12 @@ async function runLepNotificationScheduler() {
   const windowEndMs = now;
 
   const customSent = await deliverDueBatchMessages(db, now);
+
+  // Ready batches switch their reminders on by themselves (batchAutoStart.js); CX no
+  // longer has to press Start on each one. A batch CX paused is left alone.
+  await autoStartReadyBatches(db, now).catch((e) =>
+    console.error('[lepNotificationScheduler] auto-start:', e?.message || e)
+  );
 
   const batches = await loadLiveBatches(db);
   const events = await loadParticipantEvents(db);

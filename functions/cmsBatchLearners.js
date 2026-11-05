@@ -17,24 +17,39 @@ async function assertCmsStaff(db, uid) {
 }
 
 /**
+ * Every LMS batch (group) a cms_batches doc covers. Zoho sync makes more than one group for
+ * the same dates ("24/10/2026 - 24/11/2026" and "24 Oct 2026 – 24 Nov 2026"); the cohort is
+ * usually in one and a few learners in the other, so a batch lists all of them in
+ * lmsGroupIds. lmsGroupId (the main one) is always included.
+ */
+function batchGroupIds(batch) {
+  const ids = [batch?.lmsGroupId, ...(Array.isArray(batch?.lmsGroupIds) ? batch.lmsGroupIds : [])]
+    .map((x) => String(x || '').trim())
+    .filter(Boolean);
+  return [...new Set(ids)];
+}
+
+/**
  * Learners of a cms_batches doc. The Zoho batch sync records membership on the LMS
  * batch (groups/{id}.memberIds) and users.batchId; learners who chose a batch in the
  * app carry programAccess.<program>.batchId. Either link counts.
  */
 async function learnersForBatch(db, batch) {
-  const groupId = String(batch?.lmsGroupId || '').trim();
-  if (!groupId) return [];
+  const groupIds = batchGroupIds(batch);
+  if (!groupIds.length) return [];
   const key = accessKey(batch.program);
 
   const uids = new Set();
-  const group = await db.collection('groups').doc(groupId).get();
-  (group.data()?.memberIds || []).forEach((id) => id && uids.add(String(id)));
-  const chosen = await db
-    .collection('users')
-    .where(`programAccess.${key}.batchId`, '==', groupId)
-    .limit(1000)
-    .get();
-  chosen.docs.forEach((d) => uids.add(d.id));
+  for (const groupId of groupIds) {
+    const group = await db.collection('groups').doc(groupId).get();
+    (group.data()?.memberIds || []).forEach((id) => id && uids.add(String(id)));
+    const chosen = await db
+      .collection('users')
+      .where(`programAccess.${key}.batchId`, '==', groupId)
+      .limit(1000)
+      .get();
+    chosen.docs.forEach((d) => uids.add(d.id));
+  }
 
   const ids = [...uids];
   const out = [];
@@ -54,7 +69,7 @@ async function runCmsBatchLearnerCounts(db, request) {
   if (!snap.exists) throw new HttpsError('not-found', 'No such batch');
   const batch = { id: snap.id, ...snap.data() };
 
-  if (!batch.lmsGroupId)
+  if (!batchGroupIds(batch).length)
     return { linked: false, counts: { all: 0, register: 0, paid: 0, late: 0, unknown: 0 } };
   const learners = await learnersForBatch(db, batch);
   return {
@@ -87,4 +102,4 @@ async function runCmsListProgramBatches(db, request) {
   return { batches };
 }
 
-module.exports = { runCmsBatchLearnerCounts, runCmsListProgramBatches, learnersForBatch };
+module.exports = { runCmsBatchLearnerCounts, runCmsListProgramBatches, learnersForBatch, batchGroupIds };

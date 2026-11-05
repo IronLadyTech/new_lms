@@ -23,13 +23,25 @@ async function writeInAppNotification(db, targetUid, payload) {
   return ref.id;
 }
 
+/**
+ * "Starts in 60 / 10 minutes" reminders go on the app's 'session' channel (two long, firm
+ * vibration pulses). Everything else, including the day-before reminder, stays on 'default'.
+ */
+function pushChannelForEvent(event) {
+  const a = event?.anchor || {};
+  const offset = Number(a.offsetMinutes);
+  if (a.type === 'sessionStart' && Number.isFinite(offset) && offset >= -60 && offset <= 0) return 'session';
+  return 'default';
+}
+
 /** Push to every device she is signed in on (pushDelivery.js). */
-async function sendPush(db, targetUid, { title, body, go, eventCode }) {
+async function sendPush(db, targetUid, { title, body, go, eventCode, channelId }) {
   const result = await sendPushToUser(
     targetUid,
     {
       title,
       body,
+      channelId,
       imageUrl: PUSH_BRAND_IMAGE_URL,
       data: { eventCode: eventCode || '', go: JSON.stringify(go || { to: 'myProgram' }) },
     },
@@ -69,6 +81,7 @@ async function deliverCmsEventToUser(db, targetUid, event, vars, overrides = {})
       body: finalBody,
       go: finalGo,
       eventCode: inAppPayload.eventCode,
+      channelId: pushChannelForEvent(event),
     });
   }
 
@@ -78,4 +91,5 @@ async function deliverCmsEventToUser(db, targetUid, event, vars, overrides = {})
 module.exports = {
   deliverCmsEventToUser,
   fillTemplate,
+  pushChannelForEvent,
 };
