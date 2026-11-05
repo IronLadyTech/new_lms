@@ -686,6 +686,14 @@ async function handleZohoBatchWebhook(req, res) {
       triggeredBy: 'batch-webhook',
       provisionIfMissing: body.provisionIfMissing !== false,
     });
+    // Her own LEP Day 1 (programAccess.lep.day1Date) decides which batch's reminders she
+    // gets and which batch her app shows, so refresh it with the group move — otherwise a
+    // learner who does not open the app stays on the old batch until her next sign-in.
+    if (result.ok) {
+      await zoho.syncEntitlementsFromZoho(db, email, null).catch((err) =>
+        console.warn('Zoho batch webhook: date refresh failed for', email, err.message)
+      );
+    }
     res.status(result.ok ? 200 : 400).json(result);
   } catch (err) {
     console.error('Zoho batch webhook failed:', err.message);
