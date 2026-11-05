@@ -551,7 +551,11 @@ function welcomeFieldsToLeadPayload(fields = {}) {
     payload.B_HAG_Next_3_month = fields.bhag;
     payload.LMS_BHAG = fields.bhag;
   }
-  if (fields.lepBatch) {
+  // She changed her batch in the app: her Lead gets the batch text, start and end dates
+  // (lepBatchText.js). Without this, a Day 1 picked in the app never reached Zoho.
+  const day1 = String(fields.day1Date || '').trim().slice(0, 10);
+  if (day1) Object.assign(payload, require('./lepBatchText').lepBatchLeadFields(day1));
+  if (fields.lepBatch && !payload.LEP_Batch) {
     payload.LEP_Batch = fields.lepBatch;
   }
   if (fields.salaryRange) {
