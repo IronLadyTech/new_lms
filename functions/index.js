@@ -663,20 +663,23 @@ async function handleZohoBatchWebhook(req, res) {
   }
 
   const body = parseWebhookBody(req);
-  const email = (body.email || body.Email || '').trim();
-
-  if (!email) {
-    res.status(400).json({
-      ok: false,
-      reason: 'email is required — trigger when Batch or cohort dates change in Zoho',
-    });
-    return;
-  }
 
   if (!zoho.isConfigured()) {
     res.status(503).json({
       ok: false,
       reason: 'Zoho OAuth not configured on Cloud Functions',
+    });
+    return;
+  }
+
+  // Learners sign in with their mobile: Zoho may send `phone` (Leads.Mobile) and/or `email`.
+  const { resolveWebhookEmail } = require('./webhookLearner');
+  const who = await resolveWebhookEmail(db, body, { searchLeadsByPhone: zoho.searchLeadsByPhone });
+  const email = who.email;
+  if (!email) {
+    res.status(400).json({
+      ok: false,
+      reason: `${who.reason} — send email and/or phone when Batch or cohort dates change in Zoho`,
     });
     return;
   }
