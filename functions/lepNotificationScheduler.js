@@ -17,6 +17,7 @@
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { deliverCmsEventToUser } = require('./lepNotificationDeliver');
 const { autoStartReadyBatches } = require('./batchAutoStart');
+const { enrolNudgeFires, wantsEnrolNudge } = require('./lepEnrolNudges');
 const { sessionAnchorFires } = require('./lepNotificationAnchors');
 const { timeAnchorFires } = require('./lepTimeAnchors');
 const { doneTaskIds, messageForLearner, taskReminderFires, taskReminderKind } = require('./lepTaskReminders');
@@ -170,6 +171,34 @@ async function runLepNotificationScheduler() {
       }
       return doneByUid.get(uid);
     };
+
+    // Enrol nudges: part-paid learners, 5 and 2 days before orientation (lepEnrolNudges.js).
+    for (const fire of enrolNudgeFires(batch, windowStartMs, windowEndMs)) {
+      if (await alreadySent(db, fire.dedupeKey)) {
+        skipped += 1;
+        continue;
+      }
+      let recipients = 0;
+      for (const { uid, data } of learners) {
+        if (!wantsEnrolNudge(data)) continue;
+        const name = data.displayName || data.firstName || data.name;
+        const vars = { name: name ? String(name).split(' ')[0] : 'there' };
+        await deliverCmsEventToUser(db, uid, fire.event, vars, {
+          title: finishText(fire.event.title, vars),
+          body: finishText(fire.event.body, vars),
+          go: { to: 'payment', programId: 'lep' },
+        });
+        delivered += 1;
+        recipients += 1;
+      }
+      await markSent(db, fire.dedupeKey, {
+        batchId: batch.id,
+        eventCode: fire.event.code,
+        day: fire.day,
+        fireAtMs: fire.fireAtMs,
+        recipientCount: recipients,
+      });
+    }
 
     for (const event of sessionEvents) {
       const fires = sessionAnchorFires(batch, event, windowStartMs, windowEndMs);
