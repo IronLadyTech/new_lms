@@ -677,6 +677,7 @@ async function handleZohoBatchWebhook(req, res) {
   const who = await resolveWebhookEmail(db, body, { searchLeadsByPhone: zoho.searchLeadsByPhone });
   const email = who.email;
   if (!email) {
+    console.warn('Zoho batch webhook: no learner in the call.', who.reason, 'fields:', Object.keys(body).join(',').slice(0, 120));
     res.status(400).json({
       ok: false,
       reason: `${who.reason} — send email and/or phone when Batch or cohort dates change in Zoho`,
@@ -697,6 +698,7 @@ async function handleZohoBatchWebhook(req, res) {
         console.warn('Zoho batch webhook: date refresh failed for', email, err.message)
       );
     }
+    if (!result.ok) console.warn('Zoho batch webhook refused:', result.reason || 'unknown');
     res.status(result.ok ? 200 : 400).json(result);
   } catch (err) {
     console.error('Zoho batch webhook failed:', err.message);

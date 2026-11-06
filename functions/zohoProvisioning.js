@@ -141,6 +141,7 @@ function zohoDateToIso(value) {
  * 100BM: BM_Reg_Date1, BM_End_Date, BM_Batch
  */
 function applyZohoProgramDatesToUpdates(updates, record, profile = {}) {
+  const { lepDay1FromZoho } = require('./lepBatchText');
   if (!record || typeof record !== 'object') return;
 
   const lepBatch = String(record.LEP_Batch || '').trim();
@@ -153,7 +154,14 @@ function applyZohoProgramDatesToUpdates(updates, record, profile = {}) {
       updates['programAccess.lep.zohoBatchKey'] = lepBatch;
       updates['programAccess.lep.batchName'] = lepBatch;
     }
-    if (lepStart) updates['programAccess.lep.day1Date'] = lepStart;
+    const day1 = lepDay1FromZoho({
+      lepBatch,
+      lepStart,
+      prevBatch: prev.zohoRawBatch,
+      prevStart: prev.zohoRegDate,
+    });
+    if (day1) updates['programAccess.lep.day1Date'] = day1;
+    if (lepStart) updates['programAccess.lep.zohoRegDate'] = lepStart;
     if (lepEnd) updates['programAccess.lep.endDate'] = lepEnd;
     // Keep a small Lead bag for app readLeadField (Month_B_HAG / LEP_Reg_Date).
     updates.zohoLead = {

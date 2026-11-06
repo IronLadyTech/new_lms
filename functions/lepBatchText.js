@@ -49,4 +49,40 @@ function lepBatchLeadFields(day1Iso) {
   };
 }
 
-module.exports = { lepBatchLeadFields, addOneMonth };
+/** Saturday on or after a date: LEP Day 1. Older batch text can start on the Wed/Thu orientation. */
+function saturdayOnOrAfter(iso) {
+  const d = parseIso(iso);
+  if (!d) return '';
+  d.setUTCDate(d.getUTCDate() + ((6 - d.getUTCDay() + 7) % 7));
+  return toIso(d);
+}
+
+/** Day 1 from the LEP Batch text, either style: "28/11/2026 - …" or "28 Nov 2026 – …". */
+function lepDay1FromBatchText(text) {
+  const raw = String(text || '').trim();
+  const dmy = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(raw);
+  if (dmy) return saturdayOnOrAfter(`${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`);
+  const named = /^(\d{1,2})\s+([A-Za-z]{3})[a-z]*\s+(\d{4})/.exec(raw);
+  if (named) {
+    const m = MON.findIndex((x) => x.toLowerCase() === named[2].toLowerCase());
+    if (m >= 0) {
+      return saturdayOnOrAfter(`${named[3]}-${String(m + 1).padStart(2, '0')}-${named[1].padStart(2, '0')}`);
+    }
+  }
+  return '';
+}
+
+/**
+ * Her new Day 1 from a Zoho sync, or '' to leave it alone. CX may change the LEP Batch text,
+ * the LEP Start Date, or both, so the field that changed since the last sync wins; with no
+ * start date at all, the batch text decides. Nothing changed = her Day 1 stays.
+ */
+function lepDay1FromZoho({ lepBatch, lepStart, prevBatch, prevStart }) {
+  const fromBatch = lepDay1FromBatchText(lepBatch);
+  if (fromBatch && lepBatch !== prevBatch) return fromBatch;
+  if (lepStart && lepStart !== prevStart) return lepStart;
+  if (!lepStart && fromBatch) return fromBatch;
+  return '';
+}
+
+module.exports = { lepBatchLeadFields, addOneMonth, lepDay1FromBatchText, lepDay1FromZoho };

@@ -1273,7 +1273,19 @@ async function updateLeadWelcomeFields(emailOrIdentity, fields = {}) {
   }
 
   if (leadId) {
-    return updateLeadByIdResilient(leadId, payload);
+    try {
+      return await updateLeadByIdResilient(leadId, payload);
+    } catch (err) {
+      // The saved Lead can be gone (merged or deleted in Zoho). Find her real Lead; the
+      // caller stores the id we return, which repairs her account.
+      const found =
+        (email && (await searchLeadByEmail(email).catch(() => null))) ||
+        (phone && (await searchLeadByPhone(phone).catch(() => null))) ||
+        null;
+      if (!found || String(found) === String(leadId)) throw err;
+      console.warn(`updateLeadWelcomeFields: Lead ${leadId} failed, using ${found}`);
+      return updateLeadByIdResilient(found, payload);
+    }
   }
 
   if (!email) {
