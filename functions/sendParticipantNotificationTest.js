@@ -45,12 +45,13 @@ async function writeInAppNotification(targetUid, payload) {
 }
 
 /** Push to every device the learner is signed in on (pushDelivery.js). */
-async function sendPush(targetUid, { title, body, go, eventCode }) {
+async function sendPush(targetUid, { title, body, go, eventCode, channelId }) {
   const result = await sendPushToUser(
     targetUid,
     {
       title,
       body,
+      channelId,
       imageUrl: PUSH_BRAND_IMAGE_URL,
       data: { eventCode: eventCode || '', go: JSON.stringify(go || { to: 'myProgram' }) },
     },
@@ -77,12 +78,13 @@ exports.runSendParticipantNotificationTest = async (request) => {
   }
 
   const channels = event?.channels || { push: true, whatsapp: false, email: false };
+  // Sample values, so a test reads like the real message on the phone.
   const vars = {
     name: 'there',
-    session: 'Session',
-    time: '',
+    session: 'Day 1',
+    time: '9:00 AM',
     task: '',
-    joinLink: '',
+    joinLink: 'https://zoom.us/j/0000000000',
     score: '—',
   };
   const finalTitle = title || fillTemplate(event?.title || event?.name || 'Iron Lady', vars);
@@ -110,6 +112,8 @@ exports.runSendParticipantNotificationTest = async (request) => {
       body: finalBody,
       go: finalGo,
       eventCode: inAppPayload.eventCode,
+      // Same channel as the real send: session reminders vibrate the strong "session" way.
+      channelId: require('./lepNotificationDeliver').pushChannelForEvent(event),
     });
   }
 
