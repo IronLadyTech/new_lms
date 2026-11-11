@@ -1294,7 +1294,44 @@ async function updateLeadWelcomeFields(emailOrIdentity, fields = {}) {
   return upsertLead({ Email: email, ...payload });
 }
 
+/** A Note on a Lead (CX see it in the Lead's Notes). */
+async function addLeadNote(leadId, title, content) {
+  const token = await getAccessToken();
+  if (!token || !leadId) return null;
+  const res = await zohoApiFetch(`${getApiDomain()}/crm/v2/Notes`, {
+    method: 'POST',
+    headers: { Authorization: `Zoho-oauthtoken ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      data: [{ Note_Title: title, Note_Content: content, Parent_Id: { id: String(leadId) }, se_module: getModule() }],
+    }),
+  });
+  if (!res.ok) throw new Error(`Zoho note failed (HTTP ${res.status})`);
+  return true;
+}
+
+/** What paymentZohoSync needs: find her Lead (stored id, Firebase UID, email, mobile), read, update, note. */
+function paymentSyncDeps() {
+  return {
+    async findLeadId(profile) {
+      const stored = profile?.zohoLeadId || profile?.zohoLead?.id || null;
+      if (stored && (await getLeadById(stored))) return stored;
+      return (
+        (profile?.uid && (await searchLeadByFirebaseUid(profile.uid).catch(() => null))) ||
+        (profile?.email && (await searchLeadByEmail(profile.email).catch(() => null))) ||
+        ((profile?.phoneNumber || profile?.phone) &&
+          (await searchLeadByPhone(profile.phoneNumber || profile.phone).catch(() => null))) ||
+        null
+      );
+    },
+    getLeadById,
+    updateLead: (id, fields) => updateLeadByIdResilient(id, fields),
+    addNote: addLeadNote,
+  };
+}
+
 module.exports = {
+  paymentSyncDeps,
+  addLeadNote,
   /** Zoho + Firestore helpers the batch syncs share (used by zohoCmsSync). */
   buildBatchSyncDeps,
   runZohoReconcile: (db, options) => runZohoReconcile(db, options),

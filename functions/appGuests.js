@@ -3,7 +3,8 @@
  *
  *   Lead status "MC Enrolled" / "MC Completed"  → guest + Masterclass recordings
  *   any other status, or no status              → guest
- *   number not in Zoho at all                   → guest + a new Zoho Lead (name, mobile)
+ *   number not in Zoho at all                   → guest + a new Zoho Lead (name, mobile,
+ *                                                 Lead Source "App", status "New")
  *
  * Every guest has a record in app_guests/{10-digit phone} that the CMS lists for CX:
  * first and last visit, visits, challenge progress, lead status, and whether CX
@@ -134,10 +135,41 @@ function splitName(name) {
   return { First_Name: parts.slice(0, -1).join(' '), Last_Name: parts[parts.length - 1] };
 }
 
+/** Lead Source for people who first reached Iron Lady through the app (Zoho picklist value). */
+const APP_LEAD_SOURCE = 'App';
+/** One Zoho try per guest per day when it fails, so a broken Zoho never costs a call per app open. */
+const LEAD_RETRY_MS = 24 * 3600 * 1000;
+
 /**
- * The guest typed her name. Save it, and — if her number is not in Zoho — create
- * the Lead once (name, mobile, source "Online - IronLady App", status "New").
- * Only for a number that signed in as a guest in the last day.
+ * Her number is not in Zoho: create the Lead (name, mobile, source "App", status "New").
+ * Returns the fields to save on her guest record (lead id, or the error and when it was tried).
+ */
+async function createGuestLead(key, name, deps) {
+  const triedAt = new Date();
+  try {
+    const leadId = await deps.createLead({
+      ...splitName(name),
+      Mobile: `+91${key}`,
+      Lead_Source: APP_LEAD_SOURCE,
+      Lead_Status: 'New',
+      Description: 'Joined the Iron Lady app as a guest (number was not in Zoho).',
+    });
+    if (!leadId) return { leadTriedAt: triedAt, leadError: 'Zoho returned no Lead id' };
+    return { zohoLeadId: leadId, inZoho: true, leadCreatedByApp: true, leadStatus: 'New', leadTriedAt: triedAt, leadError: null };
+  } catch (err) {
+    return { leadTriedAt: triedAt, leadError: String(err.message || err).slice(0, 200) };
+  }
+}
+
+function needsLead(guest, deps, now = Date.now()) {
+  if (!guest || guest.inZoho || guest.zohoLeadId || !deps?.createLead) return false;
+  const tried = guest.leadTriedAt?.toMillis ? guest.leadTriedAt.toMillis() : Number(guest.leadTriedAt ? new Date(guest.leadTriedAt) : 0);
+  return !tried || now - tried > LEAD_RETRY_MS;
+}
+
+/**
+ * The guest typed her name (or skipped it). Save it, and — if her number is not in Zoho —
+ * create the Lead once. Only for a number that signed in as a guest in the last day.
  */
 async function runRegisterAppGuest(db, deps, data = {}) {
   const key = phoneKey(data.phone);
@@ -154,32 +186,19 @@ async function runRegisterAppGuest(db, deps, data = {}) {
 
   const patch = { updatedAt: new Date(), ...(name ? { name } : {}) };
   if (!guest.inZoho && !guest.zohoLeadId && deps?.createLead) {
-    try {
-      const leadId = await deps.createLead({
-        ...splitName(name),
-        Mobile: `+91${key}`,
-        Lead_Source: 'Online - IronLady App',
-        Lead_Status: 'New',
-        Description: 'Joined the Iron Lady app as a guest (number was not in Zoho).',
-      });
-      if (leadId)
-        Object.assign(patch, {
-          zohoLeadId: leadId,
-          inZoho: true,
-          leadCreatedByApp: true,
-          leadStatus: 'New',
-        });
-    } catch (err) {
-      patch.leadError = String(err.message || err).slice(0, 200);
-    }
+    Object.assign(patch, await createGuestLead(key, name || guest.name, deps));
   }
   await ref.set(patch, { merge: true });
   const passNo = await ensurePassNo(db, ref).catch(() => null);
   return { ok: true, passNo };
 }
 
-/** Guest activity: app opened, challenge opened or finished. Only for known guests. */
-async function runTrackAppGuest(db, data = {}) {
+/**
+ * Guest activity: app opened, challenge opened or finished. Only for known guests.
+ * On an app open, a guest whose number is still not in Zoho gets her Lead then (e.g. the
+ * name step never reached the server), at most one try a day.
+ */
+async function runTrackAppGuest(db, data = {}, deps = null) {
   const key = phoneKey(data.phone);
   if (key.length !== 10) return { ok: false };
   const ref = db.collection(COLLECTION).doc(key);
@@ -194,6 +213,7 @@ async function runTrackAppGuest(db, data = {}) {
   const now = new Date();
   const patch = { lastSeenAt: now, updatedAt: now };
   if (event === 'open') patch.opens = FieldValue.increment(1);
+  if (event === 'open' && needsLead(snap.data(), deps)) Object.assign(patch, await createGuestLead(key, snap.data()?.name, deps));
   if (event === 'challenge-start')
     patch.challengeStartedAt = snap.data()?.challengeStartedAt || now;
   if (event === 'challenge-day') {
@@ -213,6 +233,9 @@ module.exports = {
   recordGuestVisit,
   runRegisterAppGuest,
   runTrackAppGuest,
+  createGuestLead,
+  needsLead,
+  APP_LEAD_SOURCE,
   ensurePassNo,
   PASS_BASE,
   phoneKey,

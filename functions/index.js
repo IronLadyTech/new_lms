@@ -1334,15 +1334,17 @@ exports.claimPhoneAccess = onCall(async (request) => {
 });
 
 /** App guest typed her name: save it, and create her Zoho Lead if the number was not in Zoho. */
-exports.registerAppGuest = onCall({ region: 'us-central1' }, async (request) => {
+// invoker 'public': guests have no Firebase sign-in. Without it Cloud Run answered 403 to
+// every guest, so numbers not in Zoho never became Leads.
+exports.registerAppGuest = onCall({ region: 'us-central1', invoker: 'public' }, async (request) => {
   const { runRegisterAppGuest } = require('./appGuests');
   return runRegisterAppGuest(db, { createLead: zoho.isConfigured() ? zoho.createLead : null }, request.data || {});
 });
 
 /** App guest activity (opens, challenge, recordings) for the CMS guest list. */
-exports.trackAppGuest = onCall({ region: 'us-central1' }, async (request) => {
+exports.trackAppGuest = onCall({ region: 'us-central1', invoker: 'public' }, async (request) => {
   const { runTrackAppGuest } = require('./appGuests');
-  return runTrackAppGuest(db, request.data || {});
+  return runTrackAppGuest(db, request.data || {}, { createLead: zoho.isConfigured() ? zoho.createLead : null });
 });
 
 /** First-login welcome — city / domain / B-HAG on profile (+ Zoho Lead when mapped). */

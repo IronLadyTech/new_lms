@@ -15,6 +15,8 @@ const {
   maxPaymentStatus,
 } = require('./accessTiers');
 
+const { syncPaymentToZoho } = require('./paymentZohoSync');
+
 const ORDERS = 'razorpay_orders';
 const PAYMENTS = 'razorpay_payments';
 
@@ -207,6 +209,14 @@ async function verifyPayment(request, db, keyId, keySecret) {
     paymentId,
     orderId,
   });
+  // Zoho: Lead Status Enrolled → Started, and a Note with the payment for CX.
+  await syncPaymentToZoho(db, {
+    uid,
+    programId: order.programId || programId,
+    paymentId,
+    orderId,
+    amountPaise: order.amountPaise,
+  });
 
   return { ok: true, paymentId, orderId, programId: order.programId || programId };
 }
@@ -257,6 +267,13 @@ async function handleWebhook(req, db, keySecret, webhookSecret) {
       await markProgrammePaid(db, order.uid, order.programId, {
         paymentId: payment.id,
         orderId: payment.order_id,
+      });
+      await syncPaymentToZoho(db, {
+        uid: order.uid,
+        programId: order.programId,
+        paymentId: payment.id,
+        orderId: payment.order_id,
+        amountPaise: payment.amount,
       });
     }
   }
