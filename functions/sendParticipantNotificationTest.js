@@ -89,7 +89,12 @@ exports.runSendParticipantNotificationTest = async (request) => {
   };
   // Session reminders: show the Day 1 words, exactly as a learner would get them.
   const copy = event ? require('./lepSessionCopy').sessionCopy(event.code, 'S1', vars) : null;
-  const finalTitle = title || (copy ? copy.title : fillTemplate(event?.title || event?.name || 'Iron Lady', vars));
+  const finalTitle =
+    title ||
+    require('./programTag').withProgram(
+      event?.program,
+      copy ? copy.title : fillTemplate(event?.title || event?.name || 'Iron Lady', vars)
+    );
   const finalBody = body || (copy ? copy.body : fillTemplate(event?.body || '', vars));
   const finalGo = go || { to: 'myProgram' };
 

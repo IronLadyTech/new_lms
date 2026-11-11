@@ -19,6 +19,7 @@ const { deliverCmsEventToUser } = require('./lepNotificationDeliver');
 const { autoStartReadyBatches } = require('./batchAutoStart');
 const { enrolNudgeFires, wantsEnrolNudge } = require('./lepEnrolNudges');
 const { sessionCopy } = require('./lepSessionCopy');
+const { withProgram } = require('./programTag');
 const { sessionAnchorFires } = require('./lepNotificationAnchors');
 const { timeAnchorFires } = require('./lepTimeAnchors');
 const { doneTaskIds, messageForLearner, taskReminderFires, taskReminderKind } = require('./lepTaskReminders');
@@ -176,6 +177,9 @@ async function runLepNotificationScheduler() {
     // Learners are loaded only when a message is due for this batch (most 5-minute runs: none).
     let learners = null;
     const learnersNow = async () => (learners = learners || (await participantsForBatch(db, batch)));
+    // Every reminder of this batch starts with its programme: "LEP · Day 1 starts in 15 minutes".
+    const deliver = (uid, ev, vars, o) =>
+      deliverCmsEventToUser(db, uid, ev, vars, { ...o, title: withProgram(batch.program, o.title) });
     // Her handed-in LEP tasks, loaded once per run and only if a due / overdue fire needs them.
     const doneByUid = new Map();
     const doneFor = async (uid) => {
@@ -197,7 +201,7 @@ async function runLepNotificationScheduler() {
         if (!wantsEnrolNudge(data)) continue;
         const name = data.displayName || data.firstName || data.name;
         const vars = { name: name ? String(name).split(' ')[0] : 'there' };
-        await deliverCmsEventToUser(db, uid, fire.event, vars, {
+        await deliver(uid, fire.event, vars, {
           title: finishText(fire.event.title, vars),
           body: finishText(fire.event.body, vars),
           go: { to: 'payment', programId: 'lep' },
@@ -229,7 +233,7 @@ async function runLepNotificationScheduler() {
           const vars = { ...fire.vars, name: name ? String(name).split(' ')[0] : 'there' };
           // Each session has its own words (lepSessionCopy.js); others use the CMS rule's text.
           const copy = sessionCopy(fire.event.code, fire.session?.code, vars);
-          await deliverCmsEventToUser(db, uid, fire.event, vars, {
+          await deliver(uid, fire.event, vars, {
             title: copy ? copy.title : finishText(fire.event.title || fire.event.name || 'Iron Lady', vars),
             body: copy ? copy.body : finishText(fire.event.body, vars),
             go: { to: 'schedule' },
@@ -258,7 +262,7 @@ async function runLepNotificationScheduler() {
           if (!reachesLearnerOnDay(fire.offset, data.programAccess?.lep?.paymentStatus)) continue;
           const name = data.displayName || data.firstName || data.name;
           const vars = { ...fire.vars, name: name ? String(name).split(' ')[0] : 'there' };
-          await deliverCmsEventToUser(db, uid, fire.event, vars, {
+          await deliver(uid, fire.event, vars, {
             title: finishText(fire.event.title || fire.event.name || 'Iron Lady', vars),
             body: finishText(fire.event.body, vars),
             go: { to: 'home' },
@@ -291,7 +295,7 @@ async function runLepNotificationScheduler() {
             name: name ? String(name).split(' ')[0] : 'there',
           });
           if (!msg) continue;
-          await deliverCmsEventToUser(db, uid, event, {}, msg);
+          await deliver(uid, event, {}, msg);
           delivered += 1;
           recipients += 1;
         }
