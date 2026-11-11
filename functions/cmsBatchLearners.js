@@ -120,7 +120,53 @@ async function runCmsBatchLearnerCounts(db, request) {
       learners.map((l) => l.data),
       batch
     ),
+    groupCounts: groupCounts(batch, learners),
   };
+}
+
+/** Learners per group (and how many are in none yet), numbers only. */
+function groupCounts(batch, learners) {
+  const { batchGroupsOf, learnerGroupId } = require('./batchGroups');
+  const groups = batchGroupsOf(batch);
+  if (!groups.length) return null;
+  const out = Object.fromEntries(groups.map((g) => [g.id, 0]));
+  out.none = 0;
+  for (const l of learners) out[learnerGroupId(l.data, batch) || 'none'] += 1;
+  return out;
+}
+
+/**
+ * CMS "Split into groups": the batch's learners into groups of about `size` (default 15),
+ * evenly, for every session. Keeps links CX already pasted. Numbers only come back.
+ */
+async function runCmsSplitBatchGroups(db, request) {
+  await assertCmsStaff(db, request.auth?.uid);
+  const batchId = String(request.data?.batchId || '').trim();
+  if (!batchId) throw new HttpsError('invalid-argument', 'batchId is required');
+  const ref = db.collection('cms_batches').doc(batchId);
+  const snap = await ref.get();
+  if (!snap.exists) throw new HttpsError('not-found', 'No such batch');
+  const batch = { id: snap.id, ...snap.data() };
+  if (!batchGroupIds(batch).length)
+    throw new HttpsError('failed-precondition', 'Link this batch to its learners first.');
+
+  const { splitIntoGroups } = require('./batchGroups');
+  const learners = await learnersForBatch(db, batch);
+  if (!learners.length) throw new HttpsError('failed-precondition', 'This batch has no learners yet.');
+  const { groups, assign } = splitIntoGroups(learners, request.data?.size, batch.groups || []);
+
+  await ref.set({ groups, groupsSplitAt: new Date(), updatedAt: new Date() }, { merge: true });
+  const entries = [...assign.entries()];
+  for (let i = 0; i < entries.length; i += 400) {
+    const w = db.batch();
+    for (const [uid, id] of entries.slice(i, i + 400)) {
+      w.set(db.collection('users').doc(uid), { programAccess: { lep: { group: { batchId, id } } } }, { merge: true });
+    }
+    await w.commit();
+  }
+  const sizes = Object.fromEntries(groups.map((g) => [g.id, 0]));
+  for (const id of assign.values()) sizes[id] += 1;
+  return { ok: true, groups: groups.map((g) => ({ id: g.id, name: g.name, learners: sizes[g.id] })) };
 }
 
 /** Real batches for one program, from the LMS (synced from Zoho): name, raw Zoho value, size. */
@@ -144,4 +190,11 @@ async function runCmsListProgramBatches(db, request) {
   return { batches };
 }
 
-module.exports = { runCmsBatchLearnerCounts, runCmsListProgramBatches, learnersForBatch, batchGroupIds, ownLepDay1 };
+module.exports = {
+  runCmsBatchLearnerCounts,
+  runCmsListProgramBatches,
+  runCmsSplitBatchGroups,
+  learnersForBatch,
+  batchGroupIds,
+  ownLepDay1,
+};

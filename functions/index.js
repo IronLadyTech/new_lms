@@ -1208,6 +1208,12 @@ exports.cmsBatchLearnerCounts = onCall({ region: 'us-central1' }, async (request
   return runCmsBatchLearnerCounts(db, request);
 });
 
+/** CMS: split a batch into groups (Group 1, 2, 3 …), each with its own Zoom link. */
+exports.cmsSplitBatchGroups = onCall({ region: 'us-central1' }, async (request) => {
+  const { runCmsSplitBatchGroups } = require('./cmsBatchLearners');
+  return runCmsSplitBatchGroups(db, request);
+});
+
 /** Every night 2:00 AM IST: bring all Zoho batches (LEP, 100BM, MBW) into the LMS, gently on the Zoho quota. */
 exports.zohoCmsNightlySync = onSchedule(
   { schedule: '0 2 * * *', timeZone: 'Asia/Kolkata', region: 'us-central1', ...ZOHO_BULK_SYNC_OPTS },

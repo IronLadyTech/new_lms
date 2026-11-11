@@ -21,6 +21,7 @@ const { enrolNudgeFires, wantsEnrolNudge } = require('./lepEnrolNudges');
 const { sessionCopy } = require('./lepSessionCopy');
 const { withProgram } = require('./programTag');
 const { ritualsCopy, RITUALS_GO } = require('./lepRitualsCopy');
+const { batchGroupsOf, learnerGroupId, groupJoinLink, smallestGroup } = require('./batchGroups');
 const { sessionAnchorFires } = require('./lepNotificationAnchors');
 const { timeAnchorFires } = require('./lepTimeAnchors');
 const { doneTaskIds, messageForLearner, taskReminderFires, taskReminderKind } = require('./lepTaskReminders');
@@ -232,6 +233,17 @@ async function runLepNotificationScheduler() {
           if (!reachesLearner(fire.session, data.programAccess?.lep?.paymentStatus)) continue;
           const name = data.displayName || data.firstName || data.name;
           const vars = { ...fire.vars, name: name ? String(name).split(' ')[0] : 'there' };
+          // Batch split into groups: her group's Zoom link. Not in a group yet (joined late):
+          // she goes into the smallest one now, so she never gets another group's room.
+          if (batchGroupsOf(batch).length) {
+            let groupId = learnerGroupId(data, batch);
+            if (!groupId) {
+              groupId = smallestGroup(batch, await learnersNow());
+              data.programAccess = { ...(data.programAccess || {}), lep: { ...(data.programAccess?.lep || {}), group: { batchId: batch.id, id: groupId } } };
+              await db.collection('users').doc(uid).set({ programAccess: { lep: { group: { batchId: batch.id, id: groupId } } } }, { merge: true });
+            }
+            vars.joinLink = groupJoinLink(batch, groupId, fire.session?.code) || vars.joinLink;
+          }
           // Each session has its own words (lepSessionCopy.js); others use the CMS rule's text.
           const copy = sessionCopy(fire.event.code, fire.session?.code, vars);
           await deliver(uid, fire.event, vars, {
