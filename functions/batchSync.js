@@ -123,9 +123,12 @@ async function ensureLepCmsBatches(db, nowMs = Date.now()) {
 async function placeUngrouped(db, batch, learners) {
   if (!batchGroupsOf(batch).length) return 0;
   const list = learners || (await learnersForBatch(db, batch));
+  // Left out by the last split because Zoho does not have them on this batch (e.g. a test change
+  // made only in the app): they stay out until a new split finds them in Zoho.
+  const left = new Set(batch.groupsLeftOut || []);
   let placed = 0;
   for (const l of list) {
-    if (learnerGroupId(l.data, batch)) continue;
+    if (left.has(l.uid) || learnerGroupId(l.data, batch)) continue;
     const id = smallestGroup(batch, list);
     const group = { batchId: batch.id, id };
     l.data.programAccess = { ...(l.data.programAccess || {}), lep: { ...(l.data.programAccess?.lep || {}), group } };

@@ -1220,9 +1220,15 @@ exports.cmsBatchZohoCheck = onCall({ region: 'us-central1', timeoutSeconds: 120 
 });
 
 /** CMS: split a batch into groups (Group 1, 2, 3 …), each with its own Zoom link. */
-exports.cmsSplitBatchGroups = onCall({ region: 'us-central1' }, async (request) => {
+exports.cmsSplitBatchGroups = onCall({ region: 'us-central1', timeoutSeconds: 120 }, async (request) => {
   const { runCmsSplitBatchGroups } = require('./cmsBatchLearners');
-  return runCmsSplitBatchGroups(db, request);
+  if (!zoho.isConfigured()) throw new HttpsError('failed-precondition', 'Zoho is not connected on the server.');
+  // Zoho is read first: only learners Zoho has on this batch get a group.
+  return runCmsSplitBatchGroups(db, request, {
+    getAccessToken: zoho.getAccessToken,
+    getApiDomain: zoho.getApiDomain,
+    fetch: (...a) => fetch(...a),
+  });
 });
 
 /** Every night 2:00 AM IST: bring all Zoho batches (LEP, 100BM, MBW) into the LMS, gently on the Zoho quota. */

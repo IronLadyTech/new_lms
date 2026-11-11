@@ -73,6 +73,72 @@ describe('CMS: split into groups', () => {
     const db = setup();
     await runCmsSplitBatchGroups(db, { auth: { uid: 'staff' }, data: { batchId: 'b14', size: 15 } });
     const res = await runCmsBatchLearnerCounts(db, { auth: { uid: 'staff' }, data: { batchId: 'b14' } });
-    expect(res.groupCounts).toEqual({ G1: 15, G2: 15, G3: 15, none: 0 });
+    expect(res.groupCounts).toEqual({ G1: 15, G2: 15, G3: 15, none: 0, leftOut: 0 });
+  });
+});
+
+describe('CMS: split checks Zoho first', () => {
+  const zohoDeps = (leads, fail = false) => ({
+    getAccessToken: async () => 't',
+    getApiDomain: () => 'https://z',
+    fetch: async () =>
+      fail ? { ok: false, status: 500, json: async () => ({ message: 'down' }) } : { ok: true, status: 200, json: async () => ({ data: leads }) },
+  });
+  const build = () => {
+    const users = { staff: { role: 'cem' } };
+    const ids = ['real1', 'real2', 'real3', 'real4', 'test1'];
+    users.real1 = { displayName: 'Anisha', email: 'a@x.com', programAccess: { lep: {} } }; // no date in the app yet
+    users.real2 = { displayName: 'Bina', email: 'b@x.com', programAccess: { lep: { day1Date: '2026-11-14' } } };
+    users.real3 = { displayName: 'Chitra', phoneNumber: '+919800000003', programAccess: { lep: { day1Date: '2026-11-14' } } };
+    users.real4 = { displayName: 'Divya', zohoLeadId: 'L4', programAccess: { lep: { day1Date: '2026-11-14' } } };
+    // Changed to 14 Nov in the app while testing; Zoho still has 11 Nov. Had a group before.
+    users.test1 = {
+      displayName: 'App_Test_User',
+      email: 't@x.com',
+      programAccess: { lep: { day1Date: '2026-11-14', group: { batchId: 'b14', id: 'G1' } } },
+    };
+    const batch = { id: 'b14', program: 'LEP', day1Date: '2026-11-14', lmsGroupId: 'g14', groups: [{ id: 'G1', name: 'Group 1' }] };
+    const leads = [
+      { id: 'L1', Full_Name: 'Anisha', Email: 'A@x.com', Lead_Status: 'LEP Enrolled', LEP_Batch: '14/11/2026 - 14/12/2026' },
+      { id: 'L2', Full_Name: 'Bina', Email: 'b@x.com', Lead_Status: 'LEP Enrolled', LEP_Batch: '14/11/2026 - 14/12/2026' },
+      { id: 'L3', Full_Name: 'Chitra', Mobile: '98000 00003', Lead_Status: 'LEP Enrolled', LEP_Batch: '14/11/2026 - 14/12/2026' },
+      { id: 'L4', Full_Name: 'Divya', Lead_Status: 'LEP Enrolled', LEP_Batch: '14/11/2026 - 14/12/2026' },
+      { id: 'L5', Full_Name: 'Esha', Email: 'e@x.com', Lead_Status: 'LEP Enrolled' },
+    ];
+    return { db: fakeDb({ users, batch, group: { memberIds: ids } }), users, batch, leads };
+  };
+  const req = { auth: { uid: 'staff' }, data: { batchId: 'b14', size: 2 } };
+
+  it('only learners Zoho lists get a group; a test change made only in the app is left out by name', async () => {
+    const { db, users, batch, leads } = build();
+    const res = await runCmsSplitBatchGroups(db, req, zohoDeps(leads));
+    expect(res.groups.reduce((n, g) => n + g.learners, 0)).toBe(4);
+    expect(res.leftOut.map((r) => r.name)).toEqual(['App_Test_User']);
+    expect(res.zohoOnly).toEqual(['Esha']);
+    expect(users.test1.programAccess.lep.group).toBe(null); // its old seat is freed
+    expect(batch.groupsLeftOut).toEqual(['test1']);
+  });
+  it('brings the app copy in line with Zoho on the way (Day 1 and batch text)', async () => {
+    const { db, users, leads } = build();
+    const res = await runCmsSplitBatchGroups(db, req, zohoDeps(leads));
+    expect(users.real1.programAccess.lep.day1Date).toBe('2026-11-14');
+    expect(users.real1.programAccess.lep.zohoRawBatch).toBe('14/11/2026 - 14/12/2026');
+    expect(res.synced).toBe(4);
+  });
+  it('Zoho cannot be read: nothing is split', async () => {
+    const { db, batch, leads } = build();
+    await expect(runCmsSplitBatchGroups(db, req, zohoDeps(leads, true))).rejects.toThrow(/nothing was split/);
+    expect(batch.groupsSplitAt).toBeUndefined();
+  });
+  it('the CMS shows who is in which group, and the left-out learner apart', async () => {
+    const { db, leads } = build();
+    await runCmsSplitBatchGroups(db, req, zohoDeps(leads));
+    const res = await runCmsBatchLearnerCounts(db, { auth: { uid: 'staff' }, data: { batchId: 'b14' } });
+    expect(res.groupCounts.leftOut).toBe(1);
+    expect(res.groupCounts.none).toBe(0);
+    const chitra = res.roster.find((r) => r.name === 'Chitra');
+    expect(chitra.phone).toBe('0003');
+    expect(['G1', 'G2']).toContain(chitra.group);
+    expect(res.roster.find((r) => r.name === 'App_Test_User').group).toBe('leftOut');
   });
 });

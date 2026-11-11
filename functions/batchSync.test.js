@@ -72,4 +72,11 @@ describe('learners not in a group yet', () => {
     expect(await placeUngrouped(db, batch, learners)).toBe(2);
     expect(writes).toEqual({ late1: 'G2', late2: 'G1' });
   });
+  it('a learner the last split left out (not in Zoho for this batch) is not placed', async () => {
+    const batch = { id: 'b14', groups: [{ id: 'G1' }], groupsLeftOut: ['test1'] };
+    const writes = {};
+    const db = { collection: () => ({ doc: (id) => ({ set: async (p) => (writes[id] = p.programAccess.lep.group.id) }) }) };
+    expect(await placeUngrouped(db, batch, [{ uid: 'test1', data: {} }, { uid: 'new1', data: {} }])).toBe(1);
+    expect(writes).toEqual({ new1: 'G1' });
+  });
 });

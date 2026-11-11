@@ -1,7 +1,7 @@
 /**
  * CMS batch helpers on the server — real LMS batches per program, and learner counts.
- * Numbers and batch names only, never learner names or phone numbers: CX (CEM)
- * cannot read learner profiles or LMS batch docs under Firestore rules.
+ * CX (CEM) cannot read learner profiles under Firestore rules, so what they need comes from
+ * here: counts, and for groups, names with only the last 4 digits of the mobile.
  */
 const { HttpsError } = require('firebase-functions/v2/https');
 const { accessKey, countSegments } = require('./learnerSegments');
@@ -121,25 +121,65 @@ async function runCmsBatchLearnerCounts(db, request) {
       batch
     ),
     groupCounts: groupCounts(batch, learners),
+    roster: groupRoster(batch, learners),
   };
 }
 
-/** Learners per group (and how many are in none yet), numbers only. */
+/** Learners per group, how many are in none yet, and how many the split left out (not in Zoho). */
 function groupCounts(batch, learners) {
   const { batchGroupsOf, learnerGroupId } = require('./batchGroups');
   const groups = batchGroupsOf(batch);
   if (!groups.length) return null;
+  const left = new Set(batch.groupsLeftOut || []);
   const out = Object.fromEntries(groups.map((g) => [g.id, 0]));
   out.none = 0;
-  for (const l of learners) out[learnerGroupId(l.data, batch) || 'none'] += 1;
+  out.leftOut = 0;
+  for (const l of learners) {
+    const id = learnerGroupId(l.data, batch);
+    if (id) out[id] += 1;
+    else if (left.has(l.uid)) out.leftOut += 1;
+    else out.none += 1;
+  }
   return out;
 }
 
 /**
- * CMS "Split into groups": the batch's learners into groups of about `size` (default 15),
- * evenly, for every session. Keeps links CX already pasted. Numbers only come back.
+ * Who is in which group, for the CEM team (CMS staff only): name and the last 4 digits of
+ * her mobile, per group, then "not placed yet" and "left out (not in Zoho)".
  */
-async function runCmsSplitBatchGroups(db, request) {
+function groupRoster(batch, learners) {
+  const { batchGroupsOf, learnerGroupId } = require('./batchGroups');
+  const groups = batchGroupsOf(batch);
+  if (!groups.length) return null;
+  const left = new Set(batch.groupsLeftOut || []);
+  const rows = learners
+    .map((l) => {
+      const d = l.data || {};
+      const gid = learnerGroupId(d, batch);
+      return {
+        name: String(d.displayName || d.name || d.email || 'Learner').trim(),
+        phone: String(d.phoneNumber || d.phone || '').replace(/\D/g, '').slice(-4),
+        group: gid || (left.has(l.uid) ? 'leftOut' : 'none'),
+      };
+    })
+    .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+  return rows;
+}
+
+/**
+ * CMS "Split into groups": the batch's learners into groups of about `size` (default 15),
+ * evenly, for every session. Keeps links CX already pasted.
+ *
+ * LEP: Zoho decides who is in the batch, so a stale or test change made only in the app can
+ * never take a seat. Zoho is read first (same match as "Check against Zoho"):
+ *  - learners Zoho lists for this Day 1 are grouped, and their app copy of the batch is
+ *    brought in line with Zoho (Day 1 and the batch text) on the way;
+ *  - learners the app has here but Zoho does not are left out, by name, with the reason.
+ *    They keep the batch's main link, and are not placed later by the scheduler either
+ *    (groupsLeftOut) until a new split finds them in Zoho.
+ * If Zoho cannot be read, nothing is split.
+ */
+async function runCmsSplitBatchGroups(db, request, deps) {
   await assertCmsStaff(db, request.auth?.uid);
   const batchId = String(request.data?.batchId || '').trim();
   if (!batchId) throw new HttpsError('invalid-argument', 'batchId is required');
@@ -151,25 +191,82 @@ async function runCmsSplitBatchGroups(db, request) {
     throw new HttpsError('failed-precondition', 'Link this batch to its learners first.');
 
   const { splitIntoGroups } = require('./batchGroups');
-  const learners = await learnersForBatch(db, batch);
-  if (!learners.length) throw new HttpsError('failed-precondition', 'This batch has no learners yet.');
-  const { groups, assign } = splitIntoGroups(learners, request.data?.size, batch.groups || []);
+  const all = await learnersForBatch(db, batch);
+  if (!all.length) throw new HttpsError('failed-precondition', 'This batch has no learners yet.');
 
-  await ref.set({ groups, groupsSplitAt: new Date(), updatedAt: new Date() }, { merge: true });
-  const entries = [...assign.entries()];
-  for (let i = 0; i < entries.length; i += 400) {
-    const w = db.batch();
-    for (const [uid, id] of entries.slice(i, i + 400)) {
-      w.set(db.collection('users').doc(uid), { programAccess: { lep: { group: { batchId, id } } } }, { merge: true });
+  const day1 = isoDay(batch.day1Date);
+  const zohoCheck = accessKey(batch.program) === 'lep' && day1 && deps;
+  let learners = all;
+  let leftOut = [];
+  let matched = new Map();
+  let zohoOnly = [];
+  if (zohoCheck) {
+    const { matchRoster, fetchZohoBatchLeads } = require('./zohoBatchCheck');
+    let leads;
+    try {
+      leads = await fetchZohoBatchLeads(day1, deps);
+    } catch (e) {
+      throw new HttpsError('unavailable', 'Zoho could not be read, so nothing was split. Try again in a minute.');
     }
+    const roster = matchRoster(leads, all);
+    matched = roster.matched;
+    zohoOnly = roster.unmatchedLeads.map((l) => l.Full_Name || l.Email || 'Unnamed lead');
+    learners = all.filter((l) => matched.has(l.uid));
+    leftOut = all.filter((l) => !matched.has(l.uid));
+    if (!learners.length)
+      throw new HttpsError('failed-precondition', 'Zoho has none of this batch’s learners on this Day 1, so nothing was split.');
+  }
+
+  const { groups, assign } = splitIntoGroups(learners, request.data?.size, batch.groups || []);
+  await ref.set(
+    { groups, groupsSplitAt: new Date(), groupsLeftOut: leftOut.map((l) => l.uid), updatedAt: new Date() },
+    { merge: true }
+  );
+
+  const writes = [];
+  let synced = 0;
+  for (const l of learners) {
+    const lep = { group: { batchId, id: assign.get(l.uid) } };
+    const lead = matched.get(l.uid);
+    if (lead) {
+      const own = l.data?.programAccess?.lep || {};
+      if (isoDay(own.day1Date) !== day1) lep.day1Date = day1;
+      if (lead.LEP_Batch && own.zohoRawBatch !== lead.LEP_Batch) lep.zohoRawBatch = lead.LEP_Batch;
+      if (lep.day1Date || lep.zohoRawBatch) synced += 1;
+    }
+    writes.push([l.uid, { programAccess: { lep } }]);
+  }
+  for (const l of leftOut) {
+    if (l.data?.programAccess?.lep?.group?.batchId === batchId)
+      writes.push([l.uid, { programAccess: { lep: { group: null } } }]);
+  }
+  for (let i = 0; i < writes.length; i += 400) {
+    const w = db.batch();
+    for (const [uid, patch] of writes.slice(i, i + 400)) w.set(db.collection('users').doc(uid), patch, { merge: true });
     await w.commit();
   }
+
   const sizes = Object.fromEntries(groups.map((g) => [g.id, 0]));
   for (const id of assign.values()) sizes[id] += 1;
-  return { ok: true, groups: groups.map((g) => ({ id: g.id, name: g.name, learners: sizes[g.id] })) };
+  const nameOf = (d) => d?.displayName || d?.name || d?.email || 'Learner';
+  return {
+    ok: true,
+    zohoChecked: Boolean(zohoCheck),
+    groups: groups.map((g) => ({ id: g.id, name: g.name, learners: sizes[g.id] })),
+    synced,
+    leftOut: leftOut.map((l) => {
+      const zb = l.data?.programAccess?.lep?.zohoRawBatch;
+      return {
+        name: nameOf(l.data),
+        why: zb
+          ? `Not in Zoho for this date (her Zoho batch reads "${zb}"). Not put in a group.`
+          : 'Not in Zoho for this date. Not put in a group. If she belongs here, fix her LEP Batch in Zoho and split again.',
+      };
+    }),
+    zohoOnly: zohoOnly.slice(0, 100),
+  };
 }
 
-/** Real batches for one program, from the LMS (synced from Zoho): name, raw Zoho value, size. */
 async function runCmsListProgramBatches(db, request) {
   await assertCmsStaff(db, request.auth?.uid);
   const program = String(request.data?.program || '').toLowerCase();

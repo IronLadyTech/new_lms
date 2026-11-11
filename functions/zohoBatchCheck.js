@@ -51,7 +51,11 @@ async function fetchZohoBatchLeads(day1, deps) {
  * @param leads Zoho rows; @param learners [{ uid, data }]; @param elsewhere(email) → her Day 1
  *   in the app if she has an account but is not in this batch, '' if none.
  */
-function compareRoster(leads, learners, { day1, elsewhere = {} } = {}) {
+/**
+ * Which app learner is which Zoho lead. Pure; used by the check and by "Split into groups".
+ * @returns {{ active, matched: Map<uid, lead>, unmatchedLeads: lead[] }}
+ */
+function matchRoster(leads, learners) {
   const active = leads.filter((l) => isActiveLeadStatus(l.Lead_Status));
   const byLead = new Map();
   const byMail = new Map();
@@ -64,18 +68,25 @@ function compareRoster(leads, learners, { day1, elsewhere = {} } = {}) {
     const p = ten(d.phoneNumber || d.phone);
     if (p.length === 10) byPhone.set(p, l);
   });
-  const seen = new Set();
-  const onlyZoho = [];
+  const matched = new Map();
+  const unmatchedLeads = [];
   for (const lead of active) {
     const hit =
       byLead.get(String(lead.id)) ||
       byMail.get(mail(lead.Email)) ||
       byPhone.get(ten(lead.Mobile)) ||
       byPhone.get(ten(lead.Phone));
-    if (hit) {
-      seen.add(hit.uid);
-      continue;
-    }
+    if (hit && !matched.has(hit.uid)) matched.set(hit.uid, lead);
+    else if (!hit) unmatchedLeads.push(lead);
+  }
+  return { active, matched, unmatchedLeads };
+}
+
+function compareRoster(leads, learners, { day1, elsewhere = {} } = {}) {
+  const { active, matched, unmatchedLeads } = matchRoster(leads, learners);
+  const seen = new Set(matched.keys());
+  const onlyZoho = [];
+  for (const lead of unmatchedLeads) {
     const other = elsewhere[mail(lead.Email)];
     onlyZoho.push({
       name: lead.Full_Name || lead.Email || 'Unnamed lead',
@@ -109,4 +120,4 @@ function compareRoster(leads, learners, { day1, elsewhere = {} } = {}) {
   };
 }
 
-module.exports = { compareRoster, fetchZohoBatchLeads, coqlForDay1 };
+module.exports = { compareRoster, matchRoster, fetchZohoBatchLeads, coqlForDay1 };
