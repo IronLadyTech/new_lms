@@ -87,8 +87,10 @@ exports.runSendParticipantNotificationTest = async (request) => {
     joinLink: 'https://zoom.us/j/0000000000',
     score: '—',
   };
-  const finalTitle = title || fillTemplate(event?.title || event?.name || 'Iron Lady', vars);
-  const finalBody = body || fillTemplate(event?.body || '', vars);
+  // Session reminders: show the Day 1 words, exactly as a learner would get them.
+  const copy = event ? require('./lepSessionCopy').sessionCopy(event.code, 'S1', vars) : null;
+  const finalTitle = title || (copy ? copy.title : fillTemplate(event?.title || event?.name || 'Iron Lady', vars));
+  const finalBody = body || (copy ? copy.body : fillTemplate(event?.body || '', vars));
   const finalGo = go || { to: 'myProgram' };
 
   const inAppPayload = {

@@ -18,6 +18,7 @@ const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { deliverCmsEventToUser } = require('./lepNotificationDeliver');
 const { autoStartReadyBatches } = require('./batchAutoStart');
 const { enrolNudgeFires, wantsEnrolNudge } = require('./lepEnrolNudges');
+const { sessionCopy } = require('./lepSessionCopy');
 const { sessionAnchorFires } = require('./lepNotificationAnchors');
 const { timeAnchorFires } = require('./lepTimeAnchors');
 const { doneTaskIds, messageForLearner, taskReminderFires, taskReminderKind } = require('./lepTaskReminders');
@@ -226,9 +227,11 @@ async function runLepNotificationScheduler() {
           if (!reachesLearner(fire.session, data.programAccess?.lep?.paymentStatus)) continue;
           const name = data.displayName || data.firstName || data.name;
           const vars = { ...fire.vars, name: name ? String(name).split(' ')[0] : 'there' };
+          // Each session has its own words (lepSessionCopy.js); others use the CMS rule's text.
+          const copy = sessionCopy(fire.event.code, fire.session?.code, vars);
           await deliverCmsEventToUser(db, uid, fire.event, vars, {
-            title: finishText(fire.event.title || fire.event.name || 'Iron Lady', vars),
-            body: finishText(fire.event.body, vars),
+            title: copy ? copy.title : finishText(fire.event.title || fire.event.name || 'Iron Lady', vars),
+            body: copy ? copy.body : finishText(fire.event.body, vars),
             go: { to: 'schedule' },
           });
           delivered += 1;
