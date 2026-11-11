@@ -1561,7 +1561,7 @@ exports.sendParticipantNotificationTest = onCall({ region: 'us-central1' }, asyn
 });
 
 exports.lepNotificationScheduler = onSchedule(
-  { schedule: 'every 15 minutes', timeZone: 'Asia/Kolkata', region: 'us-central1' },
+  { schedule: 'every 5 minutes', timeZone: 'Asia/Kolkata', region: 'us-central1' },
   async () => {
     const { runLepNotificationScheduler } = require('./lepNotificationScheduler');
     return runLepNotificationScheduler();

@@ -32,7 +32,19 @@ const {
 const { inAudience } = require('./learnerSegments');
 const { learnersForBatch } = require('./cmsBatchLearners');
 
-const WINDOW_MS = 15 * 60 * 1000;
+/** The scheduler runs every 5 minutes (index.js). */
+const WINDOW_MS = 5 * 60 * 1000;
+
+/**
+ * When to send a session reminder. "Before" messages (1 hour, 15 minutes) go up to 5 minutes
+ * EARLY, never late — a "starts in 15 minutes" that arrives after the start is useless.
+ * "Live" and after-session messages go at their time or up to 5 minutes after, so "your
+ * session is live" never arrives before it has started.
+ */
+function sessionWindow(event, now) {
+  const before = event?.anchor?.type === 'sessionStart' && Number(event.anchor.offsetMinutes) < 0;
+  return before ? [now, now + WINDOW_MS] : [now - WINDOW_MS, now];
+}
 
 async function loadLiveBatches(db) {
   const snap = await db.collection('cms_batches').where('status', '==', 'live').get();
@@ -160,8 +172,9 @@ async function runLepNotificationScheduler() {
   let skipped = 0;
 
   for (const batch of batches) {
-    const learners = await participantsForBatch(db, batch);
-    if (!learners.length) continue;
+    // Learners are loaded only when a message is due for this batch (most 5-minute runs: none).
+    let learners = null;
+    const learnersNow = async () => (learners = learners || (await participantsForBatch(db, batch)));
     // Her handed-in LEP tasks, loaded once per run and only if a due / overdue fire needs them.
     const doneByUid = new Map();
     const doneFor = async (uid) => {
@@ -179,7 +192,7 @@ async function runLepNotificationScheduler() {
         continue;
       }
       let recipients = 0;
-      for (const { uid, data } of learners) {
+      for (const { uid, data } of await learnersNow()) {
         if (!wantsEnrolNudge(data)) continue;
         const name = data.displayName || data.firstName || data.name;
         const vars = { name: name ? String(name).split(' ')[0] : 'there' };
@@ -201,14 +214,14 @@ async function runLepNotificationScheduler() {
     }
 
     for (const event of sessionEvents) {
-      const fires = sessionAnchorFires(batch, event, windowStartMs, windowEndMs);
+      const fires = sessionAnchorFires(batch, event, ...sessionWindow(event, now));
       for (const fire of fires) {
         if (await alreadySent(db, fire.dedupeKey)) {
           skipped += 1;
           continue;
         }
         let recipients = 0;
-        for (const { uid, data } of learners) {
+        for (const { uid, data } of await learnersNow()) {
           // Part-paid learners only hear about the sessions open to them.
           if (!reachesLearner(fire.session, data.programAccess?.lep?.paymentStatus)) continue;
           const name = data.displayName || data.firstName || data.name;
@@ -238,7 +251,7 @@ async function runLepNotificationScheduler() {
           continue;
         }
         let recipients = 0;
-        for (const { uid, data } of learners) {
+        for (const { uid, data } of await learnersNow()) {
           if (!reachesLearnerOnDay(fire.offset, data.programAccess?.lep?.paymentStatus)) continue;
           const name = data.displayName || data.firstName || data.name;
           const vars = { ...fire.vars, name: name ? String(name).split(' ')[0] : 'there' };
@@ -267,7 +280,7 @@ async function runLepNotificationScheduler() {
           continue;
         }
         let recipients = 0;
-        for (const { uid, data } of learners) {
+        for (const { uid, data } of await learnersNow()) {
           const name = data.displayName || data.firstName || data.name;
           const msg = messageForLearner(fire, event, {
             paymentStatus: data.programAccess?.lep?.paymentStatus,
@@ -300,4 +313,4 @@ async function runLepNotificationScheduler() {
   return { delivered, skipped };
 }
 
-module.exports = { runLepNotificationScheduler };
+module.exports = { runLepNotificationScheduler, sessionWindow, WINDOW_MS };
