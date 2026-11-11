@@ -22,6 +22,7 @@ const { sessionCopy } = require('./lepSessionCopy');
 const { withProgram } = require('./programTag');
 const { ritualsCopy, RITUALS_GO } = require('./lepRitualsCopy');
 const { batchGroupsOf, learnerGroupId, groupJoinLink, smallestGroup } = require('./batchGroups');
+const { ensureLepCmsBatches, placeUngrouped } = require('./batchSync');
 const { sessionAnchorFires } = require('./lepNotificationAnchors');
 const { timeAnchorFires } = require('./lepTimeAnchors');
 const { doneTaskIds, messageForLearner, taskReminderFires, taskReminderKind } = require('./lepTaskReminders');
@@ -150,6 +151,14 @@ async function runLepNotificationScheduler() {
 
   const customSent = await deliverDueBatchMessages(db, now);
 
+  // Once an hour: every LEP batch Zoho has gets its CMS batch, or joins the one for its Day 1
+  // (batchSync.js), so a new Zoho batch is ready for grouping without CX doing anything.
+  if (new Date(now).getUTCMinutes() < 5) {
+    await ensureLepCmsBatches(db, now).catch((e) =>
+      console.error('[lepNotificationScheduler] batch sync:', e?.message || e)
+    );
+  }
+
   // Ready batches switch their reminders on by themselves (batchAutoStart.js); CX no
   // longer has to press Start on each one. A batch CX paused is left alone.
   await autoStartReadyBatches(db, now).catch((e) =>
@@ -182,6 +191,13 @@ async function runLepNotificationScheduler() {
     // Every reminder of this batch starts with its programme: "LEP · Day 1 starts in 15 minutes".
     const deliver = (uid, ev, vars, o) =>
       deliverCmsEventToUser(db, uid, ev, vars, { ...o, title: withProgram(batch.program, o.title) });
+    // Batch split into groups: anyone not in one yet (joined late, or rescheduled in) goes
+    // into the smallest group now, so the CMS counts and her Zoom link are right.
+    if (batchGroupsOf(batch).length) {
+      await placeUngrouped(db, batch, await learnersNow()).catch((e) =>
+        console.error('[lepNotificationScheduler] groups:', batch.id, e?.message || e)
+      );
+    }
     // Her handed-in LEP tasks, loaded once per run and only if a due / overdue fire needs them.
     const doneByUid = new Map();
     const doneFor = async (uid) => {

@@ -1208,6 +1208,17 @@ exports.cmsBatchLearnerCounts = onCall({ region: 'us-central1' }, async (request
   return runCmsBatchLearnerCounts(db, request);
 });
 
+/** CMS: compare a batch's learners with Zoho (counts and the names that differ). */
+exports.cmsBatchZohoCheck = onCall({ region: 'us-central1', timeoutSeconds: 120 }, async (request) => {
+  const { runCmsBatchZohoCheck } = require('./cmsBatchLearners');
+  if (!zoho.isConfigured()) throw new HttpsError('failed-precondition', 'Zoho is not connected on the server.');
+  return runCmsBatchZohoCheck(db, request, {
+    getAccessToken: zoho.getAccessToken,
+    getApiDomain: zoho.getApiDomain,
+    fetch: (...a) => fetch(...a),
+  });
+});
+
 /** CMS: split a batch into groups (Group 1, 2, 3 …), each with its own Zoom link. */
 exports.cmsSplitBatchGroups = onCall({ region: 'us-central1' }, async (request) => {
   const { runCmsSplitBatchGroups } = require('./cmsBatchLearners');

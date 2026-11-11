@@ -190,7 +190,40 @@ async function runCmsListProgramBatches(db, request) {
   return { batches };
 }
 
+/**
+ * CMS "Check against Zoho": the batch's learners in the app vs Zoho's Leads for its Day 1.
+ * Counts, and the names that differ with the reason (zohoBatchCheck.js). Names are shown to
+ * CMS staff only, so CEM can fix them in Zoho.
+ */
+async function runCmsBatchZohoCheck(db, request, deps) {
+  await assertCmsStaff(db, request.auth?.uid);
+  const batchId = String(request.data?.batchId || '').trim();
+  if (!batchId) throw new HttpsError('invalid-argument', 'batchId is required');
+  const snap = await db.collection('cms_batches').doc(batchId).get();
+  if (!snap.exists) throw new HttpsError('not-found', 'No such batch');
+  const batch = { id: snap.id, ...snap.data() };
+  const day1 = String(batch.day1Date || '').slice(0, 10);
+  if (!day1) throw new HttpsError('failed-precondition', 'Set this batch’s Day 1 first.');
+
+  const { compareRoster, fetchZohoBatchLeads } = require('./zohoBatchCheck');
+  const [leads, learners] = await Promise.all([fetchZohoBatchLeads(day1, deps), learnersForBatch(db, batch)]);
+  // Zoho names the app does not have here: is there an account, and on which batch?
+  const first = compareRoster(leads, learners, { day1 });
+  const elsewhere = {};
+  const missingEmails = leads
+    .filter((l) => first.onlyZoho.some((x) => x.name === (l.Full_Name || l.Email || 'Unnamed lead')))
+    .map((l) => String(l.Email || '').trim().toLowerCase())
+    .filter(Boolean)
+    .slice(0, 60);
+  for (const email of missingEmails) {
+    const u = await db.collection('users').where('email', '==', email).limit(1).get();
+    elsewhere[email] = u.empty ? null : String(u.docs[0].data()?.programAccess?.lep?.day1Date || '').slice(0, 10);
+  }
+  return { ok: true, day1, checkedAt: new Date().toISOString(), ...compareRoster(leads, learners, { day1, elsewhere }) };
+}
+
 module.exports = {
+  runCmsBatchZohoCheck,
   runCmsBatchLearnerCounts,
   runCmsListProgramBatches,
   runCmsSplitBatchGroups,

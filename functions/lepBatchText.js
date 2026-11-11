@@ -1,7 +1,7 @@
 /**
  * A learner's LEP batch written back to her Zoho Lead when she changes it in the app.
  *
- *   LEP_Batch      "14 Nov 2026 – 14 Dec 2026"  (the style CX use; the cohort groups follow it)
+ *   LEP_Batch      "14/11/2026 - 14/12/2026"    (the style Zoho Leads use; checked on the 14 Nov batch)
  *   LEP_Reg_Date   2026-11-14                   (LEP Start Date = Day 1)
  *   LEP_End_Date   2026-12-14                   (one calendar month later)
  *
@@ -31,10 +31,10 @@ function addOneMonth(iso) {
   return toIso(d);
 }
 
-function label(iso) {
-  const d = parseIso(iso);
-  if (!d) return '';
-  return `${String(d.getUTCDate()).padStart(2, '0')} ${MON[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+/** 2026-11-14 → 14/11/2026 */
+function dmy(iso) {
+  const [y, m, d] = String(iso).split('-');
+  return `${d}/${m}/${y}`;
 }
 
 /** The three Lead fields for a Day 1 (YYYY-MM-DD), or {} when the date is not valid. */
@@ -43,7 +43,7 @@ function lepBatchLeadFields(day1Iso) {
   if (!parseIso(start)) return {};
   const end = addOneMonth(start);
   return {
-    LEP_Batch: `${label(start)} – ${label(end)}`,
+    LEP_Batch: `${dmy(start)} - ${dmy(end)}`,
     LEP_Reg_Date: start,
     LEP_End_Date: end,
   };
