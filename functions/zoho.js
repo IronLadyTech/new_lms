@@ -587,8 +587,9 @@ async function getLeadById(leadId) {
     headers: { Authorization: `Zoho-oauthtoken ${token}` },
   });
 
-  if (!res.ok) return null;
-  const body = await res.json();
+  // A Lead that was merged or deleted answers 204 with an empty body: no Lead, not an error.
+  if (!res.ok || res.status === 204) return null;
+  const body = await res.json().catch(() => null);
   return body?.data?.[0] || null;
 }
 

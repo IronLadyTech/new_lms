@@ -1642,6 +1642,17 @@ exports.verifyRazorpayPayment = onCall(RAZORPAY_FN_OPTS, async (request) => {
   );
 });
 
+/** Every 30 minutes: payments whose Zoho update failed are sent again (status + Note). */
+exports.retryPaymentZohoSync = onSchedule(
+  { schedule: 'every 30 minutes', timeZone: 'Asia/Kolkata', region: 'us-central1', timeoutSeconds: 120 },
+  async () => {
+    if (!zoho.isConfigured()) return;
+    const { retryFailedPaymentSyncs } = require('./paymentZohoSync');
+    const res = await retryFailedPaymentSyncs(db);
+    if (res.tried) console.log('retryPaymentZohoSync', JSON.stringify(res));
+  }
+);
+
 exports.razorpayWebhook = onRequest({ cors: false }, async (req, res) => {
   try {
     const result = await razorpayPayments().handleWebhook(

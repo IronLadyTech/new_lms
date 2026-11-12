@@ -74,3 +74,25 @@ describe('payment → Zoho', () => {
     expect(db.docs.pay_1.zohoSyncedAt).toBeUndefined();
   });
 });
+
+describe('a failed Zoho update is tried again', () => {
+  it('retries until it reaches Zoho, then stops', async () => {
+    const { retryFailedPaymentSyncs } = await import('./paymentZohoSync.js');
+    const docs = { pay_1: { uid: 'u1', programId: 'lep', orderId: 'order_1', amountPaise: 100, testMode: true, zohoError: 'Unexpected end of JSON input' } };
+    const users = { u1: { email: 'a@x.com' } };
+    const db = {
+      collection: (c) => ({
+        where: () => ({ limit: () => ({ get: async () => ({ docs: Object.entries(docs).filter(([, d]) => d.zohoError).map(([id, d]) => ({ id, data: () => d, ref: { set: async (p) => Object.assign(docs[id], p) } })) }) }) }),
+        doc: (id) => ({
+          get: async () => (c === 'users' ? { exists: true, data: () => users[id] } : { exists: !!docs[id], data: () => docs[id] }),
+          set: async (p) => Object.assign((docs[id] = docs[id] || {}), p),
+        }),
+      }),
+    };
+    const z = fakeZoho('LEP Enrolled');
+    expect(await retryFailedPaymentSyncs(db, z)).toEqual({ tried: 1, fixed: 1 });
+    expect(docs.pay_1.zohoStatusTo).toBe('LEP Started');
+    expect(z.calls.notes[0][1]).toMatch(/^TEST payment/);
+    expect(await retryFailedPaymentSyncs(db, z)).toEqual({ tried: 0, fixed: 0 });
+  });
+});

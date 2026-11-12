@@ -87,4 +87,28 @@ async function syncPaymentToZoho(db, payment, deps = defaultDeps()) {
   }
 }
 
-module.exports = { syncPaymentToZoho, paidLeadStatus, paymentNote };
+/**
+ * Payments whose Zoho update failed (Zoho down, Lead not found yet …) are tried again, up to
+ * 10 times, by a schedule. The payment itself always stands; only the Zoho copy is retried.
+ */
+async function retryFailedPaymentSyncs(db, deps = defaultDeps(), limit = 20) {
+  if (!deps) return { tried: 0 };
+  const snap = await db.collection('razorpay_payments').where('zohoError', '!=', null).limit(limit).get();
+  let tried = 0;
+  let fixed = 0;
+  for (const doc of snap.docs) {
+    const p = doc.data() || {};
+    if (p.zohoSyncedAt || (p.zohoTries || 0) >= 10 || !p.uid) continue;
+    tried += 1;
+    await doc.ref.set({ zohoTries: (p.zohoTries || 0) + 1 }, { merge: true });
+    const res = await syncPaymentToZoho(
+      db,
+      { uid: p.uid, programId: p.programId || 'lep', paymentId: doc.id, orderId: p.orderId, amountPaise: p.amountPaise, testMode: Boolean(p.testMode) },
+      deps
+    );
+    if (res.ok) fixed += 1;
+  }
+  return { tried, fixed };
+}
+
+module.exports = { syncPaymentToZoho, retryFailedPaymentSyncs, paidLeadStatus, paymentNote };
