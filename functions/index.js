@@ -1653,6 +1653,34 @@ exports.retryPaymentZohoSync = onSchedule(
   }
 );
 
+/** CMS: every payment made in the app and whether it reached Zoho. */
+exports.cmsListAppPayments = onCall({ region: 'us-central1' }, async (request) => {
+  return require('./appPaymentsAdmin').runCmsListAppPayments(db, request);
+});
+
+/** CMS: send one payment to Zoho again (status + Note). */
+exports.cmsRetryPaymentZoho = onCall({ region: 'us-central1', timeoutSeconds: 60 }, async (request) => {
+  if (!zoho.isConfigured()) throw new HttpsError('failed-precondition', 'Zoho is not connected on the server.');
+  return require('./appPaymentsAdmin').runCmsRetryPaymentZoho(db, request);
+});
+
+/** CMS: check Razorpay now for payments the app never confirmed. */
+exports.cmsCheckRazorpayNow = onCall({ ...RAZORPAY_FN_OPTS, timeoutSeconds: 300 }, async (request) => {
+  return require('./appPaymentsAdmin').runCmsCheckRazorpayNow(db, request);
+});
+
+/**
+ * Every night 2:30 AM IST: every payment Razorpay captured in the last 2 days for an app order
+ * must be recorded; any the app never confirmed is recorded, unlocked and sent to Zoho now.
+ */
+exports.reconcileRazorpayDaily = onSchedule(
+  { schedule: '30 2 * * *', timeZone: 'Asia/Kolkata', region: 'us-central1', timeoutSeconds: 300, memory: '256MiB' },
+  async () => {
+    const res = await razorpayPayments().reconcileRazorpayPayments(db, { days: 2 });
+    console.log('reconcileRazorpayDaily', JSON.stringify({ ...res, recovered: res.recovered.length }));
+  }
+);
+
 exports.razorpayWebhook = onRequest({ cors: false }, async (req, res) => {
   try {
     const result = await razorpayPayments().handleWebhook(

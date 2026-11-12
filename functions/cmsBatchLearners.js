@@ -320,6 +320,7 @@ async function runCmsBatchZohoCheck(db, request, deps) {
 }
 
 module.exports = {
+  assertCmsStaff,
   runCmsBatchZohoCheck,
   runCmsBatchLearnerCounts,
   runCmsListProgramBatches,

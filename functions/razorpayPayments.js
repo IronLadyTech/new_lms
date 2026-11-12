@@ -261,6 +261,104 @@ function verifyWebhookSignature(rawBody, signature, webhookSecret) {
   return expected === signature;
 }
 
+/**
+ * A payment Razorpay captured for one of our orders, recorded the way the app does it:
+ * order paid, payment saved, programme unlocked, Zoho updated. Used by the webhook and by
+ * the daily check against Razorpay (a learner whose app closed before it confirmed).
+ */
+async function recordPaidPayment(db, orderSnap, payment, source) {
+  const order = orderSnap.data();
+  await orderSnap.ref.set(
+    { status: 'paid', paymentId: payment.id, paidAt: new Date(), ...(source === 'webhook' ? { webhook: true } : { recoveredBy: source }) },
+    { merge: true }
+  );
+  await db.collection(PAYMENTS).doc(payment.id).set(
+    {
+      paymentId: payment.id,
+      orderId: payment.order_id,
+      uid: order.uid,
+      programId: order.programId,
+      amountPaise: payment.amount,
+      verifiedAt: new Date(),
+      source,
+      ...(order.testMode ? { testMode: true } : {}),
+    },
+    { merge: true }
+  );
+  await markProgrammePaid(db, order.uid, order.programId, { paymentId: payment.id, orderId: payment.order_id });
+  await syncPaymentToZoho(db, {
+    uid: order.uid,
+    programId: order.programId,
+    paymentId: payment.id,
+    orderId: payment.order_id,
+    amountPaise: payment.amount,
+    testMode: Boolean(order.testMode),
+  });
+}
+
+/** Razorpay payments created between two times (unix seconds), all pages. */
+async function fetchRazorpayPayments(keys, from, to) {
+  const instance = razorpayClient(keys.keyId, keys.keySecret);
+  const out = [];
+  for (let skip = 0; skip < 2000; skip += 100) {
+    const page = await instance.payments.all({ from, to, count: 100, skip });
+    const items = page?.items || [];
+    out.push(...items);
+    if (items.length < 100) break;
+  }
+  return out;
+}
+
+/**
+ * Daily safety net: every payment Razorpay captured in the last `days` days for one of our
+ * orders must be in razorpay_payments. Anything missing (the app closed before it confirmed,
+ * no webhook) is recorded now. Payments for orders that are not ours (website, other tools on
+ * the same Razorpay account) are left alone. Live keys always; test keys when configured.
+ * @param deps.listPayments(mode, from, to) — for tests; defaults to the Razorpay API.
+ */
+async function reconcileRazorpayPayments(db, { days = 2 } = {}, deps = {}) {
+  const to = Math.floor(Date.now() / 1000);
+  const from = to - Math.max(1, Math.min(30, Number(days) || 2)) * 86400;
+  const modes = [];
+  const live = (() => {
+    try {
+      return getKeys();
+    } catch {
+      return null;
+    }
+  })();
+  if (live) modes.push(['live', live]);
+  if (testKeys()) modes.push(['test', testKeys()]);
+  const list = deps.listPayments || ((mode, f, t) => fetchRazorpayPayments(modes.find((m) => m[0] === mode)[1], f, t));
+  const summary = { checked: 0, ours: 0, recovered: [], errors: [] };
+  for (const [mode] of deps.modes ? deps.modes.map((m) => [m]) : modes) {
+    let items = [];
+    try {
+      items = await list(mode, from, to);
+    } catch (e) {
+      summary.errors.push(`${mode}: ${String(e?.error?.description || e?.message || e).slice(0, 160)}`);
+      continue;
+    }
+    for (const p of items) {
+      summary.checked += 1;
+      if (p.status !== 'captured' || !p.order_id) continue;
+      const orderSnap = await db.collection(ORDERS).doc(p.order_id).get();
+      if (!orderSnap.exists) continue; // not an app order
+      summary.ours += 1;
+      const known = await db.collection(PAYMENTS).doc(p.id).get();
+      if (known.exists) continue;
+      await recordPaidPayment(db, orderSnap, p, 'razorpay-check');
+      summary.recovered.push({ paymentId: p.id, uid: orderSnap.data().uid, mode });
+    }
+  }
+  await db
+    .collection('app_stats')
+    .doc('razorpayCheck')
+    .set({ lastRunAt: new Date(), days, ...summary, recovered: summary.recovered.slice(0, 50) }, { merge: false })
+    .catch(() => {});
+  return summary;
+}
+
 async function handleWebhook(req, db, keySecret, webhookSecret) {
   const signature = req.headers['x-razorpay-signature'];
   const rawBody =
@@ -278,33 +376,7 @@ async function handleWebhook(req, db, keySecret, webhookSecret) {
   if (event === 'payment.captured' && payment?.id && payment?.order_id) {
     const orderSnap = await db.collection(ORDERS).doc(payment.order_id).get();
     if (orderSnap.exists && orderSnap.data().status !== 'paid') {
-      const order = orderSnap.data();
-      await orderSnap.ref.update({
-        status: 'paid',
-        paymentId: payment.id,
-        paidAt: new Date(),
-        webhook: true,
-      });
-      await db.collection(PAYMENTS).doc(payment.id).set({
-        paymentId: payment.id,
-        orderId: payment.order_id,
-        uid: order.uid,
-        programId: order.programId,
-        amountPaise: payment.amount,
-        verifiedAt: new Date(),
-        source: 'webhook',
-      });
-      await markProgrammePaid(db, order.uid, order.programId, {
-        paymentId: payment.id,
-        orderId: payment.order_id,
-      });
-      await syncPaymentToZoho(db, {
-        uid: order.uid,
-        programId: order.programId,
-        paymentId: payment.id,
-        orderId: payment.order_id,
-        amountPaise: payment.amount,
-      });
+      await recordPaidPayment(db, orderSnap, payment, 'webhook');
     }
   }
 
@@ -316,5 +388,7 @@ module.exports = {
   verifyPayment,
   isTestAccount,
   testKeys,
+  recordPaidPayment,
+  reconcileRazorpayPayments,
   handleWebhook,
 };
