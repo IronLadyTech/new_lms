@@ -7,6 +7,10 @@
  * "LEP Enrolled" to "LEP Started" (100BM: "100 BM started", MBW: "MBW started") and a Note
  * records the amount, the Razorpay ids and the date for CX.
  *
+ * Zoho runs Lead Status through a Blueprint, so the status cannot just be written: the app
+ * performs the Blueprint step ("LEP Started", "100BM Started", "MBW Started") and fills the
+ * payment fields that step asks for (amount, Razorpay payment id, payment status Completed).
+ *
  * Only forward: a Lead already Started or Completed for that programme, or in a refund, keeps
  * its status (the Note is still added). Each payment is sent once (razorpay_payments
  * zohoSyncedAt), however many times Razorpay and the app both report it.
@@ -71,7 +75,10 @@ async function syncPaymentToZoho(db, payment, deps = defaultDeps()) {
     const lead = await deps.getLeadById(leadId);
     const from = lead?.Lead_Status || '';
     const to = paidLeadStatus(programId, from);
-    if (to) await deps.updateLead(leadId, { Lead_Status: to });
+    if (to) {
+      if (deps.moveToStatus) await deps.moveToStatus(leadId, lead, to, payment);
+      else await deps.updateLead(leadId, { Lead_Status: to });
+    }
     const note = paymentNote({ ...payment, from, to, at: new Date() });
     await deps.addNote(leadId, note.title, note.content).catch((e) => console.warn('payment note failed', e.message));
     await ref.set(
@@ -111,4 +118,33 @@ async function retryFailedPaymentSyncs(db, deps = defaultDeps(), limit = 20) {
   return { tried, fixed };
 }
 
-module.exports = { syncPaymentToZoho, retryFailedPaymentSyncs, paidLeadStatus, paymentNote };
+/**
+ * The data a Blueprint step asks for, from the payment. Pure.
+ * Amount fields keep the amount already on the Lead (CX enter the programme fee there) and
+ * get the paid amount only when empty; the transaction id is the Razorpay payment id; the
+ * payment status is "Completed". Anything else the step shows is left as it is.
+ */
+function transitionData(fields, lead, payment) {
+  const data = {};
+  for (const f of fields || []) {
+    const key = f.api_name;
+    if (!key) continue;
+    if (/amount/i.test(key)) {
+      const have = lead?.[key];
+      data[key] = have != null && String(have).trim() !== '' ? String(have) : String(Math.round(Number(payment.amountPaise || 0) / 100));
+    } else if (/transaction/i.test(key)) {
+      data[key] = String(payment.paymentId);
+    } else if (/payment_status/i.test(key)) {
+      data[key] = 'Completed';
+    }
+  }
+  return data;
+}
+
+/** Pick the Blueprint step that leads to `to` (e.g. "LEP Started" or "100BM Started"). Pure. */
+function pickTransition(transitions, to) {
+  const n = (s) => String(s || '').toLowerCase().replace(/\s+/g, '');
+  return (transitions || []).find((t) => n(t.next_field_value) === n(to) || n(t.name) === n(to)) || null;
+}
+
+module.exports = { syncPaymentToZoho, retryFailedPaymentSyncs, paidLeadStatus, paymentNote, transitionData, pickTransition };

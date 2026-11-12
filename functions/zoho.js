@@ -1327,6 +1327,33 @@ function paymentSyncDeps() {
     getLeadById,
     updateLead: (id, fields) => updateLeadByIdResilient(id, fields),
     addNote: addLeadNote,
+    /**
+     * Lead Status runs through a Blueprint: perform the step to `to` with the payment fields
+     * it asks for. A Lead outside the Blueprint is updated directly.
+     */
+    async moveToStatus(leadId, lead, to, payment) {
+      const { transitionData, pickTransition } = require('./paymentZohoSync');
+      const token = await getAccessToken();
+      const url = `${getApiDomain()}/crm/v2/${getModule()}/${leadId}/actions/blueprint`;
+      const got = await zohoApiFetch(url, { headers: { Authorization: `Zoho-oauthtoken ${token}` } });
+      const bp = got.ok && got.status !== 204 ? (await got.json().catch(() => null))?.blueprint : null;
+      const step = pickTransition(bp?.transitions, to);
+      if (!step) {
+        if (bp?.transitions?.length)
+          throw new Error(`Zoho Blueprint has no step to "${to}" from "${lead?.Lead_Status || '-'}" (steps: ${bp.transitions.map((t) => t.name).join(', ')})`);
+        return updateLeadByIdResilient(leadId, { Lead_Status: to });
+      }
+      const res = await zohoApiFetch(url, {
+        method: 'PUT',
+        headers: { Authorization: `Zoho-oauthtoken ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blueprint: [{ transition_id: step.id, data: transitionData(step.fields, lead, payment) }] }),
+      });
+      const body = await res.json().catch(() => ({}));
+      const row = body?.data?.[0] || body;
+      if (!res.ok || (row?.status && row.status !== 'success'))
+        throw new Error(`Zoho Blueprint step "${step.name}" failed: ${String(row?.message || row?.code || `HTTP ${res.status}`).slice(0, 200)} ${JSON.stringify(row?.details || '').slice(0, 200)}`);
+      return true;
+    },
   };
 }
 

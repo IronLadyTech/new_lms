@@ -96,3 +96,32 @@ describe('a failed Zoho update is tried again', () => {
     expect(await retryFailedPaymentSyncs(db, z)).toEqual({ tried: 0, fixed: 0 });
   });
 });
+
+describe('Zoho Blueprint step for a payment', () => {
+  it('picks the step to the paid status', async () => {
+    const { pickTransition } = await import('./paymentZohoSync.js');
+    const steps = [{ id: '1', name: 'MC Completed', next_field_value: 'MC Completed' }, { id: '2', name: 'LEP Started', next_field_value: 'LEP Started' }];
+    expect(pickTransition(steps, 'LEP Started').id).toBe('2');
+    expect(pickTransition([{ id: '3', name: '100BM Started', next_field_value: '100 BM started' }], '100 BM started').id).toBe('3');
+    expect(pickTransition(steps, 'MBW started')).toBe(null);
+  });
+  it('fills what the step asks: amount (keeps the fee CX entered), Razorpay id, Completed', async () => {
+    const { transitionData } = await import('./paymentZohoSync.js');
+    const fields = [{ api_name: 'LEP_Full_Amount' }, { data_type: 'message' }, { api_name: 'LEP_Enrollment_Transaction_Id' }, { api_name: 'LEP_Registration_Payment_Status' }];
+    expect(transitionData(fields, {}, { amountPaise: 2500000, paymentId: 'pay_1' })).toEqual({
+      LEP_Full_Amount: '25000',
+      LEP_Enrollment_Transaction_Id: 'pay_1',
+      LEP_Registration_Payment_Status: 'Completed',
+    });
+    expect(transitionData(fields, { LEP_Full_Amount: '45000' }, { amountPaise: 100, paymentId: 'pay_1' }).LEP_Full_Amount).toBe('45000');
+  });
+  it('the sync uses the Blueprint step when Zoho has one', async () => {
+    const db = fakeDb({ u1: { email: 'a@x.com' } });
+    const z = fakeZoho('LEP Enrolled');
+    const moved = [];
+    z.moveToStatus = async (id, lead, to) => moved.push([id, to]);
+    await syncPaymentToZoho(db, pay, z);
+    expect(moved).toEqual([['L1', 'LEP Started']]);
+    expect(z.calls.updates).toEqual([]);
+  });
+});
