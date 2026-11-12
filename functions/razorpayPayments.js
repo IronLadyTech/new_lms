@@ -32,6 +32,30 @@ function getKeys(keyId, keySecret) {
   return { keyId: id, keySecret: secret };
 }
 
+/**
+ * Test payments for chosen accounts only. With RAZORPAY_TEST_KEY_ID (rzp_test_…) and
+ * RAZORPAY_TEST_KEY_SECRET in functions/.env, the accounts listed in RAZORPAY_TEST_USERS
+ * (comma separated: emails or 10-digit mobiles) pay through Razorpay test mode — no money
+ * moves — while every other learner keeps the live keys. The order remembers its mode, so
+ * the payment is checked with the matching secret.
+ */
+function testKeys(env = process.env) {
+  const keyId = String(env.RAZORPAY_TEST_KEY_ID || '').trim();
+  const keySecret = String(env.RAZORPAY_TEST_KEY_SECRET || '').trim();
+  return keyId.startsWith('rzp_test_') && keySecret ? { keyId, keySecret } : null;
+}
+
+function isTestAccount(profile, env = process.env) {
+  const list = String(env.RAZORPAY_TEST_USERS || '')
+    .split(',')
+    .map((x) => x.trim().toLowerCase())
+    .filter(Boolean);
+  if (!list.length || !testKeys(env)) return false;
+  const email = String(profile?.email || '').trim().toLowerCase();
+  const phone = String(profile?.phoneNumber || profile?.phone || '').replace(/\D/g, '').slice(-10);
+  return list.some((x) => (x.includes('@') ? x === email : x.replace(/\D/g, '').slice(-10) === phone && phone.length === 10));
+}
+
 function razorpayClient(keyId, keySecret) {
   const Razorpay = require('razorpay');
   const keys = getKeys(keyId, keySecret);
@@ -92,8 +116,9 @@ async function createOrder(request, db, keyId, keySecret) {
   }
 
   const amountPaise = resolveBalancePaise(profile, programId);
-  const keys = getKeys(keyId, keySecret);
-  const instance = razorpayClient(keyId, keySecret);
+  const testMode = isTestAccount(profile);
+  const keys = testMode ? testKeys() : getKeys(keyId, keySecret);
+  const instance = razorpayClient(keys.keyId, keys.keySecret);
   const receipt = `${uid.slice(0, 8)}_${programId}_${Date.now()}`;
 
   const order = await instance.orders.create({
@@ -116,6 +141,7 @@ async function createOrder(request, db, keyId, keySecret) {
     receipt,
     status: 'created',
     createdAt: new Date(),
+    ...(testMode ? { testMode: true } : {}),
   });
 
   return {
@@ -123,7 +149,8 @@ async function createOrder(request, db, keyId, keySecret) {
     amount: amountPaise,
     currency: 'INR',
     keyId: keys.keyId,
-    description: `${programTitle(programId)} — programme balance`,
+    description: `${programTitle(programId)} — programme balance${testMode ? ' (TEST, no money)' : ''}`,
+    testMode,
     name: 'Iron Lady',
     prefill: {
       name: profile.displayName || '',
@@ -175,10 +202,6 @@ async function verifyPayment(request, db, keyId, keySecret) {
     throw new HttpsError('invalid-argument', 'orderId, paymentId and signature are required');
   }
 
-  if (!verifySignature(orderId, paymentId, signature, keySecret)) {
-    throw new HttpsError('permission-denied', 'Payment verification failed');
-  }
-
   const orderRef = db.collection(ORDERS).doc(orderId);
   const orderSnap = await orderRef.get();
   if (!orderSnap.exists) {
@@ -187,6 +210,11 @@ async function verifyPayment(request, db, keyId, keySecret) {
   const order = orderSnap.data();
   if (order.uid !== uid) {
     throw new HttpsError('permission-denied', 'Order does not belong to this user');
+  }
+  // A test-mode order is signed with the test secret.
+  const secret = order.testMode ? testKeys()?.keySecret : getKeys(keyId, keySecret).keySecret;
+  if (!secret || !verifySignature(orderId, paymentId, signature, secret)) {
+    throw new HttpsError('permission-denied', 'Payment verification failed');
   }
 
   await orderRef.update({
@@ -203,6 +231,7 @@ async function verifyPayment(request, db, keyId, keySecret) {
     amountPaise: order.amountPaise,
     verifiedAt: new Date(),
     source: 'app',
+    ...(order.testMode ? { testMode: true } : {}),
   });
 
   await markProgrammePaid(db, uid, order.programId || programId, {
@@ -216,6 +245,7 @@ async function verifyPayment(request, db, keyId, keySecret) {
     paymentId,
     orderId,
     amountPaise: order.amountPaise,
+    testMode: Boolean(order.testMode),
   });
 
   return { ok: true, paymentId, orderId, programId: order.programId || programId };
@@ -284,5 +314,7 @@ async function handleWebhook(req, db, keySecret, webhookSecret) {
 module.exports = {
   createOrder,
   verifyPayment,
+  isTestAccount,
+  testKeys,
   handleWebhook,
 };

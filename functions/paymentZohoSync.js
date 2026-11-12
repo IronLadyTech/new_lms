@@ -35,11 +35,12 @@ function istStamp(d) {
 }
 
 /** The Note CX read on the Lead. Pure. */
-function paymentNote({ programId, amountPaise, paymentId, orderId, from, to, at }) {
+function paymentNote({ programId, amountPaise, paymentId, orderId, from, to, at, testMode }) {
   const program = TITLE[programId] || programId;
   return {
-    title: `Paid in the app: ${program} ${rupees(amountPaise)}`,
+    title: `${testMode ? 'TEST payment (no money): ' : 'Paid in the app: '}${program} ${rupees(amountPaise)}`,
     content: [
+      ...(testMode ? ['TEST: Razorpay test mode, no money was received. Change the Lead Status back if needed.'] : []),
       `${program} balance of ${rupees(amountPaise)} paid in the Iron Lady app on ${istStamp(at)}.`,
       `Razorpay payment ${paymentId}, order ${orderId}.`,
       to ? `Lead Status changed from "${from || '-'}" to "${to}" by the app.` : `Lead Status left as "${from || '-'}".`,
