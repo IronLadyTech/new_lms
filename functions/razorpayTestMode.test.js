@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import crypto from 'crypto';
-import { isTestAccount, testKeys, verifyPayment } from './razorpayPayments.js';
+import { isTestAccount, resolveBalancePaise, testKeys, verifyPayment } from './razorpayPayments.js';
 
 /** Test payments for chosen accounts only; every other learner keeps the live keys. */
 const env = { RAZORPAY_TEST_KEY_ID: 'rzp_test_abc', RAZORPAY_TEST_KEY_SECRET: 'tsecret', RAZORPAY_TEST_USERS: 'demo@123gmail.com, 98765 43210' };
@@ -56,5 +56,26 @@ describe('a test order is checked with the test secret', () => {
     Object.assign(process.env, env);
     const d = db({ uid: 'u1', programId: 'lep', amountPaise: 100 });
     await expect(verifyPayment(req(sign('tsecret')), d, 'rzp_live_x', 'lsecret')).rejects.toThrow(/verification failed/);
+  });
+});
+
+/** Money: no stand-in amount for real learners (it charged live ₹1 and enrolled them). */
+describe('balance to charge', () => {
+  const saved = process.env.RAZORPAY_DEFAULT_BALANCE_PAISE;
+  afterEach(() => {
+    if (saved === undefined) delete process.env.RAZORPAY_DEFAULT_BALANCE_PAISE;
+    else process.env.RAZORPAY_DEFAULT_BALANCE_PAISE = saved;
+  });
+  it('charges the balance on record', () => {
+    process.env.RAZORPAY_DEFAULT_BALANCE_PAISE = '100';
+    expect(resolveBalancePaise({ programAccess: { lep: { programBalance: 47001 } } }, 'lep')).toBe(4700100);
+  });
+  it('a real learner with no balance on record is refused, never charged ₹1', () => {
+    process.env.RAZORPAY_DEFAULT_BALANCE_PAISE = '100';
+    expect(() => resolveBalancePaise({ programAccess: { lep: {} } }, 'lep')).toThrow(/balance amount is not set/);
+  });
+  it('a test account with no balance may use the test fallback', () => {
+    process.env.RAZORPAY_DEFAULT_BALANCE_PAISE = '100';
+    expect(resolveBalancePaise({ programAccess: { lep: {} } }, 'lep', { testAccount: true })).toBe(100);
   });
 });

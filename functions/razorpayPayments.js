@@ -71,7 +71,7 @@ function programTitle(programId) {
   return map[programId] || programId;
 }
 
-function resolveBalancePaise(profile, programId) {
+function resolveBalancePaise(profile, programId, { testAccount = false } = {}) {
   const access = profile?.programAccess?.[programId] || {};
   const balance =
     access.programBalance ??
@@ -84,9 +84,11 @@ function resolveBalancePaise(profile, programId) {
     return Math.round(Number(balance) * 100);
   }
 
-  // Demo / staging fallback — replace when Zoho writes real balance on profile.
+  // Fallback amount for TEST accounts only (RAZORPAY_TEST_USERS, paid in Razorpay test mode).
+  // A real learner with no balance on record is never charged a stand-in amount: it charged
+  // live ₹ 1 and marked her fully enrolled.
   const fallback = Number(process.env.RAZORPAY_DEFAULT_BALANCE_PAISE || 0);
-  if (fallback > 0) return fallback;
+  if (testAccount && fallback > 0) return fallback;
 
   throw new HttpsError(
     'failed-precondition',
@@ -115,8 +117,8 @@ async function createOrder(request, db, keyId, keySecret) {
     throw new HttpsError('failed-precondition', 'This programme is already fully paid.');
   }
 
-  const amountPaise = resolveBalancePaise(profile, programId);
   const testMode = isTestAccount(profile);
+  const amountPaise = resolveBalancePaise(profile, programId, { testAccount: testMode });
   const keys = testMode ? testKeys() : getKeys(keyId, keySecret);
   const instance = razorpayClient(keys.keyId, keys.keySecret);
   const receipt = `${uid.slice(0, 8)}_${programId}_${Date.now()}`;
@@ -384,6 +386,7 @@ async function handleWebhook(req, db, keySecret, webhookSecret) {
 }
 
 module.exports = {
+  resolveBalancePaise,
   createOrder,
   verifyPayment,
   isTestAccount,
