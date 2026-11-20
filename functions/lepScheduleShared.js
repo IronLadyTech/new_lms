@@ -38,7 +38,7 @@ var LEP_TIMEZONE = "Asia/Kolkata";
 var LEP_SESSION_TEMPLATE = [
   {
     code: "S0",
-    title: "Orientation (B/W)",
+    title: "Orientation",
     kind: "core",
     dayOffset: -2,
     startTime: "19:00",
