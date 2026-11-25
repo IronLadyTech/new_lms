@@ -208,7 +208,7 @@ async function runCmsSplitBatchGroups(db, request, deps) {
     } catch (e) {
       throw new HttpsError('unavailable', 'Zoho could not be read, so nothing was split. Try again in a minute.');
     }
-    const roster = matchRoster(leads, all);
+    const roster = matchRoster(leads, all, { day1 });
     matched = roster.matched;
     zohoOnly = roster.unmatchedLeads.map((l) => l.Full_Name || l.Email || 'Unnamed lead');
     learners = all.filter((l) => matched.has(l.uid));

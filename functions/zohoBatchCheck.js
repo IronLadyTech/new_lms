@@ -8,6 +8,7 @@
  * reason and what to do, in plain words for the CEM team.
  */
 const { isActiveLeadStatus } = require('./zohoBatchApply');
+const { lepDay1FromBatchText } = require('./lepBatchText');
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -55,7 +56,7 @@ async function fetchZohoBatchLeads(day1, deps) {
  * Which app learner is which Zoho lead. Pure; used by the check and by "Split into groups".
  * @returns {{ active, matched: Map<uid, lead>, unmatchedLeads: lead[] }}
  */
-function matchRoster(leads, learners) {
+function matchRoster(leads, learners, { day1 } = {}) {
   const active = leads.filter((l) => isActiveLeadStatus(l.Lead_Status));
   const byLead = new Map();
   const byMail = new Map();
@@ -79,11 +80,29 @@ function matchRoster(leads, learners) {
     if (hit && !matched.has(hit.uid)) matched.set(hit.uid, lead);
     else if (!hit) unmatchedLeads.push(lead);
   }
-  return { active, matched, unmatchedLeads };
+  /*
+   * Some learners have this batch only on their Zoho registration record (IL Registration /
+   * IL Users), with LEP Batch on the Lead left empty. The hourly batch sync copied that value
+   * onto her account (zohoRawBatch), so she is on this batch in Zoho too — and must not lose
+   * her group. Her Lead status still has to be active.
+   */
+  const viaRegistration = [];
+  if (day1) {
+    for (const l of learners) {
+      if (matched.has(l.uid)) continue;
+      const d = l.data || {};
+      const raw = String(d.programAccess?.lep?.zohoRawBatch || '').trim();
+      if (!raw || lepDay1FromBatchText(raw) !== day1) continue;
+      if (!isActiveLeadStatus(d.zohoLeadStatus)) continue;
+      matched.set(l.uid, { id: d.zohoLeadId || null, LEP_Batch: raw, fromRegistration: true });
+      viaRegistration.push(l);
+    }
+  }
+  return { active, matched, unmatchedLeads, viaRegistration };
 }
 
 function compareRoster(leads, learners, { day1, elsewhere = {} } = {}) {
-  const { active, matched, unmatchedLeads } = matchRoster(leads, learners);
+  const { active, matched, unmatchedLeads, viaRegistration } = matchRoster(leads, learners, { day1 });
   const seen = new Set(matched.keys());
   const onlyZoho = [];
   for (const lead of unmatchedLeads) {
@@ -111,12 +130,20 @@ function compareRoster(leads, learners, { day1, elsewhere = {} } = {}) {
           : 'Not in Zoho for this date. Check that her Lead has this LEP Batch and an active status.',
       };
     });
+  const registrationOnly = viaRegistration.map((l) => {
+    const d = l.data || {};
+    return {
+      name: d.displayName || d.name || d.email || 'Learner',
+      why: `On this batch in Zoho's registration record ("${d.programAccess.lep.zohoRawBatch}"), but LEP Batch on her Lead is empty. Counted as matched and gets a group; fill LEP Batch on her Lead when you can.`,
+    };
+  });
   return {
-    zohoCount: active.length,
+    zohoCount: active.length + viaRegistration.length,
     appCount: learners.length,
     matched: seen.size,
     onlyZoho: onlyZoho.slice(0, 100),
     onlyApp: onlyApp.slice(0, 100),
+    registrationOnly: registrationOnly.slice(0, 100),
   };
 }
 

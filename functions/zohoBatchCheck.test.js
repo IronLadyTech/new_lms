@@ -43,3 +43,21 @@ describe('check a batch against Zoho', () => {
     expect(r.zohoCount).toBe(0);
   });
 });
+
+describe('batch only on the Zoho registration record (LEP Batch on the Lead empty)', () => {
+  const reg = (uid, name, extra = {}) =>
+    learner(uid, name, `${uid}@x.com`, { programAccess: { lep: { zohoRawBatch: '28/11/2026 - 28/12/2026' } }, ...extra });
+
+  it('counts her as matched and lists her for the team to fill LEP Batch', () => {
+    const r = compareRoster([lead('1', 'Asha', 'a@x.com')], [learner('u1', 'Asha', 'a@x.com'), reg('u2', 'Ritu')], { day1: '2026-11-28' });
+    expect(r.onlyApp).toEqual([]);
+    expect(r.matched).toBe(2);
+    expect(r.zohoCount).toBe(2);
+    expect(r.registrationOnly.map((x) => x.name)).toEqual(['Ritu']);
+  });
+  it('another batch date, or a dropped Lead status, is still not in this batch', () => {
+    const r = compareRoster([], [reg('u2', 'Ritu', { zohoLeadStatus: 'LEP Dropped' }), learner('u3', 'Mira', 'm@x.com', { programAccess: { lep: { zohoRawBatch: '14/11/2026 - 14/12/2026' } } })], { day1: '2026-11-28' });
+    expect(r.onlyApp.map((x) => x.name).sort()).toEqual(['Mira', 'Ritu']);
+    expect(r.registrationOnly).toEqual([]);
+  });
+});
