@@ -32,9 +32,10 @@ async function pushTargets(db, uid) {
     const dev = d.data();
     if (dev.nativeToken) nativeSeen.add(dev.nativeToken);
     if (dev.platform === 'ios' || (androidViaExpo && dev.expoToken)) {
-      if (dev.expoToken) targets.push({ via: 'expo', token: dev.expoToken, deviceRef: d.ref });
+      if (dev.expoToken)
+        targets.push({ via: 'expo', token: dev.expoToken, deviceRef: d.ref, channels: dev.channels });
     } else if (dev.nativeToken) {
-      targets.push({ via: 'fcm', token: dev.nativeToken, deviceRef: d.ref });
+      targets.push({ via: 'fcm', token: dev.nativeToken, deviceRef: d.ref, channels: dev.channels });
     }
   }
   const legacy = user.exists ? user.data().fcmToken : null;
@@ -45,6 +46,16 @@ async function pushTargets(db, uid) {
 async function forget(target) {
   if (target.deviceRef) await target.deviceRef.delete().catch(() => {});
   if (target.legacy) await target.userRef.update({ fcmToken: null }).catch(() => {});
+}
+
+/**
+ * The Android channel for this phone. A channel other than 'default' is used only when the
+ * app on that phone created it (its device row lists it). A push to a channel the phone
+ * does not have lands in Android's fallback channel, so older apps get 'default' instead.
+ */
+function channelFor(target, wanted) {
+  if (!wanted || wanted === 'default') return 'default';
+  return Array.isArray(target?.channels) && target.channels.includes(wanted) ? wanted : 'default';
 }
 
 function fcmMessage(token, { title, body, data, imageUrl, channelId = 'default' }) {
@@ -90,7 +101,7 @@ async function sendPushToUser(uid, msg, db = getFirestore(), deps = {}) {
   let failed = 0;
   for (const t of targets.filter((x) => x.via === 'fcm')) {
     try {
-      await messaging.send(fcmMessage(t.token, msg));
+      await messaging.send(fcmMessage(t.token, { ...msg, channelId: channelFor(t, msg.channelId) }));
       delivered += 1;
     } catch (err) {
       failed += 1;
@@ -110,7 +121,7 @@ async function sendPushToUser(uid, msg, db = getFirestore(), deps = {}) {
           data: msg.data || {},
           sound: 'default',
           priority: 'high',
-          channelId: msg.channelId || 'default',
+          channelId: channelFor(t, msg.channelId),
         })),
         fetchImpl
       );

@@ -663,15 +663,6 @@ async function handleZohoBatchWebhook(req, res) {
   }
 
   const body = parseWebhookBody(req);
-  const email = (body.email || body.Email || '').trim();
-
-  if (!email) {
-    res.status(400).json({
-      ok: false,
-      reason: 'email is required — trigger when Batch or cohort dates change in Zoho',
-    });
-    return;
-  }
 
   if (!zoho.isConfigured()) {
     res.status(503).json({
@@ -681,11 +672,33 @@ async function handleZohoBatchWebhook(req, res) {
     return;
   }
 
+  // Learners sign in with their mobile: Zoho may send `phone` (Leads.Mobile) and/or `email`.
+  const { resolveWebhookEmail } = require('./webhookLearner');
+  const who = await resolveWebhookEmail(db, body, { searchLeadsByPhone: zoho.searchLeadsByPhone });
+  const email = who.email;
+  if (!email) {
+    console.warn('Zoho batch webhook: no learner in the call.', who.reason, 'fields:', Object.keys(body).join(',').slice(0, 120));
+    res.status(400).json({
+      ok: false,
+      reason: `${who.reason} — send email and/or phone when Batch or cohort dates change in Zoho`,
+    });
+    return;
+  }
+
   try {
     const result = await zoho.syncUserBatchFromZoho(db, email, {
       triggeredBy: 'batch-webhook',
       provisionIfMissing: body.provisionIfMissing !== false,
     });
+    // Her own LEP Day 1 (programAccess.lep.day1Date) decides which batch's reminders she
+    // gets and which batch her app shows, so refresh it with the group move — otherwise a
+    // learner who does not open the app stays on the old batch until her next sign-in.
+    if (result.ok) {
+      await zoho.syncEntitlementsFromZoho(db, email, null).catch((err) =>
+        console.warn('Zoho batch webhook: date refresh failed for', email, err.message)
+      );
+    }
+    if (!result.ok) console.warn('Zoho batch webhook refused:', result.reason || 'unknown');
     res.status(result.ok ? 200 : 400).json(result);
   } catch (err) {
     console.error('Zoho batch webhook failed:', err.message);
@@ -1195,6 +1208,29 @@ exports.cmsBatchLearnerCounts = onCall({ region: 'us-central1' }, async (request
   return runCmsBatchLearnerCounts(db, request);
 });
 
+/** CMS: compare a batch's learners with Zoho (counts and the names that differ). */
+exports.cmsBatchZohoCheck = onCall({ region: 'us-central1', timeoutSeconds: 120 }, async (request) => {
+  const { runCmsBatchZohoCheck } = require('./cmsBatchLearners');
+  if (!zoho.isConfigured()) throw new HttpsError('failed-precondition', 'Zoho is not connected on the server.');
+  return runCmsBatchZohoCheck(db, request, {
+    getAccessToken: zoho.getAccessToken,
+    getApiDomain: zoho.getApiDomain,
+    fetch: (...a) => fetch(...a),
+  });
+});
+
+/** CMS: split a batch into groups (Group 1, 2, 3 …), each with its own Zoom link. */
+exports.cmsSplitBatchGroups = onCall({ region: 'us-central1', timeoutSeconds: 120 }, async (request) => {
+  const { runCmsSplitBatchGroups } = require('./cmsBatchLearners');
+  if (!zoho.isConfigured()) throw new HttpsError('failed-precondition', 'Zoho is not connected on the server.');
+  // Zoho is read first: only learners Zoho has on this batch get a group.
+  return runCmsSplitBatchGroups(db, request, {
+    getAccessToken: zoho.getAccessToken,
+    getApiDomain: zoho.getApiDomain,
+    fetch: (...a) => fetch(...a),
+  });
+});
+
 /** Every night 2:00 AM IST: bring all Zoho batches (LEP, 100BM, MBW) into the LMS, gently on the Zoho quota. */
 exports.zohoCmsNightlySync = onSchedule(
   { schedule: '0 2 * * *', timeZone: 'Asia/Kolkata', region: 'us-central1', ...ZOHO_BULK_SYNC_OPTS },
@@ -1266,31 +1302,49 @@ exports.ensureZohoUserOnLogin = onCall(LOGIN_FN_OPTS, async (request) => {
  * Returns { ok, guest, token? }. Guest = no seat (explore mode).
  * Token is a Firebase custom token for demo OTP / post-verify sign-in.
  */
+const phoneAccessDeps = () => ({
+  isConfigured: () => zoho.isConfigured(),
+  getAccessToken: zoho.getAccessToken,
+  getApiDomain: zoho.getApiDomain,
+  searchLeadsByPhone: zoho.searchLeadsByPhone,
+  syncEntitlementsFromZoho: (firestore, email) => zoho.syncEntitlementsFromZoho(firestore, email, null),
+});
+
+/**
+ * Before the SMS: learner or guest. The account token is added only while
+ * PHONE_PRECHECK_TOKEN is not 'off' — the switch-over for apps that predate claimPhoneAccess.
+ * Set it to 'off' once every phone runs the new app: then no token leaves the server
+ * without a verified SMS.
+ */
 exports.resolvePhoneAccess = onCall(async (request) => {
   const phone = request.data?.phone;
   if (!phone || typeof phone !== 'string') {
     throw new HttpsError('invalid-argument', 'phone is required');
   }
-  return phoneAccess.resolvePhoneAccess(db, phone, {
-    isConfigured: () => zoho.isConfigured(),
-    getAccessToken: zoho.getAccessToken,
-    getApiDomain: zoho.getApiDomain,
-    searchLeadsByPhone: zoho.searchLeadsByPhone,
-    syncEntitlementsFromZoho: (firestore, email) =>
-      zoho.syncEntitlementsFromZoho(firestore, email, null),
-  });
+  const result = await phoneAccess.resolvePhoneAccess(db, phone, phoneAccessDeps());
+  if (process.env.PHONE_PRECHECK_TOKEN === 'off' && result && typeof result === 'object') {
+    delete result.token;
+  }
+  return result;
+});
+
+/** After the SMS: the account token for the number in the verified Firebase ID token. */
+exports.claimPhoneAccess = onCall(async (request) => {
+  return phoneAccess.claimPhoneAccess(db, request.data?.idToken, phoneAccessDeps());
 });
 
 /** App guest typed her name: save it, and create her Zoho Lead if the number was not in Zoho. */
-exports.registerAppGuest = onCall({ region: 'us-central1' }, async (request) => {
+// invoker 'public': guests have no Firebase sign-in. Without it Cloud Run answered 403 to
+// every guest, so numbers not in Zoho never became Leads.
+exports.registerAppGuest = onCall({ region: 'us-central1', invoker: 'public' }, async (request) => {
   const { runRegisterAppGuest } = require('./appGuests');
   return runRegisterAppGuest(db, { createLead: zoho.isConfigured() ? zoho.createLead : null }, request.data || {});
 });
 
 /** App guest activity (opens, challenge, recordings) for the CMS guest list. */
-exports.trackAppGuest = onCall({ region: 'us-central1' }, async (request) => {
+exports.trackAppGuest = onCall({ region: 'us-central1', invoker: 'public' }, async (request) => {
   const { runTrackAppGuest } = require('./appGuests');
-  return runTrackAppGuest(db, request.data || {});
+  return runTrackAppGuest(db, request.data || {}, { createLead: zoho.isConfigured() ? zoho.createLead : null });
 });
 
 /** First-login welcome — city / domain / B-HAG on profile (+ Zoho Lead when mapped). */
@@ -1532,7 +1586,7 @@ exports.sendParticipantNotificationTest = onCall({ region: 'us-central1' }, asyn
 });
 
 exports.lepNotificationScheduler = onSchedule(
-  { schedule: 'every 15 minutes', timeZone: 'Asia/Kolkata', region: 'us-central1' },
+  { schedule: 'every 5 minutes', timeZone: 'Asia/Kolkata', region: 'us-central1' },
   async () => {
     const { runLepNotificationScheduler } = require('./lepNotificationScheduler');
     return runLepNotificationScheduler();
@@ -1587,6 +1641,45 @@ exports.verifyRazorpayPayment = onCall(RAZORPAY_FN_OPTS, async (request) => {
     process.env.RAZORPAY_KEY_SECRET
   );
 });
+
+/** Every 30 minutes: payments whose Zoho update failed are sent again (status + Note). */
+exports.retryPaymentZohoSync = onSchedule(
+  { schedule: 'every 30 minutes', timeZone: 'Asia/Kolkata', region: 'us-central1', timeoutSeconds: 120 },
+  async () => {
+    if (!zoho.isConfigured()) return;
+    const { retryFailedPaymentSyncs } = require('./paymentZohoSync');
+    const res = await retryFailedPaymentSyncs(db);
+    if (res.tried) console.log('retryPaymentZohoSync', JSON.stringify(res));
+  }
+);
+
+/** CMS: every payment made in the app and whether it reached Zoho. */
+exports.cmsListAppPayments = onCall({ region: 'us-central1' }, async (request) => {
+  return require('./appPaymentsAdmin').runCmsListAppPayments(db, request);
+});
+
+/** CMS: send one payment to Zoho again (status + Note). */
+exports.cmsRetryPaymentZoho = onCall({ region: 'us-central1', timeoutSeconds: 60 }, async (request) => {
+  if (!zoho.isConfigured()) throw new HttpsError('failed-precondition', 'Zoho is not connected on the server.');
+  return require('./appPaymentsAdmin').runCmsRetryPaymentZoho(db, request);
+});
+
+/** CMS: check Razorpay now for payments the app never confirmed. */
+exports.cmsCheckRazorpayNow = onCall({ ...RAZORPAY_FN_OPTS, timeoutSeconds: 300 }, async (request) => {
+  return require('./appPaymentsAdmin').runCmsCheckRazorpayNow(db, request);
+});
+
+/**
+ * Every night 2:30 AM IST: every payment Razorpay captured in the last 2 days for an app order
+ * must be recorded; any the app never confirmed is recorded, unlocked and sent to Zoho now.
+ */
+exports.reconcileRazorpayDaily = onSchedule(
+  { schedule: '30 2 * * *', timeZone: 'Asia/Kolkata', region: 'us-central1', timeoutSeconds: 300, memory: '256MiB' },
+  async () => {
+    const res = await razorpayPayments().reconcileRazorpayPayments(db, { days: 2 });
+    console.log('reconcileRazorpayDaily', JSON.stringify({ ...res, recovered: res.recovered.length }));
+  }
+);
 
 exports.razorpayWebhook = onRequest({ cors: false }, async (req, res) => {
   try {

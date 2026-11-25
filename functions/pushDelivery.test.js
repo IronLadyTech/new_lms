@@ -104,3 +104,28 @@ describe('dead tokens are cleaned up', () => {
     expect(state.fcmToken).toBeNull();
   });
 });
+
+describe('session reminders vibrate differently', () => {
+  it("uses the 'session' channel only on phones whose app created it", async () => {
+    const { db } = fakeDb({
+      fcmToken: 'legacy-old-phone',
+      devices: {
+        updated: { platform: 'android', nativeToken: 'fcm-new', channels: ['default', 'session'] },
+        older: { platform: 'android', nativeToken: 'fcm-old' },
+      },
+    });
+    const messaging = { send: vi.fn(async () => 'id') };
+    await sendPushToUser('u', { ...MSG, channelId: 'session' }, db, { messaging, fetch: okFetch() });
+    const byToken = Object.fromEntries(
+      messaging.send.mock.calls.map(([m]) => [m.token, m.android.notification.channelId])
+    );
+    expect(byToken).toEqual({ 'fcm-new': 'session', 'fcm-old': 'default', 'legacy-old-phone': 'default' });
+  });
+
+  it("everything else stays on 'default'", async () => {
+    const { db } = fakeDb({ devices: { a: { platform: 'android', nativeToken: 't', channels: ['default', 'session'] } } });
+    const messaging = { send: vi.fn(async () => 'id') };
+    await sendPushToUser('u', MSG, db, { messaging, fetch: okFetch() });
+    expect(messaging.send.mock.calls[0][0].android.notification.channelId).toBe('default');
+  });
+});

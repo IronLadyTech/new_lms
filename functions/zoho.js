@@ -551,7 +551,11 @@ function welcomeFieldsToLeadPayload(fields = {}) {
     payload.B_HAG_Next_3_month = fields.bhag;
     payload.LMS_BHAG = fields.bhag;
   }
-  if (fields.lepBatch) {
+  // She changed her batch in the app: her Lead gets the batch text, start and end dates
+  // (lepBatchText.js). Without this, a Day 1 picked in the app never reached Zoho.
+  const day1 = String(fields.day1Date || '').trim().slice(0, 10);
+  if (day1) Object.assign(payload, require('./lepBatchText').lepBatchLeadFields(day1));
+  if (fields.lepBatch && !payload.LEP_Batch) {
     payload.LEP_Batch = fields.lepBatch;
   }
   if (fields.salaryRange) {
@@ -583,8 +587,9 @@ async function getLeadById(leadId) {
     headers: { Authorization: `Zoho-oauthtoken ${token}` },
   });
 
-  if (!res.ok) return null;
-  const body = await res.json();
+  // A Lead that was merged or deleted answers 204 with an empty body: no Lead, not an error.
+  if (!res.ok || res.status === 204) return null;
+  const body = await res.json().catch(() => null);
   return body?.data?.[0] || null;
 }
 
@@ -1269,7 +1274,19 @@ async function updateLeadWelcomeFields(emailOrIdentity, fields = {}) {
   }
 
   if (leadId) {
-    return updateLeadByIdResilient(leadId, payload);
+    try {
+      return await updateLeadByIdResilient(leadId, payload);
+    } catch (err) {
+      // The saved Lead can be gone (merged or deleted in Zoho). Find her real Lead; the
+      // caller stores the id we return, which repairs her account.
+      const found =
+        (email && (await searchLeadByEmail(email).catch(() => null))) ||
+        (phone && (await searchLeadByPhone(phone).catch(() => null))) ||
+        null;
+      if (!found || String(found) === String(leadId)) throw err;
+      console.warn(`updateLeadWelcomeFields: Lead ${leadId} failed, using ${found}`);
+      return updateLeadByIdResilient(found, payload);
+    }
   }
 
   if (!email) {
@@ -1278,7 +1295,71 @@ async function updateLeadWelcomeFields(emailOrIdentity, fields = {}) {
   return upsertLead({ Email: email, ...payload });
 }
 
+/** A Note on a Lead (CX see it in the Lead's Notes). */
+async function addLeadNote(leadId, title, content) {
+  const token = await getAccessToken();
+  if (!token || !leadId) return null;
+  const res = await zohoApiFetch(`${getApiDomain()}/crm/v2/Notes`, {
+    method: 'POST',
+    headers: { Authorization: `Zoho-oauthtoken ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      data: [{ Note_Title: title, Note_Content: content, Parent_Id: { id: String(leadId) }, se_module: getModule() }],
+    }),
+  });
+  if (!res.ok) throw new Error(`Zoho note failed (HTTP ${res.status})`);
+  return true;
+}
+
+/** What paymentZohoSync needs: find her Lead (stored id, Firebase UID, email, mobile), read, update, note. */
+function paymentSyncDeps() {
+  return {
+    async findLeadId(profile) {
+      const stored = profile?.zohoLeadId || profile?.zohoLead?.id || null;
+      if (stored && (await getLeadById(stored))) return stored;
+      return (
+        (profile?.uid && (await searchLeadByFirebaseUid(profile.uid).catch(() => null))) ||
+        (profile?.email && (await searchLeadByEmail(profile.email).catch(() => null))) ||
+        ((profile?.phoneNumber || profile?.phone) &&
+          (await searchLeadByPhone(profile.phoneNumber || profile.phone).catch(() => null))) ||
+        null
+      );
+    },
+    getLeadById,
+    updateLead: (id, fields) => updateLeadByIdResilient(id, fields),
+    addNote: addLeadNote,
+    /**
+     * Lead Status runs through a Blueprint: perform the step to `to` with the payment fields
+     * it asks for. A Lead outside the Blueprint is updated directly.
+     */
+    async moveToStatus(leadId, lead, to, payment) {
+      const { transitionData, pickTransition } = require('./paymentZohoSync');
+      const token = await getAccessToken();
+      const url = `${getApiDomain()}/crm/v2/${getModule()}/${leadId}/actions/blueprint`;
+      const got = await zohoApiFetch(url, { headers: { Authorization: `Zoho-oauthtoken ${token}` } });
+      const bp = got.ok && got.status !== 204 ? (await got.json().catch(() => null))?.blueprint : null;
+      const step = pickTransition(bp?.transitions, to);
+      if (!step) {
+        if (bp?.transitions?.length)
+          throw new Error(`Zoho Blueprint has no step to "${to}" from "${lead?.Lead_Status || '-'}" (steps: ${bp.transitions.map((t) => t.name).join(', ')})`);
+        return updateLeadByIdResilient(leadId, { Lead_Status: to });
+      }
+      const res = await zohoApiFetch(url, {
+        method: 'PUT',
+        headers: { Authorization: `Zoho-oauthtoken ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blueprint: [{ transition_id: step.id, data: transitionData(step.fields, lead, payment) }] }),
+      });
+      const body = await res.json().catch(() => ({}));
+      const row = body?.data?.[0] || body;
+      if (!res.ok || (row?.status && row.status !== 'success'))
+        throw new Error(`Zoho Blueprint step "${step.name}" failed: ${String(row?.message || row?.code || `HTTP ${res.status}`).slice(0, 200)} ${JSON.stringify(row?.details || '').slice(0, 200)}`);
+      return true;
+    },
+  };
+}
+
 module.exports = {
+  paymentSyncDeps,
+  addLeadNote,
   /** Zoho + Firestore helpers the batch syncs share (used by zohoCmsSync). */
   buildBatchSyncDeps,
   runZohoReconcile: (db, options) => runZohoReconcile(db, options),

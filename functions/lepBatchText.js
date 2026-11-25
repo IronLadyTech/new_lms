@@ -1,0 +1,88 @@
+/**
+ * A learner's LEP batch written back to her Zoho Lead when she changes it in the app.
+ *
+ *   LEP_Batch      "14/11/2026 - 14/12/2026"    (the style Zoho Leads use; checked on the 14 Nov batch)
+ *   LEP_Reg_Date   2026-11-14                   (LEP Start Date = Day 1)
+ *   LEP_End_Date   2026-12-14                   (one calendar month later)
+ *
+ * The Zoho workflow "Batch changed → LMS" then fires the batch webhook, which moves her LMS
+ * group too — the same path as when CX change it by hand.
+ */
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function parseIso(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || '').slice(0, 10));
+  if (!m) return null;
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12));
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function toIso(d) {
+  return d.toISOString().slice(0, 10);
+}
+
+/** Same day next month; the 31st becomes the month's last day. */
+function addOneMonth(iso) {
+  const d = parseIso(iso);
+  if (!d) return '';
+  const day = d.getUTCDate();
+  d.setUTCMonth(d.getUTCMonth() + 1);
+  if (d.getUTCDate() !== day) d.setUTCDate(0);
+  return toIso(d);
+}
+
+/** 2026-11-14 → 14/11/2026 */
+function dmy(iso) {
+  const [y, m, d] = String(iso).split('-');
+  return `${d}/${m}/${y}`;
+}
+
+/** The three Lead fields for a Day 1 (YYYY-MM-DD), or {} when the date is not valid. */
+function lepBatchLeadFields(day1Iso) {
+  const start = String(day1Iso || '').slice(0, 10);
+  if (!parseIso(start)) return {};
+  const end = addOneMonth(start);
+  return {
+    LEP_Batch: `${dmy(start)} - ${dmy(end)}`,
+    LEP_Reg_Date: start,
+    LEP_End_Date: end,
+  };
+}
+
+/** Saturday on or after a date: LEP Day 1. Older batch text can start on the Wed/Thu orientation. */
+function saturdayOnOrAfter(iso) {
+  const d = parseIso(iso);
+  if (!d) return '';
+  d.setUTCDate(d.getUTCDate() + ((6 - d.getUTCDay() + 7) % 7));
+  return toIso(d);
+}
+
+/** Day 1 from the LEP Batch text, either style: "28/11/2026 - …" or "28 Nov 2026 – …". */
+function lepDay1FromBatchText(text) {
+  const raw = String(text || '').trim();
+  const dmy = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(raw);
+  if (dmy) return saturdayOnOrAfter(`${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`);
+  const named = /^(\d{1,2})\s+([A-Za-z]{3})[a-z]*\s+(\d{4})/.exec(raw);
+  if (named) {
+    const m = MON.findIndex((x) => x.toLowerCase() === named[2].toLowerCase());
+    if (m >= 0) {
+      return saturdayOnOrAfter(`${named[3]}-${String(m + 1).padStart(2, '0')}-${named[1].padStart(2, '0')}`);
+    }
+  }
+  return '';
+}
+
+/**
+ * Her new Day 1 from a Zoho sync, or '' to leave it alone. CX may change the LEP Batch text,
+ * the LEP Start Date, or both, so the field that changed since the last sync wins; with no
+ * start date at all, the batch text decides. Nothing changed = her Day 1 stays.
+ */
+function lepDay1FromZoho({ lepBatch, lepStart, prevBatch, prevStart }) {
+  const fromBatch = lepDay1FromBatchText(lepBatch);
+  if (fromBatch && lepBatch !== prevBatch) return fromBatch;
+  if (lepStart && lepStart !== prevStart) return lepStart;
+  if (!lepStart && fromBatch) return fromBatch;
+  return '';
+}
+
+module.exports = { lepBatchLeadFields, addOneMonth, lepDay1FromBatchText, lepDay1FromZoho };

@@ -141,6 +141,7 @@ function zohoDateToIso(value) {
  * 100BM: BM_Reg_Date1, BM_End_Date, BM_Batch
  */
 function applyZohoProgramDatesToUpdates(updates, record, profile = {}) {
+  const { lepDay1FromZoho } = require('./lepBatchText');
   if (!record || typeof record !== 'object') return;
 
   const lepBatch = String(record.LEP_Batch || '').trim();
@@ -153,7 +154,14 @@ function applyZohoProgramDatesToUpdates(updates, record, profile = {}) {
       updates['programAccess.lep.zohoBatchKey'] = lepBatch;
       updates['programAccess.lep.batchName'] = lepBatch;
     }
-    if (lepStart) updates['programAccess.lep.day1Date'] = lepStart;
+    const day1 = lepDay1FromZoho({
+      lepBatch,
+      lepStart,
+      prevBatch: prev.zohoRawBatch,
+      prevStart: prev.zohoRegDate,
+    });
+    if (day1) updates['programAccess.lep.day1Date'] = day1;
+    if (lepStart) updates['programAccess.lep.zohoRegDate'] = lepStart;
     if (lepEnd) updates['programAccess.lep.endDate'] = lepEnd;
     // Keep a small Lead bag for app readLeadField (Month_B_HAG / LEP_Reg_Date).
     updates.zohoLead = {
@@ -193,6 +201,17 @@ function applyZohoProgramDatesToUpdates(updates, record, profile = {}) {
     };
   }
 
+  // Registration payment reference — the app shows its last 4 digits on the fee row and receipt.
+  const lepRegTxn = String(record.LEP_Registration_Transaction_Id || '').trim();
+  if (lepRegTxn) {
+    updates.zohoLead = {
+      ...(updates.zohoLead || profile.zohoLead || {}),
+      LEP_Registration_Transaction_Id: lepRegTxn,
+    };
+  }
+
+  applyLepFeeToUpdates(updates, record);
+
   const city = String(record.City || '').trim();
   if (city) updates.city = city;
   const domain = String(record.Industry || record.LMS_Domain || '').trim();
@@ -200,6 +219,31 @@ function applyZohoProgramDatesToUpdates(updates, record, profile = {}) {
     updates.domain = domain;
     updates.leadershipRole = domain;
   }
+}
+
+/** A Zoho amount ("2999", "₹ 18,000", 20500) as whole rupees; 0 when empty. */
+function zohoRupees(value) {
+  if (value == null) return 0;
+  const n = Number(String(value).replace(/[^0-9.]/g, ''));
+  return Number.isFinite(n) && n > 0 ? Math.round(n) : 0;
+}
+
+/**
+ * LEP fee from the Lead: LEP Payment Amount (registration, 2999), LEP Enrollment Amount
+ * (API name LEP_Full_Amount — what she paid after that) and LEP Pitched Amount (the fee agreed
+ * with her). Balance = pitched − paid, never below 0. Only a Lead record carries these fields,
+ * so an IL_Users-only record leaves what the Lead wrote alone. With no pitched amount there is
+ * no balance on record: the app then shows no Pay button and charges nothing.
+ */
+function applyLepFeeToUpdates(updates, record) {
+  if (!('LEP_Pitched_Amount' in record)) return;
+  const registration = zohoRupees(record.LEP_Payment_Amount);
+  const paid = registration + zohoRupees(record.LEP_Full_Amount);
+  const fee = zohoRupees(record.LEP_Pitched_Amount);
+  if (registration) updates['programAccess.lep.registrationFee'] = registration;
+  updates['programAccess.lep.feePaid'] = paid;
+  updates['programAccess.lep.courseFee'] = fee || null;
+  updates['programAccess.lep.programBalance'] = fee ? Math.max(0, fee - paid) : null;
 }
 
 function isValidBatchName(batch) {
@@ -904,6 +948,7 @@ async function provisionFromLoginCredentials(db, email, password, deps) {
 }
 
 module.exports = {
+  applyLepFeeToUpdates,
   tiersFromProgrammeLists,
   enrichRecordWithAllZohoEnrollments,
   /** Used by the reconciler to tell a missing account from an existing one. */

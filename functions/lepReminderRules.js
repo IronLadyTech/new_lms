@@ -57,7 +57,7 @@ function finishText(text, vars) {
   let source = String(text || '');
   // No Zoom link on the session yet: point to the app instead of a blank "Join:".
   if (!vars.joinLink)
-    source = source.replace(/Join:?\s*\{\{joinLink\}\}/gi, 'Join from the Iron Lady app.');
+    source = source.replace(/Join(?: now)?:?\s*\{\{joinLink\}\}/gi, 'Join from the Iron Lady app.');
   const filled = fillTemplate(source, { ...vars, joinLink: vars.joinLink || 'the Iron Lady app' });
   return (
     filled

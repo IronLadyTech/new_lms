@@ -135,7 +135,13 @@ function inferProgramFromLead(lead, fromStatus) {
   );
   if (direct) return direct;
 
-  const blob = JSON.stringify(lead || {}).toLowerCase();
+  // Values only: field names like Remarks_100BM made every Lead look like 100BM.
+  // Enrolled_Courses is written back from the app, so one wrong guess would confirm itself.
+  const blob = JSON.stringify(
+    Object.entries(lead || {})
+      .filter(([key]) => key !== 'Enrolled_Courses')
+      .map(([, value]) => value)
+  ).toLowerCase();
   if (blob.includes('100bm') || blob.includes('100 board')) return '100bm';
   if (blob.includes('"lep"') || blob.includes('leadership essentials')) return 'lep';
   if (blob.includes('"mbw"') || blob.includes('business warfare')) return 'mbw';
