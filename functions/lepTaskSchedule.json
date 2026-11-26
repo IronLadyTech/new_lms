@@ -53,9 +53,9 @@
       "order": 2,
       "title": "Complete NSDC Registration",
       "dueSession": "S1",
-      "opens": "A 5-minute step so nothing slows you down later.",
-      "due": "Due today: NSDC. Two minutes on your lunch break.",
-      "after": "NSDC confirmed. One less thing on your mind."
+      "opens": "NSDC registration is mandatory. One time, about 10 minutes.",
+      "due": "Due today: your NSDC registration. Mandatory before Day 1.",
+      "after": "NSDC done. Your participation is officially recognised."
     },
     {
       "id": "lep-orientation-framework",
@@ -289,10 +289,10 @@
     },
     {
       "id": "lep-day3-mentors",
-      "phase": "week-2",
-      "order": 503,
+      "phase": "week-3",
+      "order": 603,
       "title": "Finding and Working with Mentors",
-      "dueSession": "S6",
+      "dueSession": "S7",
       "opens": "Who's already where you want to be? Let's learn from them.",
       "due": "Due today: name 2-3 mentors and your ask for each.",
       "after": "Mentors named. Send your first ask - most people say yes."
@@ -329,10 +329,10 @@
     },
     {
       "id": "lep-resume-bootcamp",
-      "phase": "week-2",
-      "order": 507,
+      "phase": "week-3",
+      "order": 604,
       "title": "Jobseekers Bootcamp",
-      "dueSession": "S6",
+      "dueSession": "S7",
       "opens": "Your next opportunity is out there. Get ready for it.",
       "due": "Due today: the Jobseekers Bootcamp recording.",
       "after": "You're more prepared than you were yesterday."
