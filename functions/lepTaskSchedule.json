@@ -324,8 +324,8 @@
       "title": "Resume Template and Samples",
       "dueSession": "S6",
       "opens": "See how an Iron Lady resume reads before you write yours.",
-      "due": "Due today: study the template. 10 minutes.",
-      "after": "You've seen the standard. Your resume is next."
+      "due": "Due today: your resume, in the Iron Lady format. Start with 3 wins you're proud of.",
+      "after": "Resume ready. You're ready when the opportunity comes."
     },
     {
       "id": "lep-resume-bootcamp",
@@ -336,16 +336,6 @@
       "opens": "Your next opportunity is out there. Get ready for it.",
       "due": "Due today: the Jobseekers Bootcamp recording.",
       "after": "You're more prepared than you were yesterday."
-    },
-    {
-      "id": "lep-resume-prepare",
-      "phase": "week-2",
-      "order": 508,
-      "title": "Prepare your Resume",
-      "dueSession": "S6",
-      "opens": "Achievements, not duties. Show what you've really done.",
-      "due": "Due today: your resume. Start with 3 wins you're proud of.",
-      "after": "Resume ready. You're ready when the opportunity comes."
     },
     {
       "id": "lep-day5-instructions",
